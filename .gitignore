@@ -22,4 +22,5 @@ reportes/
 **/reportes/
 *.tsbuildinfo
 docs/api-reference.html
+docs/bootstrap-api-reference.html
 docs/qa-report.md

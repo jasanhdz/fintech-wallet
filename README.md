@@ -35,7 +35,8 @@ npm run build
 npm --workspace @fintech-wallet/api run test:db # requiere PostgreSQL levantado y URLs del .env
 npm run openapi:validate
 npm run openapi:check
-npm run docs:api      # genera docs/api-reference.html desde el contrato scaffold
+npm run docs:api      # contrato de producto PLANNED/no implementado: docs/api-reference.html
+npm run docs:bootstrap-api # contrato BOOT-00 de GET /health, también no implementado: docs/bootstrap-api-reference.html
 npm run qa:bootstrap # guarda reporte real en docs/qa-report.md (gitignored)
 ```
 
@@ -54,7 +55,9 @@ API: `GET http://localhost:3000/health`; una ruta no implementada responde Probl
 
 - Web muestra exactamente **Entorno preparado. Diseño pendiente**.
 - Móvil muestra el mensaje equivalente y dispone de prueba que monta el componente con React Native renderer.
-- `specs/openapi.yaml` preserva el contrato de diseño derivado previo. `specs/openapi.boot.yaml` limita la validación y tipos generados al scaffold. La documentación Swagger/Redoc, si se consulta, es contrato planeado, no endpoints implementados.
+- `npm run docs:api` genera Redoc navegable desde `specs/openapi.yaml`: contrato completo de producto PLANNED, pendiente de revisión/autorización y no implementado. El título del HTML lo marca explícitamente; sus rutas documentan diseño futuro, no endpoints disponibles.
+- `npm run docs:bootstrap-api` genera Redoc desde `specs/openapi.boot.yaml`: solo el contrato scaffold de `GET /health` y error genérico, también marcado como no implementado. La API BOOT-00 real implementa actualmente `GET /health`; las demás rutas devuelven 404. La generación de documentación no implementa endpoints.
+- `specs/openapi.yaml` preserva el contrato de diseño derivado previo. `specs/openapi.boot.yaml` limita la validación y tipos generados al scaffold.
 - TypeORM configura siempre `synchronize: false`; no hay entidades ni tablas de negocio. Tests DB rechazan URL/nombre dev antes de conectarse; aislamiento usa bases y roles runtime/migrator separados.
 - Suites financieras futuras no están implementadas ni aprobadas; permanecen bloqueadas por `DESIGN_REVIEW_REQUIRED`.
 - CI valida el scaffold; no equivale a aprobación final, prueba financiera, despliegue o publicación.
