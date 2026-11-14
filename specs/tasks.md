@@ -34,5 +34,6 @@ BOOT-00-00 (specs previas al scaffold) y tareas de implementación deben usar co
 | BOOT-00 · API base, Compose aislado y QA/CI | `aa5b769` `build(BOOT-00): add API health and isolated database QA` | `npm run qa:bootstrap`; health/Problem Details; guard DB; PostgreSQL integration; workflow CI. |
 | BOOT-00 · informe de evaluación/trazabilidad | `26fec66` `docs(BOOT-00): record forge evaluation evidence` | `FINDINGS.md`, `docs/forge-evidence.md`, bitácora AI y este mapa SHA/tarea. |
 | BOOT-00-FU01 · actualizar pins Expo/Node, añadir inspección Playwright y estabilizar OpenAPI bajo Node fijado | `a5de82b` `build(BOOT-00): align runtime and verify web in Chromium` | `npx expo install --check`; `npm run test:visual`; lint/typecheck/tests/build/OpenAPI/QA en Node 26.13.1; F-02 verificado visualmente en seguimiento sin cambiar findings históricos. |
+| BOOT-00-FU02 · documentar versiones, advisories y evidencia del seguimiento | `235e20b` `docs(BOOT-00): record compatibility and browser follow-up` | `docs/dependency-review.md`, `docs/boot-00-followup.md`, revisión oficial de compatibilidad y clasificación de auditoría. |
 
 Los hashes completos quedan en `git log`; pruebas/evaluación referidas a un SHA se identifican expresamente en `FINDINGS.md` y en el reporte final. El commit de documentación no incluye ni afirma futuros commits de producto.
