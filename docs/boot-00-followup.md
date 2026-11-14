@@ -7,7 +7,9 @@ Este documento registra las verificaciones posteriores solicitadas después de q
 - GitHub API validada con `gh api user`: `jasanhdz`. `gh auth status` muestra también `jasanhdz-isol` como cuenta autenticada inactiva; se seleccionó `jasanhdz` sin borrar sus credenciales.
 - El repositorio `jasanhdz/fintech-wallet` no existía al consultar la API (404). Se creó privado y se verificó metadata `isPrivate: true`, URL `https://github.com/jasanhdz/fintech-wallet`.
 - `origin` usa SSH personal probado: `git@github.com-personal:jasanhdz/fintech-wallet.git`.
-- En el momento de preparar este seguimiento, los cambios aún no se habían publicado. Push, SHA remoto y CI pertenecen a la verificación final y se informan después de ejecutar esos pasos; esta nota no los anticipa.
+- Se publicó `main` sin force y con el historial completo. Primer SHA publicado/CI verificado: `3a8d5458a441f1d2209228a6857bcf16dd2a2b80`, coincidente entre HEAD local, GitHub API y `git ls-remote`.
+- GitHub Actions `bootstrap-ci`, ejecución [43551752866](https://github.com/jasanhdz/fintech-wallet/actions/runs/43551752866), concluyó `success` para `main` y ese SHA. Pasaron `npm ci`, lint, typecheck, tests, Chromium smoke, PostgreSQL test aislada, builds y OpenAPI check. GitHub anotó advertencias no bloqueantes por acciones v4 ejecutándose en Node 24 bajo compatibilidad forzada (deprecación de Node 20) y la migración del runner `ubuntu-latest` a Ubuntu 26; las acciones completaron correctamente.
+- Este registro requerirá un commit/push de documentación; la verificación final repetirá CI contra el SHA resultante antes de cerrar el seguimiento.
 
 ## Corrección de F-02 por inspección de navegador
 
