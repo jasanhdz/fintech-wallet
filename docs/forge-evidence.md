@@ -21,8 +21,9 @@
 ## Roles ejecutados
 
 - **Planner:** completado en contexto independiente OpenCode task; único archivo de salida `SPEC.md`; 10 criterios binarios. El reporte de rol confirmó revisión de formato mediante `git diff --check`.
-- **Generator:** pendiente al momento de creación inicial de esta evidencia; registrar resultado real después de la fase de scaffold.
-- **Evaluator:** pendiente al momento de creación inicial de esta evidencia; registrar resultado real y pasadas después de ejecutar evaluación.
+- **Generator:** ejecutado en contextos de tarea independientes. Completó el scaffold en `4c5be10` y `aa5b769`; tras revisar el requisito de OpenAPI navegable, agregó contrato planeado Redoc + contrato health-only en `61280ce`. Respetó `SPEC.md`/`FINDINGS.md`.
+- **Evaluator:** pasada 1 (`FINDINGS.md`, SHA `aa5b769`) reportó 8/10 con base de datos BLOCKED por daemon apagado y UI visual no verificada. El orquestador inició la instancia Colima existente y el Compose exclusivo del proyecto; prueba PostgreSQL aislada pasó. Pasada 2 (`FINDINGS.md`, SHA `aa5b769`) reportó 9/10; F-01 resuelto y F-02 minor abierto porque no estaba instalado Playwright. Los roles no se comunicaron por conversación: la coordinación se realizó mediante archivos/commits y tareas contextuales independientes.
+- No hubo aprobación humana del diseño ni revisión Stitch en esta fase. El evaluador no arregló código; el Generator no editó `SPEC.md` ni `FINDINGS.md`.
 
 ## Compatibilidad observada del instalador
 

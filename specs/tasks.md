@@ -26,3 +26,11 @@ Estados: BOOT-00 puede ejecutarse ahora. Toda tarea de producto es `PENDIENTE ·
 ## Historial de commits
 
 BOOT-00-00 (specs previas al scaffold) y tareas de implementación deben usar commits distintos con IDs, por ejemplo `docs(BOOT-00): add initial specifications`, `build(BOOT-00): add isolated workspace scaffold`. Completar el mapa SHA → tarea → comandos de verificación una vez creados los commits; no inventar commits futuros.
+
+| Tarea | Commit(s) | Evidencia asociada |
+|---|---|---|
+| BOOT-00-00 · especificaciones previas al scaffold | `839bb38` `docs(BOOT-00): add challenge specs and forge plan` | Archivos fuente/specs/Forge; OpenAPI parseado YAML antes de scaffold. |
+| BOOT-00 · scaffold workspace, clientes mínimos, versiones y documentación | `4c5be10` `build(BOOT-00): add reproducible workspace scaffold`; `61280ce` `build(BOOT-00): expose planned OpenAPI reference` | `npm ci`, lint/typecheck/test/build; Redoc de contrato planeado y health-only. |
+| BOOT-00 · API base, Compose aislado y QA/CI | `aa5b769` `build(BOOT-00): add API health and isolated database QA` | `npm run qa:bootstrap`; health/Problem Details; guard DB; PostgreSQL integration; workflow CI. |
+
+Los hashes completos quedan en `git log`; pruebas/evaluación referidas a un SHA se identifican expresamente en `FINDINGS.md` y en el reporte final. El commit de documentación no incluye ni afirma futuros commits de producto.
