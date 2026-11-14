@@ -24,3 +24,5 @@ reportes/
 docs/api-reference.html
 docs/bootstrap-api-reference.html
 docs/qa-report.md
+test-results/
+playwright-report/

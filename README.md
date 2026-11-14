@@ -4,7 +4,7 @@ Scaffold reproducible de infraestructura y clientes mínimos. El único endpoint
 
 ## Requisitos
 
-- Node.js `26.3.0` (usar `nvm use` con `.nvmrc`) y npm 11 o superior.
+- Node.js `26.13.1` (rama LTS, usar `nvm use` con `.nvmrc`) y npm 11 o superior.
 - Docker Engine y Docker Compose standalone (`docker-compose`) o una instalación equivalente compatible con el archivo Compose. PostgreSQL 16.10, compatible con requisito >=15.
 - Para compilar/ejecutar móvil: dependencias Expo SDK 58; dispositivo/simulador compatible. No se publica a EAS ni tiendas.
 
@@ -31,6 +31,7 @@ npm run dev:mobile   # inicia Metro/Expo en LAN; parar con Ctrl-C
 npm run lint
 npm run typecheck
 npm test
+npm run test:visual # Playwright Chromium: browser smoke test del scaffold web, no producto
 npm run build
 npm --workspace @fintech-wallet/api run test:db # requiere PostgreSQL levantado y URLs del .env
 npm run openapi:validate
@@ -61,6 +62,7 @@ API: `GET http://localhost:3000/health`; una ruta no implementada responde Probl
 - TypeORM configura siempre `synchronize: false`; no hay entidades ni tablas de negocio. Tests DB rechazan URL/nombre dev antes de conectarse; aislamiento usa bases y roles runtime/migrator separados.
 - Suites financieras futuras no están implementadas ni aprobadas; permanecen bloqueadas por `DESIGN_REVIEW_REQUIRED`.
 - CI valida el scaffold; no equivale a aprobación final, prueba financiera, despliegue o publicación.
+- `npm run test:visual` inspecciona en Chromium el mensaje de preparación, HTTP 200 y ausencia de errores de consola; no sustituye pruebas de producto ni prueba en dispositivo móvil.
 - Diseños M01–M12 y W01–W14 están `DESIGN_REVIEW_REQUIRED`. El índice AWS queda `PENDIENTE`.
 
 ## Contrato y tipos compartidos

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=26.3.0 <27",
+    "node": ">=26.13.1 <27",
     "npm": ">=11"
   },
   "workspaces": [
@@ -25,6 +25,7 @@
     "lint:shared": "eslint packages/shared/src",
     "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.shared.json --noEmit",
     "test": "npm run test --workspaces --if-present",
+    "test:visual": "playwright test",
     "build": "npm run build --workspaces --if-present",
     "qa:bootstrap": "tsx scripts/qa/bootstrap.ts",
     "openapi:validate": "tsx scripts/qa/openapi.ts validate",
@@ -34,12 +35,13 @@
     "docs:bootstrap-api": "redocly build-docs specs/openapi.boot.yaml -o docs/bootstrap-api-reference.html --title 'Fintech Wallet BOOT-00 API — HEALTH ONLY, NOT IMPLEMENTED'"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@redocly/cli": "2.78.0",
     "@types/node": "26.0.0",
-    "concurrently": "9.2.5",
-    "eslint": "10.15.0",
     "@typescript-eslint/eslint-plugin": "8.72.2",
     "@typescript-eslint/parser": "8.72.2",
+    "concurrently": "9.2.5",
+    "eslint": "10.15.0",
     "openapi-typescript": "7.13.0",
     "tsx": "4.23.15",
     "typescript": "5.9.3"

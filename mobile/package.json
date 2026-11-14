@@ -1,1 +1,30 @@
-{"name":"@fintech-wallet/mobile","version":"0.1.0","private":true,"main":"expo/AppEntry.js","scripts":{"start":"expo start --lan","build":"expo export --platform all","lint":"eslint App.tsx tests","typecheck":"tsc --noEmit","test":"jest --runInBand"},"jest":{"preset":"jest-expo"},"dependencies":{"@fintech-wallet/shared":"0.1.0","expo":"58.0.24","react":"19.3.0","react-native":"0.88.0"},"devDependencies":{"@types/react":"19.3.0","@types/react-test-renderer":"19.3.1","@types/jest":"30.0.0","jest":"30.5.2","jest-expo":"58.0.14","react-test-renderer":"19.3.0"}}
+{
+  "name": "@fintech-wallet/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start --lan",
+    "build": "expo export --platform all",
+    "lint": "eslint App.tsx tests",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --runInBand"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@fintech-wallet/shared": "0.1.0",
+    "expo": "~58.0.25",
+    "react": "19.3.0",
+    "react-native": "0.88.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-test-renderer": "19.3.1",
+    "@types/jest": "30.0.0",
+    "jest": "30.5.2",
+    "jest-expo": "58.0.14",
+    "react-test-renderer": "19.3.0"
+  }
+}
