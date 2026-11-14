@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: Fintech Wallet BOOT-00 scaffold API
+  version: 0.1.0
+  description: >-
+    Contrato planeado, no endpoints implementados. Este documento describe solo
+    GET /health y el formato de errores base autorizado para el scaffold.
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      security: []
+      operationId: getHealth
+      summary: Estado técnico básico
+      responses:
+        '200':
+          description: API disponible
+          headers:
+            X-Request-Id:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, requestId]
+                properties:
+                  status: { type: string, const: ok }
+                  requestId: { type: string }
+        '400': { $ref: '#/components/responses/Problem' }
+        '500': { $ref: '#/components/responses/Problem' }
+  /{unmatchedPath}:
+    get:
+      operationId: notFound
+      security: []
+      summary: Rutas no implementadas devuelven problema genérico
+      parameters:
+        - name: unmatchedPath
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '404': { $ref: '#/components/responses/Problem' }
+components:
+  responses:
+    Problem:
+      description: Error genérico RFC 7807 sin detalles internos
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, instance, requestId]
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer }
+        instance: { type: string }
+        requestId: { type: string }

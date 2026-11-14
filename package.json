@@ -1,0 +1,50 @@
+{
+  "name": "fintech-wallet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=26.3.0 <27",
+    "npm": ">=11"
+  },
+  "workspaces": [
+    "api",
+    "web",
+    "mobile",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm --workspace @fintech-wallet/api run dev",
+    "dev:web": "npm --workspace @fintech-wallet/web run dev",
+    "dev:mobile": "npm --workspace @fintech-wallet/mobile run start",
+    "db:up": "docker-compose up -d",
+    "db:migrate": "npm --workspace @fintech-wallet/api run db:migrate",
+    "db:seed": "npm --workspace @fintech-wallet/api run db:seed",
+    "lint": "npm run lint --workspaces --if-present && npm run lint:shared",
+    "lint:shared": "eslint packages/shared/src",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.shared.json --noEmit",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "qa:bootstrap": "tsx scripts/qa/bootstrap.ts",
+    "openapi:validate": "tsx scripts/qa/openapi.ts validate",
+    "openapi:generate": "tsx scripts/qa/openapi.ts generate",
+    "openapi:check": "tsx scripts/qa/openapi.ts check",
+    "docs:api": "redocly build-docs specs/openapi.boot.yaml -o docs/api-reference.html"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.78.0",
+    "@types/node": "26.0.0",
+    "concurrently": "9.2.5",
+    "eslint": "10.15.0",
+    "@typescript-eslint/eslint-plugin": "8.72.2",
+    "@typescript-eslint/parser": "8.72.2",
+    "openapi-typescript": "7.13.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
+  }
+}
