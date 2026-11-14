@@ -1,0 +1,27 @@
+# Revisión de compatibilidad y advisories — seguimiento BOOT-00
+
+Fecha de consulta: 2026-11-14. Evidencia basada en el `package-lock.json` y comandos locales `npm ls`, `npx expo install --check`, `npm audit --json`, `npm audit --omit=dev --json`, `npm audit fix --dry-run --json` y `npm view`. Este seguimiento no cambia el ciclo Forge terminado (3/3) ni sus resultados históricos en `FINDINGS.md`.
+
+## Versiones resueltas y compatibilidad
+
+| Área | Lockfile/pin comprobado | Compatibilidad y fuente | Decisión |
+|---|---|---|---|
+| Node | `.nvmrc` `26.13.1`; engines `>=26.13.1 <27`; GitHub Actions usa `26.13.1` | Node.js Release Schedule oficial clasifica v26 Lithium como LTS y lista `26.13.1` mantenida. TypeORM `1.1.3` metadata de paquete declara `^20.19 || ^22.13 || >=24.11`; Express 5 oficial declara Node >=18; React Native 0.88.1 declara `^22.13 || ^24.3 || >=26`. `npx --package=node@26.13.1 --call 'node --version'` verificó `v26.13.1`. | Se reemplazó el pin anterior `26.3.0` por el parche LTS vigente, manteniendo mismo major. No se actualizó Node globalmente. La shell del host sigue teniendo `v26.3.0`; las pruebas de compatibilidad de este seguimiento se corren con el binario temporal `26.13.1`. |
+| Expo / React Native / React móvil | `expo@58.0.25`, `react-native@0.88.1`, `react@19.3.0` | La tabla oficial Expo SDK 58 fija React Native `0.88` y React `19.3.0`, mínimo Node `22.13`. `npx expo install --check` desde `/mobile` detectó primero que `.24`/`.0` no coincidían; `npx expo install --fix` ajustó a `.25`/`.1`, y la comprobación posterior dijo `Dependencies are up to date`. | Diferencia concreta de compatibilidad respecto al informe anterior, corregida en `package.json`/lockfile. No se cambió el React móvil que coincide con la tabla Expo. |
+| React web | `react@19.3.1`, `react-dom@19.3.1` | Misma versión de React y React DOM en workspace web. | Sin cambios. |
+| Express | `5.3.0` | Referencia oficial Express 5.x: Node >=18. Compatible con Node 26.13.1. | Sin cambios. |
+| TypeORM | `1.1.3` | Documentación oficial TypeORM 1.x y metadata de paquete; Node mínimo publicado `^20.19 || ^22.13 || >=24.11`. PostgreSQL driver `pg@8.23.1`. | Sin cambios; mantiene `synchronize:false`. |
+| PostgreSQL | imagen `postgres:16.10-alpine` | Política oficial PostgreSQL; cumple >=15. | Sin cambios. |
+| Browser smoke | `@playwright/test@1.65.1` dev dependency; Chromium Playwright build 1255 / Chrome for Testing `159.0.8154.6` | Playwright docs; Node engine >=20. | Instalación local para la inspección F-02; CI instala Chromium en GitHub runner. No incorpora capturas ni datos. |
+
+## Avisos npm y cadenas afectadas
+
+Auditoría posterior a la corrección Expo: `npm audit` informa **28 nodos afectados** (1 low, 27 moderate, 0 high/critical); `npm audit --omit=dev` informa **3 nodos production** (moderate). Hay **tres advisories subyacentes**, no 28 vulnerabilidades distintas. `npm audit fix --dry-run --json` indica `added: 0, removed: 0, changed: 0`; `npm audit fix --force` no se ejecutó.
+
+| Advisory / severidad | Paquetes y cadena en lockfile | Entorno | Corrección compatible verificada |
+|---|---|---|---|
+| [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), moderate — minimatch globparts amplification/DoS; afectadas `minimatch` `>=7 <11.0.1` | Production: `expo@58.0.25 → @expo/fingerprint@0.21.10 → minimatch@10.2.6`. Dev: `@typescript-eslint/eslint-plugin/parser@8.72.2 → typescript-estree → minimatch`; Jest/test-exclude/glob también resuelven minimatch. | Production y dev | El paquete corregido `minimatch@11.0.1` existe y soporta Node >=22, pero rompe el rango declarado `^10.2.6` de `@expo/fingerprint`; no hay versión patched 10.x publicada. npm solo ofrece bajar Expo a `52.0.49` (major y fuera del SDK/RN actual) o bajar typescript-eslint a 6.15.0 (major). No es una actualización con compatibilidad demostrada; queda pendiente una release compatible de Expo fingerprint/tooling o revisión de override upstream. |
+| [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4), moderate — Glob permite recorrido tras timeout/cancelación; rango reportado `>=9.0.0 <=14.0.1` | `glob@13.0.7` en varias ramas de Jest 30 (`@jest/core`, reporters, jest-config, jest-runner, jest-runtime, jest-expo/test-exclude). | Dev/test; no aparece con `--omit=dev` | Registry tiene `glob@14.0.2+`, pero cruza major desde 13; `glob@13.0.7` es la última 13.x publicada al consultar. npm propone Jest `29.7.0`, major downgrade; no existe arreglo 13.x verificado y no se aplica override mayor sin compatibilidad comprobada. Pendiente de parche compatible o actualización coordinada del stack Jest/Expo. |
+| [GHSA-gcqx-w48m-w2h4](https://github.com/advisories/GHSA-gcqx-w48m-w2h4), low — prototype poisoning en `deepmerge.mergeObject`, rango `>=4.2.0 <=4.3.1` | `jest@30.5.2 → jest-config@30.5.2 → deepmerge@4.3.1`. | Dev/test | `deepmerge@4.3.1` sigue siendo la última versión publicada (`npm view deepmerge version`); `4.3.2` no existe en registry (404). Solo se sugiere Jest 29.7.0. Sin versión corregida compatible disponible; pendiente. |
+
+`jest@30.5.2`, `jest-expo@58.0.14`, `@typescript-eslint@8.72.2` y paquetes Jest transitivos aparecen afectados por las cadenas anteriores; no se cuentan como advisories adicionales. `jest-expo@58.0.14` publica peers Expo, React Native y Jest `^29 || ^30`; la opción de auditoría `jest-expo@58.0.6` es una bajada de parche y no se aplicó sin verificar el conjunto Expo SDK 58 recomendado. El conjunto de pruebas sigue pasando con las versiones fijadas.
