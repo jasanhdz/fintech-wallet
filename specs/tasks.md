@@ -32,5 +32,6 @@ BOOT-00-00 (specs previas al scaffold) y tareas de implementación deben usar co
 | BOOT-00-00 · especificaciones previas al scaffold | `839bb38` `docs(BOOT-00): add challenge specs and forge plan` | Archivos fuente/specs/Forge; OpenAPI parseado YAML antes de scaffold. |
 | BOOT-00 · scaffold workspace, clientes mínimos, versiones y documentación | `4c5be10` `build(BOOT-00): add reproducible workspace scaffold`; `61280ce` `build(BOOT-00): expose planned OpenAPI reference` | `npm ci`, lint/typecheck/test/build; Redoc de contrato planeado y health-only. |
 | BOOT-00 · API base, Compose aislado y QA/CI | `aa5b769` `build(BOOT-00): add API health and isolated database QA` | `npm run qa:bootstrap`; health/Problem Details; guard DB; PostgreSQL integration; workflow CI. |
+| BOOT-00 · informe de evaluación/trazabilidad | `26fec66` `docs(BOOT-00): record forge evaluation evidence` | `FINDINGS.md`, `docs/forge-evidence.md`, bitácora AI y este mapa SHA/tarea. |
 
 Los hashes completos quedan en `git log`; pruebas/evaluación referidas a un SHA se identifican expresamente en `FINDINGS.md` y en el reporte final. El commit de documentación no incluye ni afirma futuros commits de producto.

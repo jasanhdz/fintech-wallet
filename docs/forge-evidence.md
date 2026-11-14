@@ -22,8 +22,12 @@
 
 - **Planner:** completado en contexto independiente OpenCode task; único archivo de salida `SPEC.md`; 10 criterios binarios. El reporte de rol confirmó revisión de formato mediante `git diff --check`.
 - **Generator:** ejecutado en contextos de tarea independientes. Completó el scaffold en `4c5be10` y `aa5b769`; tras revisar el requisito de OpenAPI navegable, agregó contrato planeado Redoc + contrato health-only en `61280ce`. Respetó `SPEC.md`/`FINDINGS.md`.
-- **Evaluator:** pasada 1 (`FINDINGS.md`, SHA `aa5b769`) reportó 8/10 con base de datos BLOCKED por daemon apagado y UI visual no verificada. El orquestador inició la instancia Colima existente y el Compose exclusivo del proyecto; prueba PostgreSQL aislada pasó. Pasada 2 (`FINDINGS.md`, SHA `aa5b769`) reportó 9/10; F-01 resuelto y F-02 minor abierto porque no estaba instalado Playwright. Los roles no se comunicaron por conversación: la coordinación se realizó mediante archivos/commits y tareas contextuales independientes.
+- **Evaluator:** pasada 1 (`FINDINGS.md`, SHA `aa5b769`) reportó 8/10 con base de datos BLOCKED por daemon apagado y UI visual no verificada. El orquestador inició la instancia Colima existente y el Compose exclusivo del proyecto; prueba PostgreSQL aislada pasó. Pasada 2 (`FINDINGS.md`, SHA `aa5b769`) reportó 9/10; F-01 resuelto y F-02 minor abierto. Pasada 3/3 (SHA `61280ce`) confirmó 9/10 y validó referencias Redoc; F-01 sigue resuelto y F-02 minor permanece abierto porque no se instaló Playwright/browser. El reporte detallado está en `FINDINGS.md`. Los roles no se comunicaron por conversación: la coordinación se realizó mediante archivos/commits y tareas contextuales independientes.
 - No hubo aprobación humana del diseño ni revisión Stitch en esta fase. El evaluador no arregló código; el Generator no editó `SPEC.md` ni `FINDINGS.md`.
+
+## Verificación local posterior en HEAD `26fec66`
+
+Después de la pasada 3, el commit documental `26fec66` añadió el findings, mapa de commits y bitácora final; no cambió código de aplicación. Sobre ese SHA se volvieron a ejecutar `npm ci`, lint, typecheck, tests (API 2, web 1, móvil 1), builds web/API y export Expo Android/iOS, validación/reproducibilidad OpenAPI, ambos documentos Redoc, `npm run qa:bootstrap` (13 PASS, 0 FAIL, 0 BLOCKED) e integración PostgreSQL real (1/1). `npm ci` reportó 28 advisories (1 low, 27 moderate); `npm audit --omit=dev` confirmó 3 moderate en `minimatch` a través de `@expo/fingerprint`/Expo. `npm audit fix --force` propone degradar Expo a 52, incompatible con el SDK 58 fijado; no se aplicó downgrade automático. El reporte runtime de bootstrap permanece ignorado (`docs/qa-report.md`).
 
 ## Compatibilidad observada del instalador
 
