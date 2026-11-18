@@ -1,6 +1,6 @@
 import React from 'react';
 import assert from 'node:assert/strict';
-import { ActivityIndicator } from 'react-native';
+import { ActivityIndicator, AppState } from 'react-native';
 import TestRenderer from 'react-test-renderer';
 import App from '../App';
 
@@ -879,5 +879,35 @@ describe('mobile rejected transfer (M11)', () => {
     assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '6000.00');
     assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
     await flow.finish();
+  });
+});
+
+describe('mobile background privacy (M12)', () => {
+  it('replaces every balance with the branded privacy curtain in the background and restores the session on return', async () => {
+    const listeners: Array<(state: string) => void> = [];
+    const spy = jest.spyOn(AppState, 'addEventListener').mockImplementation(((_type: string, listener: (state: string) => void) => {
+      listeners.push(listener);
+      return { remove: () => { listeners.splice(listeners.indexOf(listener), 1); } };
+    }) as unknown as typeof AppState.addEventListener);
+    try {
+      const flow = await startTransferFlow((url) => {
+        if (url.endsWith('/auth/me')) return Response.json({ id: 'u', fullName: 'Ana López', email: 'ana@example.com' });
+        return undefined;
+      }, { amount: '850.00' });
+      assert.match(flow.visible(), /\$12,450.00/);
+      await TestRenderer.act(async () => { listeners.forEach((listener) => listener('background')); });
+      const curtain = flow.visible();
+      assert.match(curtain, /Contenido oculto por privacidad/);
+      assert.match(curtain, /Privacidad en segundo plano/);
+      assert.equal(curtain.match(/"Billetera MXN"/g)?.length, 2, 'top bar and curtain card both carry the brand, as in the reference');
+      assert.doesNotMatch(curtain, /\$12,450.00|8412|Carlos Ruiz|Ana López|"AL"/);
+      assert.doesNotMatch(curtain, /256|biométric|SSL|Blindaje/);
+      await TestRenderer.act(async () => { listeners.forEach((listener) => listener('active')); });
+      await flow.wait();
+      assert.match(flow.visible(), /"Paso 2 de 2"/, 'returning to the foreground resumes the same step');
+      await flow.finish();
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
