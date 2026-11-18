@@ -630,6 +630,7 @@ describe('mobile transfer details (M06)', () => {
 type FlowHandler = (url: string, init?: RequestInit) => Response | Promise<Response> | undefined;
 const flowAccount = { id: 'source-1', name: 'Cuenta Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '1245000', clabe: '000000000000008412', clabeMasked: '000•••••••••••8412' };
 const flowBeneficiary = { id: 'beneficiary-1', name: 'Carlos Ruiz', alias: 'Carlos', clabeMasked: '000•••••••••••0028', destinationAccountId: 'dest-1' };
+const flowTransfer = (overrides: Record<string, unknown> = {}) => ({ id: 'transfer-flow', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: flowBeneficiary, amountMinor: '600000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: '2026-11-13T20:30:00.000Z', ...overrides });
 
 async function startTransferFlow(handler: FlowHandler, options: { amount: string; accounts?: () => unknown[] }) {
   mockSecureValues.clear();
@@ -680,6 +681,72 @@ describe('mobile transfer review (M07)', () => {
     assert.match(review, /"\$11,600.00"," MXN"/);
     assert.doesNotMatch(review, /Sin costo de comisión|Revisa tu transferencia/);
     assert.ok(flow.button('Confirmar transferencia'));
+    await flow.finish();
+  });
+});
+
+describe('mobile confirmation code (M08)', () => {
+  it('vigente: shows the security context, the demo code and enables authorization only with 6 digits, without QA tooling', async () => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ ...flowTransfer(), demoOnlyCode: '742890' }, { status: 202 });
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const screen = flow.visible();
+    assert.match(screen, /"Transferir"/);
+    assert.doesNotMatch(screen, /"TRANSFERIR"|"Para"/, 'the legacy "← Volver … TRANSFERIR" header and duplicate destination card are gone');
+    assert.match(screen, /Confirmación de seguridad/);
+    assert.match(screen, /Monto extraordinario/);
+    assert.match(screen, /"Carlos Ruiz •• 0028"/);
+    assert.match(screen, /CÓDIGO DE DEMOSTRACIÓN/);
+    assert.match(screen, /"Código de confirmación"/);
+    assert.match(screen, /742890/);
+    assert.doesNotMatch(screen, /Pruebas de validación|Simular|expira en|\$5,000/);
+    const authorize = () => flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Autorizar transferencia').length > 0)!;
+    assert.equal(authorize().props.accessibilityState?.disabled, true);
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('742890'); });
+    assert.equal(authorize().props.accessibilityState?.disabled, false);
+    assert.ok(flow.renderer.root.findByProps({ accessibilityLabel: 'Cancelar y volver a revisar' }));
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    assert.match(flow.visible(), /"Paso 2 de 2"/);
+    await flow.finish();
+  });
+
+  it('expirado: disables authorization, hides the stale code and requests a new code with a new attempt key', async () => {
+    let creates = 0;
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) {
+        creates += 1;
+        return Response.json({ ...flowTransfer({ id: `transfer-exp-${creates}` }), demoOnlyCode: creates === 1 ? '111111' : '222222' }, { status: 202 });
+      }
+      if (url.endsWith('/transfers/transfer-exp-1/confirm')) return Response.json({ title: 'Unprocessable Entity', detail: 'El código expiró.' }, { status: 422 });
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('111111'); });
+    await TestRenderer.act(async () => { flow.button('Autorizar transferencia').props.onPress(); });
+    await flow.wait();
+    const expired = flow.visible();
+    assert.match(expired, /El código ha expirado. Por seguridad solicita uno nuevo para continuar./);
+    assert.doesNotMatch(expired, /111111/, 'the expired demo code must no longer be offered');
+    assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.editable, false);
+    const authorize = flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Autorizar transferencia').length > 0)!;
+    assert.equal(authorize.props.accessibilityState?.disabled, true);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/confirm')).length, 1);
+
+    await TestRenderer.act(async () => { flow.button('Solicitar nuevo código de demostración').props.onPress(); });
+    await flow.wait();
+    const creations = flow.calls.filter((call) => call.url.endsWith('/transfers'));
+    assert.equal(creations.length, 2);
+    const keyOf = (call: { init?: RequestInit }) => (call.init?.headers as Record<string, string>)['Idempotency-Key'];
+    assert.notEqual(keyOf(creations[0]!), keyOf(creations[1]!));
+    assert.equal(String(creations[1]!.init?.body), String(creations[0]!.init?.body));
+    const renewed = flow.visible();
+    assert.doesNotMatch(renewed, /ha expirado/);
+    assert.match(renewed, /222222/);
+    assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.value, '');
     await flow.finish();
   });
 });
