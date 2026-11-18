@@ -6,6 +6,8 @@ import * as SecureStore from 'expo-secure-store';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import type { ProductComponents } from '@fintech-wallet/shared';
+import { amountToMinor, formatMoney } from './src/money';
+import { BUSINESS_ZONE_LABEL, DATE_UNAVAILABLE, businessDayKey, businessDayLabel, formatBusinessDateTime, formatBusinessShort, formatBusinessTime, formatUpdatedAt } from './src/dates';
 
 type User = ProductComponents['schemas']['User'];
 type Account = ProductComponents['schemas']['Account'];
@@ -47,13 +49,6 @@ async function request<T>(path: string, token?: string, init?: RequestInit): Pro
   return response.json() as Promise<T>;
 }
 
-function formatBalance(minor: string): string {
-  const value = BigInt(minor);
-  const whole = value / 100n;
-  const cents = String(value % 100n).padStart(2, '0');
-  return `$${whole.toLocaleString('es-MX')}.${cents}`;
-}
-
 function Wallet() {
   const [session, setSession] = useState<{ accessToken: string; user: User } | null>(null);
   const [ready, setReady] = useState(false);
@@ -92,9 +87,8 @@ function Wallet() {
   const [rejectionUnverified, setRejectionUnverified] = useState(false);
   // Balance of the source account re-read from the API after a completed transfer; null until that read succeeds.
   const [postBalance, setPostBalance] = useState<{ accountName: string; minor: string } | null>(null);
-  const [movementDetail, setMovementDetail] = useState<Transfer | null>(null);
+  const [movementDetail, setMovementDetail] = useState<{ movement: Movement; transfer: Transfer | null } | null>(null);
   const [movementDetailId, setMovementDetailId] = useState('');
-  const [movementDetailType, setMovementDetailType] = useState<Movement['type'] | null>(null);
   const [movementDetailError, setMovementDetailError] = useState('');
   const [movementDetailBusy, setMovementDetailBusy] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'movements'>('home');
@@ -153,7 +147,6 @@ function Wallet() {
       setMovementDetail(null);
       setMovementDetailId('');
       setMovementDetailError('');
-      setMovementDetailType(null);
       setActiveTab('home');
       client.clear();
     }
@@ -301,11 +294,13 @@ function Wallet() {
     }
   }, [client, movementsQuery.data, movementsQuery.isFetching, selected, session?.accessToken, session?.user.id]);
   async function openMovement(movement: Movement) {
-    if (!session || !movement.transferId) return;
+    if (!session) return;
+    // A received transfer from another user is not readable by its receiver (GET /transfers/{id} is sender-only), so
+    // credits are shown from the movement and its counterparty; sent movements also read the transfer for its folio.
+    if (movement.type === 'credit' || !movement.transferId) { setMovementDetail({ movement, transfer: null }); return; }
     setMovementDetailId(movement.transferId);
-    setMovementDetailType(movement.type);
     setMovementDetailBusy(true); setMovementDetailError('');
-    try { setMovementDetail(await request<Transfer>(`/transfers/${encodeURIComponent(movement.transferId)}`, session.accessToken)); }
+    try { setMovementDetail({ movement, transfer: await request<Transfer>(`/transfers/${encodeURIComponent(movement.transferId)}`, session.accessToken) }); }
     catch (error) { setMovementDetailError(error instanceof Error ? error.message : 'No se pudo cargar el comprobante.'); }
     finally { setMovementDetailBusy(false); }
   }
@@ -529,8 +524,8 @@ function Wallet() {
   if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} rejectionUnverified={rejectionUnverified} otpExpired={otpExpired} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={requestNewCode} onLeave={leaveUncertainTransfer} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
 
   if (movementDetailBusy || movementDetailError) return <View style={styles.page}><View style={styles.flowContent}><Pressable accessibilityRole="button" accessibilityLabel="Volver a movimientos" style={styles.backButton} onPress={() => { setMovementDetailError(''); setMovementDetailBusy(false); setMovementDetailId(''); }}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Movimientos</Text></Pressable>{movementDetailBusy ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando comprobante…</Text></Centered> : <View style={styles.notice}><Text accessibilityRole="alert" style={styles.errorText}>{movementDetailError}</Text><Button title="Reintentar" onPress={() => { const item = movementsQuery.data?.items.find((movement) => movement.transferId === movementDetailId); if (item) void openMovement(item); }}/></View>}</View></View>;
-  const closeMovementDetail = () => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); setMovementDetailType(null); };
-  if (movementDetail) return <MovementReceipt transfer={movementDetail} movementType={movementDetailType} accounts={accounts} userInitials={initials(session.user.fullName)} onBack={closeMovementDetail} onHome={() => { closeMovementDetail(); setActiveTab('home'); }} />;
+  const closeMovementDetail = () => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); };
+  if (movementDetail) return <MovementReceipt movement={movementDetail.movement} transfer={movementDetail.transfer} accountId={selected?.id} accounts={accounts} userInitials={initials(session.user.fullName)} onBack={closeMovementDetail} onHome={() => { closeMovementDetail(); setActiveTab('home'); }} />;
 
   if (activeTab === 'movements') return <MovementListScreen account={selected} movements={movementsQuery.data?.items ?? []} pending={movementsQuery.isPending} error={movementsQuery.error instanceof Error ? movementsQuery.error.message : ''} hasMore={Boolean(movementsQuery.data?.nextCursor)} loadingMore={movementsQuery.isFetching} onRetry={() => void movementsQuery.refetch()} onLoadMore={() => void loadMoreMovements()} onOpen={openMovement} onSelectAccount={setSelectedId} accounts={accounts} initials={initials(session.user.fullName)} onNavigate={setActiveTab} />;
 
@@ -542,20 +537,20 @@ function Wallet() {
       <View style={styles.greeting}><View><Text style={styles.title}>Hola, {session.user.fullName}</Text><Text style={styles.muted}>{updatedLabel ?? 'Tus cuentas y saldos'}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar sesión" style={styles.iconButton} onPress={() => void endSession()}><Ionicons name="log-out-outline" size={25} color={colors.text} /></Pressable></View>
       {accountsQuery.isPending ? <Centered><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>Cargando tus cuentas…</Text></Centered> : accountsQuery.isError ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={colors.error} /><Text style={styles.errorText}>{accountsQuery.error.message}</Text><Button title="Reintentar" onPress={() => void accountsQuery.refetch()} /></View> : accounts.length === 0 ? <View style={styles.notice}><Text style={styles.sectionTitle}>Aún no tienes cuentas</Text><Text style={styles.muted}>Cuando haya una cuenta disponible, aparecerá aquí.</Text></View> : <>
         <View style={styles.accountTabs}>{accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} •• ${lastDigits(account.clabeMasked)}`} accessibilityState={{ selected: selected?.id === account.id }} style={[styles.tab, selected?.id === account.id && styles.tabSelected]} onPress={() => setSelectedId(account.id)}><View style={[styles.tabDot, selected?.id === account.id && styles.tabDotSelected]}/><Text numberOfLines={1} style={[styles.tabText, selected?.id === account.id && styles.tabTextSelected]}>{accountTabLabel(account.name)}</Text><Text numberOfLines={1} style={styles.tabDigits}>•• {lastDigits(account.clabeMasked)}</Text></Pressable>)}</View>
-        {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.muted}>•• {lastDigits(selected.clabeMasked)}</Text></View><Text style={styles.label}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatBalance(selected.availableBalanceMinor)}</Text><Text style={styles.currency}> MXN</Text></View></View>}
+        {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.muted}>•• {lastDigits(selected.clabeMasked)}</Text></View><Text style={styles.label}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatMoney(selected.availableBalanceMinor)}</Text><Text style={styles.currency}> MXN</Text></View></View>}
       </>}
         {destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO SELECCIONADO</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Elegir beneficiario" style={({ pressed }) => [styles.transferAction, pressed && styles.buttonPressed]} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><Ionicons name="paper-plane-outline" size={22} color={colors.white} /><Text style={styles.buttonText}>Transferir dinero</Text></Pressable>}
         {destination && !choosingBeneficiary && <Button title="Continuar con transferencia" disabled={!selected} onPress={() => { setTransferScreen('details'); setTransferError(''); }} />}
       {accounts.length > 0 && <>
-         <Pressable accessibilityRole="button" accessibilityLabel="Actualizar cuentas" style={styles.updateNotice} onPress={() => void accountsQuery.refetch()}><View style={styles.updateIcon}><Ionicons name="sync-outline" size={20} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Última actualización de saldo</Text><Text style={styles.muted}>{updatedLabel ? `${updatedLabel} • ` : ''}Saldo total {formatBalance(totalBalanceMinor)} MXN</Text></View></Pressable>
+         <Pressable accessibilityRole="button" accessibilityLabel="Actualizar cuentas" style={styles.updateNotice} onPress={() => void accountsQuery.refetch()}><View style={styles.updateIcon}><Ionicons name="sync-outline" size={20} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Última actualización de saldo</Text><Text style={styles.muted}>{updatedLabel ? `${updatedLabel} • ` : ''}Saldo total {formatMoney(totalBalanceMinor)} MXN</Text></View></Pressable>
          <View style={styles.activityHeader}><Text style={styles.sectionTitle}>Actividad reciente</Text><Text style={styles.eyebrow}>ÚLTIMOS MOVIMIENTOS</Text></View>
          {movementsQuery.isPending ? <Centered><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>Cargando movimientos…</Text></Centered> : movementsQuery.isError ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={colors.error} /><View style={{ flex: 1 }}><Text style={styles.errorText}>{movementsQuery.error.message || 'Sin conexión. Revisa tu conexión e inténtalo de nuevo.'}</Text><Button title="Reintentar" onPress={() => void movementsQuery.refetch()} /></View></View> : (movementsQuery.data?.items.length ?? 0) === 0 ? <View style={styles.emptyState}><Ionicons name="receipt-outline" size={28} color={colors.primary} /><Text style={styles.sectionTitle}>Aún no hay movimientos</Text><Text style={styles.muted}>Los movimientos de esta cuenta aparecerán aquí.</Text></View> : <>
            <View style={styles.movementCard}>{movementsQuery.data?.items.slice(0, 3).map((movement, index) => {
              const credit = movement.type === 'credit';
-             return <Pressable key={movement.id} accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatBalance(movement.amountMinor)} pesos, ${movement.concept}`} onPress={() => void openMovement(movement)} style={[styles.movementRow, index > 0 && styles.divider]}>
-               <View style={[styles.movementIcon, credit && styles.creditIcon]}><MaterialIcons name={credit ? 'south-west' : 'north-east'} size={24} color={credit ? colors.success : colors.primary}/></View>
-               <View style={styles.movementCopy}><Text numberOfLines={1} style={styles.movementTitle}>{movement.concept}</Text><Text numberOfLines={1} style={styles.movementSub}>{credit ? 'Abono' : 'Cargo'} · Ref {movement.reference}</Text><Text numberOfLines={1} style={styles.movementMeta}>{new Date(movement.occurredAt).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text></View>
-               <View style={styles.movementAmountColumn}><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.movementAmount, credit && styles.creditAmount]}>{credit ? '+' : '-'}{formatBalance(movement.amountMinor)} MXN</Text><Text style={[styles.homeStatus, movement.status === 'completed' && styles.homeStatusDone]}>{movementStatusLabel(movement.status)}</Text></View>
+             return <Pressable key={movement.id} accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatMoney(movement.amountMinor)} pesos, ${movementTitle(movement)}, ${movement.concept}`} onPress={() => void openMovement(movement)} style={[styles.movementRow, index > 0 && styles.divider]}>
+               <MovementIcon movement={movement}/>
+               <View style={styles.movementCopy}><Text numberOfLines={1} style={styles.movementTitle}>{movementTitle(movement)}</Text><Text numberOfLines={1} style={styles.movementSub}>{movementSubtitle(movement)}</Text><Text numberOfLines={1} style={styles.movementMeta}>{formatBusinessShort(movement.occurredAt) ?? DATE_UNAVAILABLE}</Text></View>
+               <View style={styles.movementAmountColumn}><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.movementAmount, credit && styles.creditAmount]}>{formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit', currency: true })}</Text><Text style={[styles.homeStatus, movement.status === 'completed' && styles.homeStatusDone]}>{movementStatusLabel(movement.status)}</Text></View>
              </Pressable>;
            })}</View>
            <Pressable accessibilityRole="button" style={styles.seeAll} onPress={() => setActiveTab('movements')}><Text style={styles.seeAllText}>Ver los últimos 20 movimientos</Text><Ionicons name="chevron-forward" size={18} color={colors.primary}/></Pressable>
@@ -569,11 +564,10 @@ function Wallet() {
 function MovementListScreen(props: { account: Account | undefined; accounts: Account[]; initials: string; movements: Movement[]; pending: boolean; error: string; hasMore: boolean; loadingMore: boolean; onRetry: () => void; onLoadMore: () => void; onOpen: (movement: Movement) => void; onSelectAccount: (id: string) => void; onNavigate: (tab: 'home' | 'movements') => void }) {
   const [choosingAccount, setChoosingAccount] = useState(false);
   const groups = props.movements.reduce<{ key: string; label: string; items: Movement[] }[]>((result, movement) => {
-    const date = new Date(movement.occurredAt);
-    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const key = businessDayKey(movement.occurredAt) ?? 'sin-fecha';
     const group = result.find((entry) => entry.key === key);
     if (group) group.items.push(movement);
-    else result.push({ key, label: movementDayLabel(date), items: [movement] });
+    else result.push({ key, label: businessDayLabel(movement.occurredAt), items: [movement] });
     return result;
   }, []);
   const multipleAccounts = props.accounts.length > 1;
@@ -586,9 +580,9 @@ function MovementListScreen(props: { account: Account | undefined; accounts: Acc
           <Text style={styles.movementAccountName}>{props.account.name} (•• {lastDigits(props.account.clabeMasked)})</Text>
           {multipleAccounts && <Ionicons name={choosingAccount ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted}/>}
         </Pressable>
-        <View style={styles.movementBalance}><Text style={styles.eyebrow}>SALDO DISPONIBLE</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.movementBalanceAmount}>{formatBalance(props.account.availableBalanceMinor)}</Text><Text style={styles.currency}>MXN</Text></View>
+        <View style={styles.movementBalance}><Text style={styles.eyebrow}>SALDO DISPONIBLE</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.movementBalanceAmount}>{formatMoney(props.account.availableBalanceMinor)}</Text><Text style={styles.currency}>MXN</Text></View>
       </View>
-      {multipleAccounts && choosingAccount && <View style={styles.accountOptions}>{props.accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`Ver movimientos de ${account.name}`} accessibilityState={{ selected: account.id === props.account?.id }} onPress={() => { props.onSelectAccount(account.id); setChoosingAccount(false); }} style={[styles.accountOption, account.id === props.account?.id && styles.accountOptionSelected]}><Text numberOfLines={1} style={[styles.rowTitle, styles.summaryCopy]}>{account.name} (•• {lastDigits(account.clabeMasked)})</Text><Text style={styles.muted}>{formatBalance(account.availableBalanceMinor)} MXN</Text></Pressable>)}</View>}
+      {multipleAccounts && choosingAccount && <View style={styles.accountOptions}>{props.accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`Ver movimientos de ${account.name}`} accessibilityState={{ selected: account.id === props.account?.id }} onPress={() => { props.onSelectAccount(account.id); setChoosingAccount(false); }} style={[styles.accountOption, account.id === props.account?.id && styles.accountOptionSelected]}><Text numberOfLines={1} style={[styles.rowTitle, styles.summaryCopy]}>{account.name} (•• {lastDigits(account.clabeMasked)})</Text><Text style={styles.muted}>{formatMoney(account.availableBalanceMinor)} MXN</Text></Pressable>)}</View>}
     </View>}
     <Text style={styles.movementsTitle}>Últimos movimientos</Text>
     {props.pending ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando movimientos…</Text></Centered> : props.error ? <View style={styles.emptyState}><Ionicons name="cloud-offline-outline" size={28} color={colors.error}/><Text style={styles.errorText}>{props.error}</Text><Button title="Reintentar" onPress={props.onRetry}/></View> : props.movements.length === 0 ? <View style={styles.emptyState}><Ionicons name="receipt-outline" size={28} color={colors.primary}/><Text style={styles.sectionTitle}>Aún no hay movimientos</Text><Text style={styles.muted}>Los movimientos de esta cuenta aparecerán aquí.</Text></View> : <>
@@ -596,14 +590,14 @@ function MovementListScreen(props: { account: Account | undefined; accounts: Acc
         <View style={styles.movementGroupHeading}><Text style={styles.groupLabel}>{group.label.toLocaleUpperCase('es-MX')}</Text><Text style={styles.groupCount}>{group.items.length} {group.items.length === 1 ? 'transacción' : 'transacciones'}</Text></View>
         <View style={styles.movementCard}>{group.items.map((movement) => {
           const credit = movement.type === 'credit';
-          return <Pressable key={movement.id} accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatBalance(movement.amountMinor)} pesos, ${movement.concept}`} onPress={() => props.onOpen(movement)} style={styles.movementRow}>
-            <View style={[styles.movementIcon, credit && styles.creditIcon]}><MaterialIcons name={credit ? 'south-west' : 'north-east'} size={24} color={credit ? colors.success : colors.primary}/></View>
+          return <Pressable key={movement.id} accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatMoney(movement.amountMinor)} pesos, ${movementTitle(movement)}, ${movement.concept}`} onPress={() => props.onOpen(movement)} style={styles.movementRow}>
+            <MovementIcon movement={movement}/>
             <View style={styles.movementCopy}>
-              <Text numberOfLines={1} style={styles.movementTitle}>{movement.concept}</Text>
-              <Text numberOfLines={1} style={[styles.movementSub, credit && styles.creditAmount]}>{credit ? 'Abono' : 'Cargo'} · {movementStatusLabel(movement.status)}</Text>
-              <Text numberOfLines={2} style={styles.movementMeta}>Ref: {movement.reference} • {new Date(movement.occurredAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</Text>
+              <Text numberOfLines={1} style={styles.movementTitle}>{movementTitle(movement)}</Text>
+              <Text numberOfLines={1} style={[styles.movementSub, credit && styles.creditAmount]}>{movementSubtitle(movement)}{movement.status === 'completed' ? '' : ` · ${movementStatusLabel(movement.status)}`}</Text>
+              <Text numberOfLines={2} style={styles.movementMeta}>Ref: {movement.reference}{formatBusinessTime(movement.occurredAt) ? ` • ${formatBusinessTime(movement.occurredAt)}` : ''}</Text>
             </View>
-            <View style={styles.movementAmountColumn}><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.movementAmount, credit && styles.creditAmount]}>{credit ? '+' : '-'}{formatBalance(movement.amountMinor)}</Text><Text style={[styles.currency, credit && styles.creditAmount]}>MXN</Text></View>
+            <View style={styles.movementAmountColumn}><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.movementAmount, credit && styles.creditAmount]}>{formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit' })}</Text><Text style={[styles.currency, credit && styles.creditAmount]}>MXN</Text></View>
             <Ionicons name="chevron-forward" size={20} color={colors.muted}/>
           </Pressable>;
         })}</View>
@@ -622,24 +616,28 @@ function transferStatusLabel(status: Transfer['status'] | undefined): string {
   return 'En verificación de estado';
 }
 
+// M02/M03 rows: "A Carlos Ruiz" / "De Empresa Demo" / "Traspaso a Ahorro" from Movement.counterparty; the concept is
+// the title only when an older API response has no counterparty.
+function movementTitle(movement: Movement): string {
+  const party = movement.counterparty;
+  if (!party?.name) return movement.concept;
+  const credit = movement.type === 'credit';
+  if (party.ownAccountId) return `${credit ? 'Traspaso de' : 'Traspaso a'} ${party.name}`;
+  return `${credit ? 'De' : 'A'} ${party.name}`;
+}
+function movementSubtitle(movement: Movement): string {
+  const digits = lastDigits(movement.counterparty?.clabeMasked ?? '');
+  if (!movement.counterparty?.name) return movement.type === 'credit' ? 'Abono' : 'Cargo';
+  return digits ? `•• ${digits} · ${movement.concept}` : movement.concept;
+}
+function MovementIcon({ movement }: { movement: Movement }) {
+  const credit = movement.type === 'credit';
+  const own = Boolean(movement.counterparty?.ownAccountId);
+  return <View style={[styles.movementIcon, credit && !own && styles.creditIcon]}><MaterialIcons name={own ? 'swap-horiz' : credit ? 'south-west' : 'north-east'} size={24} color={credit && !own ? colors.success : colors.primary}/></View>;
+}
+
 function movementStatusLabel(status: Movement['status']): string {
   return status === 'completed' ? 'Completado' : status === 'processing' ? 'En proceso' : 'Rechazado';
-}
-
-function movementDayLabel(date: Date, now = new Date()): string {
-  const startOfDay = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
-  const days = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
-  const shortDate = `${date.getDate()} ${date.toLocaleDateString('es-MX', { month: 'short' }).replace('.', '')} ${date.getFullYear()}`;
-  if (days === 0) return `Hoy (${shortDate})`;
-  if (days === 1) return `Ayer (${shortDate})`;
-  return `${date.getDate()} de ${date.toLocaleDateString('es-MX', { month: 'long' })} ${date.getFullYear()}`;
-}
-
-function formatUpdatedAt(timestamp: number, now = new Date()): string {
-  const date = new Date(timestamp);
-  const time = date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-  const sameDay = date.toDateString() === now.toDateString();
-  return `Actualizado ${sameDay ? 'hoy' : date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}, ${time} hrs`;
 }
 
 // Tab label as in the M02 reference ("Principal", "Ahorro"): drops a leading "Cuenta" so the name fits a half-width tab.
@@ -707,7 +705,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
     {props.screen === 'details' && <>
       <View style={styles.formSection}>
         <View style={styles.cardHeaderRow}><Text style={styles.cardLabel}>Cuenta de origen</Text><Text style={styles.debitBadge}>Débito</Text></View>
-        <View style={styles.accountSummary}><View style={styles.originIcon}><Ionicons name="wallet-outline" size={20} color={colors.primary}/></View><View style={styles.summaryCopy}><Text numberOfLines={1} style={styles.originName}>{props.source ? `${props.source.name} •• ${lastDigits(props.source.clabeMasked)}` : 'Selecciona una cuenta'}</Text><Text style={styles.originBalance}>Saldo disponible: <Text style={styles.strongText}>{props.source ? `${formatBalance(props.source.availableBalanceMinor)} MXN` : '—'}</Text></Text></View></View>
+        <View style={styles.accountSummary}><View style={styles.originIcon}><Ionicons name="wallet-outline" size={20} color={colors.primary}/></View><View style={styles.summaryCopy}><Text numberOfLines={1} style={styles.originName}>{props.source ? `${props.source.name} •• ${lastDigits(props.source.clabeMasked)}` : 'Selecciona una cuenta'}</Text><Text style={styles.originBalance}>Saldo disponible: <Text style={styles.strongText}>{props.source ? `${formatMoney(props.source.availableBalanceMinor)} MXN` : '—'}</Text></Text></View></View>
       </View>
       <View style={styles.formSection}>
         <View style={styles.cardHeaderRow}><Text style={styles.cardLabel}>Beneficiario destino</Text><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" hitSlop={8} style={styles.changeLink} onPress={props.onChangeBeneficiary}><Text style={styles.changeLinkText}>Cambiar beneficiario</Text></Pressable></View>
@@ -715,7 +713,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
         <View style={styles.inlineNote}><Ionicons name="information-circle-outline" size={16} color={colors.muted}/><Text style={styles.inlineNoteText}>Los beneficiarios se registran y administran únicamente desde la web.</Text></View>
       </View>
       <View style={[styles.formSection, styles.formFields]}>
-        <View><Text style={styles.fieldLabel}>Monto a transferir <Text style={styles.required}>*</Text></Text><View style={styles.amountInputWrap}><Text style={styles.amountPrefix}>$</Text><TextInput accessibilityLabel="Importe" keyboardType="decimal-pad" value={props.amount} onChangeText={props.setAmount} placeholder="0.00" placeholderTextColor={colors.placeholder} style={styles.amountInput}/><Text style={styles.currencyBadge}>MXN</Text></View><Text style={styles.fieldHint}>Disponible: <Text style={styles.strongText}>{props.source ? `${formatBalance(props.source.availableBalanceMinor)} MXN` : '—'}</Text></Text></View>
+        <View><Text style={styles.fieldLabel}>Monto a transferir <Text style={styles.required}>*</Text></Text><View style={styles.amountInputWrap}><Text style={styles.amountPrefix}>$</Text><TextInput accessibilityLabel="Importe" keyboardType="decimal-pad" value={props.amount} onChangeText={props.setAmount} placeholder="0.00" placeholderTextColor={colors.placeholder} style={styles.amountInput}/><Text style={styles.currencyBadge}>MXN</Text></View><Text style={styles.fieldHint}>Disponible: <Text style={styles.strongText}>{props.source ? `${formatMoney(props.source.availableBalanceMinor)} MXN` : '—'}</Text></Text></View>
         <View><View style={styles.fieldLabelRow}><Text style={styles.fieldLabel}>Concepto de pago <Text style={styles.required}>*</Text></Text><Text style={styles.fieldCounter}>{props.concept.length}/40</Text></View><TextInput accessibilityLabel="Concepto" value={props.concept} onChangeText={props.setConcept} maxLength={40} placeholder="Ej. Pago servicio, renta" placeholderTextColor={colors.placeholder} style={styles.flowInput}/></View>
         <View><Text style={styles.fieldLabel}>Referencia numérica (hasta 7 dígitos) <Text style={styles.required}>*</Text></Text><View style={styles.referenceWrap}><TextInput accessibilityLabel="Referencia" keyboardType="number-pad" value={props.reference} onChangeText={(value) => props.setReference(value.replace(/\D/g, '').slice(0, 7))} maxLength={7} placeholder="Ej. 1234567" placeholderTextColor={colors.placeholder} style={styles.referenceInput}/><MaterialIcons name="tag" size={18} color={colors.muted}/></View></View>
       </View>
@@ -726,7 +724,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
       <View style={styles.reviewHero}>
         <View style={styles.heroIcon}><Ionicons name="arrow-forward-circle-outline" size={26} color={colors.primary}/></View>
         <Text style={styles.reviewHeroLabel}>Monto a transferir</Text>
-        <View style={styles.reviewAmountLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.reviewAmount}>{minor ? formatBalance(minor) : '—'}</Text><Text style={styles.amountCurrency}> MXN</Text></View>
+        <View style={styles.reviewAmountLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.reviewAmount}>{minor ? formatMoney(minor) : '—'}</Text><Text style={styles.amountCurrency}> MXN</Text></View>
       </View>
       <View style={styles.reviewCard}>
         <View style={styles.reviewParty}>
@@ -734,7 +732,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
           <View style={styles.summaryCopy}>
             <Text style={styles.reviewCaption}>CUENTA DE ORIGEN</Text>
             <Text numberOfLines={1} style={styles.reviewPartyName}>{props.source ? `${props.source.name} •• ${lastDigits(props.source.clabeMasked)}` : '—'}</Text>
-            {props.source ? <Text style={styles.originBalance}>Saldo disponible: <Text style={styles.strongText}>{formatBalance(props.source.availableBalanceMinor)} MXN</Text></Text> : null}
+            {props.source ? <Text style={styles.originBalance}>Saldo disponible: <Text style={styles.strongText}>{formatMoney(props.source.availableBalanceMinor)} MXN</Text></Text> : null}
           </View>
         </View>
         <View style={styles.reviewDirection}><View style={styles.reviewDirectionLine}/><Ionicons name="arrow-down" size={15} color={colors.primary}/><Text style={styles.reviewDirectionText}>TRANSFERENCIA INTERNA</Text><View style={styles.reviewDirectionLine}/></View>
@@ -762,14 +760,14 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
         <View style={styles.otpContextTop}><View style={styles.estimateLabel}><Ionicons name="shield-checkmark-outline" size={20} color={colors.primary}/><Text style={styles.otpContextLabel}>Confirmación de seguridad</Text></View><Text style={styles.otpContextBadge}>Monto extraordinario</Text></View>
         <View style={styles.otpContextBody}>
           <View style={styles.summaryCopy}><Text style={styles.reviewCaption}>DESTINATARIO</Text><Text numberOfLines={1} style={styles.otpContextName}>{recipient}</Text><Text style={styles.originBalance}>(Billetera MXN)</Text></View>
-          <View style={styles.otpContextAmount}><Text style={styles.reviewCaption}>IMPORTE</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.otpContextValue}>{props.transfer ? formatBalance(props.transfer.amountMinor) : '—'}<Text style={styles.amountCurrency}> MXN</Text></Text></View>
+          <View style={styles.otpContextAmount}><Text style={styles.reviewCaption}>IMPORTE</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.otpContextValue}>{props.transfer ? formatMoney(props.transfer.amountMinor) : '—'}<Text style={styles.amountCurrency}> MXN</Text></Text></View>
         </View>
         <View style={styles.otpContextNote}><Ionicons name="information-circle-outline" size={16} color={colors.placeholder}/><Text style={styles.estimateNoteText}>Operación sobre el umbral de verificación configurado (escenario ilustrativo de demostración)</Text></View>
       </View>
       <View style={styles.otpCard}>
         <View style={styles.otpBadge}><View style={styles.otpBadgeDot}/><Text style={styles.otpBadgeText}>CÓDIGO DE DEMOSTRACIÓN</Text></View>
         <Text style={styles.otpTitle}>Código de confirmación</Text>
-        <Text style={styles.otpDescription}>Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por <Text style={styles.strongText}>{props.transfer ? `${formatBalance(props.transfer.amountMinor)} MXN` : '—'}</Text> a {recipient}.</Text>
+        <Text style={styles.otpDescription}>Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por <Text style={styles.strongText}>{props.transfer ? `${formatMoney(props.transfer.amountMinor)} MXN` : '—'}</Text> a {recipient}.</Text>
         {props.demoOnlyCode && !props.otpExpired ? <View style={styles.demoCodeBox}><Ionicons name="information-circle-outline" size={18} color={colors.muted}/><Text style={styles.demoCodeLabel}>Código asignado para esta prueba: <Text style={styles.demoCodeValue}>{props.demoOnlyCode}</Text></Text></View> : null}
         <View style={styles.otpDigits} pointerEvents="none">{Array.from({ length: 6 }, (_, index) => <View key={index} style={[styles.otpDigit, index < props.otp.length && styles.otpDigitFilled, props.otpExpired && styles.otpDigitExpired]}>{props.otp[index] ? <View style={styles.otpDot}/> : <View style={styles.otpDash}/>}</View>)}</View>
         <TextInput accessibilityLabel="Código de confirmación" keyboardType="number-pad" maxLength={6} editable={!props.otpExpired} value={props.otp} onChangeText={(value) => props.setOtp(value.replace(/\D/g, '').slice(0, 6))} style={styles.otpInput}/>
@@ -793,13 +791,13 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
       <View style={styles.statusCard}>
         <Text style={styles.statusMessage}>{props.busy || !trackedAmount
           ? 'Estamos comprobando el estado del intento para evitar una operación duplicada.'
-          : <>No pudimos confirmar el resultado de la operación de <Text style={styles.strongText}>{formatBalance(trackedAmount)} MXN</Text>{recipient !== '—' ? <> a <Text style={styles.strongText}>{recipient}</Text></> : null}. Para evitar cobros duplicados, consultamos el estado del intento original{trackedReference ? ` (Ref: ${trackedReference})` : ''}.</>}</Text>
+          : <>No pudimos confirmar el resultado de la operación de <Text style={styles.strongText}>{formatMoney(trackedAmount)} MXN</Text>{recipient !== '—' ? <> a <Text style={styles.strongText}>{recipient}</Text></> : null}. Para evitar cobros duplicados, consultamos el estado del intento original{trackedReference ? ` (Ref: ${trackedReference})` : ''}.</>}</Text>
         {props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}
         <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}><Text style={styles.rowTitle}>No intentes enviar el dinero nuevamente</Text><Text style={styles.muted}>Verificar el estado consulta el intento original con su misma clave, sin duplicar el cargo.</Text></View></View>
       </View>
       <View style={styles.statusDetails}>
         <MetaRow label="Destinatario" value={props.transfer?.destination.name ?? props.destination?.name ?? '—'}/>
-        <MetaRow label="Monto en verificación" value={trackedAmount ? `${formatBalance(trackedAmount)} MXN` : '—'}/>
+        <MetaRow label="Monto en verificación" value={trackedAmount ? `${formatMoney(trackedAmount)} MXN` : '—'}/>
         <MetaRow label="Referencia de seguimiento" value={trackedReference ?? '—'}/>
         <View style={styles.metaRow}><Text style={styles.metaLabel}>Estado actual</Text><Text style={styles.statusState}>{transferStatusLabel(props.transfer?.status)}</Text></View>
       </View>
@@ -809,19 +807,19 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
     {props.screen === 'receipt' && props.transfer && (() => {
       const receipt = props.transfer;
       const origin = props.accounts.find((account) => account.id === receipt.sourceAccountId);
-      const when = formatReceiptDate(receipt.completedAt ?? receipt.createdAt);
+      const when = formatBusinessDateTime(receipt.completedAt ?? receipt.createdAt);
       const alias = 'alias' in receipt.destination ? receipt.destination.alias : undefined;
       return <>
         <View style={styles.receiptHero}>
           <View style={styles.receiptSuccessRing}><View style={styles.receiptSuccessIcon}><Ionicons name="checkmark" size={30} color={colors.white}/></View></View>
           <Text style={styles.detailTitle}>Transferencia completada</Text>
-          <Text adjustsFontSizeToFit numberOfLines={1} style={styles.detailAmount}>-{formatBalance(receipt.amountMinor)} <Text style={styles.detailCurrency}>MXN</Text></Text>
-          <View style={styles.receiptDatePill}><Ionicons name="time-outline" size={16} color={colors.muted}/><Text style={styles.receiptDateText}>{when.text}{when.centralMexico ? ' (Tiempo del Centro de México)' : ''}</Text></View>
+          <Text adjustsFontSizeToFit numberOfLines={1} style={styles.detailAmount}>{formatMoney(receipt.amountMinor, { sign: 'debit' })} <Text style={styles.detailCurrency}>MXN</Text></Text>
+          <View style={styles.receiptDatePill}><Ionicons name="time-outline" size={16} color={colors.muted}/><Text style={styles.receiptDateText}>{when ? `${when} (${BUSINESS_ZONE_LABEL})` : DATE_UNAVAILABLE}</Text></View>
         </View>
         <View style={styles.receiptCard}>
           <View style={styles.receiptCardHeader}><View style={styles.estimateLabel}><Ionicons name="receipt-outline" size={18} color={colors.muted}/><Text style={styles.receiptHeadingInline}>DETALLE DE OPERACIÓN</Text></View><View style={styles.appliedPill}><View style={styles.successDot}/><Text style={styles.appliedPillText}>Confirmada y aplicada</Text></View></View>
           <ReceiptRow label="Cuenta origen" value={origin?.name ?? '—'} detail={origin ? `•• ${lastDigits(origin.clabeMasked)}` : undefined}/>
-          <ReceiptRow label="Beneficiario" value={receipt.destination.name} detail={alias} shaded/>
+          <ReceiptRow label="Para" value={receipt.destination.name} detail={alias} shaded/>
           <ReceiptRow label="Cuenta destino" value="Billetera MXN" detail={`•• ${lastDigits(receipt.destination.clabeMasked)}`}/>
           <ReceiptRow label="Concepto" value={receipt.concept} shaded/>
           <ReceiptRow label="Referencia" value={receipt.reference} strong/>
@@ -830,7 +828,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
         </View>
         {props.postBalance ? <View style={styles.newBalanceCard}>
           <View style={styles.estimateLabel}><Ionicons name="wallet-outline" size={18} color={colors.primary}/><Text style={styles.newBalanceLabel}>Nuevo saldo disponible en {props.postBalance.accountName}:</Text></View>
-          <View style={styles.reviewAmountLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.reviewAmount}>{formatBalance(props.postBalance.minor)}</Text><Text style={styles.amountCurrency}> MXN</Text></View>
+          <View style={styles.reviewAmountLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.reviewAmount}>{formatMoney(props.postBalance.minor)}</Text><Text style={styles.amountCurrency}> MXN</Text></View>
           <View style={styles.estimateNote}><Ionicons name="checkmark-circle-outline" size={16} color={colors.success}/><Text style={styles.estimateNoteText}>Tu saldo se actualizó tras confirmarse la operación.</Text></View>
         </View> : null}
         <Button title="Ir al inicio" leadingIcon="home-outline" onPress={props.onDone}/>
@@ -851,8 +849,8 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
           : <View style={styles.intactBox}><View style={styles.intactIcon}><Ionicons name="shield-checkmark-outline" size={20} color={colors.success}/></View><View style={styles.summaryCopy}><Text style={styles.rowTitle}>Tu dinero está intacto</Text><Text style={styles.muted}>No se aplicó ningún cargo a tu cuenta por este intento.</Text></View></View>}
         <View style={styles.statusDetails}>
           <View style={styles.metaRow}><Text style={styles.rejectedLabel}>Cuenta de origen</Text><View style={styles.metaStatus}><Ionicons name="card-outline" size={18} color={colors.text}/><Text numberOfLines={1} style={styles.rejectedValue}>{props.source ? `${props.source.name} •• ${lastDigits(props.source.clabeMasked)}` : '—'}</Text></View></View>
-          <View style={styles.metaRow}><Text style={styles.rejectedLabel}>Saldo disponible</Text><Text style={styles.rejectedValue}>{props.source ? `${formatBalance(props.source.availableBalanceMinor)} MXN` : '—'}</Text></View>
-          <View style={styles.metaRow}><Text style={styles.rejectedLabel}>Monto solicitado</Text><Text style={[styles.rejectedValue, styles.rejectedRequested]}>{requested ? `${formatBalance(requested)} MXN` : '—'}</Text></View>
+          <View style={styles.metaRow}><Text style={styles.rejectedLabel}>Saldo disponible</Text><Text style={styles.rejectedValue}>{props.source ? `${formatMoney(props.source.availableBalanceMinor)} MXN` : '—'}</Text></View>
+          <View style={styles.metaRow}><Text style={styles.rejectedLabel}>Monto solicitado</Text><Text style={[styles.rejectedValue, styles.rejectedRequested]}>{requested ? `${formatMoney(requested)} MXN` : '—'}</Text></View>
           {props.rejectionUnverified ? null : <View style={styles.debitedBox}><View style={styles.summaryCopy}><Text style={styles.rowTitle}>Importe debitado</Text><Text style={styles.debitedNote}>Ningún dinero fue retirado</Text></View><Text style={styles.debitedValue}>$0.00 MXN</Text></View>}
         </View>
         <Button title="Modificar monto o cuenta" leadingIcon="pencil" onPress={props.onEdit}/>
@@ -862,33 +860,48 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
   </ScrollView>{props.screen === 'details' && <View style={styles.stickyFooter}><Button title="Continuar" trailingIcon="arrow-forward" disabled={!formValid || insufficient || !props.source || !props.destination} onPress={props.onReview}/></View>}</KeyboardAvoidingView>;
 }
 
-function MovementReceipt({ transfer, movementType, accounts, userInitials, onBack, onHome }: { transfer: Transfer; movementType: Movement['type'] | null; accounts: Account[]; userInitials: string; onBack: () => void; onHome: () => void }) {
-  const completed = transfer.status === 'completed';
-  const rejected = transfer.status === 'rejected';
-  const credit = movementType === 'credit';
-  const source = accounts.find((account) => account.id === transfer.sourceAccountId);
-  const sign = movementType === 'debit' ? '-' : movementType === 'credit' ? '+' : '';
-  const when = formatReceiptDate(transfer.completedAt ?? transfer.createdAt);
-  const title = completed ? (credit ? 'Transferencia recibida' : 'Transferencia completada') : rejected ? 'Transferencia rechazada' : 'Transferencia en proceso';
+// M04. Built from the movement itself (amount, concept, reference, counterparty, time) so a RECEIVED transfer from
+// another user, whose GET /transfers/{id} is sender-only, still shows who sent it. A sent movement is enriched with
+// the transfer (source account, status, receipt folio) when that read succeeded.
+function MovementReceipt({ movement, transfer, accounts, accountId, userInitials, onBack, onHome }: { movement: Movement; transfer: Transfer | null; accounts: Account[]; accountId: string | undefined; userInitials: string; onBack: () => void; onHome: () => void }) {
+  const status = transfer?.status ?? movement.status;
+  const completed = status === 'completed';
+  const rejected = status === 'rejected';
+  const credit = movement.type === 'credit';
+  const own = accounts.find((account) => account.id === (credit ? accountId : transfer?.sourceAccountId ?? accountId));
+  const counterparty = movement.counterparty;
+  const counterpartyName = counterparty?.name ?? transfer?.destination.name;
+  const counterpartyDigits = lastDigits(counterparty?.clabeMasked ?? transfer?.destination.clabeMasked ?? '');
+  const ownTransfer = Boolean(counterparty?.ownAccountId);
+  const when = formatBusinessDateTime(transfer?.completedAt ?? movement.occurredAt);
+  const title = !completed ? (rejected ? 'Transferencia rechazada' : 'Transferencia en proceso') : credit ? 'Transferencia recibida' : 'Transferencia enviada';
+  const pill = !completed ? (rejected ? 'Rechazada' : 'En proceso') : credit ? 'Recibida' : 'Enviada';
+  const party = counterpartyName ? <View style={styles.detailDestination}><Ionicons name="person-circle-outline" size={20} color={colors.primary}/><Text style={styles.detailStackedValue}>{counterpartyName}{counterpartyDigits ? ` •• ${counterpartyDigits}` : ''}</Text></View> : <Text style={styles.detailStackedValue}>—</Text>;
+  const ownLine = own ? <Text style={styles.detailStackedValue}>{own.name} •• {lastDigits(own.clabeMasked)}</Text> : null;
   return <View style={styles.page}><StatusBar barStyle="dark-content"/>
     <ScreenHeader title="Detalle" backLabel="Volver a movimientos" onBack={onBack} userInitials={userInitials} tone="pale"/>
     <ScrollView contentContainerStyle={styles.detailContent}>
       <View style={styles.detailHero}>
         <View style={[styles.detailStatusIcon, !completed && styles.detailStatusIconPending, rejected && styles.detailStatusIconRejected]}><Ionicons name={completed ? 'checkmark-circle' : rejected ? 'close-circle' : 'time'} size={52} color={completed ? colors.success : rejected ? colors.error : colors.primary}/></View>
-        <View style={styles.detailPill}><View style={[styles.successDot, !completed && { backgroundColor: rejected ? colors.error : colors.primary }]}/><Text style={styles.successPillText}>{completed ? 'Completada' : rejected ? 'Rechazada' : 'En proceso'}</Text></View>
+        <View style={styles.detailPill}><View style={[styles.successDot, !completed && { backgroundColor: rejected ? colors.error : colors.primary }]}/><Text style={styles.successPillText}>{pill}</Text></View>
         <Text style={styles.detailTitle}>{title}</Text>
-        <Text adjustsFontSizeToFit numberOfLines={1} style={styles.detailAmount}>{sign}{formatBalance(transfer.amountMinor)} <Text style={styles.detailCurrency}>MXN</Text></Text>
-        <Text style={styles.detailDate}>{when.text}</Text>
-        {when.centralMexico ? <Text style={styles.detailZone}>(Tiempo del Centro de México)</Text> : null}
+        <Text adjustsFontSizeToFit numberOfLines={1} style={[styles.detailAmount, credit && styles.creditAmount]}>{formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit' })} <Text style={styles.detailCurrency}>MXN</Text></Text>
+        <Text style={styles.detailDate}>{when ?? DATE_UNAVAILABLE}</Text>
+        {when ? <Text style={styles.detailZone}>({BUSINESS_ZONE_LABEL})</Text> : null}
       </View>
       <View style={styles.detailCard}>
         <Text style={styles.receiptHeading}>DETALLES DE LA TRANSACCIÓN</Text>
-        {source ? <View style={styles.detailStacked}><Text style={styles.muted}>Cuenta origen</Text><Text style={styles.detailStackedValue}>{source.name} •• {lastDigits(source.clabeMasked)}</Text></View> : null}
-        <View style={styles.detailStacked}><Text style={styles.muted}>Cuenta destino</Text><View style={styles.detailDestination}><Ionicons name="person-circle-outline" size={20} color={colors.primary}/><Text style={styles.detailStackedValue}>{transfer.destination.name} •• {lastDigits(transfer.destination.clabeMasked)}</Text></View></View>
-        <DetailRow label="Concepto" value={transfer.concept}/>
-        <DetailRow label="Referencia" value={transfer.reference} emphasis/>
-        <DetailRow label="Folio interno" value={transfer.receiptReference ?? transfer.id} accent/>
-        <DetailRow label="Tipo de operación" value="Transferencia interna"/>
+        {credit ? <>
+          <View style={styles.detailStacked}><Text style={styles.muted}>De</Text>{party}</View>
+          {ownLine ? <View style={styles.detailStacked}><Text style={styles.muted}>Cuenta destino</Text>{ownLine}</View> : null}
+        </> : <>
+          {ownLine ? <View style={styles.detailStacked}><Text style={styles.muted}>Cuenta origen</Text>{ownLine}</View> : null}
+          <View style={styles.detailStacked}><Text style={styles.muted}>Para</Text>{party}</View>
+        </>}
+        <DetailRow label="Concepto" value={movement.concept}/>
+        <DetailRow label="Referencia" value={movement.reference} emphasis/>
+        <DetailRow label="Folio interno" value={transfer?.receiptReference ?? movement.transferId ?? movement.id} accent/>
+        <DetailRow label="Tipo de operación" value={ownTransfer ? 'Entre cuentas propias' : 'Transferencia interna'}/>
       </View>
       <Text style={styles.detailFootnote}>Comprobante de demostración técnica interna de Billetera MXN</Text>
       <Button title="Volver a movimientos" leadingIcon="arrow-back" onPress={onBack}/>
@@ -914,9 +927,9 @@ function EstimatedBalance({ availableMinor, amountMinor }: { availableMinor: str
   return <View style={styles.estimateCard}>
     <View style={styles.estimateHeader}>
       <View style={styles.estimateLabel}><Ionicons name="calculator-outline" size={18} color={colors.primary}/><Text style={styles.estimateLabelText}>Saldo posterior estimado</Text></View>
-      <Text adjustsFontSizeToFit numberOfLines={1} style={styles.estimateValue}>{formatBalance(after.toString())} MXN</Text>
+      <Text adjustsFontSizeToFit numberOfLines={1} style={styles.estimateValue}>{formatMoney(after.toString())} MXN</Text>
     </View>
-    <View style={styles.estimateMath}><Text style={styles.estimateMathText}>Cálculo:</Text><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.estimateMathText, styles.estimateMathValue]}>{formatBalance(availableMinor)} - {formatBalance(amountMinor)} = {formatBalance(after.toString())} MXN</Text></View>
+    <View style={styles.estimateMath}><Text style={styles.estimateMathText}>Cálculo:</Text><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.estimateMathText, styles.estimateMathValue]}>{formatMoney(availableMinor)} - {formatMoney(amountMinor)} = {formatMoney(after.toString())} MXN</Text></View>
     <View accessible={false} style={styles.estimateTrack}><View style={[styles.estimateRemaining, { width: `${remainingBasisPoints / 100}%` }]}/><View style={styles.estimateSpent}/></View>
     <View style={styles.estimateNote}><Ionicons name="information-circle-outline" size={15} color={colors.muted}/><Text style={styles.estimateNoteText}>El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.</Text></View>
   </View>;
@@ -926,19 +939,6 @@ function DetailRow({ label, value, emphasis = false, accent = false }: { label: 
   return <View style={styles.detailRow}><Text style={styles.muted}>{label}</Text><Text style={[styles.detailRowValue, emphasis && styles.detailRowEmphasis, accent && styles.detailRowAccent]}>{value}</Text></View>;
 }
 
-function formatReceiptDate(iso: string): { text: string; centralMexico: boolean } {
-  const date = new Date(iso);
-  try {
-    const formatter = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-    // Only claim "Tiempo del Centro de México" when the engine really honoured the zone.
-    if (formatter.resolvedOptions().timeZone === 'America/Mexico_City') {
-      const parts = Object.fromEntries(formatter.formatToParts(date).map((part) => [part.type, part.value]));
-      return { text: `${parts.day} de ${parts.month} de ${parts.year}, ${parts.hour}:${parts.minute} hrs`, centralMexico: true };
-    }
-  } catch { /* fall back to the device's local time without a zone label */ }
-  return { text: `${date.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}, ${date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} hrs`, centralMexico: false };
-}
-
 function ScreenHeader({ title, backLabel, onBack, userInitials, tone = 'solid' }: { title: string; backLabel: string; onBack: () => void; userInitials: string; tone?: 'pale' | 'solid' }) {
   return <View style={styles.screenHeader}>
     <Pressable accessibilityRole="button" accessibilityLabel={backLabel} hitSlop={8} style={styles.headerBack} onPress={onBack}><Ionicons name="arrow-back" size={24} color={colors.text}/></Pressable>
@@ -946,14 +946,6 @@ function ScreenHeader({ title, backLabel, onBack, userInitials, tone = 'solid' }
     <View style={styles.flowHeaderSpacer}/>
     <View style={[styles.headerAvatar, tone === 'solid' && styles.headerAvatarSolid]}><Text style={[styles.avatarText, tone === 'solid' && styles.headerAvatarSolidText]}>{userInitials}</Text></View>
   </View>;
-}
-
-function amountToMinor(value: string): string | null {
-  const normalized = value.trim();
-  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(normalized)) return null;
-  const [whole, fraction = ''] = normalized.split('.');
-  const minor = `${whole}${fraction.padEnd(2, '0')}`.replace(/^0+/, '');
-  return minor && /[1-9]/.test(minor) ? minor : null;
 }
 
 function newIdempotencyKey(): string {

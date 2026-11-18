@@ -512,11 +512,11 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { await Promise.resolve(); });
     const detail = visible();
     assert.match(detail, /"Detalle"/);
-    assert.match(detail, /"-","\$430\.50"/);
+    assert.match(detail, /"-\$430\.50"/);
     assert.match(detail, /13 de noviembre de 2026, 14:32 hrs/);
     assert.match(detail, /Tiempo del Centro de México/);
     assert.match(detail, /"Ahorro"," •• ","1111"/);
-    assert.match(detail, /"Farmacia Central"," •• ","5931"/);
+    assert.match(detail, /"Farmacia Central"," •• 5931"/);
     assert.match(detail, /DEMO-0001/);
     assert.match(detail, /Transferencia interna/);
     assert.doesNotMatch(detail, /"completed"/);
@@ -864,7 +864,7 @@ describe('mobile completed receipt (M10)', () => {
     const receipt = flow.visible();
     assert.match(receipt, /"Detalle"/);
     assert.match(receipt, /"Transferencia completada"/);
-    assert.match(receipt, /"-","\$850.00"/);
+    assert.match(receipt, /"-\$850.00"/);
     assert.match(receipt, /13 de noviembre de 2026, 14:32 hrs/);
     assert.match(receipt, /DETALLE DE OPERACIÓN/);
     assert.match(receipt, /Confirmada y aplicada/);
@@ -1060,5 +1060,131 @@ describe('mobile home reference (M02)', () => {
     assert.ok(digits.length > 0 && digits.every((node) => node.props.numberOfLines === 1), 'the tab digits never wrap');
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+// Round 6 (G2) regressions reproduced from the iPhone recording.
+function installHermesLikeIntl() {
+  const original = Intl.DateTimeFormat;
+  class HermesLike {
+    resolvedOptions() { return { timeZone: 'America/Mexico_City' }; }
+    // The parts observed on device produced "a de undefined de 8, undefined:undefined hrs".
+    formatToParts() { return [{ type: 'day', value: 'a' }, { type: 'year', value: '8' }]; }
+    format() { return 'a'; }
+  }
+  Object.defineProperty(Intl, 'DateTimeFormat', { configurable: true, writable: true, value: HermesLike });
+  return () => Object.defineProperty(Intl, 'DateTimeFormat', { configurable: true, writable: true, value: original });
+}
+
+async function loginWith(handler: FlowHandler) {
+  mockSecureValues.clear();
+  const calls: string[] = [];
+  const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input); calls.push(url);
+    const handled = await handler(url, init);
+    if (handled) return handled;
+    if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: `g2-${Math.random()}`, fullName: 'Ana López', email: 'ana@example.com' } });
+    throw new Error(`Unexpected API request: ${url}`);
+  });
+  Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+  let renderer: TestRenderer.ReactTestRenderer;
+  await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+  const visible = () => JSON.stringify(renderer!.toJSON());
+  const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+  const wait = (ms = 30) => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+  await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+  await wait();
+  const finish = async () => { await TestRenderer.act(async () => { renderer!.unmount(); }); delete (global as { fetch?: typeof fetch }).fetch; };
+  return { renderer: renderer!, visible, button, wait, calls, finish };
+}
+
+describe('round 6 · A: business dates never render undefined (Hermes-like Intl)', () => {
+  it('M04: a RECEIVED movement shows "De", "+", "Recibida" and a valid business date without reading the sender-only transfer', async () => {
+    const restore = installHermesLikeIntl();
+    try {
+      const app = await loginWith((url) => {
+        if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+        if (url.includes('/accounts/source-1/movements?limit=20')) return Response.json({ items: [{ id: 'mv-in', transferId: 'tr-in', type: 'credit', amountMinor: '125000', currency: 'MXN', concept: 'Honorarios', reference: '994012', status: 'completed', occurredAt: '2026-11-13T20:32:00.123Z', counterparty: { name: 'Beto Destino', clabeMasked: '646•••••••••••1234' } }], nextCursor: null });
+        if (url.includes('/transfers/')) return Response.json({ title: 'Not Found', status: 404 }, { status: 404 });
+        return undefined;
+      });
+      const movementsTab = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'tab').find((node) => node.findAll((child) => child.props.children === 'Movimientos').length > 0)!;
+      await TestRenderer.act(async () => { movementsTab.props.onPress(); });
+      await app.wait();
+      assert.match(app.visible(), /"De Beto Destino"/);
+      const row = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Abono '))[0]!;
+      await TestRenderer.act(async () => { row.props.onPress(); });
+      await app.wait();
+      const detail = app.visible();
+      assert.match(detail, /"Transferencia recibida"/);
+      assert.match(detail, /"Recibida"/);
+      assert.match(detail, /"\+\$1,250.00"/);
+      assert.match(detail, /"De"/);
+      assert.match(detail, /"Beto Destino"," •• 1234"/);
+      assert.match(detail, /"Cuenta destino"/);
+      assert.match(detail, /13 de noviembre de 2026, 14:32 hrs/);
+      assert.match(detail, /Tiempo del Centro de México/);
+      assert.doesNotMatch(detail, /undefined|NaN|Invalid Date/);
+      assert.equal(app.calls.filter((url) => url.includes('/transfers/')).length, 0, 'the receiver cannot read the sender transfer');
+      await app.finish();
+    } finally { restore(); }
+  });
+
+  it('M10: the receipt of a SENT transfer shows "Para", "-" and a valid business date', async () => {
+    const restore = installHermesLikeIntl();
+    try {
+      const done = flowTransfer({ id: 'transfer-done', status: 'completed', amountMinor: '85000', createdAt: '2026-11-13T20:31:59.000Z', completedAt: '2026-11-13T20:32:00.456Z', receiptReference: 'transfer-done' });
+      const flow = await startTransferFlow((url) => {
+        if (url.endsWith('/transfers')) return Response.json(done, { status: 201 });
+        if (url.endsWith('/transfers/transfer-done')) return Response.json(done);
+        return undefined;
+      }, { amount: '850.00' });
+      await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+      await flow.wait();
+      const receipt = flow.visible();
+      assert.match(receipt, /"Transferencia completada"/);
+      assert.match(receipt, /"-\$850.00"/);
+      assert.match(receipt, /"Para"/);
+      assert.match(receipt, /13 de noviembre de 2026, 14:32 hrs \(Tiempo del Centro de México\)/);
+      assert.doesNotMatch(receipt, /undefined|NaN|Invalid Date/);
+      await flow.finish();
+    } finally { restore(); }
+  });
+
+  it('shows "Fecha no disponible" instead of a broken date when the timestamp is invalid', async () => {
+    const app = await loginWith((url) => {
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [{ id: 'mv-x', transferId: 'tr-x', type: 'credit', amountMinor: '100', currency: 'MXN', concept: 'Sin fecha', reference: '1', status: 'completed', occurredAt: 'not-a-date', counterparty: { name: 'Beto', clabeMasked: '646•••••••••••1234' } }], nextCursor: null });
+      return undefined;
+    });
+    const row = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Abono '))[0]!;
+    await TestRenderer.act(async () => { row.props.onPress(); });
+    const detail = app.visible();
+    assert.match(detail, /Fecha no disponible/);
+    assert.doesNotMatch(detail, /undefined|NaN|Invalid Date|Tiempo del Centro/);
+    await app.finish();
+  });
+});
+
+describe('round 6 · F: one money format everywhere', () => {
+  it('groups thousands on Home, account tabs and totals even when BigInt#toLocaleString does not group (Hermes)', async () => {
+    const original = BigInt.prototype.toLocaleString;
+    BigInt.prototype.toLocaleString = function toLocaleString(this: bigint) { return this.toString(); };
+    try {
+      const app = await loginWith((url) => {
+        if (url.endsWith('/accounts')) return Response.json({ items: [{ ...flowAccount, availableBalanceMinor: '994000' }, { ...flowAccount, id: 'savings-1', name: 'Ahorro', kind: 'savings', availableBalanceMinor: '505000', clabeMasked: '646•••••••••••5719' }] });
+        if (url.includes('/movements?limit=20')) return Response.json({ items: [{ id: 'mv-1', transferId: 't1', type: 'debit', amountMinor: '1500000', currency: 'MXN', concept: 'Renta', reference: '1', status: 'completed', occurredAt: '2026-11-13T20:32:00.000Z', counterparty: { name: 'Carlos Ruiz', clabeMasked: '000•••••••••••0028' } }], nextCursor: null });
+        return undefined;
+      });
+      const home = app.visible();
+      assert.match(home, /\$9,940.00/);
+      assert.match(home, /\$14,990.00/);
+      assert.match(home, /-\$15,000.00 MXN/);
+      assert.doesNotMatch(home, /\$9940\.00|\$5050\.00|\$15000\.00|\$14990\.00/);
+      await app.finish();
+    } finally {
+      BigInt.prototype.toLocaleString = original;
+    }
   });
 });
