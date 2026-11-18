@@ -750,3 +750,54 @@ describe('mobile confirmation code (M08)', () => {
     await flow.finish();
   });
 });
+
+describe('mobile uncertain result (M09)', () => {
+  it('explains the uncertain attempt, verifies it by replaying the same key and never creates a second attempt', async () => {
+    let creates = 0;
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) {
+        creates += 1;
+        if (creates === 1) throw new Error('response lost');
+        return Response.json({ ...flowTransfer({ amountMinor: '85000' }), demoOnlyCode: '913245' }, { status: 202 });
+      }
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const uncertain = flow.visible();
+    assert.match(uncertain, /"Detalle"/);
+    assert.match(uncertain, /Protección contra duplicados activa/);
+    assert.match(uncertain, /Estamos verificando si tu transferencia se completó/);
+    assert.match(uncertain, /No pudimos confirmar el resultado de la operación de .*"\$850.00"," MXN".*" a ".*"Carlos Ruiz •• 0028"/);
+    assert.match(uncertain, /\(Ref: 131126\)/);
+    assert.match(uncertain, /No intentes enviar el dinero nuevamente/);
+    assert.match(uncertain, /"Monto en verificación"/);
+    assert.match(uncertain, /"En verificación de estado"/);
+    assert.doesNotMatch(uncertain, /Banxico|SPEI|interbancaria|DEMO-0001|"awaiting_confirmation"/);
+    await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await flow.wait();
+    const creations = flow.calls.filter((call) => call.url.endsWith('/transfers'));
+    assert.equal(creations.length, 2);
+    const keyOf = (call: { init?: RequestInit }) => (call.init?.headers as Record<string, string>)['Idempotency-Key'];
+    assert.equal(keyOf(creations[1]!), keyOf(creations[0]!), 'verification must replay the original attempt key');
+    assert.ok(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
+    await flow.finish();
+  });
+
+  it('"Ir al inicio" leaves the uncertain screen but keeps the recovery record for the next launch', async () => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) throw new Error('response lost');
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const persisted = mockSecureValues.get('wallet.transfer-recovery');
+    assert.ok(persisted);
+    await TestRenderer.act(async () => { flow.button('Ir al inicio (revisar saldo después)').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /Hola, /);
+    assert.equal(mockSecureValues.get('wallet.transfer-recovery'), persisted, 'the unresolved attempt must stay recoverable');
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/transfers')).length, 1);
+    await flow.finish();
+  });
+});
