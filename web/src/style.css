@@ -32,3 +32,6 @@ h1,h2,h3{font-family:Inter,Arial,sans-serif!important;color:#141b2c}
 /* Match the approved web references' soft lavender canvas and broad history workspace. */
 :root{background:#f9f9ff}
 .movement-page{max-width:1160px}
+
+.consolidated-balance{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:0 0 28px;padding:25px 30px;border:1px solid #e0e8ff;border-radius:18px;background:linear-gradient(110deg,#eef2ff,#fff);box-shadow:0 8px 24px #141b2c08}.consolidated-balance h2{margin:0;color:#141b2c;font-size:16px;font-weight:600}.consolidated-balance p{margin:7px 0 0;color:#434655;font-size:13px}.consolidated-balance strong{color:#0037b0;font-size:clamp(25px,3vw,34px);font-variant-numeric:tabular-nums;letter-spacing:-.7px;overflow-wrap:anywhere}.consolidated-balance strong span{font-size:14px;letter-spacing:0}.consolidated-balance:focus-within{outline:3px solid #87a3ff;outline-offset:3px}
+@media(max-width:760px){.consolidated-balance{align-items:flex-start;flex-direction:column;gap:13px;margin-bottom:24px;padding:21px}.consolidated-balance strong{font-size:28px}}

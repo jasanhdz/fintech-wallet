@@ -3,16 +3,36 @@ import { expect, request as playwrightRequest, test } from '@playwright/test';
 async function capture(page: import('@playwright/test').Page, name: string) {
   await page.screenshot({
     path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
-    fullPage: true,
+    fullPage: false,
     mask: [
       page.locator('input'),
       page.locator('select'),
       page.locator('[data-sensitive]'),
-      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
       page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
     ],
     maskColor: '#172b4d',
   });
+}
+
+async function captureAfterScrollIfOutsideViewport(page: import('@playwright/test').Page, locator: import('@playwright/test').Locator, name: string) {
+  const box = await locator.boundingBox();
+  const viewport = page.viewportSize();
+  if (!box || !viewport || (box.y >= 0 && box.y + box.height <= viewport.height)) return;
+  await locator.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `test-results/visual/${name}-${viewport.width}-scroll.png`,
+    fullPage: false,
+    mask: [
+      page.locator('input'),
+      page.locator('select'),
+      page.locator('[data-sensitive]'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+    ],
+    maskColor: '#172b4d',
+  });
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 test('login and registration screens render responsively without browser errors @visual', async ({ page }) => {
@@ -26,10 +46,10 @@ test('login and registration screens render responsively without browser errors 
   await expect(page).toHaveTitle('Billetera — Tus cuentas');
   await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
   await expect(page.getByLabel('Correo electrónico')).toBeVisible();
-  await page.screenshot({ path: 'test-results/web-login-mobile.png', fullPage: true });
+  await page.screenshot({ path: 'test-results/visual/web-login-mobile-390.png', fullPage: false });
   await page.getByRole('link', { name: 'Regístrate' }).click();
   await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
-  await page.screenshot({ path: 'test-results/web-register-mobile.png', fullPage: true });
+  await page.screenshot({ path: 'test-results/visual/web-register-mobile-390.png', fullPage: false });
   await page.setViewportSize({ width: 1440, height: 960 });
   await expect(page.locator('.auth-side')).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
@@ -61,8 +81,13 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('heading', { name: /Hola, Web/ })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Saldo consolidado' })).toBeVisible();
+  const consolidatedBalance = page.getByRole('region', { name: 'Saldo consolidado' });
+  await expect(page.getByLabel(/pesos mexicanos$/)).toBeVisible();
+  await expect(consolidatedBalance.locator('strong')).toHaveText(/MXN$/);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W03-cuentas');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W03-cuentas');
 
@@ -132,6 +157,7 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W07-alta');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('button', { name: /Guardar beneficiario/ }), 'W07-acciones');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W07-alta');
 
@@ -279,6 +305,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   });
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
   await expect(page.getByText(/No conocemos el resultado del envío/)).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W11-resultado-incierto');

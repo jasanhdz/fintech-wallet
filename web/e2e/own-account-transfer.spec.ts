@@ -3,15 +3,34 @@ import { expect, test } from '@playwright/test';
 async function capture(page: import('@playwright/test').Page, name: string) {
   await page.screenshot({
     path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
-    fullPage: true,
+    fullPage: false,
     mask: [
       page.locator('input, select'),
       page.locator('[data-sensitive]'),
-      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
       page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
     ],
     maskColor: '#172b4d',
   });
+}
+
+async function captureAfterScrollIfOutsideViewport(page: import('@playwright/test').Page, locator: import('@playwright/test').Locator, name: string) {
+  const box = await locator.boundingBox();
+  const viewport = page.viewportSize();
+  if (!box || !viewport || (box.y >= 0 && box.y + box.height <= viewport.height)) return;
+  await locator.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `test-results/visual/${name}-${viewport.width}-scroll.png`,
+    fullPage: false,
+    mask: [
+      page.locator('input, select'),
+      page.locator('[data-sensitive]'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+    ],
+    maskColor: '#172b4d',
+  });
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 test('registers with the development fixture and transfers between own accounts', async ({ page }) => {
@@ -72,6 +91,7 @@ test('registers with the development fixture and transfers between own accounts'
   await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await capture(page, 'W03-cuentas-own');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await expect(page.locator('.app-rail')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
@@ -145,6 +165,7 @@ test('registers with the development fixture and transfers between own accounts'
   await expect(recentSuccessfulTransfer).toContainText('Cargo');
   await expect(recentSuccessfulTransfer).toContainText('Completado');
   await capture(page, 'W03-cuentas-transfer-completada-own');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente-transfer-completada-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W03-cuentas-transfer-completada-own');
   await page.setViewportSize({ width: 390, height: 844 });

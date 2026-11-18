@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { JSDOM } from 'jsdom';
-import { AccountsPage, recentMovementsPath } from '../src/routes.js';
+import { AccountsPage, recentMovementsPath, sumAvailableBalanceMinor } from '../src/routes.js';
 import { SessionProvider } from '../src/session.js';
 
 test('recent activity requests three real movements for the first account and renders their details', async () => {
@@ -40,4 +40,13 @@ test('recent activity requests three real movements for the first account and re
   } finally {
     cleanup(); client.clear(); dom.window.close(); globalThis.fetch = originalFetch;
   }
+});
+
+test('consolidated balance sums two accounts exactly in minor units', () => {
+  const accounts = [
+    { id: 'checking', kind: 'checking', name: 'Cuenta principal', currency: 'MXN', availableBalanceMinor: '10001', clabeMasked: '****0001' },
+    { id: 'savings', kind: 'savings', name: 'Ahorro', currency: 'MXN', availableBalanceMinor: '2099', clabeMasked: '****0002' },
+  ] as Parameters<typeof sumAvailableBalanceMinor>[0];
+
+  assert.equal(sumAvailableBalanceMinor(accounts), 12100n);
 });
