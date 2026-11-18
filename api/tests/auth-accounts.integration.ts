@@ -14,11 +14,12 @@ test('PostgreSQL auth, rotation, csrf and owner-scoped accounts', async (t) => {
   process.env.DATABASE_URL=testUrl.toString();
   process.env.APP_ENV='test';
   process.env.WEB_ORIGIN='http://localhost:5173';
+  let server: ReturnType<typeof createServer> | undefined;
   const source=dataSource(testUrl.toString()); await source.initialize();
+  t.after(async()=>{if(server?.listening) await new Promise<void>((resolveClose,reject)=>server!.close((error)=>error?reject(error):resolveClose()));if(source.isInitialized)await source.destroy();});
   const clearingOne=await ensureDemoClearingAccount((sql,parameters)=>source.query(sql,parameters)); const clearingTwo=await ensureDemoClearingAccount((sql,parameters)=>source.query(sql,parameters)); assert.equal(clearingOne,clearingTwo);
-  const server=createServer(createApp());
+  server=createServer(createApp());
   await new Promise<void>((resolveListen)=>server.listen(0,'127.0.0.1',resolveListen));
-  t.after(async()=>{await new Promise<void>((resolveClose,reject)=>server.close((error)=>error?reject(error):resolveClose()));await source.destroy();});
   const address=server.address(); assert(address&&typeof address!=='string'); const base=`http://127.0.0.1:${address.port}/v1`;
   const preflight=await fetch(`${base}/auth/register`,{method:'OPTIONS',headers:{origin:'http://localhost:5173','access-control-request-method':'POST','access-control-request-headers':'content-type,x-csrf-token'}});
   assert.equal(preflight.headers.get('access-control-allow-origin'),'http://localhost:5173');
@@ -47,7 +48,11 @@ test('PostgreSQL auth, rotation, csrf and owner-scoped accounts', async (t) => {
   try {
     const fixtureResponse=await fetch(`${base}/auth/register`,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfData.csrfToken,cookie:csrfCookie},body:JSON.stringify({fullName:'Demo Fixture',email:`fixture-${crypto.randomUUID()}@example.test`,password:'correct horse battery staple'})}); assert.equal(fixtureResponse.status,201);
     const fixtureBody=await fixtureResponse.json() as {user:{id:string}}; const fixtureAccounts=await source.query('SELECT id,balance_minor::text AS balance FROM accounts WHERE owner_id=$1 ORDER BY name',[fixtureBody.user.id]); assert.equal(fixtureAccounts.length,2); assert.deepEqual(fixtureAccounts.map((account: {balance:string})=>account.balance).sort(),['12345','6789']);
-    const opening=await source.query("SELECT count(*)::int AS transactions, count(*) FILTER (WHERE a.id=$2)::int AS clearing_entries, COALESCE(sum(e.signed_amount_minor),0)::text AS total FROM ledger_entries e JOIN accounts a ON a.id=e.account_id WHERE e.ledger_transaction_id IN (SELECT DISTINCT e2.ledger_transaction_id FROM ledger_entries e2 JOIN accounts a2 ON a2.id=e2.account_id WHERE a2.owner_id=$1)",[fixtureBody.user.id,demoClearingAccountId]); assert.equal(opening[0].transactions,4); assert.equal(opening[0].clearing_entries,2); assert.equal(opening[0].total,'0');
+     const opening=await source.query("SELECT count(*)::int AS transactions, count(*) FILTER (WHERE a.id=$2)::int AS clearing_entries, COALESCE(sum(e.signed_amount_minor),0)::text AS total FROM ledger_entries e JOIN accounts a ON a.id=e.account_id WHERE e.ledger_transaction_id IN (SELECT DISTINCT e2.ledger_transaction_id FROM ledger_entries e2 JOIN accounts a2 ON a2.id=e2.account_id WHERE a2.owner_id=$1)",[fixtureBody.user.id,demoClearingAccountId]); assert.equal(opening[0].transactions,4); assert.equal(opening[0].clearing_entries,2); assert.equal(opening[0].total,'0');
+     const clearingBalanceBefore=await source.query('SELECT balance_minor::text AS balance FROM accounts WHERE id=$1',[demoClearingAccountId]); assert.notEqual(clearingBalanceBefore[0].balance,'0');
+     assert.equal(await ensureDemoClearingAccount((sql,parameters)=>source.query(sql,parameters)),demoClearingAccountId);
+     const clearingBalanceAfter=await source.query('SELECT balance_minor::text AS balance FROM accounts WHERE id=$1',[demoClearingAccountId]); assert.equal(clearingBalanceAfter[0].balance,clearingBalanceBefore[0].balance);
+     const openingTransactions=await source.query('SELECT e.ledger_transaction_id, SUM(e.signed_amount_minor)::text AS total FROM ledger_entries e WHERE e.ledger_transaction_id IN (SELECT DISTINCT e2.ledger_transaction_id FROM ledger_entries e2 JOIN accounts a ON a.id=e2.account_id WHERE a.owner_id=$1) GROUP BY e.ledger_transaction_id',[fixtureBody.user.id]); assert.equal(openingTransactions.length,2); assert.ok(openingTransactions.every((transaction: {total:string})=>transaction.total==='0'));
     const foreign=await fetch(`${base}/accounts/${fixtureAccounts[0].id}`,{headers:{authorization:`Bearer ${registered.accessToken}`}}); assert.equal(foreign.status,404);
   } finally {process.env.APP_ENV=previousEnv.app;process.env.DEMO_FIXTURE_ENABLED=previousEnv.fixture;process.env.DEMO_PRIMARY_BALANCE_MINOR=previousEnv.primary;process.env.DEMO_SAVINGS_BALANCE_MINOR=previousEnv.savings;}
   let limited=0; for(let i=0;i<12;i++){const response=await fetch(`${base}/auth/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:`missing-${i}@example.test`,password:'wrong',client:'mobile'})});if(response.status===429){limited=429;break;}} assert.equal(limited,429);
