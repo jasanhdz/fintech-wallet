@@ -11,6 +11,8 @@ import { ensureDemoClearingAccount } from '../db/clearing-account.js';
 import { clabeFingerprint, decryptClabe, encryptClabe, generateClabe, hashSecret } from '../security/crypto.js';
 import { isValidClabe, loginRequestSchema, registerRequestSchema } from '@fintech-wallet/shared';
 import { cancelTransfer, confirmTransfer, createTransfer, getTransfer, getTransferPolicy, TransferFault, type TransferRequest } from '../transfers/service.js';
+import { listTransferAttempts, voidAllTransferAttempts, voidTransferAttempt } from '../transfers/attempts.js';
+import { conflictFault } from '../transfers/faults.js';
 import { listMovements, MovementFault } from '../movements/service.js';
 
 const validRequestId = /^[a-zA-Z0-9._:-]{1,128}$/;
@@ -127,8 +129,17 @@ export function createApp() {
     try {const rows=await db.query('SELECT b.id,b.name,b.alias,b.destination_account_id,b.clabe_ciphertext,(a.owner_id=b.owner_id) AS own_destination FROM beneficiaries b JOIN accounts a ON a.id=b.destination_account_id WHERE b.id=$1 AND b.owner_id=$2',[req.params.beneficiaryId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Beneficiario no encontrado.');res.json(beneficiaryDto(rows[0] as BeneficiaryRow));}catch(error){next(error);}
   });
   api.post('/transfers',async(req,res,next)=>{
-    try { const key=req.get('idempotency-key')??''; const result=await createTransfer(db,String(res.locals.userId),key,req.body as TransferRequest,String(res.locals.requestId));res.status(result.status).json(result.body); }
-    catch(error){ if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message); if(isUnique(error))return problem(res,409,'Conflict','La solicitud idempotente está en curso; reintenta con la misma llave.'); next(error); }
+    try { const key=req.get('idempotency-key')??''; const result=await createTransfer(db,String(res.locals.userId),key,req.body as TransferRequest,String(res.locals.requestId),{attemptId:req.get('transfer-attempt-id'),epoch:req.get('transfer-send-epoch')});res.status(result.status).json(result.body); }
+    catch(error){ if(error instanceof TransferFault)return transferProblem(res,error); if(isAttemptIdentityUnique(error))return transferProblem(res,conflictFault()); if(isUnique(error))return problem(res,409,'Conflict','La solicitud idempotente está en curso; reintenta con la misma llave.'); next(error); }
+  });
+  api.get('/transfer-attempts',async(req,res,next)=>{
+    try{res.json(await listTransferAttempts(db,String(res.locals.userId),req.query as Record<string,unknown>,String(res.locals.requestId)));}catch(error){if(error instanceof TransferFault)return transferProblem(res,error);next(error);}
+  });
+  api.post('/transfer-attempts/void',async(req,res,next)=>{
+    try{res.json(await voidTransferAttempt(db,String(res.locals.userId),req.body,String(res.locals.requestId)));}catch(error){if(error instanceof TransferFault)return transferProblem(res,error);if(isAttemptIdentityUnique(error))return transferProblem(res,conflictFault());next(error);}
+  });
+  api.post('/transfer-attempts/void-all',async(req,res,next)=>{
+    try{res.json(await voidAllTransferAttempts(db,String(res.locals.userId),req.body,String(res.locals.requestId)));}catch(error){if(error instanceof TransferFault)return transferProblem(res,error);next(error);}
   });
   api.get('/transfers/:transferId',async(req,res,next)=>{
     if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
@@ -152,7 +163,10 @@ export function createApp() {
 
 type Client='web'|'mobile';
 type User={id:string;email:string;full_name:string;password_hash?:string};
-function problem(response:Response,status:number,title:string,detail:string){return response.status(status).type('application/problem+json').json({type:'about:blank',title,status,detail,instance:response.req.originalUrl,requestId:response.locals.requestId as string});}
+function problem(response:Response,status:number,title:string,detail:string,type='about:blank'){return response.status(status).type('application/problem+json').json({type,title,status,detail,instance:response.req.originalUrl,requestId:response.locals.requestId as string});}
+function transferProblem(response:Response,fault:TransferFault){return problem(response,fault.status,fault.title,fault.message,fault.type);}
+/** Two concurrent sends/voids binding one Transfer-Attempt-Id to different keys: the loser is an identity conflict, not "in progress". */
+function isAttemptIdentityUnique(error:unknown){return isUnique(error)&&['transfers_owner_attempt_uidx','transfer_attempt_closures_owner_attempt_uidx'].includes(String((error as {constraint?:unknown}).constraint));}
 function originAllowed(origin:string,request:Request,allowlist:string|undefined){if(allowlist)return allowlist.split(',').map((item)=>item.trim()).includes(origin);try{return new URL(origin).hostname===new URL(`http://${request.get('host')}`).hostname;}catch{return false;}}
 function csrfValid(request:Request,allowlist:string|undefined){const origin=request.get('origin');if(origin&&!originAllowed(origin,request,allowlist))return false;const token=request.get('x-csrf-token');const cookie=request.cookies[csrfCookie];return !!token&&!!cookie&&token.length===cookie.length&&timingSafeEqual(Buffer.from(token),Buffer.from(cookie));}
 function isUnique(error:unknown){return typeof error==='object'&&error!==null&&'code'in error&&(error as {code:string}).code==='23505';}
