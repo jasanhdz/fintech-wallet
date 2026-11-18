@@ -10,3 +10,11 @@ export function assertSafeTestDatabase(value: string | undefined, developmentUrl
   }
   return parsed;
 }
+
+export function assertSafeTestMigrator(value: string | undefined, testDatabase: URL): URL {
+  if (!value) throw new Error('TEST_MIGRATOR_DATABASE_URL is required');
+  const parsed = new URL(value);
+  const port = (url: URL) => url.port || '5432';
+  if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || !['localhost', '127.0.0.1', '::1'].includes(parsed.hostname) || parsed.hostname !== testDatabase.hostname || port(parsed) !== port(testDatabase) || parsed.pathname !== '/wallet_test' || parsed.username !== 'wallet_migrator_test') throw new Error('Test migrations require local wallet_test migrator credentials');
+  return parsed;
+}

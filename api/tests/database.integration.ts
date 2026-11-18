@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { resolve } from 'node:path';
 dotenv.config({ path: resolve(process.cwd(), '..', '.env') });
-import { assertSafeTestDatabase } from '../src/db/test-database-guard.js';
+import { assertSafeTestDatabase, assertSafeTestMigrator } from '../src/db/test-database-guard.js';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Client } from 'pg';
@@ -66,5 +66,18 @@ test('isolated test database connects as runtime role and never targets developm
     }
   } finally {
     await client.end();
+  }
+});
+
+test('test migrator must match the local wallet_test target and exact role', () => {
+  const runtime = assertSafeTestDatabase(process.env.TEST_DATABASE_URL, process.env.DATABASE_URL);
+  assertSafeTestMigrator(process.env.TEST_MIGRATOR_DATABASE_URL, runtime);
+  for (const unsafe of [
+    'postgres://wallet_migrator_test@remote.invalid:5432/wallet_test',
+    'postgres://wallet_migrator_test@localhost:5433/wallet_test',
+    'postgres://wallet_migrator_test@localhost:5432/wallet_dev',
+    'postgres://wallet_migrator_extra@localhost:5432/wallet_test',
+  ]) {
+    assert.throws(() => assertSafeTestMigrator(unsafe, runtime));
   }
 });

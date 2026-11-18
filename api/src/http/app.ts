@@ -7,6 +7,7 @@ import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { compare, hash } from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { dataSource } from '../db/data-source.js';
+import { ensureDemoClearingAccount } from '../db/clearing-account.js';
 import { clabeFingerprint, decryptClabe, encryptClabe, generateClabe, hashSecret } from '../security/crypto.js';
 import { loginRequestSchema, registerRequestSchema } from '@fintech-wallet/shared';
 
@@ -64,7 +65,7 @@ export function createApp() {
       const user=inserted[0] as User; const fixture=process.env.APP_ENV==='development'&&process.env.DEMO_FIXTURE_ENABLED==='true';
       const accounts=fixture?[{name:'Cuenta principal',kind:'checking',balance:BigInt(process.env.DEMO_PRIMARY_BALANCE_MINOR??'0')},{name:'Ahorro',kind:'savings',balance:BigInt(process.env.DEMO_SAVINGS_BALANCE_MINOR??'0')}]:[{name:'Cuenta principal',kind:'checking',balance:0n}];
       let clearingId:string|undefined;
-      if(fixture) { const rows=await runner.query("INSERT INTO accounts(owner_id,name,kind,balance_minor) VALUES(NULL,'Opening clearing','clearing',0) RETURNING id"); clearingId=rows[0].id as string; }
+      if(fixture) clearingId=await ensureDemoClearingAccount((sql,parameters)=>runner.query(sql,parameters));
       for(const account of accounts) {
         const id=randomUUID(); const clabe=generateClabe();
         await runner.query('INSERT INTO accounts(id,owner_id,name,kind,balance_minor,clabe_ciphertext,clabe_lookup_hash) VALUES($1,$2,$3,$4,$5,$6,$7)',[id,user.id,account.name,account.kind,account.balance.toString(),encryptClabe(clabe),clabeFingerprint(clabe)]);

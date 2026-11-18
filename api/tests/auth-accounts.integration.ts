@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { dataSource } from '../src/db/data-source.js';
+import { demoClearingAccountId, ensureDemoClearingAccount } from '../src/db/clearing-account.js';
 import { assertSafeTestDatabase } from '../src/db/test-database-guard.js';
 import { createApp } from '../src/http/app.js';
 
@@ -14,6 +15,7 @@ test('PostgreSQL auth, rotation, csrf and owner-scoped accounts', async (t) => {
   process.env.APP_ENV='test';
   process.env.WEB_ORIGIN='http://localhost:5173';
   const source=dataSource(testUrl.toString()); await source.initialize();
+  const clearingOne=await ensureDemoClearingAccount((sql,parameters)=>source.query(sql,parameters)); const clearingTwo=await ensureDemoClearingAccount((sql,parameters)=>source.query(sql,parameters)); assert.equal(clearingOne,clearingTwo);
   const server=createServer(createApp());
   await new Promise<void>((resolveListen)=>server.listen(0,'127.0.0.1',resolveListen));
   t.after(async()=>{await new Promise<void>((resolveClose,reject)=>server.close((error)=>error?reject(error):resolveClose()));await source.destroy();});
@@ -45,7 +47,7 @@ test('PostgreSQL auth, rotation, csrf and owner-scoped accounts', async (t) => {
   try {
     const fixtureResponse=await fetch(`${base}/auth/register`,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfData.csrfToken,cookie:csrfCookie},body:JSON.stringify({fullName:'Demo Fixture',email:`fixture-${crypto.randomUUID()}@example.test`,password:'correct horse battery staple'})}); assert.equal(fixtureResponse.status,201);
     const fixtureBody=await fixtureResponse.json() as {user:{id:string}}; const fixtureAccounts=await source.query('SELECT id,balance_minor::text AS balance FROM accounts WHERE owner_id=$1 ORDER BY name',[fixtureBody.user.id]); assert.equal(fixtureAccounts.length,2); assert.deepEqual(fixtureAccounts.map((account: {balance:string})=>account.balance).sort(),['12345','6789']);
-    const opening=await source.query("SELECT COALESCE(sum(signed_amount_minor),0)::text AS total FROM ledger_entries WHERE ledger_transaction_id IN (SELECT DISTINCT e.ledger_transaction_id FROM ledger_entries e JOIN accounts a ON a.id=e.account_id WHERE a.owner_id=$1)",[fixtureBody.user.id]); assert.equal(opening[0].total,'0');
+    const opening=await source.query("SELECT count(*)::int AS transactions, count(*) FILTER (WHERE a.id=$2)::int AS clearing_entries, COALESCE(sum(e.signed_amount_minor),0)::text AS total FROM ledger_entries e JOIN accounts a ON a.id=e.account_id WHERE e.ledger_transaction_id IN (SELECT DISTINCT e2.ledger_transaction_id FROM ledger_entries e2 JOIN accounts a2 ON a2.id=e2.account_id WHERE a2.owner_id=$1)",[fixtureBody.user.id,demoClearingAccountId]); assert.equal(opening[0].transactions,4); assert.equal(opening[0].clearing_entries,2); assert.equal(opening[0].total,'0');
     const foreign=await fetch(`${base}/accounts/${fixtureAccounts[0].id}`,{headers:{authorization:`Bearer ${registered.accessToken}`}}); assert.equal(foreign.status,404);
   } finally {process.env.APP_ENV=previousEnv.app;process.env.DEMO_FIXTURE_ENABLED=previousEnv.fixture;process.env.DEMO_PRIMARY_BALANCE_MINOR=previousEnv.primary;process.env.DEMO_SAVINGS_BALANCE_MINOR=previousEnv.savings;}
   let limited=0; for(let i=0;i<12;i++){const response=await fetch(`${base}/auth/login`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:`missing-${i}@example.test`,password:'wrong',client:'mobile'})});if(response.status===429){limited=429;break;}} assert.equal(limited,429);
