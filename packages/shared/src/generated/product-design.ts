@@ -32,7 +32,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar usuario desde web y abrir cuenta MXN
-         * @description La cuenta de cliente queda asociada al usuario; datos demo de apertura solo en perfil local de desarrollo.
+         * @description Crea una cuenta MXN al registrar. En desarrollo local puede crear el fixture configurado de dos cuentas propias con contra-asientos de apertura; nunca reutiliza esas cantidades como saldo o política de producción.
          */
         post: operations["register"];
         delete?: never;
@@ -335,7 +335,7 @@ export interface components {
             alias: string;
             clabeMasked: string;
             /** Format: uuid */
-            destinationAccountId: string;
+            readonly destinationAccountId: string;
             isFrequent?: boolean;
         };
         TransferCreateRequest: {
@@ -484,7 +484,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Usuario y cuenta inicial creados; refresh web por cookie HttpOnly. */
+            /** @description Usuario y cuenta MXN creados; refresh web por cookie HttpOnly. */
             201: {
                 headers: {
                     /** @description Cookie rotativa HttpOnly para cliente web. */
@@ -498,6 +498,7 @@ export interface operations {
             400: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     login: {
@@ -529,6 +530,7 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     refreshSession: {
@@ -559,6 +561,8 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     logout: {
@@ -585,6 +589,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getCurrentUser: {
@@ -606,6 +611,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     listAccounts: {
@@ -629,6 +635,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getAccount: {
@@ -653,6 +660,7 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     listBeneficiaries: {
@@ -704,6 +712,8 @@ export interface operations {
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getBeneficiary: {
@@ -728,6 +738,7 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     createTransfer: {
@@ -770,6 +781,7 @@ export interface operations {
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getTransfer: {
@@ -794,6 +806,7 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     confirmTransfer: {
@@ -828,6 +841,8 @@ export interface operations {
             404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     listMovements: {
@@ -858,6 +873,7 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
 }
