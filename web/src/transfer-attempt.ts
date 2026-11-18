@@ -17,11 +17,15 @@ export function readTransferDraft(userId: string): TransferDraft | null {
     const raw = sessionStorage.getItem(storageKey(userId));
     if (!raw) return null;
     const value = JSON.parse(raw) as Partial<TransferDraft>;
-    if (typeof value.key !== 'string' || !value.key || !value.body || typeof value.body !== 'object') {
+    const body = value.body;
+    const validBody = body && typeof body === 'object' && !Array.isArray(body)
+      && Object.values(body).every((field) => typeof field === 'string')
+      && (body.destinationType === 'beneficiary' || body.destinationType === 'own_account');
+    if (typeof value.key !== 'string' || !value.key || !validBody || (value.transferId !== undefined && typeof value.transferId !== 'string')) {
       sessionStorage.removeItem(storageKey(userId));
       return null;
     }
-    return { key: value.key, body: value.body as Record<string, string>, ...(typeof value.transferId === 'string' ? { transferId: value.transferId } : {}) };
+    return { key: value.key, body: body as Record<string, string>, ...(typeof value.transferId === 'string' ? { transferId: value.transferId } : {}) };
   } catch {
     return null;
   }
@@ -29,7 +33,10 @@ export function readTransferDraft(userId: string): TransferDraft | null {
 
 export function saveTransferDraft(userId: string, draft: TransferDraft) {
   // Persist only the exact create request and its idempotency key; never OTP/demoOnlyCode.
-  try { sessionStorage.setItem(storageKey(userId), JSON.stringify(draft)); } catch { /* Recovery remains available in memory if storage is unavailable. */ }
+  try {
+    const safeDraft = { key: draft.key, body: draft.body, ...(draft.transferId ? { transferId: draft.transferId } : {}) };
+    sessionStorage.setItem(storageKey(userId), JSON.stringify(safeDraft));
+  } catch { /* Recovery remains available in memory if storage is unavailable. */ }
 }
 
 export function clearTransferDraft(userId: string) {

@@ -122,8 +122,14 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W03-cuentas');
 
+  await page.evaluate(() => {
+    const userId = sessionStorage.getItem('wallet:web:active-user');
+    if (!userId) throw new Error('Authenticated user scope missing');
+    sessionStorage.setItem(`wallet:web:transfer-attempt:${userId}`, JSON.stringify({ key: 'logout-pending-key', body: { destinationType: 'own_account' } }));
+  });
   await page.getByRole('button', { name: 'Salir' }).click();
   await expect(page).toHaveURL(/\/login$/);
+  expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
   await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña').fill(password);
   await page.getByRole('button', { name: /Iniciar sesión/ }).click();
@@ -136,6 +142,13 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   // A real backend session is restored from its HttpOnly cookie after reload.
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
   expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual(['wallet:web:active-user']);
+  await page.evaluate(() => {
+    sessionStorage.setItem('wallet:web:active-user', 'different-user-scope');
+    sessionStorage.setItem('wallet:web:transfer-attempt:different-user-scope', JSON.stringify({ key: 'other-user-key', body: { destinationType: 'own_account' } }));
+  });
+  await page.reload();
+  await expect(page).toHaveURL(/\/accounts$/);
+  expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
 });
 
 test('registers a real internal beneficiary and displays only a masked CLABE', async ({ page }) => {
@@ -373,6 +386,13 @@ test('retries an uncertain real transfer with identical idempotency key and show
   const transfer = observed[1].transfer as { status: string; demoOnlyCode?: string };
   if (transfer.status === 'awaiting_confirmation') {
     expect(transfer.demoOnlyCode).toBeTruthy();
+    const storedAttempt = await page.evaluate(() => Object.entries(sessionStorage)
+      .filter(([key]) => key.startsWith('wallet:web:transfer-attempt:'))
+      .map(([, value]) => value).join(''));
+    expect(storedAttempt).toContain(observed[0].key!);
+    expect(storedAttempt).toContain(observed[0].body);
+    expect(storedAttempt).toContain(observed[0].transferId);
+    expect(storedAttempt).not.toContain(transfer.demoOnlyCode!);
     await page.getByLabel('Código de confirmación de 6 dígitos').fill(transfer.demoOnlyCode!);
     await capture(page, 'W10-otp');
     await page.setViewportSize({ width: 1440, height: 960 });
@@ -383,6 +403,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
     await expect.poll(() => confirmedStatus).toBe('completed');
   }
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
+  expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
   const receipt = page.getByRole('heading', { name: 'Comprobante interno' }).locator('..');
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');

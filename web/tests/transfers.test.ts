@@ -51,10 +51,11 @@ test('create retries forward identical payload and idempotency key', async () =>
 test('transfer recovery is session-persisted, exact, and isolated when the user changes', () => {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost' });
   Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: dom.window.sessionStorage });
-  const draft = { key: 'attempt-key', body: { amountMinor: '2500', concept: 'Pago' }, transferId: 'transfer-id' };
+  const draft = { key: 'attempt-key', body: { sourceAccountId, destinationType: 'beneficiary', beneficiaryId, amountMinor: '2500', concept: 'Pago', reference: '42' }, transferId: 'transfer-id' };
   activateTransferUser('user-a');
-  saveTransferDraft('user-a', draft);
+  saveTransferDraft('user-a', { ...draft, demoOnlyCode: 'secret' } as typeof draft);
   assert.deepEqual(readTransferDraft('user-a'), draft);
+  assert.equal(dom.window.sessionStorage.getItem('wallet:web:transfer-attempt:user-a')?.includes('secret'), false);
   assert.equal(readTransferDraft('user-b'), null);
   activateTransferUser('user-b');
   assert.equal(readTransferDraft('user-a'), null);
