@@ -102,8 +102,8 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await page.getByRole('link', { name: 'Beneficiarios' }).click();
-  await expect(page.getByRole('heading', { name: 'Beneficiarios' })).toBeVisible();
-  await page.getByRole('link', { name: 'Agregar beneficiario' }).click();
+  await expect(page.getByRole('heading', { name: 'Beneficiarios', exact: true })).toBeVisible();
+  await page.locator('a.primary-button[href="/beneficiaries/new"]').click();
   await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
 
   await page.getByLabel('Nombre del beneficiario').fill('Beneficiary Destination');

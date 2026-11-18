@@ -10,6 +10,7 @@ import { dataSource } from '../db/data-source.js';
 import { ensureDemoClearingAccount } from '../db/clearing-account.js';
 import { clabeFingerprint, decryptClabe, encryptClabe, generateClabe, hashSecret } from '../security/crypto.js';
 import { isValidClabe, loginRequestSchema, registerRequestSchema } from '@fintech-wallet/shared';
+import { confirmTransfer, createTransfer, getTransfer, TransferFault, type TransferRequest } from '../transfers/service.js';
 
 const validRequestId = /^[a-zA-Z0-9._:-]{1,128}$/;
 const cookieName = 'wallet_refresh';
@@ -121,6 +122,18 @@ export function createApp() {
   api.get('/beneficiaries/:beneficiaryId',async(req,res,next)=>{
     if(!isUuid(req.params.beneficiaryId)) return problem(res,404,'Not Found','Beneficiario no encontrado.');
     try {const rows=await db.query('SELECT id,name,alias,destination_account_id,clabe_ciphertext FROM beneficiaries WHERE id=$1 AND owner_id=$2',[req.params.beneficiaryId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Beneficiario no encontrado.');res.json(beneficiaryDto(rows[0] as Record<string,string>));}catch(error){next(error);}
+  });
+  api.post('/transfers',async(req,res,next)=>{
+    try { const key=req.get('idempotency-key')??''; const result=await createTransfer(db,String(res.locals.userId),key,req.body as TransferRequest,String(res.locals.requestId));res.status(result.status).json(result.body); }
+    catch(error){ if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message); if(isUnique(error))return problem(res,409,'Conflict','La solicitud idempotente está en curso; reintenta con la misma llave.'); next(error); }
+  });
+  api.get('/transfers/:transferId',async(req,res,next)=>{
+    if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
+    try{res.json(await getTransfer(db,String(res.locals.userId),req.params.transferId));}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
+  });
+  api.post('/transfers/:transferId/confirm',async(req,res,next)=>{
+    if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
+    try{const result=await confirmTransfer(db,String(res.locals.userId),req.params.transferId,req.get('idempotency-key')??'',req.body?.code,String(res.locals.requestId));res.json(result);}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
   });
   app.use('/v1',api);
   app.use((_request,response)=>problem(response,404,'Not Found','Recurso no encontrado.'));
