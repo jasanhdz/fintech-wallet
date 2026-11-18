@@ -115,7 +115,7 @@ La dirección LAN debe ser accesible desde el teléfono en la misma Wi-Fi. Escan
 - Las migraciones TypeORM se ejecutan con `synchronize: false`; el perfil manual demo se crea con `db:seed` dentro de `wallet_dev`, con ledger de apertura balanceado y sin reset de actividad.
 - `docs/product-integration-report.md` recoge evidencia del ciclo de integración. `docs/integration-review.md` preserva la revisión independiente del SHA `f5e9a4868409740aff29b1f5a4ea11b9a4194413`; no es aprobación de la versión actual ni final.
 - `docs/design-mapping.md` registra la correspondencia de fuentes visuales, estados y alcance. `docs/design/references/round3/` contiene capturas PNG de referencia sanitizadas, capturas PNG de implementación del CI y su matriz de revisión; `docs/design/references/` conserva además dos esquemas SVG complementarios.
-- `docs/design-fidelity-round3.md` distingue implementación, inspección de capturas Web y revisión nativa móvil pendiente. `docs/mobile-review-round3.md` contiene el recorrido de validación con Expo Go.
+- `docs/design-fidelity-round4.md` registra las correcciones Web, capturas CI y el estado pantalla a pantalla de Mobile nativo. `docs/mobile-review-round4.md` contiene el recorrido actualizado de validación con Expo Go; no se declara aceptación visual del teléfono sin capturas del revisor.
 - `docs/acceptance-handoff-round3.md` registra el SHA, el arranque no destructivo, la diferencia de llaves entre worktrees y el límite de atribución del request histórico; la aceptación sigue pendiente.
 - `docs/aws-deploy.md` es una propuesta documental; no se despliega AWS. No se publica Expo/EAS ni se abre un túnel público.
 
