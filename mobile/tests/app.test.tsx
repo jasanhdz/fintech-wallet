@@ -1275,3 +1275,132 @@ describe('round 6 · E: sending, verifying, completed, rejected, expired and can
     delete (global as { fetch?: typeof fetch }).fetch;
   });
 });
+
+const savingsAccount = { id: 'savings-1', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '500000', clabe: '646000000000005719', clabeMasked: '646•••••••••••5719' };
+const ownSavingsBeneficiary = { id: 'b-own', name: 'Cuenta de ahorro demo', alias: 'Ahorro demo', clabeMasked: '646•••••••••••5719', destinationAccountId: 'savings-1', ownAccountId: 'savings-1' };
+
+async function sameAccountApp(options: { beneficiaries?: unknown[]; onCreate?: (body: Record<string, string>) => Response } = {}) {
+  const createBodies: Array<Record<string, string>> = [];
+  const app = await loginWith((url, init) => {
+    if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount, savingsAccount] });
+    if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+    if (url.endsWith('/beneficiaries')) return Response.json({ items: options.beneficiaries ?? [ownSavingsBeneficiary, flowBeneficiary] });
+    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true });
+    if (url.endsWith('/transfers') && init?.method === 'POST') {
+      const body = JSON.parse(String(init.body)) as Record<string, string>;
+      createBodies.push(body);
+      return options.onCreate ? options.onCreate(body) : Response.json(flowTransfer({ id: 'tr-ok', status: 'completed', sourceAccountId: body.sourceAccountId, destination: ownSavingsBeneficiary, amountMinor: body.amountMinor, completedAt: '2026-11-13T20:32:00.000Z' }), { status: 201 });
+    }
+    if (url.endsWith('/transfers/tr-ok')) return Response.json(flowTransfer({ id: 'tr-ok', status: 'completed', destination: ownSavingsBeneficiary, amountMinor: createBodies[0]?.amountMinor ?? '100', completedAt: '2026-11-13T20:32:00.000Z' }));
+    return undefined;
+  });
+  const press = async (label: string) => { await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: label }).props.onPress(); }); await app.wait(); };
+  const fill = async (amount: string) => {
+    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText(amount); });
+    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Ahorro mensual'); app.renderer.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('1546'); });
+  };
+  const choose = async (prefix: string) => { await TestRenderer.act(async () => { app.renderer.root.findAll((node) => node.props.accessibilityLabel?.startsWith(`Seleccionar ${prefix}`) && typeof node.props.onPress === 'function')[0]!.props.onPress(); }); await app.wait(); };
+  const continueButton = () => app.button('Continuar');
+  return { ...app, press, fill, choose, continueButton, createBodies };
+}
+
+describe('round 6 · B/C/D: origin = destination is decided by account identity before sending', () => {
+  it('M05: from Ahorro, the own "Cuenta de ahorro demo" beneficiary is disabled and explained; Carlos stays available', async () => {
+    const app = await sameAccountApp();
+    await app.press('Ahorro •• 5719');
+    await app.press('Elegir beneficiario');
+    const own = app.renderer.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Cuenta de ahorro demo') && typeof node.props.onPress === 'function')[0]!;
+    assert.equal(own.props.disabled, true);
+    assert.match(own.props.accessibilityLabel, /misma cuenta de origen/);
+    await TestRenderer.act(async () => { own.props.onPress(); });
+    assert.match(app.visible(), /Elegir beneficiario/, 'tapping the incompatible destination does nothing');
+    assert.match(app.visible(), /Es tu cuenta de origen/);
+    const carlos = app.renderer.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Carlos') && typeof node.props.onPress === 'function')[0]!;
+    assert.notEqual(carlos.props.disabled, true);
+    await app.finish();
+  });
+
+  it('changing the origin to the destination account (Home tab or M06 selector) invalidates the beneficiary and blocks Continuar; no POST', async () => {
+    const app = await sameAccountApp();
+    await app.press('Elegir beneficiario');
+    await app.choose('Cuenta de ahorro demo');
+    // Home tab changed after choosing the destination: the combination becomes invalid.
+    await app.press('Ahorro •• 5719');
+    assert.match(app.visible(), /Es la misma cuenta de origen seleccionada/);
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.fill('100');
+    assert.match(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
+    assert.equal(app.continueButton().props.disabled, true);
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    assert.doesNotMatch(app.visible(), /Revisar transferencia|Saldo posterior estimado/, 'D: no review or estimate for an invalid combination');
+    // M06 origin selector: choosing Principal makes it valid again (own accounts that differ are allowed).
+    await app.press('Cambiar cuenta de origen');
+    await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
+    assert.doesNotMatch(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
+    assert.notEqual(app.continueButton().props.disabled, true);
+    // ...and back to Ahorro invalidates it again.
+    await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
+    assert.equal(app.continueButton().props.disabled, true);
+    assert.equal(app.createBodies.length, 0);
+    await app.finish();
+  });
+
+  it('Principal -> Ahorro (different own accounts) stays valid, shows the BigInt estimate and sends that exact payload', async () => {
+    const app = await sameAccountApp();
+    await app.press('Elegir beneficiario');
+    await app.choose('Cuenta de ahorro demo');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.fill('100');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    assert.match(app.visible(), /Saldo posterior estimado/);
+    assert.match(app.visible(), /"\$12,450.00"," - ","\$100.00"," = ","\$12,350.00"," MXN"/);
+    await TestRenderer.act(async () => { app.button('Confirmar transferencia').props.onPress(); });
+    await app.wait();
+    assert.equal(app.createBodies.length, 1);
+    assert.deepEqual(app.createBodies[0], { sourceAccountId: 'source-1', destinationType: 'beneficiary', beneficiaryId: 'b-own', amountMinor: '10000', concept: 'Ahorro mensual', reference: '1546' });
+    await app.finish();
+  });
+
+  it('M11: "Modificar monto o cuenta" after an origin=destination 422 opens the origin selector, keeps the data and warns before resending the same combination', async () => {
+    // An older beneficiary payload without ownAccountId: only the API can detect the conflict.
+    const legacy = { ...ownSavingsBeneficiary, ownAccountId: undefined };
+    const app = await sameAccountApp({ beneficiaries: [legacy], onCreate: () => Response.json({ title: 'Unprocessable', status: 422, detail: 'El origen y destino deben ser distintos.' }, { status: 422 }) });
+    await app.press('Ahorro •• 5719');
+    await app.press('Elegir beneficiario');
+    await app.choose('Cuenta de ahorro demo');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.fill('100');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    await TestRenderer.act(async () => { app.button('Confirmar transferencia').props.onPress(); });
+    await app.wait();
+    assert.match(app.visible(), /El origen y destino deben ser distintos/);
+    await TestRenderer.act(async () => { app.button('Modificar monto o cuenta').props.onPress(); });
+    const details = app.visible();
+    assert.match(details, /Datos de la operación/);
+    assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Usar Cuenta Principal •• 8412 como cuenta de origen' }), 'the origin selector is open');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '100');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Concepto' }).props.value, 'Ahorro mensual');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Referencia' }).props.value, '1546');
+    // Resending the very same combination is not silent.
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    assert.match(app.visible(), /iguales a los del intento rechazado/);
+    await TestRenderer.act(async () => { app.button('Modificar datos').props.onPress(); });
+    await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    assert.doesNotMatch(app.visible(), /iguales a los del intento rechazado/);
+    assert.match(app.visible(), /"Cuenta Principal •• 8412"/);
+    await app.finish();
+  });
+
+  it('M05: when every destination is the origin itself, an explanatory empty state offers changing the origin', async () => {
+    const app = await sameAccountApp({ beneficiaries: [ownSavingsBeneficiary] });
+    await app.press('Ahorro •• 5719');
+    await app.press('Elegir beneficiario');
+    assert.match(app.visible(), /No hay destinos disponibles desde Ahorro •• 5719/);
+    await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
+    assert.doesNotMatch(app.visible(), /No hay destinos disponibles/);
+    await app.choose('Cuenta de ahorro demo');
+    assert.match(app.visible(), /DESTINO SELECCIONADO/);
+    await app.finish();
+  });
+});
