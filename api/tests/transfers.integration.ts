@@ -154,3 +154,60 @@ test('internal transfers enforce owner, idempotency, OTP, ledger, balance and co
     assert.equal((await secondRetryResponse.json() as {id:string}).id,retryDto.id,'a further replay of the same key must keep returning the single recovered transfer');
   } finally { await outageSibling.end(); }
 });
+
+// F-02: the daily transfer limit is applied per business_date, computed as `(instant AT TIME ZONE BUSINESS_TIME_ZONE)::date`
+// (see api/src/transfers/service.ts). This exercises that exact SQL expression around the real business-midnight boundary of
+// the configured IANA zone, and confirms daily_limit_usage isolates consumption across the two adjacent business dates with
+// no leakage or double counting for the same owner.
+test('daily limit usage isolates consumption across the business-midnight boundary of BUSINESS_TIME_ZONE in wallet_test', async (t) => {
+  const testUrl=assertSafeTestDatabase(process.env.TEST_DATABASE_URL);
+  const timeZone=process.env.BUSINESS_TIME_ZONE??='America/Mexico_City';
+  const client=new Client({connectionString:testUrl.toString()});await client.connect();
+  // wallet_runtime_test intentionally has no DELETE privilege on users/daily_limit_usage (same append-only posture as the
+  // rest of this suite), so the synthetic owner and its usage rows are left in place, exactly like every other registered
+  // test user in this file; they are isolated by a fresh random email/UUID and do not affect other tests.
+  t.after(async()=>{await client.end();});
+
+  // America/Mexico_City has observed UTC-6 (CST) year-round since the 2022 repeal of national DST; confirm the configured
+  // zone's real offset at the test instants before relying on it, instead of assuming a fixed offset.
+  const beforeMidnightUtc='2026-11-16T05:59:00.000Z';
+  const afterMidnightUtc='2026-11-16T06:01:00.000Z';
+  const boundary=await client.query(
+    `SELECT ($1::timestamptz AT TIME ZONE $3)::date::text AS before_day, ($2::timestamptz AT TIME ZONE $3)::date::text AS after_day,
+            ($1::timestamptz AT TIME ZONE $3)::text AS before_local, ($2::timestamptz AT TIME ZONE $3)::text AS after_local`,
+    [beforeMidnightUtc,afterMidnightUtc,timeZone],
+  );
+  const {before_day:beforeDay,after_day:afterDay,before_local:beforeLocal,after_local:afterLocal}=boundary.rows[0] as {before_day:string;after_day:string;before_local:string;after_local:string};
+  assert.match(beforeLocal,/23:59:00$/,`expected 23:59:00 local time just before business midnight in ${timeZone}, got ${beforeLocal}`);
+  assert.match(afterLocal,/00:01:00$/,`expected 00:01:00 local time just after business midnight in ${timeZone}, got ${afterLocal}`);
+  assert.notEqual(beforeDay,afterDay,'instants on opposite sides of business midnight must resolve to different business_date values');
+
+  const owner=await client.query("INSERT INTO users(email,full_name,password_hash) VALUES($1,'Midnight QA','x') RETURNING id",[`midnight-${crypto.randomUUID()}@example.test`]);
+  const ownerId=owner.rows[0].id as string;
+
+  // Seed the two adjacent business dates independently, as production code does one row at a time under a row lock.
+  await client.query("INSERT INTO daily_limit_usage(owner_id,business_date,currency,outgoing_minor) VALUES($1,$2::date,'MXN',500000)",[ownerId,beforeDay]);
+  await client.query("INSERT INTO daily_limit_usage(owner_id,business_date,currency,outgoing_minor) VALUES($1,$2::date,'MXN',0)",[ownerId,afterDay]);
+
+  // Consuming against the day that just started (afterDay) must lock and update only that row, leaving the prior
+  // business date's usage completely untouched (no cross-window leakage).
+  await client.query('BEGIN');
+  await client.query('SELECT 1 FROM daily_limit_usage WHERE owner_id=$1 AND business_date=$2::date FOR UPDATE',[ownerId,afterDay]);
+  await client.query('UPDATE daily_limit_usage SET outgoing_minor=outgoing_minor+$1 WHERE owner_id=$2 AND business_date=$3::date',['300000',ownerId,afterDay]);
+  await client.query('COMMIT');
+
+  const rows=await client.query('SELECT business_date::text AS day,outgoing_minor::text AS amount FROM daily_limit_usage WHERE owner_id=$1 ORDER BY business_date',[ownerId]);
+  const byDay=new Map(rows.rows.map((row:{day:string;amount:string})=>[row.day,row.amount] as const));
+  assert.equal(byDay.get(beforeDay),'500000','consumption recorded just before business midnight must remain in its own business_date window');
+  assert.equal(byDay.get(afterDay),'300000','consumption recorded just after business midnight must accumulate only in the new business_date window, not the prior one');
+
+  // A second, independent consumption against the earlier window must not be visible to, nor combined with, the later window.
+  await client.query('BEGIN');
+  await client.query('SELECT 1 FROM daily_limit_usage WHERE owner_id=$1 AND business_date=$2::date FOR UPDATE',[ownerId,beforeDay]);
+  await client.query('UPDATE daily_limit_usage SET outgoing_minor=outgoing_minor+$1 WHERE owner_id=$2 AND business_date=$3::date',['1',ownerId,beforeDay]);
+  await client.query('COMMIT');
+  const rowsAfter=await client.query('SELECT business_date::text AS day,outgoing_minor::text AS amount FROM daily_limit_usage WHERE owner_id=$1 ORDER BY business_date',[ownerId]);
+  const byDayAfter=new Map(rowsAfter.rows.map((row:{day:string;amount:string})=>[row.day,row.amount] as const));
+  assert.equal(byDayAfter.get(beforeDay),'500001','the earlier window must only reflect its own increment');
+  assert.equal(byDayAfter.get(afterDay),'300000','the later window must be unaffected by an update targeting the earlier window');
+});
