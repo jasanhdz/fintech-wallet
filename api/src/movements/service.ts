@@ -1,4 +1,5 @@
 import type { DataSource } from 'typeorm';
+import { decryptClabe } from '../security/crypto.js';
 
 export class MovementFault extends Error {
   constructor(readonly status: number, readonly title: string, message: string) { super(message); }
@@ -45,10 +46,19 @@ export async function listMovements(db: DataSource, userId: string, accountId: s
     if (!owned[0]) throw new MovementFault(404, 'Not Found', 'Cuenta no encontrada.');
     const rows = await runner.query(`SELECT le.id, lt.reference_id AS transfer_id, le.entry_type AS type,
       abs(le.signed_amount_minor)::text AS amount_minor, t.concept, t.reference, t.status,
-      to_char(le.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS occurred_at
+      to_char(le.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') AS occurred_at,
+      to_char(le.created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_at,
+      t.owner_id AS transfer_owner, t.beneficiary_id,
+      sa.id AS source_id, sa.owner_id AS source_owner, sa.name AS source_name, sa.clabe_ciphertext AS source_clabe, su.full_name AS sender_name,
+      da.id AS dest_id, da.owner_id AS dest_owner, da.name AS dest_name, da.clabe_ciphertext AS dest_clabe,
+      b.name AS beneficiary_name, b.clabe_ciphertext AS beneficiary_clabe
       FROM ledger_entries le
       JOIN ledger_transactions lt ON lt.id=le.ledger_transaction_id AND lt.reference_type='transfer'
       JOIN transfers t ON t.id=lt.reference_id AND t.status='completed'
+      JOIN accounts sa ON sa.id=t.source_account_id
+      JOIN accounts da ON da.id=t.destination_account_id
+      LEFT JOIN users su ON su.id=sa.owner_id
+      LEFT JOIN beneficiaries b ON b.id=t.beneficiary_id AND b.owner_id=t.owner_id
       WHERE le.account_id=$1::uuid AND le.entry_type IN ('debit','credit')
         AND t.completed_at IS NOT NULL
         AND ($2::timestamptz IS NULL OR t.completed_at >= $2::timestamptz)
@@ -62,9 +72,28 @@ export async function listMovements(db: DataSource, userId: string, accountId: s
       id: row.id, transferId: row.transfer_id, type: row.type, amountMinor: row.amount_minor,
       currency: 'MXN', concept: row.concept, reference: row.reference, status: row.status,
       occurredAt: String(row.occurred_at),
+      counterparty: counterparty(row, userId),
     }));
     const last = page.at(-1) as Record<string, unknown> | undefined;
-    const nextCursor = hasMore && last ? Buffer.from(JSON.stringify({ occurredAt: last.occurred_at, id: last.id })).toString('base64url') : null;
+    const nextCursor = hasMore && last ? Buffer.from(JSON.stringify({ occurredAt: last.cursor_at, id: last.id })).toString('base64url') : null;
     return { items, nextCursor };
   } finally { await runner.release(); }
+}
+
+const masked = (ciphertext: unknown) => { const clabe = decryptClabe(String(ciphertext)); return `${clabe.slice(0, 3)}•••••••••••${clabe.slice(-4)}`; };
+
+/**
+ * The other side of a movement, from the viewpoint of the account owner. Sent (debit): the beneficiary as the
+ * sender registered it, or the own destination account. Received (credit): the own source account, or the sending
+ * user's name with the source CLABE masked. `ownAccountId` appears only when that side is an account of this user.
+ */
+function counterparty(row: Record<string, unknown>, userId: string) {
+  if (row.type === 'debit') {
+    if (row.beneficiary_id && row.beneficiary_name !== null && row.beneficiary_name !== undefined) {
+      return { name: String(row.beneficiary_name), clabeMasked: masked(row.beneficiary_clabe), ...(row.dest_owner === userId ? { ownAccountId: String(row.dest_id) } : {}) };
+    }
+    return { name: String(row.dest_name), clabeMasked: masked(row.dest_clabe), ...(row.dest_owner === userId ? { ownAccountId: String(row.dest_id) } : {}) };
+  }
+  if (row.source_owner === userId) return { name: String(row.source_name), clabeMasked: masked(row.source_clabe), ownAccountId: String(row.source_id) };
+  return { name: String(row.sender_name ?? 'Usuario Billetera'), clabeMasked: masked(row.source_clabe) };
 }
