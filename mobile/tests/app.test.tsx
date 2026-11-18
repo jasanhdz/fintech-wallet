@@ -214,6 +214,13 @@ describe('mobile transfer attempt', () => {
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
+    {
+      const homeScreen = JSON.stringify(renderer!.toJSON());
+      const balanceIndex = homeScreen.indexOf('Saldo disponible');
+      const transferEntryIndex = homeScreen.indexOf('Transferir dinero');
+      assert.ok(balanceIndex >= 0 && transferEntryIndex >= 0, 'home screen must show both the account balance and the transfer entry point');
+      assert.ok(balanceIndex < transferEntryIndex, 'the account balance must render above the transfer entry point, matching the approved M02 composition');
+    }
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
