@@ -1,0 +1,4 @@
+policy otpThresholdMinor 500000 | demoOnly true
+POST /transfers amountMinor=499999 -> HTTP 201 status completed | demoOnlyCode present: false (value never printed)
+POST /transfers amountMinor=500000 -> HTTP 202 status awaiting_confirmation | demoOnlyCode present: true (value never printed)
+POST /transfers amountMinor=500001 -> HTTP 202 status awaiting_confirmation | demoOnlyCode present: true (value never printed)

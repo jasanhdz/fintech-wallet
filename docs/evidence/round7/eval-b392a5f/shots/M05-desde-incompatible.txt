@@ -1,0 +1,29 @@
+
+Transferir
+AL
+Elegir beneficiario
+Selecciona la cuenta destino para enviar fondos.
+
+Todos (2)
+CONTACTOS DISPONIBLES
+Billetera MXN
+
+Enviando desde Ahorro •• 6566. Un destino que es esta misma cuenta no está disponible.
+Cuenta de origen
+Cuenta principal •• 8406
+Disponible: $10,000.00 MXN
+Ahorro •• 6566
+Disponible: $5,000.00 MXN
+CD
+Cuenta de ahorro demo
+Ahorro demo
+Billetera MXN •• 6566
+Es tu cuenta de origen: elige otra cuenta de origen para enviarle.
+
+CP
+Cuenta principal demo
+Principal demo
+Billetera MXN •• 8406
+
+
+Los beneficiarios se registran y administran únicamente desde la versión web.

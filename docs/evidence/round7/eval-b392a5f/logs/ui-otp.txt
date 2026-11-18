@@ -1,0 +1,49 @@
+API#2 policy {"otpThresholdMinor":"123456","otpExpirySeconds":90,"otpMaxAttempts":3,"dailyLimitMinor":"1500000"}
+PASS M07 amount 1234.55 (policy threshold 1,234.56): code variant=false (expected false); chip text: false
+  bar 1234.55: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+PASS M07 amount 1234.56 (policy threshold 1,234.56): code variant=true (expected true); chip text: true
+SHOT M07-umbral-politica-API2 minFont=12 scrollW=390 offscreen=0 errs=0
+  bar 1234.56: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+PASS M07 amount 1234.57 (policy threshold 1,234.56): code variant=true (expected true); chip text: true
+  bar 1234.57: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+  bar 3000.00: remaining 70.00% spent-segment 30.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+SHOT M07-barra-70-30 minFont=12 scrollW=390 offscreen=0 errs=0
+  bar 9999.99: remaining 0.00% spent-segment 100.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+  bar 10000.00: remaining 0.00% spent-segment 100.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+F-15 M07 umbral @390x844: Continuar a verificación 720-768 | Modificar datos 776-820 (viewport height 844)
+SHOT M07-umbral-844 minFont=12 scrollW=390 offscreen=0 errs=0
+  after scrolling to the end: Continuar 720-768 | Modificar 776-820
+SHOT M07-umbral-844-desplazado minFont=12 scrollW=390 offscreen=0 errs=0
+PASS M08 shows the demo code box (dev only)
+SHOT M08-vacio minFont=12 scrollW=390 offscreen=0 errs=0
+M08 empty: Autorizar disabled = true | countdown text = 01:28 (expiry 90 s -> 01:2x-01:30 expected) | threshold note: true
+SHOT M08-incompleto minFont=12 scrollW=390 offscreen=0 errs=0
+M08 incomplete "12": false | Autorizar disabled = true
+  after typing "3 4-5" (insertText): value length = 3 (digits only expected 5)
+  Backspace -> length 2 text false
+  paste "12a3456789" -> value length 6 (max 6, digits only)
+SHOT M08-completo minFont=12 scrollW=390 offscreen=0 errs=0
+M08 complete: true | Autorizar disabled = null
+SHOT M08-verificando minFont=12 scrollW=390 offscreen=0 errs=0
+M08 verifying: "Verificando código…" true | "Enviando transferencia" present false | input editable false | exits disabled: Cancelar true
+SHOT M08-incorrecto minFont=12 scrollW=390 offscreen=0 errs=1
+M08 wrong code (422): message true | mentions max attempts (3): true | input cleared true | balances 1000000 unchanged true
+  2nd wrong -> still "incorrecto"
+SHOT M08-intentos-agotados minFont=12 scrollW=390 offscreen=0 errs=3
+M08 3rd wrong -> locked state: true | input editable false | Autorizar disabled true | demo code still shown false | "Solicitar un código nuevo" 1
+  API: correct code after lockout -> 429 (429 expected) | balances unchanged true
+  new code requests: ["POST /transfers/id/cancel key=-","POST /transfers key=35c96077"]
+  DB after new code: cancelled:200000 | awaiting_confirmation:200000 | pending= 1 | balances unchanged true
+SHOT M08-codigo-nuevo minFont=12 scrollW=390 offscreen=0 errs=3
+  new attempt: fresh countdown & code box: true differs from old: true | data kept: amount 2,000.00 true | recipient true
+  OLD code on NEW attempt -> 422 | balances unchanged true | old attempt row status: cancelled
+SHOT M10-tras-codigo-nuevo minFont=12 scrollW=390 offscreen=0 errs=3
+  authorize new code -> receipt: true | DB: cancelled:200000 | completed:200000 | ledger 2 rows sum 0 | debit 200000
+SHOT M08-expirado minFont=12 scrollW=390 offscreen=0 errs=0
+M08 expiry: countdown at start 00:08 | expired banner true | input editable false | Autorizar disabled true | demo code hidden true
+  API: correct code after expiry -> 422 El código expiró. | DB status now: expired | balances unchanged true
+  new code after expiry: requests ["POST /transfers/id/cancel key=-","POST /transfers key=e0838ee8"] | DB expired:200000 | awaiting_confirmation:200000 | balances unchanged true
+SHOT M07-tras-cancelar minFont=12 scrollW=390 offscreen=0 errs=0
+M08 cancel: requests ["POST /transfers/id/cancel key=-"] | back at review true | data kept (Cancela / 8803 / 2,000.00) true | DB cancelled:200000 | balances unchanged true
+SHOT M08-codigo-nuevo-incierto minFont=12 scrollW=390 offscreen=0 errs=2
+M08 new code with unreadable previous attempt: POST /transfers (create) = 0 | message shown true | pending rows = 1 | still on code step true

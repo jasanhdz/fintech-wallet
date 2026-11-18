@@ -1,0 +1,82 @@
+
+===== D1 (F-22): A deja un intento incierto; B inicia sesión, transfiere y cierra sesión; A reanuda =====
+A record fields: ["key","payload","userId"] | payload fields ["sourceAccountId","destinationType","beneficiaryId","amountMinor","concept","reference"] | userId matches A true | contains tokens/otp/clabe? false
+PASS A logout keeps A record byte-identical
+AUDIT B Home: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 3442","Ahorro •• 7391","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+PASS B does not see A notice
+B session requests touching A record id:  0 (GET/POST on transfers during B login; expected 0)
+PASS A record unchanged while B is signed in
+B transfer receipt: true | B rows completed:15000
+PASS A record unchanged after B transferred
+after B explicit logout: A record byte-identical = true | record entries 1 | legacy slot present false
+PASS B logout did not delete/replace A record (F-22)
+SHOT F22-A-reanuda minFont=12 scrollW=390 offscreen=0 errs=2
+A returns: receipt shown true | keys used 1 same as stored true | A rows completed:30025 | 2 rows sum 0 | B rows completed:15000
+PASS A resumed with the same key; 1 transfer each
+record entries after A resolved: 0
+
+===== D2: hueco único antiguo =====
+AUDIT L2 Home with legacy slot of L1: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 6152","Ahorro •• 9620","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+PASS L2 does not see L1 legacy record
+PASS legacy slot not read/replaced/deleted by L2 (still byte-identical, no new key)
+PASS still intact after L2 logout
+L1 signs in: receipt true | legacy slot gone true | per-user key present/cleared 0 | keys used 1 matches legacy key true | L1 rows completed:12345
+PASS L1 legacy attempt resumed with its own key, 1 transfer
+AUDIT L4 signs in first with a userId-less legacy record of L3: notice=false forbidden=[] | buttons=["Ir al inicio"," Verificar estado de la transferencia","Ir al inicio (revisar saldo después)"]
+  record now under L4 key: true | L4 rows (none) | L3 rows (none)
+SHOT F26-legacy-sin-userId-L4 minFont=12 scrollW=390 offscreen=0 errs=1
+  L4 controls to leave this state: ["Ir al inicio"," Verificar estado de la transferencia","Ir al inicio (revisar saldo después)"]
+
+===== E (404-transferId-inexistente) =====
+after restart with the record: screen M09 | reqs ["POST /auth/refresh","GET /accounts","GET /transfers/044c"]
+SHOT E-404-transferId-inexistente-arranque minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT 404-transferId-inexistente Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 4454","Ahorro •• 1877"," Verificar estado de la transferencia","Última actualización de saldo, Actualiza"]
+AUDIT 404-transferId-inexistente Home after foreground x2 + logout/login: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 4454","Ahorro •• 1877"," Verificar estado de la transferencia","Última actualización de saldo, Actualiza"]
+SHOT E-404-transferId-inexistente-inicio minFont=12 scrollW=390 offscreen=0 errs=6
+RESULT 404-transferId-inexistente: still locked after foreground x2 and a new login = true | transfers in DB 0
+  any discard/cancel control on Home: false
+
+===== E (404-beneficiario-inexistente) =====
+after restart with the record: screen M09 | reqs ["POST /auth/refresh","GET /accounts","POST /transfers key=fc675e0d"]
+SHOT E-404-beneficiario-inexistente-arranque minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT 404-beneficiario-inexistente Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 1980","Ahorro •• 0021"," Verificar estado de la transferencia","Última actualización de saldo, Actualiza"]
+AUDIT 404-beneficiario-inexistente Home after foreground x2 + logout/login: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 1980","Ahorro •• 0021"," Verificar estado de la transferencia","Última actualización de saldo, Actualiza"]
+SHOT E-404-beneficiario-inexistente-inicio minFont=12 scrollW=390 offscreen=0 errs=6
+RESULT 404-beneficiario-inexistente: still locked after foreground x2 and a new login = true | transfers in DB 0
+  any discard/cancel control on Home: false
+
+===== E (registro-corrupto) =====
+after restart with the record: screen M09 | reqs ["POST /auth/refresh","GET /accounts"]
+SHOT E-registro-corrupto-arranque minFont=12 scrollW=390 offscreen=0 errs=0
+AUDIT registro-corrupto Home: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 3783","Ahorro •• 3077","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+AUDIT registro-corrupto Home after foreground x2 + logout/login: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 3783","Ahorro •• 3077","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+SHOT E-registro-corrupto-inicio minFont=12 scrollW=390 offscreen=0 errs=0
+RESULT registro-corrupto: still locked after foreground x2 and a new login = false | transfers in DB 0
+  any discard/cancel control on Home: false
+
+===== E4: 409 "en curso" en el reintento tras respuesta perdida (aplicada) =====
+SHOT E4-M11-no-verificado minFont=12 scrollW=390 offscreen=0 errs=2
+retry answered 409: screen M11 unverified = true | DB: completed:30025 | record entries 1
+AUDIT Home after leaving M11 (unverified): notice=false forbidden=["Cambiar beneficiario","Continuar con transferencia"] | buttons=["Cerrar sesión","Cuenta principal •• 7111","Ahorro •• 6583","Cambiar beneficiario","Continuar con transferencia","Última actualización de saldo, Actualiza","Traspaso a Cuenta de ahorro demo, •• 658","Ver los últimos 20 movimientos "]
+record entries after leaving M11: 0
+=> guard bypassed: the app lets the user start another transfer while the first one is applied but not verified
+second transfer receipt: true | DB: completed:30025 | completed:30025 | ledger 4 rows sum 0 | principal delta 60050
+
+===== E5 (expired): intento pendiente de código resuelto por el servidor =====
+AUDIT expired: Home while pending: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0370","Ahorro •• 9724"," Continuar con la transferencia pendien","Última actualización de saldo, Actualiza"]
+PASS pending-to-authorize notice
+SHOT E5-expired-resuelto minFont=12 scrollW=390 offscreen=0 errs=3
+  resolved on foreground: closed screen = true | title: El código de esta operación expiró | DB: expired:600000 | record entries 0
+  exit controls: ["Volver"," Volver al inicio"]
+AUDIT expired: Home after closing: notice=false forbidden=["Cambiar beneficiario","Continuar con transferencia"] | buttons=["Cerrar sesión","Cuenta principal •• 0370","Ahorro •• 9724","Cambiar beneficiario","Continuar con transferencia","Última actualización de saldo, Actualiza"]
+  flow enabled again = true
+
+===== E5 (cancelled): intento pendiente de código resuelto por el servidor =====
+AUDIT cancelled: Home while pending: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0025","Ahorro •• 7079"," Continuar con la transferencia pendien","Última actualización de saldo, Actualiza"]
+PASS pending-to-authorize notice
+  cancelled by API: 200
+SHOT E5-cancelled-resuelto minFont=12 scrollW=390 offscreen=0 errs=3
+  resolved on foreground: closed screen = true | title: Operación cancelada | DB: cancelled:600000 | record entries 0
+  exit controls: ["Volver"," Volver al inicio"]
+AUDIT cancelled: Home after closing: notice=false forbidden=["Cambiar beneficiario","Continuar con transferencia"] | buttons=["Cerrar sesión","Cuenta principal •• 0025","Ahorro •• 7079","Cambiar beneficiario","Continuar con transferencia","Última actualización de saldo, Actualiza"]
+  flow enabled again = true

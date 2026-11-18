@@ -1,0 +1,20 @@
+
+Transferir
+EC
+
+No se pudo completar la transferencia
+La solicitud idempotente está en curso; reintenta con la misma llave.
+
+Revisa tu saldo antes de reintentar
+No pudimos confirmar el efecto de este intento en tu cuenta. Consulta tus movimientos antes de volver a enviar.
+Cuenta de origen
+
+Principal •• 7111
+Saldo disponible
+$9,699.75 MXN
+Monto solicitado
+$300.25 MXN
+
+Modificar monto o cuenta
+
+Volver al inicio

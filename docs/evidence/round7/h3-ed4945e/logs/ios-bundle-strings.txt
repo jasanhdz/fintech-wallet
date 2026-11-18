@@ -1,0 +1,8 @@
+iOS export (Hermes bytecode) of ed4945e: entry-c7930f9cf450dbf8d16c3c12437a9b5d.hbc
+Transferencia pendiente de autorizar: 1
+Continuar con la transferencia pendiente: 1
+Verificar estado de la transferencia: 1
+wallet.transfer-recovery: 1
+Sin respuesta por ahora: 1
+review-hero-inline-icon: 1
+user-avatar: 1

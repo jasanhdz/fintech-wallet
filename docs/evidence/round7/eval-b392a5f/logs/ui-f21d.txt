@@ -1,0 +1,17 @@
+
+===== T (corrupt) =====
+  app screen after restart with corrupt record shows raw error text: true
+SHOT T-corrupt-confirmar minFont=12 scrollW=390 offscreen=0 errs=0
+message "No pudimos comprobar si tienes una transferencia en verificación": true | POST /transfers sent 0 | DB (none)
+  controls on screen: ["Volver","Confirmar transferencia ","Modificar datos"]
+  second tap -> POST sent 0 (0 = blocked every time; the record is unreadable so no escape in the UI)
+
+===== T (unreadable) =====
+SHOT T-unreadable-confirmar minFont=12 scrollW=390 offscreen=0 errs=0
+message "No pudimos comprobar si tienes una transferencia en verificación": true | POST /transfers sent 0 | DB (none)
+  controls on screen: ["Volver","Confirmar transferencia ","Modificar datos"]
+  second tap -> POST sent 0 (0 = blocked every time; the record is unreadable so no escape in the UI)
+
+===== T (500 mientras el aviso está visible) =====
+Home with 500 from API: notice true | "Sin respuesta por ahora" true | forbidden entries false
+API back + foreground -> receipt: true | DB completed:10000

@@ -1,0 +1,35 @@
+
+Transferir
+WW
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$850.00
+MXN
+
+CUENTA DE ORIGEN
+Cuenta principal •• 4665
+Saldo disponible: $10,000.00 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Wanda Wu (Wanda) •• 5056
+Billetera MXN
+Concepto
+Comida
+Referencia numérica
+1234
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$9,150.00 MXN
+Cálculo:
+$10,000.00 - $850.00 = $9,150.00 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+Confirmar transferencia
+
+Modificar datos

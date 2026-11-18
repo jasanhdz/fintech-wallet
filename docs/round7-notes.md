@@ -8,11 +8,14 @@ Alcance: sólo `mobile/**`, documentación y evidencia. No se tocaron `api/**`, 
 
 | Fuente | Texto | Regla |
 |---|---|---|
-| `specs/requirements.md` REQ-XFER-11 | "monto **superior** al umbral" | `amount > threshold` |
-| `specs/design.md` | "OTP **sobre** 5,000 MXN" (valor ilustrativo) | ambiguo (sobre = superior) |
-| `api/src/transfers/service.ts` | `const requiresOtp=amount>=threshold;` | `amount >= threshold` |
+| `specs/requirements.md:47` REQ-XFER-11 | "Given transferencia de monto **superior** al umbral pendiente de aprobación, when se confirma, then exige código de un solo uso…" | `amount > threshold` |
+| `specs/design.md:17` | "OTP **sobre** 5,000 MXN" — "Umbral demo desde env (`5,000 MXN` como ejemplo, no exigencia aprobada)" | ambiguo (sobre = superior) |
+| `specs/openapi.yaml:616` (`TransferPolicy.otpThresholdMinor`, contrato) | "Se exige OTP cuando `amountMinor >= otpThresholdMinor`." | `amount >= threshold` |
+| `api/src/transfers/service.ts:51` | `const requiresOtp=amount>=threshold;` | `amount >= threshold` |
 
-Comportamiento vigente medido contra la API real en `wallet_test` (`docs/evidence/round7/efd0704/tools/api-r7.mjs`, umbral de demostración 500000):
+El contrato OpenAPI y el backend coinciden entre sí (`>=`) y discrepan del texto del requisito (`>`); el diseño es ambiguo.
+Comportamiento vigente medido contra la API real en `wallet_test` (ronda 7: `docs/evidence/round7/efd0704/tools/api-r7.mjs`;
+repetido en la tanda H3: `docs/evidence/round7/h3-ed4945e/logs/h3-threshold.txt`, umbral de demostración 500000):
 
 | Monto | Centavos | HTTP | Estado |
 |---|---|---|---|
@@ -20,9 +23,12 @@ Comportamiento vigente medido contra la API real en `wallet_test` (`docs/evidenc
 | $5,000.00 | 500000 | 202 | `awaiting_confirmation` (con código) |
 | $5,000.01 | 500001 | 202 | `awaiting_confirmation` (con código) |
 
-Decisión: **no** se cambia la regla ni el backend. Exactamente $5,000.00 pide código hoy; según REQ-XFER-11 no debería. Queda
-para decisión del responsable de producto/backend (cambiar `>=` por `>` o el texto del requisito). El cliente no redefine la
-regla:
+Decisión: **no** se cambia la regla, el contrato ni el backend (F-23 es decisión de producto). Exactamente $5,000.00 pide
+código hoy; según REQ-XFER-11 literal no debería. **Requiere decisión del Coordinador/producto**, que es dueño de OpenAPI y
+de la documentación de producto: o bien (a) se mantiene `>=` y se corrige el texto de REQ-XFER-11 ("igual o superior") y de
+`design.md`, o bien (b) se adopta `>` y cambian juntos `specs/openapi.yaml:616`, `api/src/transfers/service.ts:51`, sus
+pruebas de integración y la predicción del cliente (`mobile/App.tsx`, `requiresOtp`, y la etiqueta "mayor o igual a"). Hasta
+esa decisión el cliente no redefine la regla:
 
 - La variante de M07 ("Continuar a verificación" y el chip "mayor o igual a …") es sólo una **predicción** con
   `otpThresholdMinor` de `GET /v1/transfer-policy` y la misma comparación que hoy aplica la API (BigInt `>=`).
@@ -46,7 +52,9 @@ regla:
   un rechazo de negocio confirmado: M11 sin débito y el intento pendiente se cancela.
 - Entrada: un único `TextInput` oculto con nombre "Código de confirmación", `autoComplete="one-time-code"`,
   `textContentType="oneTimeCode"`, sólo dígitos, pegado de 6 dígitos y borrado; las seis casillas son decorativas para
-  tecnologías de asistencia.
+  tecnologías de asistencia. **F-24 (tanda H3)**: el campo ya no tiene `maxLength` (el control recortaba "12 34-56" a
+  "12 34-" *antes* del filtro); `onChangeText` filtra dígitos y conserva los 6 primeros, así que pegar `12 34-56`,
+  `12a3456789` o ` 742-890 ` da los 6 dígitos (medido en RN-Web; en iOS el portapapeles real queda pendiente, F-05).
 
 ## 3. "Solicitar un código nuevo" (sin endpoint nuevo)
 
@@ -84,8 +92,9 @@ desplazarse antes (no se redujo nada para evitarlo). Comparación lado a lado en
 - **M09/M12**: "Ir al inicio" deja en Inicio el aviso "Transferencia en verificación" (monto y referencia, sin afirmar nada
   sobre el dinero) cuya acción repite el mismo intento con su llave original. El registro de recuperación guarda el id de
   usuario: una sesión vencida lo conserva y el mismo usuario lo reanuda al volver a entrar; otro usuario en el dispositivo
-  nunca lo ve ni lo consume; cerrar sesión explícitamente lo borra. La cortina de privacidad se aplica en `inactive` (selector
-  de apps de iOS) y `background`. No es protección biométrica.
+  nunca lo ve ni lo consume. ~~Cerrar sesión explícitamente lo borra.~~ **Cambiado en la tanda H3 (F-21/F-22, §10)**: ningún
+  cierre de sesión borra el registro; sólo se borra cuando la API informa el intento resuelto. La cortina de privacidad se
+  aplica en `inactive` (selector de apps de iOS) y `background`. No es protección biométrica.
 - **M11**: "no se debitó" sólo con 422 o 429 "límite diario" (rechazos de negocio confirmados); otros 4xx quedan "Revisa tu
   saldo antes de reintentar" y un error de conexión va a M09, nunca a M11.
 - **F-20**: filas de movimientos, tarjetas de beneficiario y opciones de cuenta nombran todo su contenido visible.
@@ -169,3 +178,22 @@ camino para crear otro intento sin resolver el primero.
   `cancel` de mejor esfuerzo y borra el registro (comportamiento de la ronda 7). Si ese `cancel` fallara, el intento quedaría
   `awaiting_confirmation` hasta su `expiresAt` sin que la app conserve su código: no puede confirmarse desde la app ni mover
   dinero.
+
+### 10.1 Otros hallazgos de la pasada 8 (tanda H3)
+
+- **F-15 (M07 umbral con nombres reales)**: en la variante con código, el círculo decorativo de 48 px del importe pasa a
+  ser un icono en línea (el mismo, 18 pt) junto a "Monto a transferir". No se redujo ningún texto (mínimo medido 12 px), los
+  botones siguen en 48/44 pt y el chip conserva su texto completo. Medido en RN-Web con "Cuenta principal" → "Cuenta de ahorro
+  demo", $6,000.00: "Continuar a verificación" / "Modificar datos" a 390x844 = 720-768 / 776-820 (antes 762-810 / 818-862,
+  fuera); a 884 = 760-808 / 816-860; a 763 (safe area simulada) = 639-687 / 695-739. Las variantes normal y propias no
+  cambian y caben a 844, 884 y 763. Diferencia frente a Stitch (que conserva el círculo): documentada. Safe area real en
+  iPhone sin verificar (F-05).
+- **F-24 (pegado de código)**: ver §2.
+- **F-25 (iniciales con texto ampliado)**: avatares de Inicio, encabezados de flujo y tarjetas de beneficiario con tamaños
+  mínimos (32/44 pt) en lugar de fijos, radio de píldora e iniciales en una línea. A 100 % son los mismos círculos; a 200 %
+  (aproximación CSS) "AL" mide 36x40 dentro de 44x40 en Inicio y 31x32 dentro de 39x32 en M07, sin controles < 44 px ni
+  desbordes horizontales. `fontScale`/Dynamic Type real sin verificar (F-05).
+- **F-23**: sin cambio de regla; §1 documenta requisito, diseño, contrato OpenAPI y backend con las mediciones.
+
+Evidencia (código `ed4945e`): `docs/evidence/round7/h3-ed4945e/` (README con el procedimiento, scripts, logs y capturas antes/
+después lado a lado).

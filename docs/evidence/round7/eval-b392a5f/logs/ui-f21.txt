@@ -1,0 +1,65 @@
+
+===== SCENARIO A-after: response lost (lost-after); Principal -> Ahorro $300.25 =====
+M09 shown: true
+DB after lost response: completed:30025 | ledger 2 rows sum 0
+SHOT F21-A-after-inicio-bloqueado minFont=12 scrollW=390 offscreen=0 errs=2
+AUDIT Home (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","\nVerificar estado de la transfe","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS Home: only notice, no entry to a new transfer
+AUDIT Movimientos: notice=false forbidden-controls=[] | buttons=["Cuenta principal (•• 6172), camb","Traspaso a Cuenta de ahorro demo"]
+PASS Movimientos: no new-transfer entry
+AUDIT detalle de movimiento: notice=false forbidden-controls=[] | buttons=["Volver a movimientos","Reintentar"]
+AUDIT Inicio otra vez: notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","\nVerificar estado de la transfe","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS Home again still locked
+AUDIT Inicio, cuenta de ahorro: notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","\nVerificar estado de la transfe","Última actualización de saldo, A","Traspaso de Cuenta principal, ••","Ver los últimos 20 movimientos\n"]
+PASS account tab switch does not reopen a new-transfer entry
+after "Verificar" offline -> screen: M09 status
+SHOT F21-A-after-verificar-offline minFont=12 scrollW=390 offscreen=0 errs=5
+record keys after reload: ["ss:wallet.transfer-recovery.<userId>"]
+after reload offline: screen is M09 status
+AUDIT Home after reload (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","\nVerificar estado de la transfe","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS after reload no new-transfer entry
+record kept after explicit logout: ["ss:wallet.transfer-recovery.<userId>"]
+after relogin offline: M09 status
+AUDIT Home after relogin (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","\nVerificar estado de la transfe","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS after relogin no new-transfer entry
+DB while offline: completed:30025 | transfers 1
+SHOT F21-A-after-resuelto-primer-plano minFont=12 scrollW=390 offscreen=0 errs=9
+foreground resolved -> receipt: true | keys used on replay 1 | requests: ["GET /auth/me","POST /transfers key=3b182fb0","GET /transfers/6dc8","GET /accounts"]
+RESULT balances principal 1000000 -> 969975 | DB: completed:30025 | ledger 2 rows sum 0 | transfers 1
+PASS A-after: exactly 1 transfer
+AUDIT Home after resolution: notice=false forbidden-controls=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 6172","Ahorro •• 8090","Transferir dinero, elegir benefi","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS flow enabled again after resolution (notice gone)
+record keys after resolution: 0
+errs 9 ["console Failed to load resource: net::ERR_CONNECTION_RESET","console Failed to load resource: net::ERR_CONNECTION_RESET","console Failed to load resource: net::ERR_CONNECTION_RESET"]
+
+===== SCENARIO B-before: response lost (lost-before); Principal -> Ahorro $300.25 =====
+M09 shown: true
+DB after lost response: (no rows) | ledger 0 rows sum 0
+SHOT F21-B-before-inicio-bloqueado minFont=12 scrollW=390 offscreen=0 errs=2
+AUDIT Home (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","\nVerificar estado de la transfe","Última actualización de saldo, A"]
+PASS Home: only notice, no entry to a new transfer
+AUDIT Movimientos: notice=false forbidden-controls=[] | buttons=["Cuenta principal (•• 7657), camb"]
+PASS Movimientos: no new-transfer entry
+AUDIT Inicio otra vez: notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","\nVerificar estado de la transfe","Última actualización de saldo, A"]
+PASS Home again still locked
+AUDIT Inicio, cuenta de ahorro: notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","\nVerificar estado de la transfe","Última actualización de saldo, A"]
+PASS account tab switch does not reopen a new-transfer entry
+after "Verificar" offline -> screen: M09 status
+SHOT F21-B-before-verificar-offline minFont=12 scrollW=390 offscreen=0 errs=4
+record keys after reload: ["ss:wallet.transfer-recovery.<userId>"]
+after reload offline: screen is M09 status
+AUDIT Home after reload (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","\nVerificar estado de la transfe","Última actualización de saldo, A"]
+PASS after reload no new-transfer entry
+record kept after explicit logout: ["ss:wallet.transfer-recovery.<userId>"]
+after relogin offline: M09 status
+AUDIT Home after relogin (offline): notice=true forbidden-controls=[] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","\nVerificar estado de la transfe","Última actualización de saldo, A"]
+PASS after relogin no new-transfer entry
+DB while offline: (no rows) | transfers 0
+SHOT F21-B-before-resuelto-primer-plano minFont=12 scrollW=390 offscreen=0 errs=8
+foreground resolved -> receipt: true | keys used on replay 1 | requests: ["GET /auth/me","POST /transfers key=bafdab10","GET /transfers/77c5","GET /accounts"]
+RESULT balances principal 1000000 -> 969975 | DB: completed:30025 | ledger 2 rows sum 0 | transfers 1
+PASS B-before: exactly 1 transfer
+AUDIT Home after resolution: notice=false forbidden-controls=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 7657","Ahorro •• 4085","Transferir dinero, elegir benefi","Última actualización de saldo, A","Traspaso a Cuenta de ahorro demo","Ver los últimos 20 movimientos\n"]
+PASS flow enabled again after resolution (notice gone)
+record keys after resolution: 0
+errs 8 ["console Failed to load resource: net::ERR_CONNECTION_RESET","console Failed to load resource: net::ERR_CONNECTION_RESET","console Failed to load resource: net::ERR_CONNECTION_RESET"]

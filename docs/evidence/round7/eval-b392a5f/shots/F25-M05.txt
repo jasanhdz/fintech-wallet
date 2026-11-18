@@ -1,0 +1,34 @@
+
+Transferir
+WW
+Elegir beneficiario
+Selecciona la cuenta destino para enviar fondos.
+
+Todos (3)
+CONTACTOS DISPONIBLES
+Billetera MXN
+
+Enviando desde Cuenta principal •• 1206. Un destino que es esta misma cuenta no está disponible.
+Cuenta de origen
+Cuenta principal •• 1206
+Disponible: $10,000.00 MXN
+Ahorro •• 4764
+Disponible: $5,000.00 MXN
+CD
+Cuenta de ahorro demo
+Ahorro demo
+Billetera MXN •• 4764
+
+CP
+Cuenta principal demo
+Principal demo
+Billetera MXN •• 1206
+Es tu cuenta de origen: elige otra cuenta de origen para enviarle.
+
+WW
+Wanda Wu
+Wanda
+Billetera MXN •• 6359
+
+
+Los beneficiarios se registran y administran únicamente desde la versión web.

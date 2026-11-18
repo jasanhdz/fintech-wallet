@@ -1,0 +1,65 @@
+MUTATION F21 guard of the new key removed (submitCreate does not read the record) [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › defence in depth: confirming a new attempt while this user has a stored unresolved one sends no
+MUTATION F21 guard fails OPEN when SecureStore cannot be read [mobile/App.tsx] -> 160 passed, 160 total
+MUTATION F21 Home keeps destination card + Continuar while a record exists [mobile/App.tsx] -> 3 failed, 157 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home with an unresolved attempt offers no way to start another one (neither the kept destinatio
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › defence in depth: confirming a new attempt while this user has a stored unresolved one sends no
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › leaving the code step when the cancel cannot be confirmed keeps the attempt; Home only offers t
+MUTATION F21 Home keeps Continuar action while a record exists [mobile/App.tsx] -> 3 failed, 157 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home with an unresolved attempt offers no way to start another one (neither the kept destinatio
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › defence in depth: confirming a new attempt while this user has a stored unresolved one sends no
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › leaving the code step when the cancel cannot be confirmed keeps the attempt; Home only offers t
+MUTATION F21 Home does not auto-resolve the pending attempt [mobile/App.tsx] -> 5 failed, 155 passed, 160 total
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M09 "Ir al inicio" keeps a pending notice on Home; verifying replays the same key and lands 
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and 
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home resolves the attempt by itself (same key): completed -> receipt, record cleared, the trans
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › returning to the foreground with a valid session re-checks the pending attempt with the same ke
+MUTATION F21 foreground does not re-check (auth/me .then tick removed) [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › returning to the foreground with a valid session re-checks the pending attempt with the same ke
+MUTATION F21 record not saved before the POST [mobile/App.tsx] -> 8 failed, 152 passed, 160 total
+    FAIL mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    FAIL mobile uncertain result (M09) › "Ir al inicio" leaves the uncertain screen but keeps the recovery record for the next launch
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M09 "Ir al inicio" keeps a pending notice on Home; verifying replays the same key and lands 
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and 
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home resolves the attempt by itself (same key): completed -> receipt, record cleared, the trans
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home with an unresolved attempt offers no way to start another one (neither the kept destinatio
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › returning to the foreground with a valid session re-checks the pending attempt with the same ke
+MUTATION F21 leaving M08 with an unconfirmed cancel drops the record [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › leaving the code step when the cancel cannot be confirmed keeps the attempt; Home only offers t
+MUTATION F21 new code bypasses the guard even with no previous attempt [mobile/App.tsx] -> 160 passed, 160 total
+MUTATION F22 logout deletes the own record [mobile/App.tsx] -> 4 failed, 156 passed, 160 total
+    FAIL mobile logout › clears local credentials and UI when logout cannot reach the API
+    FAIL mobile logout › revokes the server session with bearer and refresh credentials, then clears local state
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and 
+MUTATION F22 logout deletes the legacy single slot [mobile/App.tsx] -> 3 failed, 157 passed, 160 total
+    FAIL mobile logout › clears local credentials and UI when logout cannot reach the API
+    FAIL mobile logout › revokes the server session with bearer and refresh credentials, then clears local state
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › another user signing in and out on the device (even after transferring) never deletes nor repla
+MUTATION F22 one shared slot for every user [mobile/App.tsx] -> 5 failed, 155 passed, 160 total
+    FAIL mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and 
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › another user signing in and out on the device (even after transferring) never deletes nor repla
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › defence in depth: confirming a new attempt while this user has a stored unresolved one sends no
+MUTATION F22 legacy record of another user is taken over [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › another user signing in and out on the device (even after transferring) never deletes nor repla
+MUTATION F22 own-key record read without comparing the owner id (userId ignored on key) [mobile/App.tsx] -> 2 failed, 158 passed, 160 total
+    FAIL round 6 · E: sending, verifying, completed, rejected, expired and cancelled are distinct › checking an uncertain attempt that the server expired goes to the closed screen
+    FAIL round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › another user signing in and out on the device (even after transferring) never deletes nor repla
+MUTATION F24 digit filter removed (value only sliced) [mobile/App.tsx] -> 2 failed, 158 passed, 160 total
+    FAIL round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) › F-24: pasting a code with separators yields its 6 digits even through the platform maxL
+    FAIL round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) › one hidden accessible input: one-time-code autofill, paste of 6 digits, delete, digits 
+MUTATION F24 maxLength={6} back on the control [mobile/App.tsx] -> 2 failed, 158 passed, 160 total
+    FAIL round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) › F-24: pasting a code with separators yields its 6 digits even through the platform maxL
+    FAIL round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) › one hidden accessible input: one-time-code autofill, paste of 6 digits, delete, digits 
+MUTATION F25 header avatar fixed 32 px again [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL F-25: avatar initials grow with the text size instead of being clipped › header (M07), picker (M05) and Home avatars have minimum, not fixed, sizes (32/44 pt at 100 %) an
+MUTATION F25 home avatar fixed 32 px again [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL F-25: avatar initials grow with the text size instead of being clipped › header (M07), picker (M05) and Home avatars have minimum, not fixed, sizes (32/44 pt at 100 %) an
+MUTATION F25 beneficiary avatar fixed 44 px again [mobile/App.tsx] -> 1 failed, 159 passed, 160 total
+    FAIL F-25: avatar initials grow with the text size instead of being clipped › header (M07), picker (M05) and Home avatars have minimum, not fixed, sizes (32/44 pt at 100 %) an
+restored; git status: clean
+DONE

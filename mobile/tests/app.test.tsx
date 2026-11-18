@@ -1774,12 +1774,19 @@ describe('F-15: the M07 threshold variant keeps both actions within 390x844', ()
     await flow.wait();
     const hero = styleOf(flow.renderer, 'review-hero');
     const estimate = styleOf(flow.renderer, 'estimate-card');
+    const heroIcon = flow.renderer.root.findAll((node) => node.props.testID === 'review-hero-icon');
+    const inlineIcon = flow.renderer.root.findAll((node) => node.props.testID === 'review-hero-inline-icon');
     if (threshold) {
       assert.match(flow.visible(), /requiere código de autorización/);
       assert.equal(hero.paddingVertical, 12);
       assert.equal(estimate.marginBottom, 12);
+      // Round 8 (F-15 with real account names): the 48 px icon circle moves inline next to "Monto a transferir".
+      assert.equal(heroIcon.length, 0, 'no 48 px icon circle in the threshold variant');
+      assert.ok(inlineIcon.length > 0, 'the same icon stays, inline with the label');
       assert.ok(flow.button('Continuar a verificación'));
     } else {
+      assert.ok(heroIcon.length > 0, 'the other variants keep the Stitch icon circle');
+      assert.equal(inlineIcon.length, 0);
       assert.doesNotMatch(flow.visible(), /requiere código de autorización/);
       assert.equal(hero.paddingVertical, undefined, 'the other variants keep the Stitch p-4 hero');
       assert.equal(hero.padding, 16);
@@ -1787,6 +1794,37 @@ describe('F-15: the M07 threshold variant keeps both actions within 390x844', ()
       assert.ok(flow.button('Confirmar transferencia'));
     }
     assert.ok(flow.button('Modificar datos'));
+    await flow.finish();
+  });
+});
+
+describe('F-25: avatar initials grow with the text size instead of being clipped', () => {
+  const flat = (style: unknown) => StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) ?? {};
+  it('header (M07), picker (M05) and Home avatars have minimum, not fixed, sizes (32/44 pt at 100 %) and one-line initials', async () => {
+    const flow = await startTransferFlow(() => undefined, { amount: '850.00' });
+    const check = (testID: string, min: number) => {
+      const nodes = flow.renderer.root.findAll((node) => node.props.testID === testID && String(node.type) === 'View');
+      assert.ok(nodes.length > 0, `${testID} rendered`);
+      for (const node of nodes) {
+        const style = flat(node.props.style) as Record<string, unknown>;
+        assert.equal(style.width, undefined, 'no fixed width that would clip enlarged initials');
+        assert.equal(style.height, undefined, 'no fixed height that would clip enlarged initials');
+        assert.ok(Number(style.minWidth) >= min && Number(style.minHeight) >= min, `keeps at least ${min} pt`);
+        const text = node.findAll((child) => String(child.type) === 'Text')[0]!;
+        assert.equal(text.props.numberOfLines, 1);
+      }
+    };
+    check('user-avatar', 32);
+    await TestRenderer.act(async () => { flow.button('Modificar datos').props.onPress(); });
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Cambiar beneficiario' }).props.onPress(); });
+    await flow.wait();
+    check('beneficiary-avatar', 44);
+    check('user-avatar', 32);
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Volver a datos de transferencia' }).props.onPress(); });
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Volver' }).props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /Hola, /);
+    check('user-avatar', 32);
     await flow.finish();
   });
 });

@@ -1,0 +1,42 @@
+===== F-25 scale 1 =====
+SHOT F25-M02 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M02 Inicio: n=1 clipped=0 scrollW=390 ["user:WW:37x32/29x20"] | targets<44: []
+SHOT F25-M05 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M05 picker (header + tarjetas): n=4 clipped=0 scrollW=390 ["user:WW:33x32/25x16","bene:CD:44x44/23x24","bene:CP:44x44/22x24","bene:WW:44x44/33x24"] | targets<44: []
+SHOT F25-M06 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M06 datos: n=1 clipped=0 scrollW=390 ["user:WW:33x32/25x16"] | targets<44: ["Cambiar cuenta de origen 92x32"]
+SHOT F25-M07 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M07 revision: n=1 clipped=0 scrollW=390 ["user:WW:33x32/25x16"] | targets<44: []
+SHOT F25-M10 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M10 comprobante: n=1 clipped=0 scrollW=390 ["user:WW:33x32/25x16"] | targets<44: []
+SHOT F25-M03 minFont=12 scrollW=390 offscreen=0 errs=0
+  AVATARS M03 movimientos: n=1 clipped=0 scrollW=390 ["user:WW:37x32/29x20"] | targets<44: []
+  errs 0
+===== F-25 scale 1.3 =====
+SHOT F25-M02-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M02 Inicio: n=1 clipped=0 scrollW=390 ["user:WW:46x32/38x26"] | targets<44: []
+SHOT F25-M05-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M05 picker (header + tarjetas): n=4 clipped=0 scrollW=390 ["user:WW:40x32/32x21","bene:CD:44x44/30x31","bene:CP:44x44/29x31","bene:WW:51x44/43x31"] | targets<44: []
+SHOT F25-M06-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M06 datos: n=1 clipped=0 scrollW=390 ["user:WW:40x32/32x21"] | targets<44: ["Cambiar cuenta de origen 119x32"]
+SHOT F25-M07-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M07 revision: n=1 clipped=0 scrollW=390 ["user:WW:40x32/32x21"] | targets<44: []
+SHOT F25-M10-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M10 comprobante: n=1 clipped=0 scrollW=390 ["user:WW:40x32/32x21"] | targets<44: []
+SHOT F25-M03-x1.3 minFont=15.6 scrollW=390 offscreen=0 errs=0
+  AVATARS M03 movimientos: n=1 clipped=0 scrollW=390 ["user:WW:46x32/38x26"] | targets<44: []
+  errs 0
+===== F-25 scale 2 =====
+SHOT F25-M02-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M02 Inicio: n=1 clipped=0 scrollW=390 ["user:WW:66x40/58x40"] | targets<44: []
+SHOT F25-M05-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M05 picker (header + tarjetas): n=4 clipped=0 scrollW=390 ["user:WW:58x32/50x32","bene:CD:55x48/47x48","bene:CP:52x48/44x48","bene:WW:74x48/66x48"] | targets<44: []
+SHOT F25-M06-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M06 datos: n=1 clipped=0 scrollW=390 ["user:WW:58x32/50x32"] | targets<44: ["Cambiar cuenta de origen 184x32"]
+SHOT F25-M07-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M07 revision: n=1 clipped=0 scrollW=390 ["user:WW:58x32/50x32"] | targets<44: []
+SHOT F25-M10-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M10 comprobante: n=1 clipped=0 scrollW=390 ["user:WW:58x32/50x32"] | targets<44: []
+SHOT F25-M03-x2 minFont=24 scrollW=390 offscreen=0 errs=0
+  AVATARS M03 movimientos: n=1 clipped=0 scrollW=390 ["user:WW:66x40/58x40"] | targets<44: []
+  errs 0

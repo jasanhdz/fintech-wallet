@@ -1,0 +1,10 @@
+===== variant before =====
+SHOT A-M09-antes minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT A-tras-ir-al-inicio-antes minFont=12 scrollW=390 offscreen=0 errs=1
+A after "Ir al inicio": receipt shown false | notice true | entries {"continuar":1,"transferir":0,"cambiar":1,"verificar":0,"pendiente":0} | record [{"slot":"wallet.transfer-recovery","key":"e5836dda","transferId":null,"status":null}]
+SHOT A-segundo-intento-antes minFont=12 scrollW=390 offscreen=0 errs=1
+A second attempt sent through "Continuar con transferencia"
+A keys ["e5836dda","1f4dc915"] distinct 2 | POST /transfers 2
+A principal 1000000 -> 939950 (debit 60050 ) savings 500000 -> 560050
+A DB transfers [completed:30025 | completed:30025] ledger 4 rows sum 0
+PASS A: one key, one debit of 300.25

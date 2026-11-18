@@ -1,0 +1,46 @@
+
+Detalle
+AL
+
+
+Transferencia completada
+-$300.25
+MXN
+
+16 de noviembre de 2026, 18:08 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 5729
+Para
+Cuenta de ahorro demo
+Ahorro demo
+Cuenta destino
+Billetera MXN
+•• 9782
+Concepto
+Perdida
+Referencia
+9102
+Folio interno
+f64fcf99-c538-49e0-b12b-efb418f22d59
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$9,699.75
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

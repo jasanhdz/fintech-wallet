@@ -1,0 +1,13 @@
+New/changed jest cases of tanda H3 run against mobile/App.tsx of 261decc (pre-fix), current tests:
+FAILED F-15: the M07 threshold variant keeps both actions within 390x844 amount 6000.00 (threshold variant: true) uses the matching hero padding and gap above the actions
+FAILED F-15: the M07 threshold variant keeps both actions within 390x844 amount 850.00 (threshold variant: false) uses the matching hero padding and gap above the actions
+FAILED F-25: avatar initials grow with the text size instead of being clipped header (M07), picker (M05) and Home avatars have minimum, not fixed, sizes (32/44 pt at 100 %) and one-line initials
+FAILED round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) F-24: pasting a code with separators yields its 6 digits even through the platform maxLength cut
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user Home with an unresolved attempt offers no way to start another one (neither the kept destination nor "Transferir dinero"); its action resumes the same key
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user defence in depth: confirming a new attempt while this user has a stored unresolved one sends nothing new and shows that attempt instead
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and lands on the real result
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user another user signing in and out on the device (even after transferring) never deletes nor replaces user A's record
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user Home resolves the attempt by itself (same key): completed -> receipt, record cleared, the transfer flow is offered again
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user returning to the foreground with a valid session re-checks the pending attempt with the same key
+FAILED round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user leaving the code step when the cancel cannot be confirmed keeps the attempt; Home only offers to continue it
+total failed 11 / run 11

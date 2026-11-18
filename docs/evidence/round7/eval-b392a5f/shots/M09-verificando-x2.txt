@@ -1,0 +1,26 @@
+
+Detalle
+AM
+
+
+
+Protección contra duplicados activa
+Estamos verificando si tu transferencia se completó
+No pudimos confirmar el resultado de la operación de $300.25 MXN a Constructora y Servicios Profesionales del Centro de México Sociedad Anónima de Capital Variable Sucursal Norte •• 4995. Para evitar cobros duplicados, consultamos el estado del intento original (Ref: 1234567).
+No pudimos conectar. Revisa tu conexión e inténtalo de nuevo.
+
+No intentes enviar el dinero nuevamente
+Verificar el estado consulta el intento original con su misma clave, sin duplicar el cargo.
+Destinatario
+Constructora y Servicios Profesionales del Centro de México Sociedad Anónima de Capital Variable Sucursal Norte
+Monto en verificación
+$300.25 MXN
+Referencia de seguimiento
+1234567
+Estado actual
+En verificación de estado
+
+Verificar estado de la transferencia
+Ir al inicio (revisar saldo después)
+Referencia: 1234567
+Billetera MXN • Validación interna de operación

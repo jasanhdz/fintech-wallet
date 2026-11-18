@@ -1,0 +1,1 @@
+SHOT F-M02-pendiente-codigo minFont=12 scrollW=390 offscreen=0 errs=3

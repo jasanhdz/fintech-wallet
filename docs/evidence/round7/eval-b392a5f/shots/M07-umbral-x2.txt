@@ -1,0 +1,37 @@
+
+Transferir
+AM
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$6,000.00
+MXN
+
+Operación mayor o igual a $5,000.00 MXN requiere código de autorización (umbral de demostración)
+
+CUENTA DE ORIGEN
+Cuenta principal •• 4574
+Saldo disponible: $8,300.00 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Constructora y Servicios Profesionales del Centro de México Sociedad Anónima de Capital Variable Sucursal Norte (Proveedor principal de materiales y servicios generales de mantenimiento del in) •• 4995
+Billetera MXN
+Concepto
+Pago de servicios profesionales de nov
+Referencia numérica
+1234567
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$2,300.00 MXN
+Cálculo:
+$8,300.00 - $6,000.00 = $2,300.00 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+Continuar a verificación
+
+Modificar datos

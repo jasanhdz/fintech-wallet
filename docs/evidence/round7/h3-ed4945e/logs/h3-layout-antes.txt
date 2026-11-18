@@ -1,0 +1,23 @@
+===== variant before =====
+F-15 M07 normal (Carlos Ruiz, 850.00) @390x844: primary 720-768 / Modificar 776-820 -> both inside without scrolling: true
+F-15 M07 normal (Carlos Ruiz, 850.00) @390x884: primary 753-801 / Modificar 809-853 -> both inside without scrolling: true
+F-15 M07 normal (Carlos Ruiz, 850.00) @390x763: primary 639-687 / Modificar 695-739 -> both inside without scrolling: true
+F-15 M07 propias (Ahorro, 850.00) @390x844: primary 722-770 / Modificar 778-822 -> both inside without scrolling: true
+F-15 M07 propias (Ahorro, 850.00) @390x884: primary 762-810 / Modificar 818-862 -> both inside without scrolling: true
+F-15 M07 propias (Ahorro, 850.00) @390x763: primary 641-689 / Modificar 697-741 -> both inside without scrolling: true
+F-15 M07 umbral (Ahorro, 6000.00) @390x844: primary 762-810 / Modificar 818-862 -> both inside without scrolling: false
+SHOT F15-M07-umbral-844-antes minFont=12 scrollW=390 offscreen=0 errs=0
+  M07 umbral text sizes (px): [12,14,16,36]
+F-15 M07 umbral (Ahorro, 6000.00) @390x884: primary 802-850 / Modificar 858-902 -> both inside without scrolling: false
+F-15 M07 umbral (Ahorro, 6000.00) @390x763: primary 681-729 / Modificar 737-781 -> both inside without scrolling: false
+SHOT F25-M02-x1-antes minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F25-M07-x1-antes minFont=12 scrollW=390 offscreen=0 errs=0
+F-25 avatar @100%: Home [{"font":14,"text":"18x20","box":"32x32","inside":true}] | M07 header [{"font":12,"text":"16x16","box":"32x32","inside":true}]
+  M07 @100%: buttons smaller than 44 px: 0; scrollWidth 390
+SHOT F25-M02-x2-antes minFont=24 scrollW=390 offscreen=0 errs=0
+SHOT F25-M07-x2-antes minFont=24 scrollW=390 offscreen=0 errs=0
+F-25 avatar @200%: Home [{"font":28,"text":"36x40","box":"32x32","inside":false}] | M07 header [{"font":24,"text":"31x32","box":"32x32","inside":true}]
+  M07 @200%: buttons smaller than 44 px: 0; scrollWidth 390
+F-24 paste "12 34-56" -> 4 digits | maxLength attr 6 | autocomplete one-time-code
+F-24 paste "12a3456789" -> 5 digits | maxLength attr 6 | autocomplete one-time-code
+F-24 paste "123456" -> 6 digits (123456) | maxLength attr 6 | autocomplete one-time-code

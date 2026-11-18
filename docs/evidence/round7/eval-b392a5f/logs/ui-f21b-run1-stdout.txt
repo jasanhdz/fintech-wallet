@@ -1,0 +1,33 @@
+
+===== C1: sobre el umbral, "Cancelar y volver a revisar" sin poder confirmar la cancelación =====
+PASS M08 with demo code (not printed)
+DB: awaiting_confirmation:600000 | ledger 0 rows sum 0 | record keys 1
+AUDIT after failed cancel: notice=true forbidden=[]
+PASS Home shows pending-to-authorize notice, no new-transfer entry
+SHOT F21-C1-inicio-pendiente-de-autorizar minFont=12 scrollW=390 offscreen=0 errs=3
+record kept: true | DB still awaiting: awaiting_confirmation:600000
+AUDIT Movimientos: notice=false forbidden=[]
+after reload with record (GET still failing): screen M09
+SHOT F21-C1-reanudado-M08 minFont=12 scrollW=390 offscreen=0 errs=5
+reload with network back -> M08 resumed with code box: true true | same code as before: true
+SHOT F21-C1-comprobante minFont=12 scrollW=390 offscreen=0 errs=5
+receipt: true | DB: completed:600000 | 1 debit(s) | balance delta 600000 | record keys 0
+PASS C1: exactly one debit
+AUDIT Home after receipt: notice=false forbidden=["Transferir dinero, elegir beneficiario"]
+
+===== C2: cancelación confirmada =====
+after confirmed cancel: on review true | DB: cancelled:600000 | record keys 0 | reqs ["POST /transfers/f535/cancel"]
+PASS cancel confirmed -> status cancelled, record deleted
+second attempt after cancel -> receipt true | DB: cancelled:600000 | completed:600000 | 1 debit(s) | delta 600000
+PASS C2: one debit
+
+===== C3: confirm en vuelo (F-12) y confirm perdido =====
+FAILED locator.getAttribute: Error: strict mode violation: getByRole('button', { name: 'Cancelar y volver a revisar' }) resolved to 2 elements:
+    1) <button disabled role="button" tabindex="-1" type="button" aria-disabled="true" aria-label="Cancelar y volver a revisar" class="css-g5y9jx r-12vffkv r-1awozwy r-1ugchlj r-1777fci r-usgzl9">…</button> aka getByRole('button', { name: 'Cancelar y volver a revisar', exact: true })
+    2) <button disabled role="button" tabindex="-1" type="button" aria-disabled="true" class="css-g5y9jx r-12vffkv r-1awozwy r-1q9bdsx r-1777fci r-1pl7oy7 r-3pj75a r-14lw9ot r-15i92mo r-ha76ja">…</button> aka getByRole('button', { name: ' Cancelar y volver a revisar' })
+
+Call log:
+[2m  - waiting for getByRole('button', { name: 'Cancelar y volver a revisar' })[22m
+
+    at /Users/jasanhernandez/Develop/fintech-wallet-g1/docs/evidence/round7/eval-b392a5f/tools/ui-f21b.cjs:72:86
+DONE

@@ -1,0 +1,35 @@
+
+Transferir
+AM
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$850.00
+MXN
+
+CUENTA DE ORIGEN
+Cuenta principal •• 3961
+Saldo disponible: $9,150.00 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Constructora y Servicios Profesionales del Centro de México Sociedad Anónima de Capital Variable Sucursal Norte (Proveedor principal de materiales y servicios generales de mantenimiento del in) •• 2701
+Billetera MXN
+Concepto
+Pago de servicios profesionales de nov
+Referencia numérica
+1234567
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$8,300.00 MXN
+Cálculo:
+$9,150.00 - $850.00 = $8,300.00 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+Confirmar transferencia
+
+Modificar datos

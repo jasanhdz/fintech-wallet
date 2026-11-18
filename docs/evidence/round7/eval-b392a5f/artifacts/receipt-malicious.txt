@@ -1,0 +1,14 @@
+Comprobante de transferencia · Billetera MXN
+Transferencia completada
+Monto: -$12,345.67 MXN
+Fecha: 16 de noviembre de 2026, 09:00 hrs (Tiempo del Centro de México)
+Estado: Completada — confirmada y aplicada
+Cuenta origen: Cuenta <b>principal</b> •• 9999
+Para: <script>alert("x")</script> Carlos ("><b>alias</b>)
+Cuenta destino: Billetera MXN •• 1231
+Concepto: <img src=x onerror=alert(1)>&"'`
+Referencia: 1234567
+Folio interno: 11111111-2222-3333-4444-555555555555
+Tipo de operación: Transferencia interna
+
+Comprobante interno de demostración — no es un comprobante bancario oficial
