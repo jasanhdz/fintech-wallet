@@ -1,0 +1,52 @@
+== R8-12: grep "interval '30 days'" api/src/transfers (expect no matches)
+matches=0
+
+== R8-24 / F-23: OTP threshold rule unchanged
+108:    const requiresOtp=amount>=threshold;
+756:        otpThresholdMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Se exige OTP cuando amountMinor >= otpThresholdMinor. }
+
+== R8-24: no reservation route (no POST /transfer-attempts that creates an attempt)
+135:  api.get('/transfer-attempts',async(req,res,next)=>{
+138:  api.post('/transfer-attempts/void',async(req,res,next)=>{
+141:  api.post('/transfer-attempts/void-all',async(req,res,next)=>{
+408:  /transfer-attempts:
+409-    get:
+--
+442:  /transfer-attempts/void:
+443-    post:
+--
+473:  /transfer-attempts/void-all:
+474-    post:
+
+== R8-24: round diff since f0ed4bc (SPEC round 8) in web/**, manifests and lockfile (expect empty)
+lines=0
+
+== R8-24: OTP policy unchanged. Every changed fragment on the confirmTransfer / getTransferPolicy lines
+   ($ git diff --word-diff=plain -U0 f0ed4bc..HEAD -- api/src/transfers/service.ts):
+   - {+retentionDays=idempotencyRetentionDays();const+}
+   - [-VALUES($1,'confirm-transfer',$2,$3,$4,$5,$6,now()+interval '30 days')",[user,hashSecret(key),payloadHash,id,status,JSON.stringify({problem:{title,detail}})]);return-]  {+VALUES($1,'confirm-transfer',$2,$3,$4,$5,$6,now()+make_interval(days=>$7::int))",[user,hashSecret(key),payloadHash,id,status,JSON.stringify({problem:{title,detail}}),retentionDays]);return+}
+   - [-VALUES($1,'confirm-transfer',$2,$3,$4,200,$5,now()+interval '30 days')",[user,hashSecret(key),payloadHash,id,JSON.stringify(result)]);await-]  {+VALUES($1,'confirm-transfer',$2,$3,$4,200,$5,now()+make_interval(days=>$6::int))",[user,hashSecret(key),payloadHash,id,JSON.stringify(result),retentionDays]);await+}
+   - [-{currency:'MXN',businessDate:String(rows[0].day),businessTimeZone:timeZone,dailyLimitMinor:limit.toString(),dailyUsedMinor:used.toString(),dailyRemainingMinor:(limit>used?limit-used:0n).toString(),otpThresholdMinor:BigInt(configured('OTP_THRESHOLD_MINOR')).toString(),otpExpirySeconds:Number(configured('OTP_EXPIRY_SECONDS')),otpMaxAttempts:Number(configured('OTP_MAX_ATTEMPTS')),demoOnly:process.env.APP_ENV!=='production'};-]  {+{currency:'MXN',businessDate:String(rows[0].day),businessTimeZone:timeZone,dailyLimitMinor:limit.toString(),dailyUsedMinor:used.toString(),dailyRemainingMinor:(limit>used?limit-used:0n).toString(),otpThresholdMinor:BigInt(configured('OTP_THRESHOLD_MINOR')).toString(),otpExpirySeconds:Number(configured('OTP_EXPIRY_SECONDS')),otpMaxAttempts:Number(configured('OTP_MAX_ATTEMPTS')),demoOnly:process.env.APP_ENV!=='production',sendEpoch:String(rows[0].send_epoch)};+}
+   (cancelTransfer and OTP generation/expiry/attempt counting: unchanged; expireDue only gained `export`; the createTransfer body moved into executeTransfer with client_attempt_id and the configured retention)
+
+== R8-02: openapi diff removed lines since f0ed4bc (only version and one schema required-list line)
+--- a/specs/openapi.yaml
+-  version: 0.3.0
+-      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly]
+
+== R8-02: version, routes, headers, sendEpoch, problem types
+4:  version: 0.4.0
+408:  /transfer-attempts:
+442:  /transfer-attempts/void:
+473:  /transfer-attempts/void-all:
+547:      name: Transfer-Attempt-Id
+556:      name: Transfer-Send-Epoch
+760:        sendEpoch:
+847:        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+874:        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+880:        - urn:billetera:problem:transfer-attempt-voided
+881:        - urn:billetera:problem:transfer-attempt-rejected
+882:        - urn:billetera:problem:transfer-attempt-conflict
+
+== R8-13: 18-digit values or key-like headers in the saved suite logs (expect none)
+end

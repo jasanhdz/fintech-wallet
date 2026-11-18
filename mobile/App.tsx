@@ -20,8 +20,25 @@ type Transfer = ProductComponents['schemas']['Transfer'];
 type TransferRequest = ProductComponents['schemas']['TransferCreateRequest'];
 type Movement = ProductComponents['schemas']['Movement'];
 type TransferPolicy = ProductComponents['schemas']['TransferPolicy'];
-type FlowScreen = 'details' | 'review' | 'sending' | 'otp' | 'status' | 'resend' | 'receipt' | 'rejected' | 'closed';
-type PendingLookup = 'idle' | 'checking' | 'failed' | 'not_found' | 'no_id';
+type TransferAttemptSummary = ProductComponents['schemas']['TransferAttemptSummary'];
+type TransferAttemptPage = ProductComponents['schemas']['TransferAttemptPage'];
+type VoidAttemptResult = ProductComponents['schemas']['VoidAttemptResult'];
+type VoidAllResult = ProductComponents['schemas']['VoidAllResult'];
+type FlowScreen = 'details' | 'review' | 'sending' | 'otp' | 'status' | 'resend' | 'void' | 'voided' | 'receipt' | 'rejected' | 'closed';
+// "closure" = the authoritative list (GET /transfer-attempts?attemptId=) shows this identity closed without a transfer
+// (voided/rejected); it is released only by the explicit "Anular esta transferencia" (any 200 of void is terminal).
+type PendingLookup = 'idle' | 'checking' | 'failed' | 'not_found' | 'no_id' | 'closure';
+// Round 8 (§R8.4/§R8.6): typed problems of the transfer-attempt contract (RFC 7807 `type`).
+const PROBLEM_VOIDED = 'urn:billetera:problem:transfer-attempt-voided';
+const PROBLEM_REJECTED = 'urn:billetera:problem:transfer-attempt-rejected';
+const PROBLEM_CONFLICT = 'urn:billetera:problem:transfer-attempt-conflict';
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EPOCH_PATTERN = /^(0|[1-9][0-9]{0,18})$/;
+// What the app shows for a terminal "voided" answer (void resolution or a 409 transfer-attempt-voided to the send).
+type VoidOutcome = { resolution: 'voided' | 'rejected' | 'transfer_found'; attempt: TransferAttemptSummary | null; payload: TransferRequest | null; detail?: string };
+// "Resolver con el servidor" (§R8.8): list -> void-all -> list -> verified delete. `result` is kept once void-all answered
+// 200 so a failed re-read is retried without sending void-all again.
+type ResolveState = { phase: 'loading' | 'ready' | 'voiding' | 'rereading' | 'done' | 'error'; before?: TransferAttemptPage; after?: TransferAttemptPage; result?: VoidAllResult; released?: boolean; error?: string };
 
 // One mapping from the API transfer status to the screen that may show it. Only "completed" reaches the receipt;
 // "expired"/"cancelled" are terminal attempts without postings; an unknown or "processing" state is still being
@@ -42,9 +59,6 @@ function sameAccountDestination(beneficiary: Beneficiary | null | undefined, sou
 }
 type RejectedCombo = { sourceAccountId: string; beneficiaryId: string | undefined; amountMinor: string; reason: string };
 
-function isBusinessRejection(error: ApiError): boolean {
-  return error.status === 422 || (error.status === 429 && DAILY_LIMIT_PATTERN.test(error.message));
-}
 const DAILY_LIMIT_PATTERN = /límite diario/i;
 function isTerminalStatus(status: Transfer['status']): boolean {
   return status === 'completed' || status === 'rejected' || status === 'expired' || status === 'cancelled';
@@ -52,8 +66,8 @@ function isTerminalStatus(status: Transfer['status']): boolean {
 const REFRESH_KEY = 'wallet.refresh-token';
 // F-21/F-22: the record of an attempt whose outcome is not known yet (or that still waits for its code). One record per
 // user (SecureStore keys allow [A-Za-z0-9._-]); a record is read, replaced and deleted only in its owner's session and
-// only removed when the API reports the attempt resolved. Signing out (explicitly or by expiry) never deletes it. The
-// single pre-round-8 slot is migrated to its owner's key the first time that owner signs in again.
+// only removed after a terminal result decided by the server (§R8.7). Signing out (explicitly or by expiry) never
+// deletes it. The single pre-round-8 slot is migrated to its owner's key the first time that owner signs in again.
 const LEGACY_RECOVERY_KEY = 'wallet.transfer-recovery';
 function recoveryKeyFor(userId: string): string { return `${LEGACY_RECOVERY_KEY}.${userId.replace(/[^A-Za-z0-9._-]/g, '_')}`; }
 // H5 (F-27): the user's original consent travels with the record: when "Confirmar transferencia" (or "Solicitar un código
@@ -62,11 +76,16 @@ function recoveryKeyFor(userId: string): string { return `${LEGACY_RECOVERY_KEY}
 type RecoveryConsent = { confirmedAt: string; via: 'confirm' | 'new_code'; otp: 'unknown' | 'required' | 'authorized' };
 // Labels of origin and destination as the user saw them when confirming (masked digits only; never a full CLABE).
 type RecoveryDisplay = { source?: string; destination?: string };
-type RecoveryRecord = { key: string; payload: TransferRequest; transferId?: string; userId?: string; status?: Transfer['status']; consent?: RecoveryConsent; display?: RecoveryDisplay };
-// F-26: a stored record that cannot be used. "damaged" = it exists but is not a valid record (truncated/invalid JSON or
-// missing fields); "unreadable" = the secure store itself failed. Either way nothing new is sent (fail closed) and Home
-// explains it in plain words; the record is never deleted by the app (its key and payload cannot be recovered, so it
-// cannot be re-sent either): "Reintentar lectura" reads it again and "Ver movimientos" only reads.
+// Round 8 (§R8.7) record v2: `attemptId` (client-chosen identity, UUID v4, distinct from the key), `key` (Idempotency-Key)
+// and `sendEpoch` (TransferPolicy.sendEpoch read for the review) are persisted BEFORE anything is sent, and every
+// POST /transfers carries the three of them. `legacy` = written by a build before round 8 (its identity was added when it
+// was read; its first send carried no headers). `ownerAssumed` = it was stored without saying which user it belonged to
+// and was moved to the user signed in now.
+type RecoveryRecord = { v?: 2; attemptId?: string; key: string; sendEpoch?: string; payload: TransferRequest; transferId?: string; userId?: string; status?: Transfer['status']; consent?: RecoveryConsent; display?: RecoveryDisplay; legacy?: true; ownerAssumed?: true };
+// F-26: a stored record that cannot be used. "damaged" = it exists but is not a valid record (truncated/invalid JSON,
+// missing fields or an identity that contradicts its key); "unreadable" = the secure store itself failed to read or
+// write. Either way nothing new is sent (fail closed); the record is never deleted by the app on its own: Home offers
+// "Reintentar lectura" and the explicit "Resolver con el servidor" (list -> void-all -> list -> verified delete, §R8.8).
 type RecoveryProblem = 'damaged' | 'unreadable';
 class RecoveryReadError extends Error {
   constructor(readonly kind: RecoveryProblem) { super(kind === 'damaged' ? 'damaged recovery record' : 'secure store unavailable'); }
@@ -81,7 +100,11 @@ function parseRecovery(raw: string): RecoveryRecord {
     || typeof payload.amountMinor !== 'string' || !/^\d+$/.test(payload.amountMinor) || typeof payload.reference !== 'string'
     || typeof payload.sourceAccountId !== 'string' || typeof payload.concept !== 'string'
     || !(typeof payload.beneficiaryId === 'string' || typeof payload.destinationAccountId === 'string')
-    || (record.transferId !== undefined && typeof record.transferId !== 'string')) throw new RecoveryReadError('damaged');
+    || (record.transferId !== undefined && typeof record.transferId !== 'string')
+    // Round 8: a malformed identity cannot be sent nor voided by identity: it is resolved like a damaged record.
+    || (record.attemptId !== undefined && (typeof record.attemptId !== 'string' || !UUID_PATTERN.test(record.attemptId) || record.attemptId === record.key))
+    || (record.sendEpoch !== undefined && (typeof record.sendEpoch !== 'string' || !EPOCH_PATTERN.test(record.sendEpoch)))
+    || (record.userId !== undefined && typeof record.userId !== 'string')) throw new RecoveryReadError('damaged');
   const consent = record.consent;
   if (consent !== undefined && (typeof consent !== 'object' || consent === null || typeof consent.confirmedAt !== 'string')) delete record.consent;
   return record as RecoveryRecord;
@@ -89,9 +112,31 @@ function parseRecovery(raw: string): RecoveryRecord {
 async function readSecure(key: string): Promise<string | null> {
   try { return await SecureStore.getItemAsync(key); } catch { throw new RecoveryReadError('unreadable'); }
 }
+// §R8.8: a readable record without identity (H3-H5) gets a NEW attemptId and `legacy: true`, and a record without owner
+// is bound to the user signed in now (`ownerAssumed`). Key and payload are kept as they are (same bytes on a resend). The
+// upgraded record is written back before it is used; if it cannot be written the store is treated as unusable.
+async function upgradeRecovery(record: RecoveryRecord, userId: string, stored: boolean): Promise<RecoveryRecord> {
+  let upgraded: RecoveryRecord = record;
+  if (!upgraded.attemptId) {
+    let attemptId = newIdempotencyKey();
+    while (attemptId === record.key) attemptId = newIdempotencyKey();
+    upgraded = { v: 2, attemptId, ...upgraded, legacy: true };
+  }
+  if (upgraded.v !== 2) upgraded = { ...upgraded, v: 2 };
+  if (!upgraded.userId) upgraded = { ...upgraded, userId, ownerAssumed: true };
+  if (upgraded === record && stored) return record;
+  try { await SecureStore.setItemAsync(recoveryKeyFor(userId), JSON.stringify(upgraded)); }
+  catch { throw new RecoveryReadError('unreadable'); }
+  return upgraded;
+}
 async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
   const own = await readSecure(recoveryKeyFor(userId));
-  if (own) return parseRecovery(own);
+  if (own) {
+    const record = parseRecovery(own);
+    // Another user's identity under this user's key contradicts the key it is stored in: resolve it as damaged.
+    if (record.userId && record.userId !== userId) throw new RecoveryReadError('damaged');
+    return upgradeRecovery(record, userId, true);
+  }
   const legacy = await readSecure(LEGACY_RECOVERY_KEY);
   if (!legacy) return null;
   let record: RecoveryRecord;
@@ -107,29 +152,47 @@ async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
   }
   // Another user's record is never shown, consumed, replaced nor deleted from this session.
   if (record.userId && record.userId !== userId) return null;
-  const migrated = { ...record, userId };
-  try {
-    await SecureStore.setItemAsync(recoveryKeyFor(userId), JSON.stringify(migrated));
-    await SecureStore.deleteItemAsync(LEGACY_RECOVERY_KEY);
-  } catch { throw new RecoveryReadError('unreadable'); }
+  const migrated = await upgradeRecovery(record, userId, false);
+  try { await SecureStore.deleteItemAsync(LEGACY_RECOVERY_KEY); } catch { throw new RecoveryReadError('unreadable'); }
   return migrated;
 }
-// F-26 (H5): a record is released ONLY when the server confirms the final result of that same attempt: completed,
-// rejected, expired or cancelled for its transferId, or a business answer (422 / 429 "límite diario") to a send with its
-// own key. Never on a 404 of GET /transfers/{id}, 5xx, no answer, 409, 401/403, 400, a 404 of the create, nor because
-// data is missing: in those cases nobody knows whether money moved, so the record and the block stay.
-// What the user is told when the read of a stored attempt answers 404 (the record is kept).
-const NOT_FOUND_TEXT = 'El servidor no encuentra esta operación. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo.';
-// H5 (F-27): what a read can say about an attempt whose id never arrived (there is nothing to GET; nothing is sent).
-const NO_ID_TEXT = 'Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo. Para conocer su resultado sin riesgo de un cargo doble usa «Reenviar la misma transferencia»: se envía con la misma clave y, si ya se aplicó, el servidor devuelve esa misma transferencia.';
+// §R8.7: the three identity headers of every POST /transfers, taken from the stored record. Without a valid identity and
+// epoch nothing is sent (fail closed).
+function attemptHeaders(record: RecoveryRecord): Record<string, string> | null {
+  if (!record.attemptId || !UUID_PATTERN.test(record.attemptId) || !record.sendEpoch || !EPOCH_PATTERN.test(record.sendEpoch)) return null;
+  return { 'Idempotency-Key': record.key, 'Transfer-Attempt-Id': record.attemptId, 'Transfer-Send-Epoch': record.sendEpoch };
+}
+// §R8.7: a record is released ONLY after a terminal result decided by the server for that same attempt: GET /transfers/{id}
+// completed|expired|cancelled|rejected; POST /transfers completed (after its GET) or the typed problems
+// transfer-attempt-voided / transfer-attempt-rejected; any 200 of POST /transfer-attempts/void; void-all 200 followed by a
+// successful list read (cases without identity); a confirmed cancel. And only once its deletion succeeded and a re-read
+// returns null. Never on a 404 of GET, any 4xx/409 without the new types (incl. 422/429 without type and 409 "en curso"),
+// a rate-limit 429, 5xx, no answer, transfer-attempt-conflict, a match in Movimientos, elapsed time, sign-out or a user
+// change: in those cases nobody knows whether money moved, so the record and the block stay.
+// What the user is told when the read of a stored attempt answers 404 (the record is kept; no "Verificar de nuevo").
+const NOT_FOUND_TEXT = 'El servidor no encuentra esta operación. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo. Puedes anularla o reenviarla con la misma clave.';
+// §R8.4-2: the authoritative list has nothing for this identity yet (it never arrived, or it is still on its way).
+const NO_ID_TEXT = 'El servidor aún no registra esta operación, así que no podemos confirmar si se realizó un cargo: si el envío original sigue en camino, aún podría aplicarse. Usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces) o «Anular esta transferencia» (si no se aplicó, ya no podrá aplicarse).';
+// §R8.8: a record written by a build before round 8 carries no identity the server could look up.
+const LEGACY_NO_ID_TEXT = 'Una versión anterior de la app no registró esta operación por número, así que el servidor no puede buscarla y no podemos confirmar si se realizó un cargo. Para resolverla sin riesgo de un cargo doble usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia) o «Anular esta transferencia».';
+const OWNER_ASSUMED_TEXT = 'Esta operación se guardó sin indicar a qué usuario pertenecía; la mostramos en tu sesión y lo que hagas con ella sólo afecta a tu usuario.';
 // H5: Movimientos is only informative. Matching amount, concept, reference or time is NOT proof that a charge is this
-// attempt, so the app never resolves, releases nor shows a receipt from such a match; the only authoritative
-// reconciliation of an attempt without id is the consented resend with its own key (idempotent on the server).
+// attempt, so the app never resolves, releases nor shows a receipt from such a match.
 const MOVEMENTS_CAVEAT = 'En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.';
+// F-30 (a)/(b): what not to do, and the safe ways out.
+const PENDING_SAFE_EXITS_TEXT = 'No hagas otra transferencia igual: las salidas seguras son «Verificar estado» (sólo consulta), «Reenviar la misma transferencia» (misma clave: nunca cobra dos veces) y «Anular esta transferencia». Podrás hacer otra transferencia cuando esta quede resuelta.';
+// §R8.7 mandatory texts.
+const VOID_CONFIRM_TEXT = 'Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.';
+const VOIDED_TEXT = 'Transferencia anulada. No se realizó ningún cargo por esta operación.';
+const RESOLVE_TEXT = 'El servidor revisará tus intentos de transferencia. Si tocas «Anular pendientes y desbloquear», también se detienen las transferencias aún no aplicadas enviadas desde otros dispositivos y se cancelan las pendientes de código. Lo que ya se aplicó aparece en la lista y no se cancela ningún cargo.';
+const IDENTITY_CONFLICT_TEXT = 'El servidor indica que la identidad de esta operación no coincide con la que guardó. Para resolverla sin riesgo de un cargo doble usa «Resolver con el servidor».';
+// §R8.4-6 / §R8.11-D6: the result is already known but this device could not delete its record (or re-read it as gone).
+const DEVICE_UPDATE_FAILED_TEXT = 'No pudimos actualizar este dispositivo. El resultado ya es definitivo en el servidor, pero para evitar un cargo doble la app no enviará otra transferencia hasta poder actualizarlo. Toca «Reintentar»; si sigue fallando, puedes usar la web.';
+const SEND_EPOCH_MISSING_MESSAGE = 'No pudimos preparar el envío con seguridad: falta la información de envío del servidor. No enviamos nada; inténtalo de nuevo en un momento.';
 // M08 reopened from a stored attempt: the code is never kept on the device.
 const CODE_NOT_STORED_TEXT = 'Por seguridad el código no se guarda en el dispositivo. Si ya no lo tienes, usa «Solicitar un código nuevo».';
-const RECOVERY_DAMAGED_TEXT = 'No pudimos recuperar los datos de una transferencia en verificación guardada en este dispositivo. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia mientras no pueda leer esos datos.';
-const RECOVERY_UNREADABLE_TEXT = 'No pudimos leer el almacenamiento seguro del dispositivo, así que no podemos recuperar los datos de una transferencia en verificación, si la hay. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia hasta poder leerlo.';
+const RECOVERY_DAMAGED_TEXT = 'No pudimos recuperar los datos de una transferencia en verificación guardada en este dispositivo. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia hasta resolverla: usa «Resolver con el servidor».';
+const RECOVERY_UNREADABLE_TEXT = 'No pudimos leer el almacenamiento seguro del dispositivo, así que no podemos recuperar los datos de una transferencia en verificación, si la hay. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia hasta poder leerlo o hasta que uses «Resolver con el servidor».';
 const PENDING_UNVERIFIABLE_MESSAGE = 'No pudimos comprobar si tienes una transferencia en verificación. Para evitar un cargo doble no enviamos nada; inténtalo de nuevo en un momento.';
 // Round 7 · 5: a new code needs the previous attempt to be closed first; when its state cannot be read nothing is created.
 const NEW_CODE_UNCERTAIN_MESSAGE = 'No pudimos confirmar que el intento anterior quedó cancelado. Para evitar dos intentos abiertos no creamos uno nuevo; inténtalo de nuevo en un momento.';
@@ -138,7 +201,8 @@ const apiBase = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 0 } } });
 
 class ApiError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  // `type` = RFC 7807 problem type (round 8 typed problems; "about:blank" otherwise).
+  constructor(readonly status: number, message: string, readonly type?: string) { super(message); }
 }
 
 async function request<T>(path: string, token?: string, init?: RequestInit): Promise<T> {
@@ -154,11 +218,13 @@ async function request<T>(path: string, token?: string, init?: RequestInit): Pro
   }
   if (!response.ok) {
     let message = response.status === 401 ? 'La sesión expiró. Inicia sesión de nuevo.' : 'Ocurrió un problema. Inténtalo de nuevo.';
+    let type: string | undefined;
     try {
-      const problem = await response.json() as { detail?: string; title?: string };
+      const problem = await response.json() as { detail?: string; title?: string; type?: unknown };
       message = problem.detail || problem.title || message;
+      if (typeof problem.type === 'string') type = problem.type;
     } catch { /* keep safe fallback */ }
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, message, type);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
@@ -207,6 +273,16 @@ function Wallet() {
   const pendingCheckInFlight = useRef(false);
   // F-26: an unusable stored record (damaged / store unreadable). It blocks new transfers like an unresolved attempt.
   const [recoveryProblem, setRecoveryProblem] = useState<RecoveryProblem | null>(null);
+  // Round 8: the server answered transfer-attempt-conflict for this record's identity (never releases; "Resolver con el
+  // servidor" is its way out), the list showed it closed without a transfer, the result of a void, a terminal result whose
+  // local deletion failed (block kept, "Reintentar"), where the void confirmation was opened from, and "Resolver con el
+  // servidor".
+  const [identityConflict, setIdentityConflict] = useState(false);
+  const [closureSeen, setClosureSeen] = useState<TransferAttemptSummary | null>(null);
+  const [voidOutcome, setVoidOutcome] = useState<VoidOutcome | null>(null);
+  const [deviceUpdateFailed, setDeviceUpdateFailed] = useState(false);
+  const [voidFrom, setVoidFrom] = useState<'home' | 'status'>('home');
+  const [resolveState, setResolveState] = useState<ResolveState | null>(null);
   const sessionUserRef = useRef<string | null>(null);
   const [otp, setOtp] = useState('');
   // Set only when the API answers a confirm with "code expired"; the challenge can then never be confirmed.
@@ -276,6 +352,7 @@ function Wallet() {
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
       setRecoveryReady(false); setPendingRecord(null); setPendingCheck('idle');
       setRecoveryProblem(null); setCodeNotStored(false); setResendFrom('home');
+      setIdentityConflict(false); setClosureSeen(null); setVoidOutcome(null); setDeviceUpdateFailed(false); setVoidFrom('home'); setResolveState(null);
       setSession(null);
       setDestination(null);
       setTransfer(null);
@@ -323,15 +400,15 @@ function Wallet() {
         setRecoveryProblem(null);
         if (!attempt) { setPendingRecord(null); return; }
         setPendingRecord(attempt);
-        // F-27 (H5): start-up and sign-in only READ. An attempt whose id never arrived cannot be read: it is shown on Home
-        // with its safe actions and nothing is sent (re-sending it is the explicit, confirmed "Reenviar…" action).
+        // F-27 (H5) / §R8.4-2: start-up and sign-in only READ. An attempt whose id never arrived is looked up on Home (GET
+        // /transfer-attempts?attemptId=, read only) and nothing is sent (re-sending it is the explicit "Reenviar…").
         if (!attempt.transferId) return;
         setCreateAttempt({ key: attempt.key, payload: attempt.payload });
         setTransferScreen('status');
         const result = await request<Transfer>(`/transfers/${encodeURIComponent(attempt.transferId)}`, session.accessToken);
         if (!active) return;
         setTransfer(result);
-        if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
+        if (isTerminalStatus(result.status)) await releaseRecovery(session.user.id);
         else await saveRecovery({ ...attempt, status: result.status }, session.user.id).catch(() => undefined);
         // An attempt waiting for its code reopens M08 without the code (it is never stored; no create is replayed).
         if (result.status === 'awaiting_confirmation') { setDemoOnlyCode(''); setCodeNotStored(true); }
@@ -469,10 +546,30 @@ function Wallet() {
     await SecureStore.setItemAsync(recoveryKeyFor(userId), JSON.stringify(stored));
     if (sessionUserRef.current === userId) setPendingRecord(stored);
   }
-  async function clearRecovery(userId: string | undefined) {
-    if (!userId) return;
-    if (sessionUserRef.current === userId) { setPendingRecord(null); setPendingCheck('idle'); }
-    await SecureStore.deleteItemAsync(recoveryKeyFor(userId));
+  // §R8.4-6 / §R8.7: called ONLY after a terminal result decided by the server. Release = deletion without error + a
+  // re-read that returns null; only then is "Transferir" enabled again. Otherwise the known result stays on screen with
+  // "No pudimos actualizar este dispositivo" + "Reintentar" and the block (the in-memory record) stays.
+  async function releaseRecovery(userId: string): Promise<boolean> {
+    try {
+      await SecureStore.deleteItemAsync(recoveryKeyFor(userId));
+      const again = await SecureStore.getItemAsync(recoveryKeyFor(userId));
+      if (again !== null && again !== undefined) throw new Error('record still stored');
+    } catch {
+      if (sessionUserRef.current === userId) setDeviceUpdateFailed(true);
+      return false;
+    }
+    if (sessionUserRef.current === userId) {
+      setPendingRecord(null); setPendingCheck('idle'); setDeviceUpdateFailed(false); setIdentityConflict(false); setClosureSeen(null);
+    }
+    return true;
+  }
+  // "Reintentar" after a failed release: the terminal result is already known (deviceUpdateFailed is only set after one).
+  async function retryRelease() {
+    if (!session || !deviceUpdateFailed) return;
+    const released = await releaseRecovery(session.user.id);
+    if (!released) return;
+    setRecoveryProblem(null);
+    setResolveState((current) => (current?.phase === 'done' ? { ...current, released: true } : current));
   }
 
   // F-21: the attempt being prepared is dropped before anything is sent; Home shows the unresolved one and its own action.
@@ -493,6 +590,17 @@ function Wallet() {
       source: source ? `${source.name} •• ${lastDigits(source.clabeMasked)}` : undefined,
       destination: target ? `${target.name} (${target.alias}) •• ${lastDigits(target.clabeMasked)}` : ownTarget ? `${ownTarget.name} •• ${lastDigits(ownTarget.clabeMasked)}` : undefined,
     };
+  }
+
+  // §R8.4-1: the send epoch of a NEW attempt comes from GET /transfer-policy loaded for the review (staleTime 0); when that
+  // read is not available it is read once more (a GET). Without a valid sendEpoch nothing is sent (fail closed).
+  async function currentSendEpoch(accessToken: string): Promise<string | null> {
+    const loaded = policyQuery.data?.sendEpoch;
+    if (typeof loaded === 'string' && EPOCH_PATTERN.test(loaded)) return loaded;
+    try {
+      const policy = await request<TransferPolicy>('/transfer-policy', accessToken);
+      return typeof policy.sendEpoch === 'string' && EPOCH_PATTERN.test(policy.sendEpoch) ? policy.sendEpoch : null;
+    } catch { return null; }
   }
 
   async function submitCreate(payloadOverride?: TransferRequest, replacesClosedAttempt = false) {
@@ -521,34 +629,44 @@ function Wallet() {
       }
       if (existing) { transferInFlight.current = false; holdForPendingAttempt(existing); return; }
     }
-    let attempt: RecoveryRecord | null;
     const payload = payloadOverride ?? transferPayload;
+    if (!payload) {
+      transferInFlight.current = false;
+      if (destinationIsSource) setTransferError(SAME_ACCOUNT_MESSAGE);
+      return;
+    }
+    const sendEpoch = await currentSendEpoch(session.accessToken);
+    if (!sendEpoch) {
+      transferInFlight.current = false;
+      setTransferError(SEND_EPOCH_MISSING_MESSAGE);
+      return;
+    }
+    let attempt: RecoveryRecord;
     try {
       // H5: the user's consent (this tap) is stored with the attempt before anything is sent.
-      let display = payload ? describeAttempt(payload) : {};
+      let display = describeAttempt(payload);
       // A new code after a restart has no draft in memory: keep the labels the replaced attempt was confirmed with.
       if (replacesClosedAttempt && pendingRecord?.display) display = { source: display.source ?? pendingRecord.display.source, destination: display.destination ?? pendingRecord.display.destination };
-      attempt = payload ? { key: newIdempotencyKey(), payload, consent: { confirmedAt: new Date().toISOString(), via: replacesClosedAttempt ? 'new_code' : 'confirm', otp: 'unknown' }, display } : null;
+      // §R8.7 record v2: identity (UUID v4) and key (another UUID v4) are both new for every new attempt.
+      const key = newIdempotencyKey();
+      let attemptId = newIdempotencyKey();
+      while (attemptId === key) attemptId = newIdempotencyKey();
+      attempt = { v: 2, attemptId, key, sendEpoch, payload, consent: { confirmedAt: new Date().toISOString(), via: replacesClosedAttempt ? 'new_code' : 'confirm', otp: 'unknown' }, display };
     } catch (error) {
       transferInFlight.current = false;
       setTransferError(error instanceof Error ? error.message : 'No se pudo preparar el intento de transferencia.');
       return;
     }
-    if (!attempt) {
-      transferInFlight.current = false;
-      if (destinationIsSource) setTransferError(SAME_ACCOUNT_MESSAGE);
-      return;
-    }
     setCreateAttempt({ key: attempt.key, payload: attempt.payload });
     try { await saveRecovery(attempt, userId); }
     catch {
-      // Without a stored record a lost response could not be resumed with this key: send nothing.
+      // Without a stored record a lost response could not be resumed with this identity: send nothing (§R8.11-D6).
       transferInFlight.current = false;
       setTransferError('No se pudo preparar el intento de transferencia.');
       return;
     }
     // E: a normal first request is "Enviando" (neutral copy).
-    setCodeNotStored(false);
+    setCodeNotStored(false); setIdentityConflict(false); setClosureSeen(null); setVoidOutcome(null);
     setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('sending');
     try { await sendAttempt({ ...attempt, userId }, userId, session.accessToken); }
     finally { setTransferBusy(false); transferInFlight.current = false; }
@@ -556,21 +674,19 @@ function Wallet() {
 
   // The ONLY place a POST /transfers is sent: the first send (tap on "Confirmar transferencia" / "Continuar a
   // verificación" or "Solicitar un código nuevo") and the explicit, confirmed "Reenviar la misma transferencia". Both send
-  // the stored record's own key and body. A record is released only by a final result the server confirmed for it.
-  async function sendAttempt(record: RecoveryRecord, userId: string, accessToken: string, resend = false) {
-    setPendingCheck('idle');
-    const send = () => request<Transfer & { demoOnlyCode?: string }>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': record.key }, body: JSON.stringify(record.payload) });
+  // the stored record's own key, identity, epoch and body. One tap = one POST (§R8.9): a business rejection of a send
+  // with identity is decided once and for all by the server (transfer-attempt-rejected), so nothing is re-sent here.
+  async function sendAttempt(record: RecoveryRecord, userId: string, accessToken: string) {
+    setPendingCheck('idle'); setClosureSeen(null);
+    const headers = attemptHeaders(record);
+    if (!headers) {
+      // Defence in depth: a record without identity or epoch is never sent (it stays as it is, unresolved).
+      setTransferError(SEND_EPOCH_MISSING_MESSAGE);
+      setTransferScreen('status');
+      return;
+    }
     try {
-      let result: Transfer & { demoOnlyCode?: string };
-      try { result = await send(); }
-      catch (error) {
-        // H5: a resend can meet an earlier send of the SAME key that the server was still applying; it then answers
-        // 422/429 "límite diario" because that send already used the balance/limit (it locks the accounts first, so it has
-        // committed by then). Within the same tap the same key and body are sent once more: if the earlier send was
-        // applied the server now returns it (no new charge); a second business rejection confirms nothing was applied.
-        if (!(resend && error instanceof ApiError && isBusinessRejection(error))) throw error;
-        result = await send();
-      }
+      const result = await request<Transfer & { demoOnlyCode?: string }>('/transfers', accessToken, { method: 'POST', headers, body: JSON.stringify(record.payload) });
       setDemoOnlyCode(result.demoOnlyCode ?? '');
       // The server's id is kept before anything else, so a later read (GET) can resolve this attempt.
       const otp: RecoveryConsent['otp'] = result.status === 'awaiting_confirmation' ? (record.consent?.otp === 'authorized' ? 'authorized' : 'required') : record.consent?.otp ?? 'unknown';
@@ -578,28 +694,37 @@ function Wallet() {
       if (!isTerminalStatus(result.status) || result.status === 'completed') await saveRecovery(known, userId).catch(() => undefined);
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${encodeURIComponent(result.id)}`, accessToken) : result;
       setTransfer(finalResult);
-      if (isTerminalStatus(finalResult.status)) await clearRecovery(userId);
+      if (isTerminalStatus(finalResult.status)) await releaseRecovery(userId);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
-      // Round 7 · 7: only a business rejection proves nothing was posted: 422 (e.g. "Saldo insuficiente") or the 429
-      // "Se excedió el límite diario" of the transfer rules. Any other 4xx (401, 403, 400, 404, 409, a rate limit…)
-      // stays unverified.
-      const confirmed = error instanceof ApiError && isBusinessRejection(error);
       // M11 shows the source balance and today's remaining limit: re-read them instead of presenting cached values.
       if (error instanceof ApiError) { void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['transfer-policy'] }); }
-      // F-21 (H5): only a confirmed rejection of this same attempt releases the record and opens M11. Any other answer —
-      // 409 "en curso", 401, 403, 400, a rate-limit 429, 5xx or no answer — on the first send, a retry or a resume keeps
-      // the attempt uncertain on M09 with its record intact: M11 is never shown for an outcome nobody confirmed.
-      if (confirmed) await clearRecovery(userId).catch(() => undefined);
-      setTransferScreen(confirmed ? 'rejected' : 'status');
+      // §R8.7: only the typed answers for this identity are terminal. transfer-attempt-voided (voided identity or old
+      // epoch: never applied) -> "Transferencia anulada"; transfer-attempt-rejected (404/422/429 closed for this identity)
+      // -> M11. Any other answer — 422/429 without type, 409 "en curso", transfer-attempt-conflict, 401, 403, 400, a
+      // rate-limit 429, 5xx or no answer — keeps the attempt uncertain on M09 with its record intact.
+      if (error instanceof ApiError && error.type === PROBLEM_VOIDED) {
+        await releaseRecovery(userId);
+        setVoidOutcome({ resolution: 'voided', attempt: null, payload: record.payload });
+        setTransferScreen('voided');
+        return;
+      }
+      if (error instanceof ApiError && error.type === PROBLEM_REJECTED) {
+        await releaseRecovery(userId);
+        setTransferScreen('rejected');
+        return;
+      }
+      if (error instanceof ApiError && error.type === PROBLEM_CONFLICT) setIdentityConflict(true);
+      setTransferScreen('status');
     }
   }
 
   // H5 (F-27): "Reenviar la misma transferencia" — never automatic. It first opens a review of the ORIGINAL data (screen
-  // "resend"); only the tap on its own "Reenviar la misma transferencia" sends, and it sends the stored key and body as
-  // they are (re-read from the secure store, never re-captured, never a new key). The API answers a repeated key with
-  // the same attempt, so an attempt that was already applied is not charged again; if it needs the code, M08 asks for it.
+  // "resend"); only the tap on its own "Reenviar la misma transferencia" sends, and it sends the stored key, identity,
+  // epoch and body as they are (re-read from the secure store, never re-captured, never a new key). The API answers a
+  // repeated key with the same attempt, so an attempt that was already applied is not charged again; if it needs the
+  // code, M08 asks for it.
   function openResend(from: 'home' | 'status') {
     if (!pendingRecord) return;
     setResendFrom(from); setTransferError('');
@@ -625,10 +750,151 @@ function Wallet() {
     }
     // Nothing (or another attempt) stored any more: send nothing and show what is there.
     if (!record || record.key !== pendingRecord?.key) { transferInFlight.current = false; holdForPendingAttempt(record); if (!record) setPendingRecord(null); return; }
-    setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(null); setCodeNotStored(false);
-    setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('status');
-    try { await sendAttempt(record, userId, session.accessToken, true); }
+    setTransferBusy(true); setTransferError('');
+    // §R8.8: a record of a build before round 8 has no epoch yet: it is read from the policy (a GET) and persisted with the
+    // record BEFORE the resend; if either fails nothing is sent.
+    if (!record.sendEpoch) {
+      const sendEpoch = await currentSendEpoch(session.accessToken);
+      let persisted = false;
+      if (sendEpoch) {
+        record = { ...record, sendEpoch };
+        try { await saveRecovery(record, userId); persisted = true; } catch { persisted = false; }
+      }
+      if (!persisted) { setTransferBusy(false); transferInFlight.current = false; setTransferError(SEND_EPOCH_MISSING_MESSAGE); return; }
+    }
+    setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(null); setCodeNotStored(false); setVoidOutcome(null);
+    setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('status');
+    try { await sendAttempt(record, userId, session.accessToken); }
     finally { setTransferBusy(false); transferInFlight.current = false; }
+  }
+
+  // §R8.4-3 "Anular esta transferencia": explicit, behind its own confirmation screen; never on start-up, foreground,
+  // sign-in or Home. It sends POST /transfer-attempts/void with the stored key (and identity, unless the record is from a
+  // build before round 8: its original send carried no identity, so it is voided by its key). Any 200 is terminal.
+  function openVoid(from: 'home' | 'status') {
+    if (!pendingRecord) return;
+    setVoidFrom(from); setTransferError('');
+    setCreateAttempt({ key: pendingRecord.key, payload: pendingRecord.payload });
+    setTransferScreen('void');
+  }
+  function cancelVoid() {
+    setTransferError('');
+    if (voidFrom === 'status') { setTransferScreen('status'); return; }
+    leaveUncertainTransfer();
+  }
+  async function confirmVoid() {
+    if (!session || transferBusy || transferInFlight.current) return;
+    transferInFlight.current = true;
+    const userId = session.user.id;
+    const token = session.accessToken;
+    let record: RecoveryRecord | null;
+    try { record = await readOwnRecovery(userId); }
+    catch (error) {
+      transferInFlight.current = false;
+      setRecoveryProblem(error instanceof RecoveryReadError ? error.kind : 'unreadable');
+      holdForPendingAttempt(null);
+      return;
+    }
+    // Like the resend: the attempt shown must still be the one stored; otherwise nothing is voided.
+    if (!record || record.key !== pendingRecord?.key) { transferInFlight.current = false; holdForPendingAttempt(record); if (!record) setPendingRecord(null); return; }
+    setTransferBusy(true); setTransferError('');
+    try {
+      const body = { idempotencyKey: record.key, ...(record.attemptId && !record.legacy ? { attemptId: record.attemptId } : {}) };
+      const result = await request<VoidAttemptResult>('/transfer-attempts/void', token, { method: 'POST', body: JSON.stringify(body) });
+      await releaseRecovery(userId);
+      void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] });
+      setVoidOutcome({ resolution: result.resolution, attempt: result.attempt, payload: record.payload, detail: result.attempt.problem?.detail });
+      if (result.resolution === 'transfer_found' && result.attempt.transferId) {
+        // "Si ya se aplicó, te mostraremos su resultado": the transfer itself is read (receipt / closed).
+        try {
+          const found = await request<Transfer>(`/transfers/${encodeURIComponent(result.attempt.transferId)}`, token);
+          setTransfer(found);
+          setTransferScreen(found.status === 'awaiting_confirmation' || found.status === 'processing' ? 'voided' : screenForStatus(found.status));
+          return;
+        } catch { /* the summary of the void answer is shown instead */ }
+      }
+      setTransferScreen('voided');
+    } catch (error) {
+      if (error instanceof ApiError && error.type === PROBLEM_CONFLICT) setIdentityConflict(true);
+      setTransferError(error instanceof Error ? error.message : 'No se pudo anular la transferencia.');
+      if (error instanceof ApiError && error.type === PROBLEM_CONFLICT) setTransferScreen('status');
+    } finally { setTransferBusy(false); transferInFlight.current = false; }
+  }
+
+  // §R8.4-4 / §R8.8 "Resolver con el servidor": for a damaged record, an unreadable store or an identity in conflict. It
+  // first lists the user's attempts (GET) and explains the effect; only the explicit tap on "Anular pendientes y
+  // desbloquear" sends void-all with the epoch it read, then lists again, and only then deletes the local record (verified
+  // by a re-read). Never automatic.
+  async function openResolve() {
+    if (!session) return;
+    setResolveState({ phase: 'loading' });
+    try {
+      const before = await request<TransferAttemptPage>('/transfer-attempts?limit=20', session.accessToken);
+      setResolveState({ phase: 'ready', before });
+    } catch (error) {
+      setResolveState({ phase: 'error', error: error instanceof Error ? error.message : 'No pudimos consultar tus transferencias.' });
+    }
+  }
+  async function finishResolve(before: TransferAttemptPage, result: VoidAllResult) {
+    if (!session) return;
+    const userId = session.user.id;
+    setResolveState({ phase: 'rereading', before, result });
+    let after: TransferAttemptPage;
+    try { after = await request<TransferAttemptPage>('/transfer-attempts?limit=20', session.accessToken); }
+    catch (error) {
+      // void-all already answered 200; the release still needs a successful list read (retry it, no new void-all).
+      setResolveState({ phase: 'rereading', before, result, error: error instanceof Error ? error.message : 'No pudimos consultar tus transferencias.' });
+      return;
+    }
+    const released = await releaseRecovery(userId);
+    if (released) { setRecoveryProblem(null); setIdentityConflict(false); }
+    void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] });
+    setResolveState({ phase: 'done', before, after, result, released });
+  }
+  async function confirmVoidAll() {
+    const state = resolveState;
+    if (!session || !state?.before || state.phase !== 'ready' || transferInFlight.current) return;
+    transferInFlight.current = true;
+    const before = state.before;
+    setResolveState({ phase: 'voiding', before });
+    try {
+      let result: VoidAllResult;
+      try {
+        result = await request<VoidAllResult>('/transfer-attempts/void-all', session.accessToken, { method: 'POST', body: JSON.stringify({ fromEpoch: before.sendEpoch }) });
+      } catch (error) {
+        setResolveState({ phase: 'ready', before, error: error instanceof Error ? error.message : 'No pudimos anular tus transferencias pendientes.' });
+        return;
+      }
+      await finishResolve(before, result);
+    } finally { transferInFlight.current = false; }
+  }
+  function closeResolve() {
+    setResolveState(null);
+    setActiveTab('home');
+  }
+
+  // §R8.4-2: READ ONLY reconciliation of a stored attempt. With an id: GET /transfers/{id}. Without one:
+  // GET /transfer-attempts?attemptId=<id>&limit=1; an item with a transfer gets its id stored and that transfer is read.
+  // Nothing is ever sent from here.
+  type AttemptLookup = { kind: 'transfer'; transfer: Transfer; record: RecoveryRecord } | { kind: 'closure'; summary: TransferAttemptSummary; record: RecoveryRecord } | { kind: 'none'; record: RecoveryRecord } | { kind: 'not_found'; record: RecoveryRecord };
+  async function lookupAttempt(record: RecoveryRecord, userId: string, accessToken: string): Promise<AttemptLookup> {
+    let current = record;
+    if (!current.transferId) {
+      if (!current.attemptId) return { kind: 'none', record: current };
+      const page = await request<TransferAttemptPage>(`/transfer-attempts?attemptId=${encodeURIComponent(current.attemptId)}&limit=1`, accessToken);
+      const item = page.items.find((entry) => entry.attemptId?.toLowerCase() === current.attemptId?.toLowerCase());
+      if (!item) return { kind: 'none', record: current };
+      if (!item.transferId) return { kind: 'closure', summary: item, record: current };
+      current = { ...current, transferId: item.transferId, status: item.status as Transfer['status'] };
+      if (sessionUserRef.current === userId) await saveRecovery(current, userId).catch(() => undefined);
+    }
+    try {
+      const transfer = await request<Transfer>(`/transfers/${encodeURIComponent(current.transferId!)}`, accessToken);
+      return { kind: 'transfer', transfer, record: current };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return { kind: 'not_found', record: current };
+      throw error;
+    }
   }
 
   async function confirmOtp(retry = false) {
@@ -652,7 +918,7 @@ function Wallet() {
       const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
       setTransfer(finalResult); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
-      if (isTerminalStatus(finalResult.status)) await clearRecovery(session.user.id);
+      if (isTerminalStatus(finalResult.status)) await releaseRecovery(session.user.id);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) {
       if (!(error instanceof ApiError) || error.status >= 500) {
@@ -662,7 +928,7 @@ function Wallet() {
         try {
           const recovered = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
           setTransfer(recovered); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
-          if (isTerminalStatus(recovered.status)) await clearRecovery(session.user.id);
+          if (isTerminalStatus(recovered.status)) await releaseRecovery(session.user.id);
           setTransferScreen(screenForStatus(recovered.status));
           return;
         } catch { /* Recovery query failed too; fall through and show the error with the attempt preserved for retry. */ }
@@ -682,7 +948,7 @@ function Wallet() {
           // Confirmed business rejection at confirm time (M11): no posting happened. The still-pending attempt is closed;
           // F-26 (H5): its record is released only once the API confirms it cancelled/expired (else Home keeps it).
           const closed = await closePreviousAttempt(transfer, session.accessToken);
-          if (closed && (closed.status === 'cancelled' || closed.status === 'expired')) await clearRecovery(session.user.id).catch(() => undefined);
+          if (closed && (closed.status === 'cancelled' || closed.status === 'expired')) await releaseRecovery(session.user.id);
           setOtp('');
           setTransferError(error.message);
           void client.invalidateQueries({ queryKey: ['accounts'] });
@@ -695,29 +961,37 @@ function Wallet() {
     } finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
-  // M09 "Verificar estado de la transferencia": READ ONLY (H5 · 2). With an id it reads the attempt (GET); without one there
-  // is nothing to read and nothing is sent: it says so and refreshes balances and movements (also reads).
+  // M09 "Verificar estado de la transferencia": READ ONLY (H5 · 2, §R8.4-2). With an id it reads the transfer (GET); without
+  // one it reads the authoritative list for this identity (GET /transfer-attempts?attemptId=). Nothing is ever sent.
   async function checkTransferStatus() {
     if (!session || transferBusy || transferInFlight.current) return;
+    const userId = session.user.id;
     const transferId = transfer?.id ?? pendingRecord?.transferId;
     setTransferError('');
-    if (!transferId) {
-      setPendingCheck('no_id');
-      void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] });
-      return;
-    }
+    const record = pendingRecord ? { ...pendingRecord, ...(transferId ? { transferId } : {}) } : null;
+    if (!record && !transferId) { setPendingCheck('no_id'); return; }
     setTransferBusy(true);
     setPendingCheck('idle');
     try {
-      const result = await request<Transfer>(`/transfers/${encodeURIComponent(transferId)}`, session.accessToken);
+      const found: AttemptLookup | { kind: 'transfer'; transfer: Transfer; record: null } = record
+        ? await lookupAttempt(record, userId, session.accessToken)
+        : { kind: 'transfer', transfer: await request<Transfer>(`/transfers/${encodeURIComponent(transferId!)}`, session.accessToken), record: null };
+      if (found.kind === 'none') {
+        setPendingCheck('no_id');
+        void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] });
+        return;
+      }
+      if (found.kind === 'closure') { setClosureSeen(found.summary); setPendingCheck('closure'); return; }
+      // F-26 (H5): a 404 keeps the record; M09 explains that a charge cannot be confirmed either way.
+      if (found.kind === 'not_found') { setPendingCheck('not_found'); return; }
+      const result = found.transfer;
       setTransfer(result);
-      if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
-      else if (pendingRecord) await saveRecovery({ ...pendingRecord, transferId: result.id, status: result.status }, session.user.id).catch(() => undefined);
+      if (isTerminalStatus(result.status)) await releaseRecovery(userId);
+      else if (found.record) await saveRecovery({ ...found.record, transferId: result.id, status: result.status }, userId).catch(() => undefined);
       if (result.status === 'awaiting_confirmation' && !demoOnlyCode) setCodeNotStored(true);
       setTransferScreen(screenForStatus(result.status));
     } catch (error) {
-      // F-26 (H5): a 404 keeps the record; M09 explains that a charge cannot be confirmed either way.
-      if (error instanceof ApiError && error.status === 404) { setPendingCheck('not_found'); return; }
+      if (error instanceof ApiError && error.status === 404 && transferId) { setPendingCheck('not_found'); return; }
       setTransferError(error instanceof Error ? error.message : 'No se pudo consultar el estado.');
     }
     finally { setTransferBusy(false); }
@@ -764,7 +1038,7 @@ function Wallet() {
       if (!closed) { setTransferError(NEW_CODE_UNCERTAIN_MESSAGE); return; }
       if (closed.status !== 'cancelled' && closed.status !== 'expired') {
         setTransfer(closed);
-        if (isTerminalStatus(closed.status)) await clearRecovery(session.user.id);
+        if (isTerminalStatus(closed.status)) await releaseRecovery(session.user.id);
         if (closed.status !== 'awaiting_confirmation') setTransferScreen(screenForStatus(closed.status));
         else setTransferError(NEW_CODE_UNCERTAIN_MESSAGE);
         return;
@@ -825,7 +1099,7 @@ function Wallet() {
         const current = await request<Transfer>(`/transfers/${encodeURIComponent(transfer.id)}`, session.accessToken);
         setTransfer(current); setConfirmUncertain(false); setConfirmAttempt(null); setOtp('');
         if (current.status !== 'awaiting_confirmation') {
-          if (isTerminalStatus(current.status)) await clearRecovery(session.user.id);
+          if (isTerminalStatus(current.status)) await releaseRecovery(session.user.id);
           setTransferScreen(screenForStatus(current.status));
           return;
         }
@@ -848,12 +1122,18 @@ function Wallet() {
       if (!closed || !isTerminalStatus(closed.status)) { leaveUncertainTransfer(); return; }
       if (closed.status !== 'cancelled' && closed.status !== 'expired') {
         setTransfer(closed); setOtp(''); setConfirmAttempt(null);
-        await clearRecovery(session.user.id);
+        await releaseRecovery(session.user.id);
         setTransferScreen(screenForStatus(closed.status));
         return;
       }
+      // §R8.7: the confirmed cancel is terminal; if this device cannot delete its record the closed result is shown with
+      // "No pudimos actualizar este dispositivo" and the block stays.
+      if (!(await releaseRecovery(session.user.id))) {
+        setTransfer(closed); setOtp(''); setConfirmAttempt(null); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setDemoOnlyCode('');
+        setTransferScreen('closed');
+        return;
+      }
     }
-    await clearRecovery(session.user.id).catch(() => undefined);
     setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setConfirmAttempt(null); setTransferError(''); setTransfer(null); setCreateAttempt(null); setDemoOnlyCode('');
     // A pending attempt resumed after a restart has no draft in memory; go home rather than to an empty review.
     if (!destination) { resetTransfer(); return; }
@@ -893,11 +1173,11 @@ function Wallet() {
   );
 
   // F-21: Home resolves a pending attempt by itself whenever Home is shown and when the app returns to the foreground with
-  // a valid session, by READING it (GET by its id). A resolved attempt shows its real result (receipt when completed) and
-  // the transfer flow is enabled again; otherwise (still pending, processing or no answer) the notice and its action stay.
-  // H5 (F-27 / 2): this is READ ONLY in every case — automatic or tapped ("Verificar estado de la transferencia",
-  // "Verificar de nuevo", "Continuar con la transferencia pendiente"). An attempt whose id never arrived cannot be read:
-  // nothing is sent; on a tap Home says so and offers the safe actions (movements, explicit resend).
+  // a valid session, by READING it. A resolved attempt shows its real result (receipt when completed) and the transfer flow
+  // is enabled again; otherwise (still pending, processing, not received yet or no answer) the notice and its actions stay.
+  // H5 (F-27 / 2) / §R8.4-2: this is READ ONLY in every case — automatic or tapped ("Verificar estado de la transferencia",
+  // "Continuar con la transferencia pendiente"): GET /transfers/{id}, or GET /transfer-attempts?attemptId= for an attempt
+  // whose id never arrived. Never a POST /transfers, a void or a void-all.
   async function verifyPendingFromHome(byTap: boolean) {
     if (!session || pendingCheckInFlight.current || transferInFlight.current) return;
     const userId = session.user.id;
@@ -908,22 +1188,27 @@ function Wallet() {
       record = await readOwnRecovery(userId);
       if (sessionUserRef.current !== userId) return;
       setRecoveryProblem(null);
-      if (!record) { setPendingRecord(null); setPendingCheck('idle'); return; }
+      if (!record) { setPendingRecord(null); setPendingCheck('idle'); setDeviceUpdateFailed(false); return; }
       setPendingRecord(record);
-      if (!record.transferId) {
-        if (byTap) { setPendingCheck('no_id'); void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] }); }
+      setPendingCheck('checking');
+      const found = await lookupAttempt(record, userId, token);
+      if (sessionUserRef.current !== userId) return;
+      if (found.kind === 'none') {
+        setPendingCheck('no_id');
+        if (byTap) { void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] }); }
         return;
       }
-      setPendingCheck('checking');
-      const result = await request<Transfer>(`/transfers/${encodeURIComponent(record.transferId)}`, token);
-      if (sessionUserRef.current !== userId) return;
+      if (found.kind === 'closure') { setClosureSeen(found.summary); setPendingCheck('closure'); return; }
+      // F-26 (H5): a 404 keeps the record (no release); Home explains it and offers only safe actions.
+      if (found.kind === 'not_found') { setPendingCheck('not_found'); return; }
+      const result = found.transfer;
       if (isTerminalStatus(result.status)) {
-        await clearRecovery(userId);
+        await releaseRecovery(userId);
         setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(result); setTransferError('');
         setTransferScreen(screenForStatus(result.status));
         return;
       }
-      await saveRecovery({ ...record, transferId: result.id, status: result.status }, userId);
+      await saveRecovery({ ...found.record, transferId: result.id, status: result.status }, userId);
       setPendingCheck('idle');
       if (byTap) {
         // The user asked to continue: the attempt is shown where it can be acted on (M08 asks for the code again).
@@ -937,18 +1222,22 @@ function Wallet() {
         setRecoveryProblem(error.kind); setPendingRecord(null); setPendingCheck('idle');
         return;
       }
-      // F-26 (H5): a 404 keeps the record (no release); Home explains it and offers only safe actions.
-      setPendingCheck(record?.transferId && error instanceof ApiError && error.status === 404 ? 'not_found' : 'failed');
+      setPendingCheck('failed');
     } finally { pendingCheckInFlight.current = false; }
   }
-  const homeVisible = Boolean(session && ready && recoveryReady && !transferScreen && !choosingBeneficiary && !movementDetail && !movementDetailBusy && !movementDetailError && activeTab === 'home');
+  const homeVisible = Boolean(session && ready && recoveryReady && !resolveState && !transferScreen && !choosingBeneficiary && !movementDetail && !movementDetailBusy && !movementDetailError && activeTab === 'home');
   const pendingKey = pendingRecord?.key;
   // F-26: no new transfer can start while an own record exists or the stored record cannot be used. There is no discard.
   const transferBlocked = Boolean(pendingRecord || recoveryProblem);
-  // H5 (F-27): the explicit resend is offered only while the attempt's server state is unknown: its id never arrived,
-  // or its read answered 404. It always re-sends the stored key and body (the API answers a repeated key with the same
-  // attempt, so it cannot charge twice). A damaged/unreadable record has no key or body to send: no resend.
-  const canResend = Boolean(pendingRecord && !recoveryProblem && (!(transfer?.id ?? pendingRecord.transferId) || pendingCheck === 'not_found'));
+  // H5 (F-27) / §R8.8: the explicit resend and "Anular esta transferencia" are offered only while the attempt's server
+  // state is unknown: its id never arrived, or its read answered 404 (then there is no "Verificar de nuevo"). The resend
+  // always re-sends the stored key, identity, epoch and body (the API answers a repeated key with the same attempt, so it
+  // cannot charge twice). A damaged/unreadable record or an identity in conflict has neither: its way out is "Resolver
+  // con el servidor". An identity the list shows closed is confirmed with "Anular esta transferencia".
+  const unknownServerState = Boolean(pendingRecord && !recoveryProblem && !identityConflict && (!(transfer?.id ?? pendingRecord.transferId) || pendingCheck === 'not_found'));
+  const canResend = unknownServerState && pendingCheck !== 'closure';
+  const canVoid = unknownServerState;
+  const canResolve = Boolean(recoveryProblem || identityConflict);
   useEffect(() => {
     if (!homeVisible || !pendingKey) return;
     void verifyPendingFromHome(false);
@@ -982,7 +1271,8 @@ function Wallet() {
 
   // Opened from Home or from "Cambiar beneficiario" on the transfer details step; any later step keeps priority.
   if (choosingBeneficiary && (!transferScreen || transferScreen === 'details')) return <BeneficiaryPickerScreen queryPending={beneficiariesQuery.isPending} error={beneficiariesQuery.error instanceof Error ? beneficiariesQuery.error.message : ''} beneficiaries={filteredBeneficiaries} total={beneficiaries.length} search={beneficiarySearch} setSearch={setBeneficiarySearch} userInitials={initials(session.user.fullName)} backLabel={transferScreen ? 'Volver a datos de transferencia' : 'Volver a inicio'} source={selected} accounts={accounts} onSelectSource={setSelectedId} onRetry={() => void beneficiariesQuery.refetch()} onClose={() => setChoosingBeneficiary(false)} onChoose={(beneficiary) => { setDestination(beneficiary); setChoosingBeneficiary(false); }} />;
-  if (transferScreen) return <TransferFlow screen={transferScreen} policy={policyQuery.data ?? null} onOtpTimeout={otpTimedOut} confirmUncertain={confirmUncertain} sameAccount={destinationIsSource} originOpen={originOpen} setOriginOpen={setOriginOpen} onSelectSource={(id) => { setSelectedId(id); setTransferError(''); }} rejectedWarning={repeatsRejected && transferScreen === 'review' ? rejectedCombo?.reason ?? null : null} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} confirmRetry={Boolean(confirmAttempt)} codeNotStored={codeNotStored} resendRecord={transferScreen === 'resend' ? pendingRecord : null} canResend={canResend} otpExpired={otpExpired} otpWrong={otpWrong} otpLocked={otpLocked} verifying={transferBusy && Boolean(confirmAttempt)} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={() => void requestNewCode()} lookup={pendingCheck} onLeave={leaveUncertainTransfer} onViewMovements={() => { leaveUncertainTransfer(); setActiveTab('movements'); }} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { if (destinationIsSource) { setTransferError(SAME_ACCOUNT_MESSAGE); return; } setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onResend={() => openResend('status')} onConfirmResend={() => void resendSameTransfer()} onCancelResend={cancelResend} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
+  if (resolveState) return <ResolveWithServerScreen state={resolveState} userInitials={initials(session.user.fullName)} onRetryList={() => void openResolve()} onConfirm={() => void confirmVoidAll()} onRetryReread={() => { if (resolveState.before && resolveState.result) void finishResolve(resolveState.before, resolveState.result); }} onRetryRelease={() => void retryRelease()} deviceUpdateFailed={deviceUpdateFailed} onClose={closeResolve} />;
+  if (transferScreen) return <TransferFlow screen={transferScreen} policy={policyQuery.data ?? null} onOtpTimeout={otpTimedOut} confirmUncertain={confirmUncertain} sameAccount={destinationIsSource} originOpen={originOpen} setOriginOpen={setOriginOpen} onSelectSource={(id) => { setSelectedId(id); setTransferError(''); }} rejectedWarning={repeatsRejected && transferScreen === 'review' ? rejectedCombo?.reason ?? null : null} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} confirmRetry={Boolean(confirmAttempt)} codeNotStored={codeNotStored} resendRecord={transferScreen === 'resend' || transferScreen === 'void' ? pendingRecord : null} canResend={canResend} canVoid={canVoid} canResolve={canResolve} identityConflict={identityConflict} closure={closureSeen} voidOutcome={voidOutcome} deviceUpdateFailed={deviceUpdateFailed} onRetryRelease={() => void retryRelease()} onVoid={() => openVoid('status')} onConfirmVoid={() => void confirmVoid()} onCancelVoid={cancelVoid} onResolve={() => void openResolve()} otpExpired={otpExpired} otpWrong={otpWrong} otpLocked={otpLocked} verifying={transferBusy && Boolean(confirmAttempt)} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={() => void requestNewCode()} lookup={pendingCheck} onLeave={leaveUncertainTransfer} onViewMovements={() => { leaveUncertainTransfer(); setActiveTab('movements'); }} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { if (destinationIsSource) { setTransferError(SAME_ACCOUNT_MESSAGE); return; } setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onResend={() => openResend('status')} onConfirmResend={() => void resendSameTransfer()} onCancelResend={cancelResend} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
 
   if (movementDetailBusy || movementDetailError) return <View style={styles.page}><View style={styles.flowContent}><Pressable accessibilityRole="button" accessibilityLabel="Volver a movimientos" style={styles.backButton} onPress={() => { setMovementDetailError(''); setMovementDetailBusy(false); setMovementDetailId(''); }}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Movimientos</Text></Pressable>{movementDetailBusy ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando comprobante…</Text></Centered> : <View style={styles.notice}><Text accessibilityRole="alert" style={styles.errorText}>{movementDetailError}</Text><Button title="Reintentar" onPress={() => { const item = movementsQuery.data?.items.find((movement) => movement.transferId === movementDetailId); if (item) void openMovement(item); }}/></View>}</View></View>;
   const closeMovementDetail = () => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); };
@@ -1000,7 +1290,7 @@ function Wallet() {
         <View style={styles.accountTabs}>{accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} •• ${lastDigits(account.clabeMasked)}`} accessibilityState={{ selected: selected?.id === account.id }} style={[styles.tab, selected?.id === account.id && styles.tabSelected]} onPress={() => setSelectedId(account.id)}><View style={[styles.tabDot, selected?.id === account.id && styles.tabDotSelected]}/><Text numberOfLines={1} style={[styles.tabText, selected?.id === account.id && styles.tabTextSelected]}>{accountTabLabel(account.name)}</Text><Text numberOfLines={1} style={styles.tabDigits}>•• {lastDigits(account.clabeMasked)}</Text></Pressable>)}</View>
         {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.balanceDigits}>•• {lastDigits(selected.clabeMasked)}</Text></View><View><Text style={styles.balanceLabel}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatMoney(selected.availableBalanceMinor)}</Text><Text style={styles.currency}>MXN</Text></View></View></View>}
       </>}
-        {transferBlocked ? <PendingTransferNotice record={pendingRecord} problem={recoveryProblem} lookup={pendingCheck} canResend={canResend} onVerify={() => void verifyPendingFromHome(true)} onResend={() => openResend('home')} onRetryRead={() => { setRecoveryReady(false); }} onMovements={() => setActiveTab('movements')}/> : null}
+        {transferBlocked ? <PendingTransferNotice record={pendingRecord} problem={recoveryProblem} lookup={pendingCheck} canResend={canResend} canVoid={canVoid} canResolve={canResolve} identityConflict={identityConflict} closure={closureSeen} deviceUpdateFailed={deviceUpdateFailed} onVerify={() => void verifyPendingFromHome(true)} onResend={() => openResend('home')} onVoid={() => openVoid('home')} onResolve={() => void openResolve()} onRetryRelease={() => void retryRelease()} onRetryRead={() => { setRecoveryReady(false); }} onMovements={() => setActiveTab('movements')}/> : null}
         {/* F-21: while an attempt of this user is unresolved or waits for its code, Home offers no way to start another
             one (no "Transferir dinero", destination card or "Continuar"): only resuming/verifying that attempt. F-26: the
             same holds while a stored record is damaged or the secure store cannot be read. */}
@@ -1134,17 +1424,22 @@ function AppTopbar({ section, initials: userInitials }: { section: string; initi
 }
 
 // F-21: Home's only transfer action while an attempt of this user is unresolved or still waits for its code. Nothing on
-// Home can start another one until it is resolved. F-26 (H5): the same notice covers an unusable stored record (damaged
-// / secure store unreadable) and a stored attempt the server does not find (404); none of them offers a discard and
-// none deletes the record: only reading again and "Ver movimientos" (read-only).
-function PendingTransferNotice({ record, problem, lookup, canResend, onVerify, onResend, onRetryRead, onMovements }: { record: RecoveryRecord | null; problem: RecoveryProblem | null; lookup: PendingLookup; canResend: boolean; onVerify: () => void; onResend: () => void; onRetryRead: () => void; onMovements: () => void }) {
+// Home can start another one until it is resolved. F-26 (H5) / §R8.8: the same notice covers an unusable stored record
+// (damaged / secure store unreadable: "Reintentar lectura" and the explicit "Resolver con el servidor"), an identity in
+// conflict, a stored attempt the server does not find (404: Anular, Reenviar, Ver movimientos; no "Verificar de nuevo")
+// and a known result whose local deletion failed ("Reintentar"). None discards the record on its own.
+function PendingTransferNotice({ record, problem, lookup, canResend, canVoid, canResolve, identityConflict, closure, deviceUpdateFailed, onVerify, onResend, onVoid, onResolve, onRetryRelease, onRetryRead, onMovements }: { record: RecoveryRecord | null; problem: RecoveryProblem | null; lookup: PendingLookup; canResend: boolean; canVoid: boolean; canResolve: boolean; identityConflict: boolean; closure: TransferAttemptSummary | null; deviceUpdateFailed: boolean; onVerify: () => void; onResend: () => void; onVoid: () => void; onResolve: () => void; onRetryRelease: () => void; onRetryRead: () => void; onMovements: () => void }) {
   const movements = <Button title="Ver movimientos" variant="secondary" leadingIcon="list-outline" onPress={onMovements}/>;
+  const resolve = canResolve ? <Button title="Resolver con el servidor" variant="secondary" leadingIcon="shield-checkmark-outline" onPress={onResolve}/> : null;
+  const deviceUpdate = deviceUpdateFailed ? <View testID="device-update-failed" style={styles.pendingNotice}><Text accessibilityRole="alert" style={styles.pendingNoticeError}>{DEVICE_UPDATE_FAILED_TEXT}</Text><Button title="Reintentar" leadingIcon="sync-outline" onPress={onRetryRelease}/></View> : null;
   if (!record) {
     const damaged = problem === 'damaged';
     return <View accessibilityRole="alert" testID="pending-transfer-notice" style={styles.pendingNotice}>
       <View style={styles.estimateLabel}><Ionicons name="alert-circle-outline" size={20} color={colors.primary}/><Text style={styles.pendingNoticeTitle}>{damaged ? 'No pudimos recuperar una transferencia en verificación' : 'No pudimos comprobar tus transferencias'}</Text></View>
       <Text style={styles.pendingNoticeText}>{damaged ? RECOVERY_DAMAGED_TEXT : RECOVERY_UNREADABLE_TEXT}</Text>
+      {deviceUpdate}
       <Button title="Reintentar lectura" leadingIcon="sync-outline" onPress={onRetryRead}/>
+      {resolve}
       {movements}
     </View>;
   }
@@ -1152,20 +1447,74 @@ function PendingTransferNotice({ record, problem, lookup, canResend, onVerify, o
   const checking = lookup === 'checking';
   const awaitingCode = record.status === 'awaiting_confirmation' && !notFound;
   const { amountMinor, reference } = record.payload;
+  const closedLabel = closure?.status === 'rejected' ? 'rechazada' : 'anulada';
   return <View accessibilityRole="alert" testID="pending-transfer-notice" style={styles.pendingNotice}>
     <View style={styles.estimateLabel}><Ionicons name={awaitingCode ? 'shield-checkmark-outline' : 'hourglass-outline'} size={20} color={colors.primary}/><Text style={styles.pendingNoticeTitle}>{awaitingCode ? 'Transferencia pendiente de autorizar' : 'Transferencia en verificación'}</Text></View>
     {awaitingCode
       ? <Text style={styles.pendingNoticeText}>Tu operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}) espera su código de autorización. Continúa con ella o cancélala antes de enviar otra.</Text>
-      : <Text style={styles.pendingNoticeText}>Aún no confirmamos si se aplicó la operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}). No la envíes de nuevo: verifica su estado. Podrás hacer otra transferencia cuando conozcamos su resultado.</Text>}
+      : <Text style={styles.pendingNoticeText}>Aún no confirmamos si se aplicó la operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}). {PENDING_SAFE_EXITS_TEXT}</Text>}
+    {record.ownerAssumed ? <Text style={styles.pendingNoticeText}>{OWNER_ASSUMED_TEXT}</Text> : null}
+    {deviceUpdate}
     {checking ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Consultando el estado de esta operación…</Text>
-      : notFound ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{NOT_FOUND_TEXT}</Text>
-        : lookup === 'no_id' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{NO_ID_TEXT}</Text>
-          : lookup === 'failed' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
-    <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onVerify}/>
+      : identityConflict ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{IDENTITY_CONFLICT_TEXT}</Text>
+        : notFound ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{NOT_FOUND_TEXT}</Text>
+          : lookup === 'closure' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{`El servidor registró esta operación como ${closedLabel}${closure?.problem?.detail ? ` (${closure.problem.detail})` : ''}. Toca «Anular esta transferencia» para confirmarlo y liberar este dispositivo.`}</Text>
+            : lookup === 'no_id' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{record.legacy ? LEGACY_NO_ID_TEXT : NO_ID_TEXT}</Text>
+              : lookup === 'failed' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
+    {notFound || identityConflict ? null : <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onVerify}/>}
+    {resolve}
+    {canVoid && !checking ? <Button title="Anular esta transferencia" variant="secondary" leadingIcon="close-circle-outline" onPress={onVoid}/> : null}
+    {canResend && !checking ? <Button title="Reenviar la misma transferencia" variant="secondary" leadingIcon="repeat-outline" onPress={onResend}/> : null}
     {awaitingCode ? null : movements}
     {awaitingCode ? null : <Text style={styles.pendingNoticeText}>{MOVEMENTS_CAVEAT}</Text>}
-    {canResend && !checking ? <Button title="Reenviar la misma transferencia" variant="secondary" leadingIcon="repeat-outline" onPress={onResend}/> : null}
   </View>;
+}
+
+const ATTEMPT_STATUS_LABELS: Record<TransferAttemptSummary['status'], string> = { awaiting_confirmation: 'Pendiente de código', completed: 'Completada', expired: 'Expirada', cancelled: 'Cancelada', rejected: 'Rechazada', voided: 'Anulada' };
+function AttemptList({ page, testID }: { page: TransferAttemptPage | undefined; testID: string }) {
+  if (!page) return null;
+  if (page.items.length === 0) return <Text testID={testID} style={styles.pendingNoticeText}>No hay intentos de transferencia registrados en el servidor.</Text>;
+  return <View testID={testID} style={styles.rejectedCard}>{page.items.map((item, index) => <View key={`${item.transferId ?? item.attemptId ?? 'closure'}-${index}`} style={styles.rejectedRow}>
+    <Text style={styles.rejectedLabel}>{`${ATTEMPT_STATUS_LABELS[item.status]}${item.reference ? ` · Ref ${item.reference}` : ''}`}</Text>
+    <Text style={styles.rejectedValue}>{item.amountMinor ? `${formatMoney(item.amountMinor)} MXN` : '—'}</Text>
+  </View>)}{page.nextCursor ? <Text style={styles.pendingNoticeText}>Se muestran los 20 más recientes.</Text> : null}</View>;
+}
+
+// §R8.4-4 / §R8.8 "Resolver con el servidor" (damaged record, unreadable store or identity in conflict): the list read from
+// the server, what the void-all does, and the explicit "Anular pendientes y desbloquear"; then the list again. The local
+// block is lifted only after void-all 200 + that list + a verified deletion (otherwise "Reintentar").
+function ResolveWithServerScreen({ state, userInitials, deviceUpdateFailed, onRetryList, onConfirm, onRetryReread, onRetryRelease, onClose }: { state: ResolveState; userInitials: string; deviceUpdateFailed: boolean; onRetryList: () => void; onConfirm: () => void; onRetryReread: () => void; onRetryRelease: () => void; onClose: () => void }) {
+  const working = state.phase === 'loading' || state.phase === 'voiding' || (state.phase === 'rereading' && !state.error);
+  return <View style={styles.page}><StatusBar barStyle="dark-content"/><ScreenHeader title="Resolver" backLabel={state.phase === 'done' ? 'Volver al inicio' : 'Volver sin anular'} onBack={onClose} backDisabled={working} userInitials={userInitials} tone="pale"/><ScrollView contentContainerStyle={[styles.flowContent, styles.steppedContent]}>
+    <View style={styles.rejectedHero}>
+      <View style={[styles.rejectedIcon, styles.closedIcon]}><Ionicons name="shield-checkmark-outline" size={30} color={colors.primary}/></View>
+      <Text accessibilityRole="header" style={styles.rejectedTitle}>Resolver con el servidor</Text>
+      {state.phase === 'done' ? null : <Text style={styles.rejectedReason}>{RESOLVE_TEXT}</Text>}
+    </View>
+    {state.phase === 'loading' ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Consultando tus transferencias…</Text></Centered> : null}
+    {state.phase === 'error' ? <View style={styles.actions}><Text accessibilityRole="alert" style={styles.errorText}>{state.error}</Text><Button title="Reintentar" leadingIcon="sync-outline" onPress={onRetryList}/><Button title="Volver sin anular" variant="secondary" onPress={onClose}/></View> : null}
+    {state.phase === 'ready' || state.phase === 'voiding' ? <>
+      <Text style={styles.sectionTitle}>Tus intentos en el servidor</Text>
+      <AttemptList page={state.before} testID="resolve-before"/>
+      {state.error ? <Text accessibilityRole="alert" style={[styles.errorText, styles.resendError]}>{state.error}</Text> : null}
+      <View style={styles.actions}>
+        <Button title="Anular pendientes y desbloquear" leadingIcon="close-circle-outline" loading={state.phase === 'voiding'} disabled={state.phase === 'voiding'} onPress={onConfirm}/>
+        <Button title="Volver sin anular" variant="secondary" disabled={state.phase === 'voiding'} onPress={onClose}/>
+      </View>
+    </> : null}
+    {state.phase === 'rereading' ? <View style={styles.actions}>
+      <Text style={styles.pendingNoticeText}>El servidor ya anuló lo pendiente. Falta leer de nuevo tu lista de transferencias para desbloquear este dispositivo.</Text>
+      {state.error ? <><Text accessibilityRole="alert" style={styles.errorText}>{state.error}</Text><Button title="Reintentar" leadingIcon="sync-outline" onPress={onRetryReread}/></> : <ActivityIndicator color={colors.primary}/>}
+    </View> : null}
+    {state.phase === 'done' ? <>
+      {state.released
+        ? <Text testID="resolve-done" style={styles.pendingNoticeText}>Listo: el servidor anuló lo pendiente y este dispositivo quedó desbloqueado. Lo que ya se había aplicado aparece abajo y no se canceló ningún cargo.</Text>
+        : <View testID="device-update-failed" style={styles.pendingNotice}><Text accessibilityRole="alert" style={styles.pendingNoticeError}>{DEVICE_UPDATE_FAILED_TEXT}</Text>{deviceUpdateFailed ? <Button title="Reintentar" leadingIcon="sync-outline" onPress={onRetryRelease}/> : null}</View>}
+      <Text style={styles.sectionTitle}>Tus intentos en el servidor ahora</Text>
+      <AttemptList page={state.after} testID="resolve-after"/>
+      <Button title="Volver al inicio" leadingIcon="home-outline" onPress={onClose}/>
+    </> : null}
+  </ScrollView></View>;
 }
 
 function BottomNavigation({ active, onChange }: { active: 'home' | 'movements'; onChange: (tab: 'home' | 'movements') => void }) {
@@ -1252,7 +1601,7 @@ function LoginScreen(props: { email: string; password: string; setEmail: (value:
   </ScrollView></KeyboardAvoidingView>;
 }
 
-function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null; onOtpTimeout: () => void; confirmUncertain: boolean; sameAccount: boolean; originOpen: boolean; setOriginOpen: (open: boolean) => void; onSelectSource: (id: string) => void; rejectedWarning: string | null; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; demoOnlyCode: string; error: string; busy: boolean; confirmRetry: boolean; codeNotStored: boolean; resendRecord: RecoveryRecord | null; canResend: boolean; otpExpired: boolean; otpWrong: boolean; otpLocked: boolean; verifying: boolean; pendingPayload: TransferRequest | null; accounts: Account[]; postBalance: { accountName: string; minor: string } | null; userInitials: string; onChangeBeneficiary: () => void; onRequestNewCode: () => void; lookup: PendingLookup; onLeave: () => void; onViewMovements: () => void; onMovements: () => void; onEdit: () => void; onBack: () => void; onReview: () => void; onCreate: () => void; onResend: () => void; onConfirmResend: () => void; onCancelResend: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
+function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null; onOtpTimeout: () => void; confirmUncertain: boolean; sameAccount: boolean; originOpen: boolean; setOriginOpen: (open: boolean) => void; onSelectSource: (id: string) => void; rejectedWarning: string | null; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; demoOnlyCode: string; error: string; busy: boolean; confirmRetry: boolean; codeNotStored: boolean; resendRecord: RecoveryRecord | null; canResend: boolean; canVoid: boolean; canResolve: boolean; identityConflict: boolean; closure: TransferAttemptSummary | null; voidOutcome: VoidOutcome | null; deviceUpdateFailed: boolean; onRetryRelease: () => void; onVoid: () => void; onConfirmVoid: () => void; onCancelVoid: () => void; onResolve: () => void; otpExpired: boolean; otpWrong: boolean; otpLocked: boolean; verifying: boolean; pendingPayload: TransferRequest | null; accounts: Account[]; postBalance: { accountName: string; minor: string } | null; userInitials: string; onChangeBeneficiary: () => void; onRequestNewCode: () => void; lookup: PendingLookup; onLeave: () => void; onViewMovements: () => void; onMovements: () => void; onEdit: () => void; onBack: () => void; onReview: () => void; onCreate: () => void; onResend: () => void; onConfirmResend: () => void; onCancelResend: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
   const minor = amountToMinor(props.amount);
   const insufficient = Boolean(minor && props.source && BigInt(minor) > BigInt(props.source.availableBalanceMinor));
   const formValid = Boolean(minor && props.concept.trim().length >= 1 && props.concept.trim().length <= 40 && /^\d{1,7}$/.test(props.reference));
@@ -1277,13 +1626,17 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
   const notFound = props.screen === 'status' && props.lookup === 'not_found' && !props.busy;
   const noId = props.screen === 'status' && props.lookup === 'no_id' && !props.busy;
   const headerTitle = props.screen === 'status' || props.screen === 'receipt' || props.screen === 'sending' ? 'Detalle' : 'Transferir';
-  const headerBack = props.screen === 'review' || props.screen === 'otp' ? props.onBack : props.screen === 'status' ? props.onLeave : props.screen === 'resend' ? props.onCancelResend : props.onDone;
-  const headerBackLabel = props.screen === 'otp' ? 'Cancelar y volver a revisar' : props.screen === 'status' ? 'Ir al inicio' : props.screen === 'resend' ? 'Volver sin reenviar' : props.screen === 'receipt' || props.screen === 'rejected' ? 'Volver al inicio' : 'Volver';
+  const headerBack = props.screen === 'review' || props.screen === 'otp' ? props.onBack : props.screen === 'status' ? props.onLeave : props.screen === 'resend' ? props.onCancelResend : props.screen === 'void' ? props.onCancelVoid : props.onDone;
+  const headerBackLabel = props.screen === 'otp' ? 'Cancelar y volver a revisar' : props.screen === 'status' ? 'Ir al inicio' : props.screen === 'resend' ? 'Volver sin reenviar' : props.screen === 'void' ? 'Volver sin anular' : props.screen === 'receipt' || props.screen === 'rejected' || props.screen === 'voided' ? 'Volver al inicio' : 'Volver';
+  const closure = props.screen === 'status' && props.lookup === 'closure' && !props.busy ? props.closure : null;
+  // §R8.4-6: a terminal result is shown even when this device could not delete its record; the block then stays.
+  const deviceUpdate = props.deviceUpdateFailed && (props.screen === 'receipt' || props.screen === 'rejected' || props.screen === 'closed' || props.screen === 'voided') ? <View testID="device-update-failed" style={styles.pendingNotice}><Text accessibilityRole="alert" style={styles.pendingNoticeError}>{DEVICE_UPDATE_FAILED_TEXT}</Text><Button title="Reintentar" leadingIcon="sync-outline" onPress={props.onRetryRelease}/></View> : null;
   const trackedAmount = props.transfer?.amountMinor ?? props.pendingPayload?.amountMinor;
   const trackedReference = props.transfer?.reference ?? props.pendingPayload?.reference;
   const recipient = props.transfer ? `${props.transfer.destination.name} •• ${lastDigits(props.transfer.destination.clabeMasked)}` : props.destination ? `${props.destination.name} •• ${lastDigits(props.destination.clabeMasked)}` : '—';
   return <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}><StatusBar barStyle="dark-content"/><ScreenHeader title={headerTitle} backLabel={headerBackLabel} onBack={headerBack} backDisabled={props.screen === 'sending'} backInactive={props.screen === 'otp' && props.busy} userInitials={props.userInitials} tone={headerTitle === 'Detalle' ? 'pale' : 'solid'}/><ScrollView contentContainerStyle={[styles.flowContent, styles.steppedContent]} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}>
     <DismissKeyboardArea>
+    {deviceUpdate}
     {props.screen === 'details' && <View style={styles.progressHeader}><View style={styles.progressLabels}><Text style={styles.progressActive}>PASO 1 DE 2</Text><Text style={styles.progressPercent}>50% completado</Text></View><Text style={styles.progressTitle}>Datos de la operación</Text><View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 2, now: 1 }} style={styles.progressTrack}><View style={styles.progressFill}/></View></View>}
     {props.screen === 'review' && <View style={styles.reviewProgress}><View style={styles.progressLabels}><Text style={styles.reviewStep}>Paso 2 de 2</Text><Text style={styles.reviewStepLabel}>Revisar transferencia</Text></View><View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 2, now: 2 }} style={[styles.progressTrack, styles.progressTrackHigh]}><View style={[styles.progressFill, styles.progressComplete]}/></View></View>}
     {props.screen === 'details' && <>
@@ -1443,14 +1796,65 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
           <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Concepto</Text><Text style={styles.rejectedValue}>{original.payload.concept}</Text></View>
           <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Referencia</Text><Text style={styles.rejectedValue}>{original.payload.reference}</Text></View>
         </View>
-        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}>
+        {/* F-30 (d): at least 12 px between the consent box and the main button. */}
+        <View testID="resend-consent" style={[styles.warningBox, styles.resendConsent]}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}>
           <Text style={styles.warningTitle}>{confirmedAt ? `Confirmaste esta transferencia el ${confirmedAt} (${BUSINESS_ZONE_LABEL}).` : 'Confirmaste esta transferencia antes; la fecha no quedó guardada en este dispositivo.'}</Text>
           <Text style={styles.warningText}>{otp === 'authorized' ? 'Ya habías autorizado su código. Si el servidor vuelve a pedirlo, tendrás que ingresarlo de nuevo: el reenvío no lo omite.' : otp === 'required' ? 'El servidor pidió su código de autorización y no se autorizó. Si lo vuelve a pedir, tendrás que ingresarlo: el reenvío no lo omite.' : 'Si el servidor pide un código de autorización, tendrás que ingresarlo antes de que se aplique.'}</Text>
         </View></View>
-        {props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}
+        {props.error ? <Text accessibilityRole="alert" style={[styles.errorText, styles.resendError]}>{props.error}</Text> : null}
         <View style={styles.actions}>
           <Button title="Reenviar la misma transferencia" leadingIcon="repeat-outline" loading={props.busy} disabled={props.busy} onPress={props.onConfirmResend}/>
           <Button title="Volver sin reenviar" variant="secondary" disabled={props.busy} onPress={props.onCancelResend}/>
+        </View>
+      </>;
+    })()}
+    {props.screen === 'void' && props.resendRecord && (() => {
+      // §R8.4-3: the explicit confirmation of "Anular esta transferencia" (original data + what the void does).
+      const original = props.resendRecord;
+      const destinationLabel = original.display?.destination ?? 'Destinatario guardado';
+      return <>
+        <View style={styles.rejectedHero}>
+          <View style={[styles.rejectedIcon, styles.closedIcon]}><Ionicons name="close-circle-outline" size={30} color={colors.primary}/></View>
+          <Text accessibilityRole="header" style={styles.rejectedTitle}>Anular esta transferencia</Text>
+          <Text style={styles.rejectedReason}>{VOID_CONFIRM_TEXT}</Text>
+        </View>
+        <View testID="void-original" style={styles.rejectedCard}>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Monto</Text><Text style={styles.rejectedValue}>{formatMoney(original.payload.amountMinor)} MXN</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Destinatario</Text><Text style={styles.rejectedValue}>{destinationLabel}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Concepto</Text><Text style={styles.rejectedValue}>{original.payload.concept}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Referencia</Text><Text style={styles.rejectedValue}>{original.payload.reference}</Text></View>
+        </View>
+        {props.error ? <Text accessibilityRole="alert" style={[styles.errorText, styles.resendError]}>{props.error}</Text> : null}
+        <View style={styles.actions}>
+          <Button title="Anular esta transferencia" leadingIcon="close-circle-outline" loading={props.busy} disabled={props.busy} onPress={props.onConfirmVoid}/>
+          <Button title="Volver sin anular" variant="secondary" disabled={props.busy} onPress={props.onCancelVoid}/>
+        </View>
+      </>;
+    })()}
+    {props.screen === 'voided' && props.voidOutcome && (() => {
+      // The terminal answer of a void (or a 409 transfer-attempt-voided to the send). "No charge" is said only for a
+      // voided identity or a typed rejection (both decided by the server).
+      const outcome = props.voidOutcome;
+      const amount = outcome.attempt?.amountMinor ?? outcome.payload?.amountMinor ?? null;
+      const reference = outcome.attempt?.reference ?? outcome.payload?.reference ?? null;
+      const applied = outcome.resolution === 'transfer_found';
+      const title = outcome.resolution === 'voided' ? 'Operación anulada' : outcome.resolution === 'rejected' ? 'Operación rechazada' : 'Esta transferencia ya había llegado al servidor';
+      const text = outcome.resolution === 'voided' ? VOIDED_TEXT
+        : outcome.resolution === 'rejected' ? `El servidor ya había rechazado esta transferencia${outcome.detail ? `: ${outcome.detail}` : ''}. No se realizó ningún cargo por esta operación.`
+          : `Su estado en el servidor es «${transferStatusLabel(outcome.attempt?.status === 'rejected' || outcome.attempt?.status === 'voided' ? undefined : outcome.attempt?.status)}». La anulación no cancela un cargo ya aplicado; revisa Movimientos.`;
+      return <>
+        <View style={styles.rejectedHero}>
+          <View style={[styles.rejectedIcon, styles.closedIcon]}><Ionicons name={applied ? 'information-circle-outline' : 'close'} size={32} color={colors.primary}/></View>
+          <Text accessibilityRole="header" style={styles.rejectedTitle}>{title}</Text>
+          <Text testID="voided-text" style={styles.rejectedReason}>{text}</Text>
+        </View>
+        <View style={styles.rejectedCard}>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Monto</Text><Text style={styles.rejectedValue}>{amount ? `${formatMoney(amount)} MXN` : '—'}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Referencia</Text><Text style={styles.rejectedValue}>{reference ?? '—'}</Text></View>
+        </View>
+        <View style={styles.actions}>
+          <Button title="Volver al inicio" leadingIcon="home-outline" onPress={props.onDone}/>
+          {applied ? <Button title="Ver movimientos" variant="secondary" leadingIcon="list-outline" onPress={props.onMovements}/> : null}
         </View>
       </>;
     })()}
@@ -1469,8 +1873,11 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
           : <>No pudimos confirmar el resultado de la operación de <Text style={styles.strongText}>{formatMoney(trackedAmount)} MXN</Text>{recipient !== '—' ? <> a <Text style={styles.strongText}>{recipient}</Text></> : null}. Para evitar cobros duplicados, consultamos el estado del intento original{trackedReference ? <> (Ref: <Text style={[styles.mediumText, styles.mono]}>{trackedReference}</Text>)</> : null}.</>}</Text>
         {props.error ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{props.error}</Text> : null}
         {notFound ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{NOT_FOUND_TEXT}</Text> : null}
-        {noId ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{NO_ID_TEXT}</Text> : null}
-        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}><Text style={styles.warningTitle}>No intentes enviar el dinero nuevamente</Text><Text style={styles.warningText}>Verificar el estado solo consulta el intento original; no envía nada ni genera cargos.</Text></View></View>
+        {noId ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{props.resendRecord?.legacy ? LEGACY_NO_ID_TEXT : NO_ID_TEXT}</Text> : null}
+        {closure ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{`El servidor registró esta operación como ${closure.status === 'rejected' ? 'rechazada' : 'anulada'}${closure.problem?.detail ? ` (${closure.problem.detail})` : ''}. Toca «Anular esta transferencia» para confirmarlo y liberar este dispositivo.`}</Text> : null}
+        {props.identityConflict ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{IDENTITY_CONFLICT_TEXT}</Text> : null}
+        {/* F-30 (a): not "another identical transfer"; the safe ways out are named. */}
+        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}><Text style={styles.warningTitle}>No hagas otra transferencia igual</Text><Text style={styles.warningText}>Verificar el estado sólo consulta el intento original; no envía nada ni genera cargos. Las salidas seguras son Verificar, Reenviar la misma transferencia (misma clave) y Anular esta transferencia.</Text></View></View>
       </View>
       <View style={styles.statusDetails}>
         <StatusRow label="Destinatario" value={props.transfer?.destination.name ?? props.destination?.name ?? '—'}/>
@@ -1479,11 +1886,14 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         <StatusRow label="Estado actual" value={transferStatusLabel(props.transfer?.status)} badge/>
       </View>
       <View style={styles.actions}>
-        {/* H5 · 2: "Verificar" is read-only; the resend is a separate, explicit action with its own confirmation. */}
-        <Button title={notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy} onPress={props.onCheck}/>
+        {/* H5 · 2: "Verificar" is read-only; the resend and the void are separate, explicit actions with their own
+            confirmation. F-30 (c) / §R8.8: after a GET 404 there is no "Verificar de nuevo" (Anular, Reenviar, Ver movimientos). */}
+        {notFound || props.identityConflict ? null : <Button title="Verificar estado de la transferencia" size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy} onPress={props.onCheck}/>}
+        {props.canResolve ? <Button title="Resolver con el servidor" size="lg" variant="secondary" leadingIcon="shield-checkmark-outline" disabled={props.busy} onPress={props.onResolve}/> : null}
+        {props.canVoid ? <Button title="Anular esta transferencia" size="lg" variant="secondary" leadingIcon="close-circle-outline" disabled={props.busy} onPress={props.onVoid}/> : null}
+        {props.canResend ? <Button title="Reenviar la misma transferencia" size="lg" variant="secondary" leadingIcon="repeat-outline" disabled={props.busy} onPress={props.onResend}/> : null}
         <Button title="Ver movimientos" size="lg" variant="secondary" leadingIcon="list-outline" disabled={props.busy} onPress={props.onViewMovements}/>
         <Text style={styles.warningText}>{MOVEMENTS_CAVEAT}</Text>
-        {props.canResend ? <Button title="Reenviar la misma transferencia" size="lg" variant="secondary" leadingIcon="repeat-outline" disabled={props.busy} onPress={props.onResend}/> : null}
         <Button title="Ir al inicio (revisar saldo después)" size="lg" variant="surfaceLow" disabled={props.busy} onPress={props.onLeave}/>
       </View>
       <View style={styles.statusFooter}>
@@ -1736,7 +2146,7 @@ const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-
 const cardShadow = { shadowColor: '#141b2c', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 } as const;
 const baseStyles = StyleSheet.create({
   flowContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 48, maxWidth: 600, width: '100%', alignSelf: 'center', flexGrow: 1 }, backButton: { minHeight: 48, minWidth: 48, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }, flowHeaderSpacer: { flex: 1 }, flowTitle: { color: colors.text, fontSize: 30, lineHeight: 38, fontWeight: '700', marginTop: 12, marginBottom: 24, letterSpacing: -0.5 }, flowCard: { backgroundColor: colors.white, borderRadius: 20, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16, gap: 12 }, flowInput: { minHeight: 48, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.bg, color: colors.text, fontSize: 14 }, flowAmount: { color: colors.text, fontSize: 36, lineHeight: 44, fontWeight: '700', marginTop: 6, marginBottom: 12, fontVariant: ['tabular-nums'], letterSpacing: -0.7 }, receiptHeading: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.6, paddingBottom: 8 }, successIcon: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 10, borderColor: colors.successPale }, movementStateIcon: { backgroundColor: colors.primary, borderColor: colors.pale }, successPill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: colors.pale, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 7, marginBottom: 12 }, successDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success }, successPillText: { color: colors.muted, fontSize: 14, fontWeight: '600' }, demoCode: { color: colors.primary, fontWeight: '700', fontSize: 16, marginVertical: 8 },
-  progressHeader: { marginBottom: 12 }, progressPercent: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2 }, progressTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', marginBottom: 4 }, steppedContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 }, formSection: { backgroundColor: colors.white, borderRadius: 12, padding: 16, marginBottom: 12, ...cardShadow }, formFields: { gap: 16 }, cardHeaderRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8, marginBottom: 8 }, headerTrailing: { marginLeft: 'auto', flexShrink: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }, cardLabel: { flexShrink: 1, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, debitBadge: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.pale, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, originIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center' }, originName: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, originBalance: { color: colors.muted, fontSize: 12, lineHeight: 16 }, strongText: { color: colors.text, fontWeight: '600' }, changeLink: { minHeight: 44, justifyContent: 'center', marginLeft: 'auto', flexShrink: 1 }, changeLinkText: { color: colors.primaryContainer, fontSize: 12, lineHeight: 16, fontWeight: '600', textAlign: 'right' }, destinationBox: { backgroundColor: colors.bg, borderRadius: 8, padding: 8, marginBottom: 8 }, destinationName: { flexShrink: 1, color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, aliasBadgeMuted: { flexShrink: 0, maxWidth: '45%', overflow: 'hidden', borderRadius: 4, paddingHorizontal: 6, backgroundColor: colors.pale, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, destinationAccount: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, inlineNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, backgroundColor: colors.input, borderRadius: 8, padding: 8 }, inlineNoteText: { flex: 1, color: colors.muted, fontSize: 12, lineHeight: 17, letterSpacing: 0.2 }, fieldLabel: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600', marginBottom: 6 }, fieldLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, fieldCounter: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', marginBottom: 6 }, required: { color: colors.pending }, fieldHint: { color: colors.muted, fontSize: 12, lineHeight: 16, letterSpacing: 0.2, marginTop: 6, paddingHorizontal: 4 }, fieldHintTight: { marginTop: 2 }, fieldHintRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: 8 }, thresholdPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginTop: 4 }, thresholdPillText: { flexShrink: 1, color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center' }, countdown: { flexDirection: 'row', alignItems: 'center', gap: 6 }, countdownText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '500', fontVariant: ['tabular-nums'] }, newCodeLink: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12 }, newCodeText: { color: 'rgba(0,55,176,0.8)', fontSize: 14, lineHeight: 20, fontWeight: '500' }, newCodeTextDisabled: { color: colors.placeholder }, currencyBadge: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.pale, color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }, referenceWrap: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.bg }, referenceInput: { flex: 1, minWidth: 0, minHeight: 48, color: colors.text, fontSize: 14, letterSpacing: 0.5, fontVariant: ['tabular-nums'] }, stickyFooter: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16, gap: 8, backgroundColor: colors.bg }, progressLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 10 }, progressActive: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.3 }, progressTrack: { height: 6, borderRadius: 3, backgroundColor: colors.pale, overflow: 'hidden' }, progressFill: { height: 6, width: '50%', backgroundColor: colors.primaryContainer, borderRadius: 3 }, progressComplete: { width: '100%' }, accountSummary: { flexDirection: 'row', alignItems: 'center', gap: 12 }, summaryCopy: { flex: 1 }, amountInputWrap: { minHeight: 60, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg }, amountPrefix: { fontSize: 28, lineHeight: 36, color: colors.text, fontWeight: '600' }, amountInput: { flex: 1, minWidth: 0, color: colors.text, fontSize: 36, lineHeight: 44, fontWeight: '700', fontVariant: ['tabular-nums'], paddingHorizontal: 6 }, amountCurrency: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }, fieldMeta: { color: colors.muted, fontSize: 12, textAlign: 'right', marginTop: -8, marginBottom: 12 }, amountHero: { alignItems: 'center', padding: 20, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }, heroIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input, marginBottom: 4 }, internalBadge: { color: colors.success, backgroundColor: colors.successPale, overflow: 'hidden', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, fontSize: 13, fontWeight: '600' }, summaryRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 }, summaryValue: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: 'right', flexShrink: 1 }, summaryDetail: { color: colors.muted, fontSize: 12, marginTop: 3 }, flowDivider: { height: 1, backgroundColor: colors.input, marginVertical: 3 }, modifyAction: { minHeight: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, otpIntro: { alignItems: 'center', backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16 }, otpBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.input, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 12, marginBottom: 12 }, otpBadgeText: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.3 }, otpDigits: { width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 20, marginBottom: 16 }, otpDigit: { width: 44, height: 52, borderRadius: 8, backgroundColor: colors.input, alignItems: 'center', justifyContent: 'center' }, otpDigitFilled: { backgroundColor: colors.paleHigh }, otpDigitText: { color: colors.primary, fontSize: 22, fontWeight: '600' }, otpInput: { width: '100%', height: 52, marginTop: -68, marginBottom: 16, color: 'transparent', opacity: 0.02 }, statusIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paleHigh, marginBottom: 12, ...cardShadow }, statusIconInner: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceHighest }, statusIconBadge: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white, ...cardShadow }, statusTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', textAlign: 'center', letterSpacing: -0.5, marginBottom: 8, paddingHorizontal: 4 }, statusCard: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 16, ...cardShadow }, statusDetails: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 24, ...cardShadow }, statusState: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, backgroundColor: colors.paleHigh, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '600' }, statusPill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'center', backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, marginBottom: 4 }, statusPillText: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, statusMessage: { color: colors.muted, fontSize: 14, lineHeight: 22, marginBottom: 12 }, warningText: { color: colors.muted, fontSize: 14, lineHeight: 20, marginTop: 2 }, warningBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.input, borderRadius: 8, padding: 8 }, resultHero: { alignItems: 'center', gap: 14, paddingVertical: 22 }, rejectedIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,218,214,0.6)', alignItems: 'center', justifyContent: 'center', marginBottom: 12, ...cardShadow }, rejectedHero: { alignItems: 'center', marginTop: 8, marginBottom: 24 }, rejectedReason: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 320 }, intactBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.input, borderRadius: 12, padding: 12, marginBottom: 16, ...cardShadow }, intactIcon: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.successPale, marginTop: 2 }, neutralIcon: { backgroundColor: colors.pale }, closedIcon: { backgroundColor: colors.paleHigh }, rejectedLabel: { flexShrink: 0, color: colors.muted, fontSize: 14, lineHeight: 20 }, rejectedValue: { flexGrow: 1, flexShrink: 1, flexBasis: 0, color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'right', fontVariant: ['tabular-nums'] }, rejectedRequested: { color: colors.error }, debitedBox: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.input, borderRadius: 8, padding: 12 }, debitedNote: { color: colors.success, fontSize: 12, lineHeight: 16, fontWeight: '500' }, debitedValue: { color: colors.success, fontSize: 16, lineHeight: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  progressHeader: { marginBottom: 12 }, progressPercent: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2 }, progressTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', marginBottom: 4 }, steppedContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 }, formSection: { backgroundColor: colors.white, borderRadius: 12, padding: 16, marginBottom: 12, ...cardShadow }, formFields: { gap: 16 }, cardHeaderRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 8, marginBottom: 8 }, headerTrailing: { marginLeft: 'auto', flexShrink: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }, cardLabel: { flexShrink: 1, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, debitBadge: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.pale, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, originIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center' }, originName: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, originBalance: { color: colors.muted, fontSize: 12, lineHeight: 16 }, strongText: { color: colors.text, fontWeight: '600' }, changeLink: { minHeight: 44, justifyContent: 'center', marginLeft: 'auto', flexShrink: 1 }, changeLinkText: { color: colors.primaryContainer, fontSize: 12, lineHeight: 16, fontWeight: '600', textAlign: 'right' }, destinationBox: { backgroundColor: colors.bg, borderRadius: 8, padding: 8, marginBottom: 8 }, destinationName: { flexShrink: 1, color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, aliasBadgeMuted: { flexShrink: 0, maxWidth: '45%', overflow: 'hidden', borderRadius: 4, paddingHorizontal: 6, backgroundColor: colors.pale, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, destinationAccount: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, inlineNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, backgroundColor: colors.input, borderRadius: 8, padding: 8 }, inlineNoteText: { flex: 1, color: colors.muted, fontSize: 12, lineHeight: 17, letterSpacing: 0.2 }, fieldLabel: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600', marginBottom: 6 }, fieldLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, fieldCounter: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', marginBottom: 6 }, required: { color: colors.pending }, fieldHint: { color: colors.muted, fontSize: 12, lineHeight: 16, letterSpacing: 0.2, marginTop: 6, paddingHorizontal: 4 }, fieldHintTight: { marginTop: 2 }, fieldHintRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: 8 }, thresholdPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginTop: 4 }, thresholdPillText: { flexShrink: 1, color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center' }, countdown: { flexDirection: 'row', alignItems: 'center', gap: 6 }, countdownText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '500', fontVariant: ['tabular-nums'] }, newCodeLink: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12 }, newCodeText: { color: 'rgba(0,55,176,0.8)', fontSize: 14, lineHeight: 20, fontWeight: '500' }, newCodeTextDisabled: { color: colors.placeholder }, currencyBadge: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: colors.pale, color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }, referenceWrap: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.bg }, referenceInput: { flex: 1, minWidth: 0, minHeight: 48, color: colors.text, fontSize: 14, letterSpacing: 0.5, fontVariant: ['tabular-nums'] }, stickyFooter: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16, gap: 8, backgroundColor: colors.bg }, progressLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4, gap: 10 }, progressActive: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.3 }, progressTrack: { height: 6, borderRadius: 3, backgroundColor: colors.pale, overflow: 'hidden' }, progressFill: { height: 6, width: '50%', backgroundColor: colors.primaryContainer, borderRadius: 3 }, progressComplete: { width: '100%' }, accountSummary: { flexDirection: 'row', alignItems: 'center', gap: 12 }, summaryCopy: { flex: 1 }, amountInputWrap: { minHeight: 60, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg }, amountPrefix: { fontSize: 28, lineHeight: 36, color: colors.text, fontWeight: '600' }, amountInput: { flex: 1, minWidth: 0, color: colors.text, fontSize: 36, lineHeight: 44, fontWeight: '700', fontVariant: ['tabular-nums'], paddingHorizontal: 6 }, amountCurrency: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '600' }, fieldMeta: { color: colors.muted, fontSize: 12, textAlign: 'right', marginTop: -8, marginBottom: 12 }, amountHero: { alignItems: 'center', padding: 20, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }, heroIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input, marginBottom: 4 }, internalBadge: { color: colors.success, backgroundColor: colors.successPale, overflow: 'hidden', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, fontSize: 13, fontWeight: '600' }, summaryRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 }, summaryValue: { color: colors.text, fontSize: 15, fontWeight: '600', textAlign: 'right', flexShrink: 1 }, summaryDetail: { color: colors.muted, fontSize: 12, marginTop: 3 }, flowDivider: { height: 1, backgroundColor: colors.input, marginVertical: 3 }, modifyAction: { minHeight: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, otpIntro: { alignItems: 'center', backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16 }, otpBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.input, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 12, marginBottom: 12 }, otpBadgeText: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.3 }, otpDigits: { width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 20, marginBottom: 16 }, otpDigit: { width: 44, height: 52, borderRadius: 8, backgroundColor: colors.input, alignItems: 'center', justifyContent: 'center' }, otpDigitFilled: { backgroundColor: colors.paleHigh }, otpDigitText: { color: colors.primary, fontSize: 22, fontWeight: '600' }, otpInput: { width: '100%', height: 52, marginTop: -68, marginBottom: 16, color: 'transparent', opacity: 0.02 }, statusIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paleHigh, marginBottom: 12, ...cardShadow }, statusIconInner: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceHighest }, statusIconBadge: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white, ...cardShadow }, statusTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', textAlign: 'center', letterSpacing: -0.5, marginBottom: 8, paddingHorizontal: 4 }, statusCard: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 16, ...cardShadow }, statusDetails: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 24, ...cardShadow }, statusState: { overflow: 'hidden', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, backgroundColor: colors.paleHigh, color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '600' }, statusPill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'center', backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4, marginBottom: 4 }, statusPillText: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, statusMessage: { color: colors.muted, fontSize: 14, lineHeight: 22, marginBottom: 12 }, warningText: { color: colors.muted, fontSize: 14, lineHeight: 20, marginTop: 2 }, resendConsent: { marginBottom: 16 }, resendError: { marginTop: 0, marginBottom: 12 }, warningBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.input, borderRadius: 8, padding: 8 }, resultHero: { alignItems: 'center', gap: 14, paddingVertical: 22 }, rejectedIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,218,214,0.6)', alignItems: 'center', justifyContent: 'center', marginBottom: 12, ...cardShadow }, rejectedHero: { alignItems: 'center', marginTop: 8, marginBottom: 24 }, rejectedReason: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 320 }, intactBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.input, borderRadius: 12, padding: 12, marginBottom: 16, ...cardShadow }, intactIcon: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.successPale, marginTop: 2 }, neutralIcon: { backgroundColor: colors.pale }, closedIcon: { backgroundColor: colors.paleHigh }, rejectedLabel: { flexShrink: 0, color: colors.muted, fontSize: 14, lineHeight: 20 }, rejectedValue: { flexGrow: 1, flexShrink: 1, flexBasis: 0, color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'right', fontVariant: ['tabular-nums'] }, rejectedRequested: { color: colors.error }, debitedBox: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.input, borderRadius: 8, padding: 12 }, debitedNote: { color: colors.success, fontSize: 12, lineHeight: 16, fontWeight: '500' }, debitedValue: { color: colors.success, fontSize: 16, lineHeight: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
   reviewStep: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600' }, reviewStepLabel: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, reviewHero: { alignItems: 'center', padding: 16, backgroundColor: colors.white, borderRadius: 12, marginBottom: 12, ...cardShadow }, reviewHeroCompact: { paddingVertical: 12 }, reviewHeroLabelLine: { flexDirection: 'row', alignItems: 'center', gap: 6 }, reviewHeroLabel: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '500' }, reviewAmountLine: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginTop: 2 }, amountLineStart: { justifyContent: 'flex-start' }, reviewAmount: { flexShrink: 1, minWidth: 0, color: colors.text, fontSize: 36, lineHeight: 44, fontWeight: '700', letterSpacing: -0.9, fontVariant: ['tabular-nums'] }, reviewCard: { backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden', marginBottom: 12, ...cardShadow }, reviewParty: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12 }, reviewPartyIcon: { width: 40, height: 40, borderRadius: 8, backgroundColor: colors.input, alignItems: 'center', justifyContent: 'center', marginTop: 2 }, reviewPartyIconDestination: { backgroundColor: colors.paleHigh }, reviewCaption: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.5 }, reviewPartyName: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600', marginTop: 2 }, reviewDirection: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 4, backgroundColor: 'rgba(241,243,255,0.5)' }, reviewDirectionLine: { flex: 1, height: 1, backgroundColor: colors.paleHigh }, reviewDirectionText: { color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.5 }, reviewMeta: { backgroundColor: 'rgba(241,243,255,0.6)', padding: 12, gap: 8 }, metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 2 }, rowValue: { flexGrow: 1, flexShrink: 1, flexBasis: 0 }, metaStatusValue: { justifyContent: 'flex-end' }, metaLabel: { color: colors.muted, fontSize: 14, lineHeight: 20 }, metaValue: { flexGrow: 1, flexShrink: 1, flexBasis: 0, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500', textAlign: 'right', fontVariant: ['tabular-nums'] }, metaStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
 shrinkRow: { flexShrink: 1, minWidth: 0 }, metaStatusText: { flexShrink: 1, color: colors.success, fontSize: 12, lineHeight: 16, fontWeight: '500' }, estimateCard: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginBottom: 24, ...cardShadow }, estimateCardCompact: { marginBottom: 12 }, estimateHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }, estimateLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }, estimateLabelText: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, estimateValue: { flexShrink: 1, color: colors.primary, fontSize: 16, lineHeight: 24, fontWeight: '700', fontVariant: ['tabular-nums'] }, estimateMath: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, backgroundColor: colors.input, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginVertical: 4 }, estimateMathText: { color: colors.muted, fontSize: 12, lineHeight: 16 }, estimateMathValue: { flexShrink: 1, fontWeight: '500', textAlign: 'right', fontVariant: ['tabular-nums'] }, estimateTrack: { height: 6, borderRadius: 3, overflow: 'hidden', flexDirection: 'row', backgroundColor: colors.paleHigh, marginVertical: 4 }, estimateRemaining: { height: 6, backgroundColor: colors.primary }, estimateSpent: { flex: 1, height: 6, backgroundColor: colors.border }, estimateNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 4 }, estimateNoteText: { flex: 1, color: colors.muted, fontSize: 12, lineHeight: 18 },
   otpContext: { backgroundColor: colors.white, borderRadius: 12, padding: 12, marginTop: -8, marginBottom: 16, ...cardShadow }, otpContextTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }, otpContextLabel: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, otpContextBadge: { flexShrink: 0, overflow: 'hidden', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, backgroundColor: colors.pale, color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '600' }, otpContextBody: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', columnGap: 12, rowGap: 8, marginTop: 8 }, otpContextName: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, otpContextAmount: { alignItems: 'flex-end', maxWidth: '100%', flexShrink: 1, marginLeft: 'auto' }, otpAmountLine: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'flex-end', columnGap: 4 }, otpContextValue: { flexShrink: 1, minWidth: 0, color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', fontVariant: ['tabular-nums'] }, otpContextNote: { flexDirection: 'row', alignItems: 'center', gap: 6, borderTopWidth: 1, borderTopColor: colors.paleHigh, marginTop: 8, paddingTop: 4 }, otpCard: { alignItems: 'center', backgroundColor: colors.white, borderRadius: 12, padding: 16, marginBottom: 16, ...cardShadow }, otpBadgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary }, otpTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', textAlign: 'center', marginBottom: 4 }, otpDescription: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 320 }, demoCodeBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.input, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, marginTop: 12 }, demoCodeLabel: { flexShrink: 1, color: colors.muted, fontSize: 14, lineHeight: 20 }, demoCodeValue: { color: colors.text, fontWeight: '700', fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }), letterSpacing: 1 }, otpDigitExpired: { opacity: 0.6, backgroundColor: colors.pale, borderWidth: 1, borderColor: 'rgba(196,197,215,0.6)' }, otpDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary }, otpDash: { width: 12, height: 3, borderRadius: 2, backgroundColor: 'rgba(116,118,134,0.4)' }, otpExpiredBlock: { width: '100%', alignItems: 'center', gap: 12 }, otpExpiredBanner: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.errorPale, backgroundColor: 'rgba(255,218,214,0.4)' }, otpExpiredText: { flexShrink: 1, color: colors.warning, fontSize: 14, lineHeight: 20, fontWeight: '500', textAlign: 'center' },

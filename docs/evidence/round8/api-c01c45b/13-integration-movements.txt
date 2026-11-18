@@ -1,0 +1,13 @@
+$ (cd api && npx tsx --import dotenv/config --test tests/movements.integration.ts)
+started 2026-11-17T07:33:39Z
+◇ injected env (22) from ../.env
+✔ movement history is owner-scoped, ledger-backed and keyset-paginated in wallet_test (1258.4405ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1544.735416
+exit=0

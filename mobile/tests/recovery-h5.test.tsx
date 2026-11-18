@@ -11,6 +11,15 @@ jest.mock('../App', () => {
   return jest.requireActual('../App');
 });
 
+// Round 8 (contract 0.4.0): TransferPolicy carries sendEpoch (the app sends nothing without it) and an attempt without a
+// transfer id is looked up, read only, in GET /transfer-attempts?attemptId=. Fallbacks used by the mocks below.
+const R8_POLICY = { currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0' };
+function round8Default(url: string): Response | undefined {
+  if (url.endsWith('/transfer-policy')) return Response.json(R8_POLICY);
+  if (url.includes('/transfer-attempts?')) return Response.json({ items: [], nextCursor: null, sendEpoch: '0' });
+  return undefined;
+}
+
 const mockSecureValues = new Map<string, string>();
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn((key: string) => Promise.resolve(mockSecureValues.get(key) ?? null)),
@@ -42,6 +51,8 @@ const account = { id: 'source-1', name: 'Cuenta Principal', kind: 'checking', cu
 const beneficiary = { id: 'beneficiary-1', name: 'Carlos Ruiz', alias: 'Carlos', clabeMasked: '000•••••••••••0028', destinationAccountId: 'dest-1' };
 const transferBody = (overrides: Record<string, unknown> = {}) => ({ id: 'tr-new', status: 'completed', sourceAccountId: 'source-1', destination: beneficiary, amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: '2026-11-13T20:30:00.000Z', completedAt: '2026-11-13T20:31:00.000Z', receiptReference: 'R-NEW', ...overrides });
 const problem = (status: number, detail: string) => Response.json({ title: 'Error', detail }, { status });
+// Round 8: a business rejection of a send with identity is decided once by the server and typed (§R8.4-1, B6).
+const rejected = (status: number, detail: string) => Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Error', detail }, { status });
 const IN_PROGRESS = 'La solicitud idempotente está en curso; reintenta con la misma llave.';
 
 type Call = { url: string; init?: RequestInit };
@@ -67,9 +78,10 @@ async function signIn(seed: Record<string, string>, handler: Handler, options: {
     if (url.endsWith('/accounts')) return Response.json({ items: [account] });
     if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
     if (url.endsWith('/beneficiaries')) return Response.json({ items: [beneficiary] });
-    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', otpThresholdMinor: '500000', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpExpirySeconds: 300, otpMaxAttempts: 5, businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City' });
+    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', otpThresholdMinor: '500000', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpExpirySeconds: 300, otpMaxAttempts: 5, sendEpoch: '0', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City' });
     if (isCreate({ url, init })) return Response.json(transferBody(), { status: 201 });
     if (url.endsWith('/transfers/tr-new')) return Response.json(transferBody());
+    { const r8 = round8Default(url); if (r8) return r8; }
     throw new Error(`Unexpected API request: ${url}`);
   });
   Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -140,8 +152,9 @@ describe('H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification o
     });
   }
 
-  it('a confirmed business rejection (422) of the first send is the only 4xx that opens M11 and releases the record', async () => {
-    const app = await signIn({}, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
+  // R8 (§R8.7): only the TYPED rejection (transfer-attempt-rejected) is terminal; an untyped 422 stays in M09 (recovery-r8).
+  it('a confirmed business rejection (422 transfer-attempt-rejected) of the first send is the only 4xx that opens M11 and releases the record', async () => {
+    const app = await signIn({}, (url, init) => (isCreate({ url, init }) ? rejected(422, 'Saldo insuficiente.') : undefined));
     await app.transferOnce();
     assert.match(app.visible(), /Tu dinero está intacto/);
     assert.equal(mockSecureValues.get(ownKey()), undefined);
@@ -151,7 +164,10 @@ describe('H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification o
 
 const storedPayload = { sourceAccountId: 'source-1', destinationType: 'beneficiary', beneficiaryId: 'beneficiary-1', amountMinor: '30025', concept: 'Comida', reference: '4401' };
 const STORED_KEY = 'stored-key-0001-abcd';
-const record = (extra: Record<string, unknown> = {}) => JSON.stringify({ key: STORED_KEY, payload: storedPayload, userId: USER, ...extra });
+// Round 8 (§R8.7): fixtures are records written by the current build (v2: identity, key, epoch, payload, owner). A record
+// without identity (H3-H5 build) is upgraded on read (§R8.8) and is covered by tests/recovery-r8.test.tsx.
+const STORED_ATTEMPT = '6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b';
+const record = (extra: Record<string, unknown> = {}) => JSON.stringify({ v: 2, attemptId: STORED_ATTEMPT, key: STORED_KEY, sendEpoch: '0', payload: storedPayload, userId: USER, ...extra });
 const tabTo = async (app: Awaited<ReturnType<typeof signIn>>, name: string) => {
   await TestRenderer.act(async () => { app.renderer.root.findAll((node) => node.props.accessibilityRole === 'tab' && node.findAll((child) => child.props.children === name).length > 0)[0]!.props.onPress(); });
   await app.wait(60);
@@ -180,21 +196,20 @@ describe('H5 · 4 (F-26): no release without a confirmed final result and no dis
       assert.doesNotMatch(home, RELEASE_CLAIMS);
       assert.ok(!app.homeOffersNewTransfer(), 'still blocked: a 404 does not prove that nothing was charged');
       assert.equal(app.pressables('Descartar este intento').length, 0, 'there is no discard');
-      assert.ok(app.pressables('Verificar de nuevo').length > 0);
+      // R8 F-30 (c) / §R8.8: after a GET 404 there is no "Verificar de nuevo"; the ways out are Anular, Reenviar, Ver movimientos.
+      assert.equal(app.pressables('Verificar de nuevo').length, 0);
+      assert.equal(app.pressables('Verificar estado de la transferencia').length, 0);
+      assert.ok(app.pressables('Anular esta transferencia').length > 0);
+      assert.ok(app.pressables('Reenviar la misma transferencia').length > 0);
       assert.ok(app.pressables('Ver movimientos').length > 0);
       assert.equal(app.creates().length, 0);
-      // "Verificar de nuevo" only reads again.
       const before = reads;
-      await app.press('Verificar de nuevo');
-      await app.wait(60);
-      assert.ok(reads > before, "it read the attempt again");
-      assert.equal(app.creates().length, 0);
-      assert.equal(mockSecureValues.get(ownKey()), stored);
       // "Ver movimientos" only reads; the block stays when coming back.
       await app.press('Ver movimientos');
       assert.match(app.visible(), /Últimos movimientos/);
       await tabTo(app, 'Inicio');
       assert.match(app.visible(), NOT_FOUND);
+      assert.ok(reads > before, 'Home shown again only read the attempt again');
       assert.equal(mockSecureValues.get(ownKey()), stored);
       assert.equal(app.creates().length, 0);
       await app.finish();
@@ -303,7 +318,8 @@ describe('H5 · 4 (F-26): no release without a confirmed final result and no dis
   });
 });
 
-const NO_ID = /Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo. Para conocer su resultado sin riesgo de un cargo doble usa «Reenviar la misma transferencia»/;
+// R8 §R8.4-2: the authoritative list (GET /transfer-attempts?attemptId=) has nothing for this identity yet.
+const NO_ID = /El servidor aún no registra esta operación, así que no podemos confirmar si se realizó un cargo: si el envío original sigue en camino, aún podría aplicarse. Usa «Reenviar la misma transferencia»/;
 const MOVEMENTS_CAVEAT = /En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento./;
 const RESEND = 'Reenviar la misma transferencia';
 const lostOnce = (then: () => Response | undefined = () => undefined) => {
@@ -594,13 +610,16 @@ describe('H5 · 3: "Reenviar la misma transferencia" is explicit, shows the orig
     });
   }
 
-  it('a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit', async () => {
-    const app = await signIn({ [ownKey()]: record() }, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
+  // R8 §R8.9 (one tap = one POST): the second send() of the same tap is removed. The two H5 tests "422 twice" and "422
+  // from the earlier send still being applied" are replaced: the server serializes sends of one key (B7) and closes a
+  // typed rejection for the identity (B6), so the first answer is final.
+  it('a resend answered with a typed rejection (422 transfer-attempt-rejected) is final at once: ONE POST, M11, record released', async () => {
+    const app = await signIn({ [ownKey()]: record() }, (url, init) => (isCreate({ url, init }) ? rejected(422, 'Saldo insuficiente.') : undefined));
     await app.press(RESEND);
     await app.wait();
     await app.press(RESEND);
     await app.wait(60);
-    assert.equal(app.creates().length, 2, 'the rejection is re-confirmed once with the same key and body');
+    assert.equal(app.creates().length, 1, 'one tap = one POST');
     assert.ok(app.creates().every((call) => keyOf(call) === STORED_KEY && String(call.init?.body) === JSON.stringify(storedPayload)));
     assert.match(app.visible(), /Tu dinero está intacto/);
     assert.equal(mockSecureValues.get(ownKey()), undefined);
@@ -610,28 +629,22 @@ describe('H5 · 3: "Reenviar la misma transferencia" is explicit, shows the orig
     await app.finish();
   });
 
-  it('a resend whose 422 came from the earlier send of the same key still being applied shows that transfer (no claim of "no debit", no new charge)', async () => {
-    let sends = 0;
-    const app = await signIn({ [ownKey()]: record() }, (url, init) => {
-      if (!isCreate({ url, init })) return undefined;
-      sends += 1;
-      // 1st: the server was still applying the earlier send of this key (balance already used) -> 422;
-      // 2nd: the earlier send has committed -> the same key returns it.
-      return sends === 1 ? problem(422, 'Saldo insuficiente.') : Response.json(transferBody({ id: 'tr-new', amountMinor: '30025', reference: '4401' }), { status: 201 });
-    });
+  it('a resend answered with an UNTYPED 422 is not terminal: ONE POST, M09 and the record intact', async () => {
+    const stored = record();
+    const app = await signIn({ [ownKey()]: stored }, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
     await app.press(RESEND);
     await app.wait();
     await app.press(RESEND);
     await app.wait(60);
-    assert.match(app.visible(), /"Transferencia completada"/);
+    assert.equal(app.creates().length, 1, 'one tap = one POST');
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
     assert.doesNotMatch(app.visible(), /Tu dinero está intacto/);
-    assert.equal(app.creates().length, 2);
-    assert.equal(new Set(app.creates().map(keyOf)).size, 1);
+    assert.equal(mockSecureValues.get(ownKey()), stored);
     await app.finish();
   });
 
-  it('a FIRST send answered 422 is final at once (no other send of that key can exist): one POST, M11', async () => {
-    const app = await signIn({}, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
+  it('a FIRST send answered with a typed 422 is final at once: one POST, M11', async () => {
+    const app = await signIn({}, (url, init) => (isCreate({ url, init }) ? rejected(422, 'Saldo insuficiente.') : undefined));
     await app.transferOnce();
     assert.equal(app.creates().length, 1);
     assert.match(app.visible(), /Tu dinero está intacto/);
@@ -730,7 +743,9 @@ describe('H5 · 6 (F-28): coverage found missing by the H5 mutations', () => {
     assert.match(app.visible(), NOT_FOUND);
     assert.doesNotMatch(app.visible(), RELEASE_CLAIMS);
     assert.equal(mockSecureValues.get(ownKey()), stored);
-    assert.ok(app.pressables('Verificar de nuevo').length > 0);
+    // R8 F-30 (c): no "Verificar de nuevo" after a 404; Anular and Reenviar are offered.
+    assert.equal(app.pressables('Verificar de nuevo').length, 0);
+    assert.ok(app.pressables('Anular esta transferencia').length > 0);
     assert.ok(app.pressables(RESEND).length > 0);
     assert.equal(app.creates().length, 0);
     await app.press('Ir al inicio (revisar saldo después)');

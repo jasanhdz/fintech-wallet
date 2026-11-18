@@ -12,6 +12,15 @@ jest.mock('../App', () => {
   return jest.requireActual('../App');
 });
 
+// Round 8 (contract 0.4.0): TransferPolicy carries sendEpoch (the app sends nothing without it) and an attempt without a
+// transfer id is looked up, read only, in GET /transfer-attempts?attemptId=. Fallbacks used by the mocks below.
+const R8_POLICY = { currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0' };
+function round8Default(url: string): Response | undefined {
+  if (url.endsWith('/transfer-policy')) return Response.json(R8_POLICY);
+  if (url.includes('/transfer-attempts?')) return Response.json({ items: [], nextCursor: null, sendEpoch: '0' });
+  return undefined;
+}
+
 const mockSecureValues = new Map<string, string>();
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn((key: string) => Promise.resolve(mockSecureValues.get(key) ?? null)),
@@ -43,7 +52,10 @@ const account = { id: 'source-1', name: 'Cuenta Principal', kind: 'checking', cu
 const beneficiary = { id: 'beneficiary-1', name: 'Carlos Ruiz', alias: 'Carlos', clabeMasked: '000•••••••••••0028', destinationAccountId: 'dest-1' };
 const storedPayload = { sourceAccountId: 'source-1', destinationType: 'beneficiary', beneficiaryId: 'beneficiary-1', amountMinor: '30025', concept: 'Comida', reference: '4401' };
 const STORED_KEY = 'stored-key-0001-abcd';
-const record = (extra: Record<string, unknown> = {}) => JSON.stringify({ key: STORED_KEY, payload: storedPayload, userId: USER, ...extra });
+// Round 8 (§R8.7): fixtures are records written by the current build (v2: identity, key, epoch, payload, owner). A record
+// without identity (H3-H5 build) is upgraded on read (§R8.8) and is covered by tests/recovery-r8.test.tsx.
+const STORED_ATTEMPT = '6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b';
+const record = (extra: Record<string, unknown> = {}) => JSON.stringify({ v: 2, attemptId: STORED_ATTEMPT, key: STORED_KEY, sendEpoch: '0', payload: storedPayload, userId: USER, ...extra });
 const transferBody = (overrides: Record<string, unknown> = {}) => ({ id: 'tr-new', status: 'completed', sourceAccountId: 'source-1', destination: beneficiary, amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: '2026-11-13T20:30:00.000Z', completedAt: '2026-11-13T20:31:00.000Z', receiptReference: 'R-NEW', ...overrides });
 const problem = (status: number, detail: string) => Response.json({ title: 'Error', detail }, { status });
 
@@ -65,10 +77,11 @@ async function signIn(seed: Record<string, string>, handler: Handler) {
     if (url.endsWith('/accounts')) return Response.json({ items: [account] });
     if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
     if (url.endsWith('/beneficiaries')) return Response.json({ items: [beneficiary] });
-    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', otpThresholdMinor: '500000', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpExpirySeconds: 300, otpMaxAttempts: 5, businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City' });
+    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', otpThresholdMinor: '500000', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpExpirySeconds: 300, otpMaxAttempts: 5, sendEpoch: '0', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City' });
     // A NEW attempt (any key other than the stored one) completes; GET of its id answers the same.
     if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json(transferBody(), { status: 201 });
     if (url.endsWith('/transfers/tr-new')) return Response.json(transferBody());
+    { const r8 = round8Default(url); if (r8) return r8; }
     throw new Error(`Unexpected API request: ${url}`);
   });
   Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -237,7 +250,8 @@ describe('H4 · F-21 residual: an unverified 4xx never opens a path to a second 
   });
 
   it('a confirmed rejection (422 "Saldo insuficiente") on the retry releases the record: M11 with no debit and the flow enabled again', async () => {
-    const app = await signIn({}, lostThen(() => problem(422, 'Saldo insuficiente.')));
+    // R8 (§R8.7): only the typed rejection of this identity is terminal.
+    const app = await signIn({}, lostThen(() => Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Error', detail: 'Saldo insuficiente.' }, { status: 422 })));
     await app.transferOnce();
     await app.press('Reenviar la misma transferencia');
     await app.press('Reenviar la misma transferencia');

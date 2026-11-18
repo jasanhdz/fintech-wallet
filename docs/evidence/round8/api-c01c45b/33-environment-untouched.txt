@@ -1,0 +1,12 @@
+== Demo and Lucem untouched (listeners only; read-only)
+port 3200: node pid=38651 
+port 5174: node pid=2689 
+port 8083: node pid=59937 
+port 5432: ssh pid=4384 
+
+== Main checkout (demo host) HEAD and status — not modified by this task
+6549bfe docs: Forge pass 10 findings and evaluation evidence (round 7, code 07903cd)
+?? design/
+
+== Ports used by this task: ephemeral 127.0.0.1:0 listeners created in-process by the suites (no 3200/5174/8083)
+55:  const startServer = async () => { server = createServer

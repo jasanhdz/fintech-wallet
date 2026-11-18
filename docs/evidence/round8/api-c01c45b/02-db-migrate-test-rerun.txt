@@ -1,0 +1,12 @@
+$ npm run db:migrate:test
+
+> fintech-wallet@0.1.0 db:migrate:test
+> npm --workspace @fintech-wallet/api run db:migrate:test
+
+
+> @fintech-wallet/api@0.1.0 db:migrate:test
+> tsx --import dotenv/config src/db/command.ts migrate:test
+
+◇ injected env (22) from ../.env
+Database migrations applied.
+exit=0

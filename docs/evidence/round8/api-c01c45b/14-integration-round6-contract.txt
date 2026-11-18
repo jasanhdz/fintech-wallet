@@ -1,0 +1,13 @@
+$ (cd api && npx tsx --import dotenv/config --test tests/round6-contract.integration.ts)
+started 2026-11-17T07:33:41Z
+◇ injected env (22) from ../.env
+✔ round 6 contract: own-account identity, transfer policy, OTP expiry/cancel lifecycle, receipts and history in wallet_test (1310.29825ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1597.161083
+exit=0

@@ -10,6 +10,17 @@ jest.mock('../App', () => {
   return jest.requireActual('../App');
 });
 
+// Round 8 (contract 0.4.0): TransferPolicy carries sendEpoch (the app sends nothing without it) and an attempt without a
+// transfer id is looked up, read only, in GET /transfer-attempts?attemptId=. Fallbacks used by the mocks below.
+// Tests that did not mock the policy before round 8 get one whose limits never apply (no OTP threshold or daily limit is
+// reached), so their flow is the one they were written for.
+const R8_POLICY = { currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '999999999999', dailyUsedMinor: '0', dailyRemainingMinor: '999999999999', otpThresholdMinor: '999999999999', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0' };
+function round8Default(url: string): Response | undefined {
+  if (url.endsWith('/transfer-policy')) return Response.json(R8_POLICY);
+  if (url.includes('/transfer-attempts?')) return Response.json({ items: [], nextCursor: null, sendEpoch: '0' });
+  return undefined;
+}
+
 const mockSecureValues = new Map<string, string>();
 // F-22: recovery records live under one key per user ("wallet.transfer-recovery.<userId>"); the bare key is the legacy
 // (pre-round-8) slot. These helpers see both, so "no record left" means none under any key.
@@ -30,7 +41,8 @@ beforeEach(() => {
 });
 let mockExpoCryptoUuidCalls = 0;
 jest.mock('expo-crypto', () => ({
-  randomUUID: jest.fn(() => `expo-crypto-uuid-${++mockExpoCryptoUuidCalls}`),
+  // Round 8: the attempt identity sent in Transfer-Attempt-Id must be a UUID (as expo-crypto returns on a device).
+  randomUUID: jest.fn(() => `00000000-0000-4000-8000-${String(++mockExpoCryptoUuidCalls).padStart(12, '0')}`),
 }));
 beforeEach(() => { mockExpoCryptoUuidCalls = 0; });
 
@@ -82,6 +94,7 @@ describe('mobile logout', () => {
       });
       if (url.endsWith('/accounts')) return Response.json({ items: [] });
       if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error('Unexpected API request');
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -165,6 +178,7 @@ describe('mobile beneficiary selection', () => {
         { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••••••••••••1234', destinationAccountId: 'account-1' },
         { id: 'beneficiary-2', name: 'Katherine Johnson', alias: 'KJ', clabeMasked: '••••••••••••••5678', destinationAccountId: 'account-2' },
       ] });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error('Unexpected API request');
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -225,6 +239,7 @@ describe('mobile transfer attempt', () => {
         serverTransfer = { ...serverTransfer, status: 'completed', receiptReference: 'folio-1' };
         return Response.json(serverTransfer);
       }
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -333,6 +348,7 @@ describe('mobile transfer attempt', () => {
         throw new Error('Network request failed');
       }
       if (url.endsWith('/transfers/transfer-2')) return Response.json(serverTransfer);
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -386,6 +402,7 @@ describe('mobile transfer attempt', () => {
         observedIdempotencyKey = (init?.headers as Record<string, string>)['Idempotency-Key'] ?? '';
         return Response.json({ ...serverTransfer, demoOnlyCode: '552134' }, { status: 202 });
       }
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -427,7 +444,7 @@ describe('mobile transfer attempt', () => {
 
       assert.deepEqual(unhandledRejections, [], 'generating the idempotency key must never produce an unhandled promise rejection');
       assert.equal(createCalls, 1, 'the transfer must still be created exactly once via the expo-crypto fallback');
-      assert.equal(observedIdempotencyKey, 'expo-crypto-uuid-1', 'the Idempotency-Key must come from the expo-crypto fallback, not globalThis.crypto');
+      assert.equal(observedIdempotencyKey, '00000000-0000-4000-8000-000000000001', 'the Idempotency-Key must come from the expo-crypto fallback, not globalThis.crypto');
       assert.ok(renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }), 'the flow must proceed to the OTP screen, not get stuck behind the crash');
 
       await TestRenderer.act(async () => { renderer!.unmount(); });
@@ -462,6 +479,7 @@ describe('mobile movement history', () => {
         return Response.json({ items: [], nextCursor: null });
       }
       if (url.endsWith('/transfers/transfer-1')) return Response.json(transfer);
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -506,6 +524,7 @@ describe('mobile movement history', () => {
       if (url.includes('/accounts/own-1/movements?limit=20')) return Response.json({ items: [{ id: 'm-1', transferId: 't-1', type: 'credit', amountMinor: '50000', currency: 'MXN', concept: 'Honorarios', reference: '994012', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
       if (url.includes('/accounts/own-2/movements?limit=20')) return Response.json({ items: [{ id: 'm-2', transferId: 't-2', type: 'debit', amountMinor: '43050', currency: 'MXN', concept: 'Farmacia', reference: '781204', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
       if (url.endsWith('/transfers/t-2')) return Response.json({ id: 't-2', status: 'completed', sourceAccountId: 'own-2', destination: { id: 'b-1', name: 'Farmacia Central', alias: 'Farmacia', clabeMasked: '222•••••••••••5931', destinationAccountId: 'other' }, amountMinor: '43050', currency: 'MXN', concept: 'Farmacia', reference: '781204', createdAt: '2026-11-13T20:32:00.000Z', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'DEMO-0001' });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -560,6 +579,7 @@ describe('mobile beneficiary picker (M05)', () => {
       if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'empty-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
       if (url.endsWith('/accounts')) return Response.json({ items: [] });
       if (url.endsWith('/beneficiaries')) return Response.json({ items: [] });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -601,6 +621,7 @@ describe('mobile transfer details (M06)', () => {
         createBodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
         return Response.json({ id: 'transfer-m06', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-2', name: 'Katherine Johnson', alias: 'KJ', clabeMasked: '••••5678', destinationAccountId: 'dest-2' }, amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: new Date().toISOString() }, { status: 202 });
       }
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -668,6 +689,7 @@ async function startTransferFlow(handler: FlowHandler, options: { amount: string
     if (url.endsWith('/accounts')) return Response.json({ items: options.accounts ? options.accounts() : [flowAccount] });
     if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
     if (url.endsWith('/beneficiaries')) return Response.json({ items: [flowBeneficiary] });
+    { const r8 = round8Default(url); if (r8) return r8; }
     throw new Error(`Unexpected API request: ${url}`);
   });
   Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -843,7 +865,9 @@ describe('mobile uncertain result (M09)', () => {
     assert.match(uncertain, /Estamos verificando si tu transferencia se completó/);
     assert.match(uncertain, /No pudimos confirmar el resultado de la operación de .*"\$850.00"," MXN".*" a ".*"Carlos Ruiz •• 0028"/);
     assert.match(uncertain, /" \(Ref: ",.{0,140}"children":\["131126"\]\},"\)"/);
-    assert.match(uncertain, /No intentes enviar el dinero nuevamente/);
+    // R8 F-30 (a): the warning names the safe ways out instead of "No intentes enviar el dinero nuevamente".
+    assert.match(uncertain, /No hagas otra transferencia igual/);
+    assert.doesNotMatch(uncertain, /No intentes enviar el dinero nuevamente/);
     assert.match(uncertain, /"Monto en verificación"/);
     assert.match(uncertain, /"En verificación de estado"/);
     assert.doesNotMatch(uncertain, /Banxico|SPEI|interbancaria|DEMO-0001|"awaiting_confirmation"/);
@@ -940,7 +964,7 @@ describe('mobile completed receipt (M10)', () => {
 describe('mobile rejected transfer (M11)', () => {
   it('shows the API reason, the untouched balance and lets the user edit the same data without a recovery record', async () => {
     const flow = await startTransferFlow((url) => {
-      if (url.endsWith('/transfers')) return Response.json({ title: 'Unprocessable Entity', detail: 'Se excedió el límite diario.' }, { status: 422 });
+      if (url.endsWith('/transfers')) return Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Unprocessable Entity', detail: 'Se excedió el límite diario.' }, { status: 422 });
       return undefined;
     }, { amount: '6000.00' });
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
@@ -1040,6 +1064,7 @@ describe('mobile home reference (M02)', () => {
       if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'home-user', fullName: 'Ana López', email: 'ana@example.com' } });
       if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount, { id: 'source-2', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '500000', clabe: '000000000000005931', clabeMasked: '000•••••••••••5931' }] });
       if (url.includes('/movements?limit=20')) return Response.json({ items, nextCursor: null });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -1079,6 +1104,7 @@ describe('mobile home reference (M02)', () => {
       if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'home-order-user', fullName: 'Ana López', email: 'ana@example.com' } });
       if (url.endsWith('/accounts')) return Response.json({ items: [savings, principal] });
       if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -1123,6 +1149,7 @@ async function loginWith(handler: FlowHandler) {
     const handled = await handler(url, init);
     if (handled) return handled;
     if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: `g2-${Math.random()}`, fullName: 'Ana López', email: 'ana@example.com' } });
+    { const r8 = round8Default(url); if (r8) return r8; }
     throw new Error(`Unexpected API request: ${url}`);
   });
   Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -1304,6 +1331,7 @@ describe('round 6 · E: sending, verifying, completed, rejected, expired and can
       if (url.endsWith('/auth/refresh')) return Response.json({ accessToken: 'access', refreshToken: 'refresh-2', tokenType: 'Bearer', expiresIn: 300, user: { id: 'restart-user', fullName: 'Ana López', email: 'ana@example.com' } });
       if (url.endsWith('/transfers/tr-exp')) return Response.json(flowTransfer({ id: 'tr-exp', status: 'expired' }));
       if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -1326,7 +1354,7 @@ async function sameAccountApp(options: { beneficiaries?: unknown[]; onCreate?: (
     if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount, savingsAccount] });
     if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
     if (url.endsWith('/beneficiaries')) return Response.json({ items: options.beneficiaries ?? [ownSavingsBeneficiary, flowBeneficiary] });
-    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true });
+    if (url.endsWith('/transfer-policy')) return Response.json({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '0', dailyRemainingMinor: '2000000', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0' });
     if (url.endsWith('/transfers') && init?.method === 'POST') {
       const body = JSON.parse(String(init.body)) as Record<string, string>;
       createBodies.push(body);
@@ -1433,7 +1461,7 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
   it('M11: "Modificar monto o cuenta" after an origin=destination 422 opens the origin selector, keeps the data and warns before resending the same combination', async () => {
     // An older beneficiary payload without ownAccountId: only the API can detect the conflict.
     const legacy = { ...ownSavingsBeneficiary, ownAccountId: undefined };
-    const app = await sameAccountApp({ beneficiaries: [legacy], onCreate: () => Response.json({ title: 'Unprocessable', status: 422, detail: 'El origen y destino deben ser distintos.' }, { status: 422 }) });
+    const app = await sameAccountApp({ beneficiaries: [legacy], onCreate: () => Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Unprocessable', status: 422, detail: 'El origen y destino deben ser distintos.' }, { status: 422 }) });
     await app.press('Ahorro •• 5719');
     await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
@@ -1474,7 +1502,7 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
   });
 });
 
-const demoPolicy = (overrides: Record<string, unknown> = {}) => ({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '175156', dailyRemainingMinor: '1824844', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, ...overrides });
+const demoPolicy = (overrides: Record<string, unknown> = {}) => ({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '175156', dailyRemainingMinor: '1824844', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0', ...overrides });
 
 describe('round 6 · H: server transfer policy, threshold variant and real code expiry', () => {
   it('M06 shows the server daily limit and remaining amount (demo) and blocks an amount above what is left today', async () => {
@@ -1690,6 +1718,7 @@ describe('F-11: long dynamic data never pushes controls off screen', () => {
       if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
       if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
       if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
+      { const r8 = round8Default(url); if (r8) return r8; }
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -1944,7 +1973,7 @@ describe('F-16: with large text (fontScale 1.3 / 2) label-value rows and amounts
 
   it.each([1.3, 2])('M11 at fontScale %s', async (fontScale) => {
     fontScaleSpy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(fontScale);
-    const flow = await startTransferFlow((url) => (url.endsWith('/transfers') ? Response.json({ title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 }) : undefined), { amount: '6000.00' });
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfers') ? Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 }) : undefined), { amount: '6000.00' });
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
     await flow.wait();
     for (const label of ['Saldo disponible', 'Monto solicitado']) assertWrappingRow(flow.renderer, label);
@@ -2163,7 +2192,7 @@ describe('round 7 · 2: readable type scale (>= 12 pt secondary, >= 14 pt help, 
     await receipt.finish();
 
     const rejected = await startTransferFlow((url) => {
-      if (url.endsWith('/transfers')) return Response.json({ title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 });
+      if (url.endsWith('/transfers')) return Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 });
       return undefined;
     }, { amount: '850.00' });
     await TestRenderer.act(async () => { rejected.button('Confirmar transferencia').props.onPress(); });
@@ -2617,7 +2646,8 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     await flow.wait();
     const home = flow.visible();
     assert.match(home, /Transferencia en verificación/);
-    assert.match(home, /Podrás hacer otra transferencia cuando conozcamos su resultado/);
+    // R8 F-30 (b): new wording.
+    assert.match(home, /Podrás hacer otra transferencia cuando esta quede resuelta\./);
     assert.doesNotMatch(home, /DESTINO SELECCIONADO/);
     assertNoNewAttemptEntry(flow);
     assert.ok(pressables(flow, 'Verificar estado de la transferencia').length > 0, 'the notice verifies the pending attempt');
@@ -2800,7 +2830,7 @@ describe('round 7 · 7: M11 reasons, real amounts and "no debit" only for confir
   };
 
   it('daily limit (429 "Se excedió el límite diario"): limit reason with today\'s remaining amount, no debit, a way to fix it', async () => {
-    const flow = await run(() => Response.json({ title: 'Too Many Requests', detail: 'Se excedió el límite diario.' }, { status: 429 }));
+    const flow = await run(() => Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Too Many Requests', detail: 'Se excedió el límite diario.' }, { status: 429 }));
     const screen = flow.visible();
     assert.match(screen, /supera lo disponible hoy según el límite diario de demostración/);
     assert.match(screen, /"\$850.00 MXN"/);
@@ -2813,7 +2843,7 @@ describe('round 7 · 7: M11 reasons, real amounts and "no debit" only for confir
   });
 
   it('insufficient balance (422): balance reason with the requested and available amounts and no debit', async () => {
-    const flow = await run(() => Response.json({ title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 }));
+    const flow = await run(() => Response.json({ type: 'urn:billetera:problem:transfer-attempt-rejected', title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 }));
     const screen = flow.visible();
     assert.match(screen, /supera el saldo disponible actual en tu cuenta/);
     assert.match(screen, /"\$850.00 MXN"/);

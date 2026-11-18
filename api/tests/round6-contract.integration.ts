@@ -125,7 +125,7 @@ test('round 6 contract: own-account identity, transfer policy, OTP expiry/cancel
   const usage = await source.query("SELECT business_date::text AS day,outgoing_minor::text AS used FROM daily_limit_usage WHERE owner_id=$1 AND business_date=(now() AT TIME ZONE 'America/Mexico_City')::date", [alice.userId]);
   const used = BigInt(usage[0].used);
   assert.equal(used, 1000n + amount + 50000n + 700n);
-  assert.deepEqual(policy, { currency: 'MXN', businessDate: usage[0].day, businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: used.toString(), dailyRemainingMinor: (2000000n - used).toString(), otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true });
+  assert.deepEqual(policy, { currency: 'MXN', businessDate: usage[0].day, businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: used.toString(), dailyRemainingMinor: (2000000n - used).toString(), otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, sendEpoch: '0' }); // sendEpoch: contract 0.4.0 (round 8), additive
   const bobPolicy = await (await fetch(`${base}/transfer-policy`, { headers: bob.headers })).json() as { dailyUsedMinor: string };
   assert.equal(bobPolicy.dailyUsedMinor, '0', 'daily usage is per authenticated user');
 
