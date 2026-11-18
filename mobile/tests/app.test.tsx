@@ -461,4 +461,45 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
+  it('M03: groups by relative day, switches account from the balance card and shows the web footer without unsupported claims', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    const calls: string[] = [];
+    const now = new Date();
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input); calls.push(url);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'm03-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [
+        { id: 'own-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '10000', clabe: '000000000000008412', clabeMasked: '000•••••••••••8412' },
+        { id: 'own-2', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '2500', clabe: '111111111111111111', clabeMasked: '111•••••••••••1111' },
+      ] });
+      if (url.includes('/accounts/own-1/movements?limit=20')) return Response.json({ items: [{ id: 'm-1', transferId: 't-1', type: 'credit', amountMinor: '50000', currency: 'MXN', concept: 'Honorarios', reference: '994012', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
+      if (url.includes('/accounts/own-2/movements?limit=20')) return Response.json({ items: [{ id: 'm-2', transferId: 't-2', type: 'debit', amountMinor: '43050', currency: 'MXN', concept: 'Farmacia', reference: '781204', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const movementsTab = renderer!.root.findAll((node) => node.props.accessibilityRole === 'tab').find((node) => node.findAll((child) => child.props.children === 'Movimientos').length > 0)!;
+    await TestRenderer.act(async () => { movementsTab.props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const visible = () => JSON.stringify(renderer!.toJSON());
+    assert.match(visible(), /HOY \(/);
+    assert.match(visible(), /"AL"/);
+    assert.match(visible(), /Puedes consultar más movimientos en la web/);
+    assert.match(visible(), /Honorarios/);
+    assert.doesNotMatch(visible(), /Ciclo/);
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cuenta Principal, cambiar cuenta' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Ver movimientos de Ahorro' }).props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    assert.ok(calls.some((url) => url.includes('/accounts/own-2/movements?limit=20')));
+    assert.match(visible(), /Farmacia/);
+    assert.ok(renderer!.root.findByProps({ accessibilityLabel: 'Cuenta Ahorro, cambiar cuenta' }));
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
 });
