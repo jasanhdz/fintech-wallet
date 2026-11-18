@@ -59,12 +59,6 @@ function Wallet() {
   const [selectedId, setSelectedId] = useState('');
   const client = useQueryClient();
 
-  const endSession = useCallback(async () => {
-    await SecureStore.deleteItemAsync(REFRESH_KEY);
-    setSession(null);
-    client.clear();
-  }, [client]);
-
   const refreshSession = useCallback(async (refreshToken: string) => {
     const result = await request<AuthResponse>('/auth/refresh', undefined, {
       method: 'POST', body: JSON.stringify({ client: 'mobile', refreshToken }),
@@ -73,6 +67,40 @@ function Wallet() {
     await SecureStore.setItemAsync(REFRESH_KEY, result.refreshToken);
     setSession({ accessToken: result.accessToken, user: result.user });
   }, []);
+
+  const endSession = useCallback(async () => {
+    try {
+      const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
+      if (refreshToken) {
+        let accessToken = session?.accessToken;
+        if (accessToken) {
+          try {
+            await request<void>('/auth/logout', accessToken, {
+              method: 'POST', body: JSON.stringify({ client: 'mobile', refreshToken }),
+            });
+            return;
+          } catch (error) {
+            if (!(error instanceof ApiError) || error.status !== 401) return;
+          }
+        }
+
+        try {
+          const refreshed = await request<AuthResponse>('/auth/refresh', undefined, {
+            method: 'POST', body: JSON.stringify({ client: 'mobile', refreshToken }),
+          });
+          accessToken = refreshed.accessToken;
+          await request<void>('/auth/logout', accessToken, {
+            method: 'POST', body: JSON.stringify({ client: 'mobile', refreshToken: refreshed.refreshToken ?? refreshToken }),
+          });
+        } catch { /* Logout is best-effort; local secrets are always cleared below. */ }
+      }
+    } catch { /* SecureStore/network failures must not prevent local logout. */ }
+    finally {
+      try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
+      setSession(null);
+      client.clear();
+    }
+  }, [client, session?.accessToken]);
 
   useEffect(() => {
     let active = true;
