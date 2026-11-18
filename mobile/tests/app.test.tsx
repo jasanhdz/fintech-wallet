@@ -851,3 +851,33 @@ describe('mobile completed receipt (M10)', () => {
     await flow.finish();
   });
 });
+
+describe('mobile rejected transfer (M11)', () => {
+  it('shows the API reason, the untouched balance and lets the user edit the same data without a recovery record', async () => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ title: 'Too Many Requests', detail: 'Se excedió el límite diario.' }, { status: 429 });
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const rejected = flow.visible();
+    assert.match(rejected, /"Transferir"/);
+    assert.doesNotMatch(rejected, /"TRANSFERIR"/);
+    assert.match(rejected, /No se pudo completar la transferencia/);
+    assert.match(rejected, /Se excedió el límite diario./);
+    assert.match(rejected, /Tu dinero está intacto/);
+    assert.match(rejected, /"Cuenta Principal •• 8412"/);
+    assert.match(rejected, /"\$12,450.00 MXN"/);
+    assert.match(rejected, /"Monto solicitado"/);
+    assert.match(rejected, /"\$6,000.00 MXN"/);
+    assert.match(rejected, /"Importe debitado"/);
+    assert.match(rejected, /"\$0.00 MXN"/);
+    assert.doesNotMatch(rejected, /comisión/);
+    await TestRenderer.act(async () => { flow.button('Modificar monto o cuenta').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /PASO 1 DE 2/);
+    assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '6000.00');
+    assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
+    await flow.finish();
+  });
+});
