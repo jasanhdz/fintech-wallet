@@ -10,7 +10,7 @@ import { dataSource } from '../db/data-source.js';
 import { ensureDemoClearingAccount } from '../db/clearing-account.js';
 import { clabeFingerprint, decryptClabe, encryptClabe, generateClabe, hashSecret } from '../security/crypto.js';
 import { isValidClabe, loginRequestSchema, registerRequestSchema } from '@fintech-wallet/shared';
-import { confirmTransfer, createTransfer, getTransfer, TransferFault, type TransferRequest } from '../transfers/service.js';
+import { cancelTransfer, confirmTransfer, createTransfer, getTransfer, getTransferPolicy, TransferFault, type TransferRequest } from '../transfers/service.js';
 import { listMovements, MovementFault } from '../movements/service.js';
 
 const validRequestId = /^[a-zA-Z0-9._:-]{1,128}$/;
@@ -101,7 +101,7 @@ export function createApp() {
   api.get('/accounts',async(_req,res,next)=>{try{const rows=await db.query("SELECT id,name,kind,currency,balance_minor::text AS balance,clabe_ciphertext FROM accounts WHERE owner_id=$1 ORDER BY created_at,id",[res.locals.userId]);res.json({items:rows.map((a:Record<string,string>)=>accountDto(a))});}catch(error){next(error);}});
   api.get('/accounts/:accountId',async(req,res,next)=>{try{const rows=await db.query("SELECT id,name,kind,currency,balance_minor::text AS balance,clabe_ciphertext FROM accounts WHERE id=$1 AND owner_id=$2",[req.params.accountId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Cuenta no encontrada.');res.json(accountDto(rows[0] as Record<string,string>));}catch(error){next(error);}});
   api.get('/accounts/:accountId/movements',async(req,res,next)=>{try{res.json(await listMovements(db,String(res.locals.userId),req.params.accountId,req.query));}catch(error){if(error instanceof MovementFault)return problem(res,error.status,error.title,error.message);next(error);}});
-  api.get('/beneficiaries',async(_req,res,next)=>{try{const rows=await db.query('SELECT id,name,alias,destination_account_id,clabe_ciphertext FROM beneficiaries WHERE owner_id=$1 ORDER BY created_at,id',[res.locals.userId]);res.json({items:rows.map((row:Record<string,string>)=>beneficiaryDto(row))});}catch(error){next(error);}});
+  api.get('/beneficiaries',async(_req,res,next)=>{try{const rows=await db.query('SELECT b.id,b.name,b.alias,b.destination_account_id,b.clabe_ciphertext,(a.owner_id=b.owner_id) AS own_destination FROM beneficiaries b JOIN accounts a ON a.id=b.destination_account_id WHERE b.owner_id=$1 ORDER BY b.created_at,b.id',[res.locals.userId]);res.json({items:rows.map((row:BeneficiaryRow)=>beneficiaryDto(row))});}catch(error){next(error);}});
   api.post('/beneficiaries',async(req,res,next)=>{
     const body=req.body as Record<string,unknown>|null;
     if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some((key)=>!['name','alias','clabe'].includes(key))||typeof body.name!=='string'||typeof body.alias!=='string'||typeof body.clabe!=='string') return problem(res,400,'Bad Request','Datos de beneficiario inválidos.');
@@ -113,10 +113,10 @@ export function createApp() {
     try {
       await runner.connect(); connected=true; await runner.startTransaction();
       const fingerprint=clabeFingerprint(clabe);
-      const targets=await runner.query("SELECT id FROM accounts WHERE clabe_lookup_hash=$1 AND owner_id IS NOT NULL AND kind IN ('checking','savings')",[fingerprint]);
+      const targets=await runner.query("SELECT id,owner_id FROM accounts WHERE clabe_lookup_hash=$1 AND owner_id IS NOT NULL AND kind IN ('checking','savings')",[fingerprint]);
       if(!targets[0]) {await runner.rollbackTransaction();return problem(res,404,'Not Found','No se encontró una cuenta interna.');}
       const rows=await runner.query('INSERT INTO beneficiaries(owner_id,destination_account_id,name,alias,clabe_ciphertext,clabe_lookup_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,name,alias,destination_account_id,clabe_ciphertext',[res.locals.userId,targets[0].id,name,alias,encryptClabe(clabe),fingerprint]);
-      const row=rows[0] as Record<string,string>;
+      const row:BeneficiaryRow={...(rows[0] as Omit<BeneficiaryRow,'own_destination'>),own_destination:targets[0].owner_id===res.locals.userId};
       await runner.query("INSERT INTO audit_events(actor_id,action,resource_type,resource_id,request_id,metadata) VALUES($1,'beneficiary.created','beneficiary',$2,$3,'{}')",[res.locals.userId,row.id,res.locals.requestId]);
       await runner.commitTransaction();
       res.status(201).json(beneficiaryDto(row));
@@ -124,7 +124,7 @@ export function createApp() {
   });
   api.get('/beneficiaries/:beneficiaryId',async(req,res,next)=>{
     if(!isUuid(req.params.beneficiaryId)) return problem(res,404,'Not Found','Beneficiario no encontrado.');
-    try {const rows=await db.query('SELECT id,name,alias,destination_account_id,clabe_ciphertext FROM beneficiaries WHERE id=$1 AND owner_id=$2',[req.params.beneficiaryId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Beneficiario no encontrado.');res.json(beneficiaryDto(rows[0] as Record<string,string>));}catch(error){next(error);}
+    try {const rows=await db.query('SELECT b.id,b.name,b.alias,b.destination_account_id,b.clabe_ciphertext,(a.owner_id=b.owner_id) AS own_destination FROM beneficiaries b JOIN accounts a ON a.id=b.destination_account_id WHERE b.id=$1 AND b.owner_id=$2',[req.params.beneficiaryId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Beneficiario no encontrado.');res.json(beneficiaryDto(rows[0] as BeneficiaryRow));}catch(error){next(error);}
   });
   api.post('/transfers',async(req,res,next)=>{
     try { const key=req.get('idempotency-key')??''; const result=await createTransfer(db,String(res.locals.userId),key,req.body as TransferRequest,String(res.locals.requestId));res.status(result.status).json(result.body); }
@@ -132,8 +132,13 @@ export function createApp() {
   });
   api.get('/transfers/:transferId',async(req,res,next)=>{
     if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
-    try{res.json(await getTransfer(db,String(res.locals.userId),req.params.transferId));}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
+    try{res.json(await getTransfer(db,String(res.locals.userId),req.params.transferId,String(res.locals.requestId)));}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
   });
+  api.post('/transfers/:transferId/cancel',async(req,res,next)=>{
+    if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
+    try{res.json(await cancelTransfer(db,String(res.locals.userId),req.params.transferId,String(res.locals.requestId)));}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
+  });
+  api.get('/transfer-policy',async(_req,res,next)=>{try{res.json(await getTransferPolicy(db,String(res.locals.userId)));}catch(error){next(error);}});
   api.post('/transfers/:transferId/confirm',async(req,res,next)=>{
     if(!isUuid(req.params.transferId))return problem(res,404,'Not Found','Transferencia no encontrada.');
     try{const result=await confirmTransfer(db,String(res.locals.userId),req.params.transferId,req.get('idempotency-key')??'',req.body?.code,String(res.locals.requestId));res.json(result);}catch(error){if(error instanceof TransferFault)return problem(res,error.status,error.title,error.message);next(error);}
@@ -152,5 +157,7 @@ function originAllowed(origin:string,request:Request,allowlist:string|undefined)
 function csrfValid(request:Request,allowlist:string|undefined){const origin=request.get('origin');if(origin&&!originAllowed(origin,request,allowlist))return false;const token=request.get('x-csrf-token');const cookie=request.cookies[csrfCookie];return !!token&&!!cookie&&token.length===cookie.length&&timingSafeEqual(Buffer.from(token),Buffer.from(cookie));}
 function isUnique(error:unknown){return typeof error==='object'&&error!==null&&'code'in error&&(error as {code:string}).code==='23505';}
 function accountDto(a:Record<string,string>){const clabe=decryptClabe(a.clabe_ciphertext!);return{id:a.id,name:a.name,kind:a.kind,currency:a.currency,availableBalanceMinor:a.balance,clabe,clabeMasked:`${clabe.slice(0,3)}•••••••••••${clabe.slice(-4)}`};}
-function beneficiaryDto(row:Record<string,string>){const clabe=decryptClabe(row.clabe_ciphertext!);return{id:row.id,name:row.name,alias:row.alias,clabeMasked:`${clabe.slice(0,3)}•••••••••••${clabe.slice(-4)}`,destinationAccountId:row.destination_account_id!};}
+type BeneficiaryRow={id:string;name:string;alias:string;destination_account_id:string;clabe_ciphertext:string;own_destination:boolean|null};
+/** `ownAccountId` is present only when the beneficiary resolves to an account of the same user (never for third parties). */
+function beneficiaryDto(row:BeneficiaryRow){const clabe=decryptClabe(row.clabe_ciphertext);return{id:row.id,name:row.name,alias:row.alias,clabeMasked:`${clabe.slice(0,3)}•••••••••••${clabe.slice(-4)}`,destinationAccountId:row.destination_account_id,...(row.own_destination===true?{ownAccountId:row.destination_account_id}:{})};}
 function isUuid(value:string){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);}
