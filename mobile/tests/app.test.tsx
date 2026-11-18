@@ -626,3 +626,60 @@ describe('mobile transfer details (M06)', () => {
     delete (global as { fetch?: typeof fetch }).fetch;
   });
 });
+
+type FlowHandler = (url: string, init?: RequestInit) => Response | Promise<Response> | undefined;
+const flowAccount = { id: 'source-1', name: 'Cuenta Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '1245000', clabe: '000000000000008412', clabeMasked: '000•••••••••••8412' };
+const flowBeneficiary = { id: 'beneficiary-1', name: 'Carlos Ruiz', alias: 'Carlos', clabeMasked: '000•••••••••••0028', destinationAccountId: 'dest-1' };
+
+async function startTransferFlow(handler: FlowHandler, options: { amount: string; accounts?: () => unknown[] }) {
+  mockSecureValues.clear();
+  const calls: Array<{ url: string; init?: RequestInit }> = [];
+  const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    calls.push({ url, init });
+    const handled = await handler(url, init);
+    if (handled) return handled;
+    if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: `flow-${options.amount}-${Math.random()}`, fullName: 'Ana López', email: 'ana@example.com' } });
+    if (url.endsWith('/accounts')) return Response.json({ items: options.accounts ? options.accounts() : [flowAccount] });
+    if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+    if (url.endsWith('/beneficiaries')) return Response.json({ items: [flowBeneficiary] });
+    throw new Error(`Unexpected API request: ${url}`);
+  });
+  Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+  let renderer: TestRenderer.ReactTestRenderer;
+  await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+  const visible = () => JSON.stringify(renderer!.toJSON());
+  const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+  const wait = (ms = 30) => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+  await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+  await wait();
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+  await wait();
+  await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Carlos'))[0]!.props.onPress(); });
+  await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText(options.amount); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('131126'); });
+  await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
+  const finish = async () => { await TestRenderer.act(async () => { renderer!.unmount(); }); delete (global as { fetch?: typeof fetch }).fetch; };
+  return { renderer: renderer!, visible, button, wait, calls, finish };
+}
+
+describe('mobile transfer review (M07)', () => {
+  it('shows the origin → destination card, metadata and the BigInt balance calculation without unsupported fee claims', async () => {
+    const flow = await startTransferFlow(() => undefined, { amount: '850.00' });
+    const review = flow.visible();
+    assert.match(review, /"Paso 2 de 2"/);
+    assert.match(review, /"Revisar transferencia"/);
+    assert.match(review, /CUENTA DE ORIGEN/);
+    assert.match(review, /"Cuenta Principal •• 8412"/);
+    assert.match(review, /TRANSFERENCIA INTERNA/);
+    assert.match(review, /"Carlos Ruiz \(Carlos\) •• 0028"/);
+    assert.match(review, /"Referencia numérica"/);
+    assert.match(review, /"\$12,450.00"," - ","\$850.00"," = ","\$11,600.00"," MXN"/);
+    assert.match(review, /"\$11,600.00"," MXN"/);
+    assert.doesNotMatch(review, /Sin costo de comisión|Revisa tu transferencia/);
+    assert.ok(flow.button('Confirmar transferencia'));
+    await flow.finish();
+  });
+});
