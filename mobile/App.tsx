@@ -9,6 +9,7 @@ import type { ProductComponents } from '@fintech-wallet/shared';
 type User = ProductComponents['schemas']['User'];
 type Account = ProductComponents['schemas']['Account'];
 type AuthResponse = ProductComponents['schemas']['AuthResponse'];
+type Beneficiary = ProductComponents['schemas']['Beneficiary'];
 const REFRESH_KEY = 'wallet.refresh-token';
 const apiBase = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 0 } } });
@@ -57,6 +58,9 @@ function Wallet() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState('');
+  const [choosingBeneficiary, setChoosingBeneficiary] = useState(false);
+  const [beneficiarySearch, setBeneficiarySearch] = useState('');
+  const [destination, setDestination] = useState<Beneficiary | null>(null);
   const client = useQueryClient();
 
   const refreshSession = useCallback(async (refreshToken: string) => {
@@ -98,6 +102,9 @@ function Wallet() {
     finally {
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
       setSession(null);
+      setDestination(null);
+      setChoosingBeneficiary(false);
+      setBeneficiarySearch('');
       client.clear();
     }
   }, [client, session?.accessToken]);
@@ -163,6 +170,30 @@ function Wallet() {
   });
   const accounts = accountsQuery.data ?? [];
   const selected = accounts.find((account) => account.id === selectedId) ?? accounts[0];
+  const beneficiariesQuery = useQuery({
+    queryKey: ['beneficiaries', session?.user.id],
+    queryFn: async () => {
+      try { return (await request<{ items: Beneficiary[] }>('/beneficiaries', session?.accessToken)).items; }
+      catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 401) throw error;
+        const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
+        if (!refreshToken) { await endSession(); throw error; }
+        try {
+          const refreshed = await request<AuthResponse>('/auth/refresh', undefined, { method: 'POST', body: JSON.stringify({ client: 'mobile', refreshToken }) });
+          if (!refreshed.refreshToken) throw new Error('La API no devolvió la sesión móvil renovada.');
+          await SecureStore.setItemAsync(REFRESH_KEY, refreshed.refreshToken);
+          setSession({ accessToken: refreshed.accessToken, user: refreshed.user });
+          return (await request<{ items: Beneficiary[] }>('/beneficiaries', refreshed.accessToken)).items;
+        } catch (refreshError) { await endSession(); throw refreshError; }
+      }
+    },
+    enabled: Boolean(session && choosingBeneficiary && !hidden),
+  });
+  const beneficiaries = beneficiariesQuery.data ?? [];
+  const normalizedSearch = beneficiarySearch.trim().toLocaleLowerCase('es-MX');
+  const filteredBeneficiaries = beneficiaries.filter((beneficiary) =>
+    [beneficiary.name, beneficiary.alias, beneficiary.clabeMasked].some((value) => value.toLocaleLowerCase('es-MX').includes(normalizedSearch)),
+  );
 
   async function login() {
     setFormError('');
@@ -193,6 +224,13 @@ function Wallet() {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.topbar}><View><Text style={styles.brand}>Billetera MXN</Text><Text style={styles.eyebrow}>INICIO</Text></View><View style={styles.avatar}><Text style={styles.avatarText}>{initials(session.user.fullName)}</Text></View></View>
       <View style={styles.greeting}><View><Text style={styles.title}>Hola, {session.user.fullName.split(' ')[0]}</Text><Text style={styles.muted}>Tus cuentas y saldos</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar sesión" style={styles.iconButton} onPress={() => void endSession()}><Ionicons name="log-out-outline" size={25} color={colors.text} /></Pressable></View>
+      {destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO PROVISIONAL</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Elegir beneficiario" style={styles.transferEntry} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><View style={styles.accountIcon}><Ionicons name="send-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Elegir beneficiario</Text><Text style={styles.muted}>Selecciona un destino registrado en web</Text></View><Ionicons name="chevron-forward" size={22} color={colors.primary} /></Pressable>}
+      {choosingBeneficiary && <View style={styles.beneficiarySection}>
+        <View style={styles.beneficiaryHeader}><View><Text style={styles.sectionTitle}>Elige a quién enviar</Text><Text style={styles.muted}>Beneficiarios guardados desde la web</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección" onPress={() => setChoosingBeneficiary(false)}><Ionicons name="close" size={24} color={colors.muted} /></Pressable></View>
+        <View style={styles.searchWrap}><Ionicons name="search" size={20} color={colors.muted} /><TextInput accessibilityLabel="Buscar beneficiario" value={beneficiarySearch} onChangeText={setBeneficiarySearch} placeholder="Nombre, alias o CLABE" placeholderTextColor={colors.placeholder} autoCapitalize="none" style={styles.input} /></View>
+        {beneficiariesQuery.isPending ? <Centered><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>Cargando beneficiarios…</Text></Centered> : beneficiariesQuery.isError ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={colors.error} /><Text style={styles.errorText}>{beneficiariesQuery.error.message || 'No hay conexión. Revisa tu conexión e inténtalo de nuevo.'}</Text><Button title="Reintentar" onPress={() => void beneficiariesQuery.refetch()} /></View> : beneficiaries.length === 0 ? <View style={styles.emptyState}><Ionicons name="people-outline" size={28} color={colors.primary} /><Text style={styles.sectionTitle}>Aún no tienes beneficiarios</Text><Text style={styles.muted}>Agrega beneficiarios desde la versión web para poder seleccionarlos aquí.</Text></View> : filteredBeneficiaries.length === 0 ? <View style={styles.emptyState}><Text style={styles.sectionTitle}>Sin resultados</Text><Text style={styles.muted}>Prueba con otro nombre, alias o CLABE.</Text></View> : <View style={styles.listCard}>{filteredBeneficiaries.map((beneficiary, index) => <Pressable key={beneficiary.id} accessibilityRole="button" accessibilityLabel={`Seleccionar ${beneficiary.name}, ${beneficiary.alias}, CLABE ${beneficiary.clabeMasked}`} onPress={() => { setDestination(beneficiary); setChoosingBeneficiary(false); }} style={[styles.accountRow, index > 0 && styles.divider]}><View style={styles.accountIcon}><Ionicons name="person-outline" size={21} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>{beneficiary.name}</Text><Text style={styles.muted}>{beneficiary.alias} · {beneficiary.clabeMasked}</Text></View><Ionicons name="chevron-forward" size={20} color={colors.primary} /></Pressable>)}</View>}
+        {beneficiariesQuery.isError ? <Text style={styles.offlineHint}>Comprueba tu conexión para volver a cargar la lista.</Text> : null}
+      </View>}
       {accountsQuery.isPending ? <Centered><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>Cargando tus cuentas…</Text></Centered> : accountsQuery.isError ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={colors.error} /><Text style={styles.errorText}>{accountsQuery.error.message}</Text><Button title="Reintentar" onPress={() => void accountsQuery.refetch()} /></View> : accounts.length === 0 ? <View style={styles.notice}><Text style={styles.sectionTitle}>Aún no tienes cuentas</Text><Text style={styles.muted}>Cuando haya una cuenta disponible, aparecerá aquí.</Text></View> : <>
         <View style={styles.accountTabs}>{accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityState={{ selected: selected?.id === account.id }} style={[styles.tab, selected?.id === account.id && styles.tabSelected]} onPress={() => setSelectedId(account.id)}><Text numberOfLines={1} style={[styles.tabText, selected?.id === account.id && styles.tabTextSelected]}>{account.name}</Text></Pressable>)}</View>
         {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.muted}>{selected.clabeMasked}</Text></View><Text style={styles.muted}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatBalance(selected.availableBalanceMinor)}</Text><Text style={styles.currency}> MXN</Text></View></View>}
@@ -226,6 +264,7 @@ const styles = StyleSheet.create({
   accountTabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 6, borderRadius: 16, backgroundColor: colors.pale, marginBottom: 16 }, tab: { minHeight: 48, minWidth: 100, flex: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 }, tabSelected: { backgroundColor: colors.white }, tabText: { color: colors.muted, fontSize: 15, fontWeight: '600' }, tabTextSelected: { color: colors.primary },
   balanceCard: { backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 20, marginBottom: 16 }, accountLabel: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginBottom: 22 }, tag: { paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors.pale, borderRadius: 7, color: colors.primary, fontSize: 12, fontWeight: '700' }, balanceLine: { flexDirection: 'row', alignItems: 'baseline', marginTop: 4 }, balance: { flexShrink: 1, color: colors.text, fontSize: 38, fontWeight: '700', letterSpacing: -1.2, fontVariant: ['tabular-nums'] }, currency: { color: colors.muted, fontSize: 15, fontWeight: '600' },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f1f3ff', borderRadius: 16, padding: 16, marginVertical: 8 }, sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '700' }, activityHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 }, listCard: { backgroundColor: colors.white, borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: colors.border }, accountRow: { minHeight: 76, flexDirection: 'row', alignItems: 'center', gap: 12 }, divider: { borderTopWidth: 1, borderTopColor: colors.border }, accountIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, rowTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 3 }, rowBalance: { color: colors.text, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  transferEntry: { minHeight: 82, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, marginBottom: 16 }, destinationCard: { minHeight: 92, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16 }, destinationIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, beneficiarySection: { marginTop: 4, marginBottom: 20 }, beneficiaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }, searchWrap: { minHeight: 52, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, marginBottom: 12 }, emptyState: { alignItems: 'center', gap: 10, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 24, marginVertical: 8 }, link: { color: colors.primary, fontSize: 14, fontWeight: '700' }, offlineHint: { color: colors.muted, fontSize: 13, marginTop: 8 },
   loginContent: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 28, width: '100%', maxWidth: 600, alignSelf: 'center' }, loginBrand: { alignItems: 'center', marginBottom: 28 }, walletMark: { width: 62, height: 62, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale, marginBottom: 14 }, loginTitle: { color: colors.text, fontSize: 34, fontWeight: '700', marginTop: 18, textAlign: 'center' }, loginSubtitle: { color: colors.muted, fontSize: 16, lineHeight: 24, textAlign: 'center', marginTop: 8, maxWidth: 360 }, formCard: { backgroundColor: colors.white, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: colors.border }, label: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 8 }, inputWrap: { minHeight: 52, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f1f3ff', borderWidth: 1, borderColor: colors.border }, input: { flex: 1, minWidth: 0, minHeight: 48, color: colors.text, fontSize: 16 }, button: { minHeight: 50, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginTop: 22 }, buttonPressed: { opacity: 0.78 }, buttonText: { color: colors.white, fontSize: 16, fontWeight: '700' }, errorText: { color: colors.error, fontSize: 14, lineHeight: 20, marginTop: 12 }, infoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#f1f3ff', borderRadius: 16, padding: 16, marginTop: 20 }, infoText: { flex: 1, color: colors.muted, fontSize: 14, lineHeight: 21 }, bold: { fontWeight: '700', color: colors.text },
   centered: { flex: 1, minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.bg }, privacy: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: colors.bg }, privacyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale, marginBottom: 24 }, center: { textAlign: 'center', maxWidth: 320, marginTop: 10 }, privacyFooter: { position: 'absolute', bottom: 36, color: colors.muted, fontSize: 14, fontWeight: '600' },
 });

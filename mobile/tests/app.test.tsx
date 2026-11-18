@@ -125,3 +125,46 @@ describe('mobile logout', () => {
     delete (global as { fetch?: typeof fetch }).fetch;
   });
 });
+
+describe('mobile beneficiary selection', () => {
+  it('loads the authenticated directory, searches locally and retains the selected masked destination without transferring', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({
+        accessToken: 'access-secret', refreshToken: 'refresh-secret', tokenType: 'Bearer', expiresIn: 300,
+        user: { id: 'user-select', fullName: 'Ada Lovelace', email: 'ada@example.com' },
+      });
+      if (url.endsWith('/accounts')) return Response.json({ items: [] });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [
+        { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••••••••••••1234', destinationAccountId: 'account-1' },
+        { id: 'beneficiary-2', name: 'Katherine Johnson', alias: 'KJ', clabeMasked: '••••••••••••••5678', destinationAccountId: 'account-2' },
+      ] });
+      throw new Error('Unexpected API request');
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => {
+      renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com');
+      renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
+    });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    assert.ok(fetchSpy.mock.calls.some(([url]) => String(url).endsWith('/beneficiaries')));
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Buscar beneficiario' }).props.onChangeText('KJ'); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Katherine Johnson/);
+    assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Grace Hopper/);
+    const selection = renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Katherine'))!;
+    await TestRenderer.act(async () => { selection.props.onPress(); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Katherine Johnson/);
+    assert.match(JSON.stringify(renderer!.toJSON()), /5678/);
+    assert.equal(fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/transfers')).length, 0);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
