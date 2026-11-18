@@ -1,0 +1,10 @@
+input box {"y":492,"h":52}
+focused after tapping the boxes area: false
+type "12" (80 ms/key) -> length 0 text false
+type "3" -> length 0 (3 expected)
+Backspace -> length 0 (2 expected) false
+type "3456" -> length 0 (6 expected) false
+7th digit ignored -> length 0 (6 expected)
+6x Backspace -> length 0
+paste "12 34-56" -> length 4 (6 expected, digits only)
+select all + delete -> length 4

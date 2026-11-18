@@ -1,0 +1,40 @@
+SHOT M02-par-valido minFont=10 fonts=10x6,12x7,14x10,16x1,20x2,36x1 scrollW=390 errs=0
+SHOT M02-incompatible minFont=10 fonts=10x6,12x8,14x10,16x1,20x2,36x1 scrollW=390 errs=0
+M02 incompatible: "Elegir otro destinatario" 0 "Continuar con transferencia" 1
+SHOT M06-datos minFont=10 fonts=10x9,12x7,14x4,16x5 scrollW=390 errs=0
+SHOT M06-teclado-enfocado minFont=10 fonts=10x9,12x7,14x4,16x5 scrollW=390 errs=0
+SHOT M07-revision minFont=10 fonts=10x7,12x9,14x8,16x2,36x1 scrollW=390 errs=0
+M07 normal @884: Confirmar 741-789 Modificar 797-841
+SHOT M10-comprobante minFont=10 fonts=10x6,12x11,14x8,16x4,20x1,36x2 scrollW=390 errs=0
+SHOT M07-umbral minFont=10 fonts=10x8,12x9,14x8,16x2,36x1 scrollW=390 errs=0
+M07 umbral @844: Continuar 761-809 Modificar 817-861
+M07 umbral @844 after scrolling: Continuar 720-768 Modificar 776-820
+SHOT M07-umbral-844-desplazado minFont=10 fonts=10x8,12x9,14x8,16x2,36x1 scrollW=390 errs=0
+SHOT M08-vacio minFont=10 fonts=10x5,12x7,14x3,16x2,20x2 scrollW=390 errs=0
+SHOT M08-incompleto minFont=10 fonts=10x5,12x7,14x3,16x2,20x2 scrollW=390 errs=0
+SHOT M08-completo minFont=10 fonts=10x5,12x7,14x3,16x2,20x2 scrollW=390 errs=0
+SHOT M08-incorrecto minFont=10 fonts=10x5,12x7,14x5,16x2,20x2 scrollW=390 errs=0
+SHOT M08-intentos-agotados minFont=10 fonts=10x5,12x7,14x5,16x2,20x2 scrollW=390 errs=0
+control not present in this build
+SHOT M08-codigo-nuevo minFont=10 fonts=10x5,12x7,14x5,16x2,20x2 scrollW=390 errs=0
+M08 new code: balances unchanged true
+SHOT M06-datos-x1.3 minFont=13 fonts=13x9,15.6x7,18.2x4,20.8x5 scrollW=390 errs=0
+SHOT M07-revision-x1.3 minFont=13 fonts=13x7,15.6x9,18.2x8,20.8x2,46.8x1 scrollW=390 errs=0
+SHOT M10-comprobante-x1.3 minFont=13 fonts=13x7,15.6x10,18.2x8,20.8x4,26x1,46.8x2 scrollW=390 errs=0
+SHOT M07-umbral-x1.3 minFont=13 fonts=13x8,15.6x9,18.2x8,20.8x2,46.8x1 scrollW=390 errs=0
+SHOT M08-vacio-x1.3 minFont=13 fonts=13x5,15.6x7,18.2x3,20.8x2,26x2 scrollW=390 errs=0
+SHOT M06-datos-x2 minFont=20 fonts=20x9,24x7,28x4,32x5 scrollW=390 errs=0
+SHOT M07-revision-x2 minFont=20 fonts=20x7,24x9,28x8,32x2,72x1 scrollW=390 errs=0
+SHOT M10-comprobante-x2 minFont=20 fonts=20x7,24x10,28x8,32x4,40x1,72x2 scrollW=390 errs=0
+SHOT M07-umbral-x2 minFont=20 fonts=20x8,24x9,28x8,32x2,72x1 scrollW=390 errs=0
+SHOT M08-vacio-x2 minFont=20 fonts=20x5,24x7,28x3,32x2,40x2 scrollW=390 errs=0
+SHOT M06-saldo-insuficiente minFont=10 fonts=10x9,12x7,14x5,16x5 scrollW=390 errs=0
+SHOT M11-limite-diario minFont=10 fonts=10x1,12x2,14x7,16x3,20x1 scrollW=390 errs=0
+SHOT M11-saldo-insuficiente minFont=10 fonts=10x2,12x2,14x8,16x4,20x1 scrollW=390 errs=0
+SHOT M09-verificando minFont=10 fonts=10x3,12x11,14x2,16x3,20x1 scrollW=390 errs=0
+SHOT M02-aviso-pendiente minFont=10 fonts=10x8,12x8,14x11,16x2,20x1,36x1 scrollW=390 errs=0
+control not present in this build
+SHOT M09-resuelto minFont=10 fonts=10x8,12x8,14x11,16x2,20x1,36x1 scrollW=390 errs=0
+M09: keys=1 distinct=1 balances checking=969975 savings=530025 movements(30025)=1
+SHOT M12-cortina minFont=12 fonts=12x2,14x1,16x2,20x1 scrollW=390 errs=0
+SHOT M12-regreso minFont=10 fonts=10x8,12x8,14x11,16x2,20x1,36x1 scrollW=390 errs=0

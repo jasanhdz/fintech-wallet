@@ -1,0 +1,9 @@
+u9.ev8.7440999@example.test|awaiting_confirmation|200000|c2a2feb9|create-transfer
+u9.ev8.7440999@example.test|awaiting_confirmation|200000|80359a65|confirm-transfer
+u2.ev8.7614725@example.test|cancelled|200000|2f443c15|create-transfer
+u2.ev8.7614725@example.test|cancelled|200000|37ec61d6|confirm-transfer
+u2.ev8.7614725@example.test|cancelled|200000|743c9ffe|confirm-transfer
+u2.ev8.7614725@example.test|cancelled|200000|639673f5|confirm-transfer
+u2.ev8.7614725@example.test|completed|200000|c883a431|create-transfer
+u2.ev8.7614725@example.test|completed|200000|3c86f214|confirm-transfer
+u2.ev8.7614725@example.test|completed|200000|ed180c3c|confirm-transfer

@@ -8,6 +8,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import type { ProductComponents } from '@fintech-wallet/shared';
 import { amountToMinor, formatMoney } from './src/money';
 import { useInterTypeface, withInter, type Typeface } from './src/typography';
+import { receiptFromTransfer } from './src/receipt';
+import { RECEIPT_ACTION_LABELS, RECEIPT_BUSY_LABELS, useReceiptShare } from './src/receiptShare';
 import { parseTimestamp, BUSINESS_ZONE_LABEL, DATE_UNAVAILABLE, businessDayKey, businessDayLabel, formatBusinessDateTime, formatBusinessShort, formatBusinessTime, formatUpdatedAt } from './src/dates';
 
 type User = ProductComponents['schemas']['User'];
@@ -30,6 +32,7 @@ function screenForStatus(status: Transfer['status']): FlowScreen {
   if (status === 'expired' || status === 'cancelled') return 'closed';
   return 'status';
 }
+const INCOMPATIBLE_DESTINATION_TEXT = 'Es tu cuenta de origen: elige otra cuenta de origen para enviarle.';
 const SAME_ACCOUNT_MESSAGE = 'La cuenta de origen y el destino son la misma cuenta. Elige otra cuenta de origen o cambia el beneficiario.';
 // B: identity check only (Beneficiary.ownAccountId is present only when the destination is one of the user's own
 // accounts); names, aliases or last digits are never compared. The API stays authoritative (422).
@@ -38,11 +41,35 @@ function sameAccountDestination(beneficiary: Beneficiary | null | undefined, sou
 }
 type RejectedCombo = { sourceAccountId: string; beneficiaryId: string | undefined; amountMinor: string; reason: string };
 
+function isBusinessRejection(error: ApiError): boolean {
+  return error.status === 422 || (error.status === 429 && DAILY_LIMIT_PATTERN.test(error.message));
+}
+const DAILY_LIMIT_PATTERN = /límite diario/i;
 function isTerminalStatus(status: Transfer['status']): boolean {
   return status === 'completed' || status === 'rejected' || status === 'expired' || status === 'cancelled';
 }
 const REFRESH_KEY = 'wallet.refresh-token';
-const TRANSFER_RECOVERY_KEY = 'wallet.transfer-recovery';
+// F-21/F-22: the record of an attempt whose outcome is not known yet (or that still waits for its code). One record per
+// user (SecureStore keys allow [A-Za-z0-9._-]); a record is read, replaced and deleted only in its owner's session and
+// only removed when the API reports the attempt resolved. Signing out (explicitly or by expiry) never deletes it. The
+// single pre-round-8 slot is migrated to its owner's key the first time that owner signs in again.
+const LEGACY_RECOVERY_KEY = 'wallet.transfer-recovery';
+function recoveryKeyFor(userId: string): string { return `${LEGACY_RECOVERY_KEY}.${userId.replace(/[^A-Za-z0-9._-]/g, '_')}`; }
+type RecoveryRecord = { key: string; payload: TransferRequest; transferId?: string; userId?: string; status?: Transfer['status'] };
+async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
+  const own = await SecureStore.getItemAsync(recoveryKeyFor(userId));
+  if (own) return JSON.parse(own) as RecoveryRecord;
+  const legacy = await SecureStore.getItemAsync(LEGACY_RECOVERY_KEY);
+  if (!legacy) return null;
+  const record = JSON.parse(legacy) as RecoveryRecord;
+  // Another user's record is never shown, consumed, replaced nor deleted from this session.
+  if (record.userId && record.userId !== userId) return null;
+  const migrated = { ...record, userId };
+  await SecureStore.setItemAsync(recoveryKeyFor(userId), JSON.stringify(migrated));
+  await SecureStore.deleteItemAsync(LEGACY_RECOVERY_KEY);
+  return migrated;
+}
+const PENDING_UNVERIFIABLE_MESSAGE = 'No pudimos comprobar si tienes una transferencia en verificación. Para evitar un cargo doble no enviamos nada; inténtalo de nuevo en un momento.';
 // Round 7 · 5: a new code needs the previous attempt to be closed first; when its state cannot be read nothing is created.
 const NEW_CODE_UNCERTAIN_MESSAGE = 'No pudimos confirmar que el intento anterior quedó cancelado. Para evitar dos intentos abiertos no creamos uno nuevo; inténtalo de nuevo en un momento.';
 const UNCERTAIN_CONFIRM_MESSAGE = 'No pudimos verificar si tu autorización anterior se aplicó. Para evitar un cargo doble, reintenta con el mismo código o vuelve a intentarlo cuando tengas conexión.';
@@ -105,6 +132,13 @@ function Wallet() {
   const [demoOnlyCode, setDemoOnlyCode] = useState('');
   const [createAttempt, setCreateAttempt] = useState<{ key: string; payload: TransferRequest } | null>(null);
   const [recoveryReady, setRecoveryReady] = useState(false);
+  // F-21: mirror of this user's stored recovery record. While it exists Home offers only resuming/verifying that attempt
+  // (no new transfer can be started) and re-checks it, with the same key, whenever Home is shown or the app returns.
+  const [pendingRecord, setPendingRecord] = useState<RecoveryRecord | null>(null);
+  const [pendingCheck, setPendingCheck] = useState<'idle' | 'checking' | 'failed'>('idle');
+  const [homeCheckTick, setHomeCheckTick] = useState(0);
+  const pendingCheckInFlight = useRef(false);
+  const sessionUserRef = useRef<string | null>(null);
   const [otp, setOtp] = useState('');
   // Set only when the API answers a confirm with "code expired"; the challenge can then never be confirmed.
   const [otpExpired, setOtpExpired] = useState(false);
@@ -142,6 +176,8 @@ function Wallet() {
   }, []);
 
   const expireSession = useCallback(async () => { setSessionExpired(true); }, []);
+  // Round 8 (F-21/F-22): neither an expired session nor an explicit logout deletes a pending-transfer record. It stays
+  // bound to its user, is shown only to that user and is resumed (same key) when that user signs in again.
   const endSession = useCallback(async () => {
     try {
       const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
@@ -170,8 +206,9 @@ function Wallet() {
       }
     } catch { /* SecureStore/network failures must not prevent local logout. */ }
     finally {
+      sessionUserRef.current = null;
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
-      try { await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY); } catch { /* local logout must complete */ }
+      setRecoveryReady(false); setPendingRecord(null); setPendingCheck('idle');
       setSession(null);
       setDestination(null);
       setTransfer(null);
@@ -204,14 +241,18 @@ function Wallet() {
     return () => { active = false; };
   }, [refreshSession]);
 
+  useEffect(() => { sessionUserRef.current = session?.user.id ?? null; }, [session]);
+
   useEffect(() => {
     if (!session || !ready || recoveryReady) return;
     let active = true;
     void (async () => {
       try {
-        const stored = await SecureStore.getItemAsync(TRANSFER_RECOVERY_KEY);
-        if (!stored || !active) return;
-        const attempt = JSON.parse(stored) as { key: string; payload: TransferRequest; transferId?: string };
+        // Round 7 · 8 / F-22: only this user's record is read (a record of another user is never shown nor consumed).
+        // Records written before round 7 carry no userId; they come from the session restored with the same token.
+        const attempt = await readOwnRecovery(session.user.id);
+        if (!attempt || !active) return;
+        setPendingRecord(attempt);
         setCreateAttempt({ key: attempt.key, payload: attempt.payload });
         setTransferScreen('status');
         if (attempt.transferId) {
@@ -220,7 +261,7 @@ function Wallet() {
           setTransfer(result);
           if (result.status !== 'awaiting_confirmation') {
             setTransferScreen(screenForStatus(result.status));
-            if (isTerminalStatus(result.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+            if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
           } else {
             setTransferScreen('otp');
             setTransferBusy(true);
@@ -232,7 +273,7 @@ function Wallet() {
             } finally { if (active) setTransferBusy(false); }
           }
         } else {
-          await submitRecoveredCreate(attempt, session.accessToken);
+          await submitRecoveredCreate(attempt, session.accessToken, session.user.id);
         }
       } catch (error) {
         if (active) {
@@ -255,11 +296,12 @@ function Wallet() {
       }
       if (previous !== 'active') {
         const token = session?.accessToken;
-        if (token) void request<User>('/auth/me', token).catch(async (error: unknown) => {
+        // F-21: once the session is confirmed valid again, Home re-checks a pending attempt (same key) on its own.
+        if (token) void request<User>('/auth/me', token).then(() => setHomeCheckTick((tick) => tick + 1)).catch(async (error: unknown) => {
           try {
             if (error instanceof ApiError && error.status === 401) {
               const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
-              if (refresh) await refreshSession(refresh).catch(async () => { await expireSession(); await endSession(); });
+              if (refresh) await refreshSession(refresh).then(() => setHomeCheckTick((tick) => tick + 1)).catch(async () => { await expireSession(); await endSession(); });
               else { await expireSession(); await endSession(); }
             }
           } catch { /* Best-effort background session recheck on foreground; never let it crash the app. */ }
@@ -350,13 +392,42 @@ function Wallet() {
     : null;
   const repeatsRejected = Boolean(rejectedCombo && transferPayload && rejectedCombo.sourceAccountId === transferPayload.sourceAccountId && rejectedCombo.beneficiaryId === ('beneficiaryId' in transferPayload ? transferPayload.beneficiaryId : undefined) && rejectedCombo.amountMinor === transferPayload.amountMinor);
 
-  async function submitCreate(retry = false, payloadOverride?: TransferRequest) {
+  // F-21: the stored record and its in-memory mirror always change together (only this user's key).
+  async function saveRecovery(record: RecoveryRecord, userId: string) {
+    const stored: RecoveryRecord = { ...record, userId };
+    await SecureStore.setItemAsync(recoveryKeyFor(userId), JSON.stringify(stored));
+    if (sessionUserRef.current === userId) setPendingRecord(stored);
+  }
+  async function clearRecovery(userId: string | undefined) {
+    if (!userId) return;
+    if (sessionUserRef.current === userId) { setPendingRecord(null); setPendingCheck('idle'); }
+    await SecureStore.deleteItemAsync(recoveryKeyFor(userId));
+  }
+
+  // F-21: the attempt being prepared is dropped before anything is sent; Home shows the unresolved one and its own action.
+  function holdForPendingAttempt(record: RecoveryRecord) {
+    setPendingRecord(record);
+    setTransferScreen(null); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setRejectionUnverified(false); setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferError(''); setDemoOnlyCode('');
+    setChoosingBeneficiary(false); setActiveTab('home');
+  }
+
+  async function submitCreate(retry = false, payloadOverride?: TransferRequest, replacesClosedAttempt = false) {
     if (!session || transferBusy || transferInFlight.current) return;
     if (confirmUncertain) {
       setTransferError(UNCERTAIN_CONFIRM_MESSAGE);
       return;
     }
     transferInFlight.current = true;
+    const userId = session.user.id;
+    // F-21: a NEW attempt (new Idempotency-Key) is never created while this user still has an unresolved or pending one;
+    // only "Solicitar un código nuevo", after the API confirmed the previous attempt closed, may replace it. When the
+    // store cannot be read nothing is sent (fail closed).
+    if (!retry && !replacesClosedAttempt) {
+      let existing: RecoveryRecord | null;
+      try { existing = await readOwnRecovery(userId); }
+      catch { transferInFlight.current = false; setTransferError(PENDING_UNVERIFIABLE_MESSAGE); return; }
+      if (existing) { transferInFlight.current = false; holdForPendingAttempt(existing); return; }
+    }
     let attempt: { key: string; payload: TransferRequest; transferId?: string } | null;
     const payload = payloadOverride ?? transferPayload;
     try {
@@ -373,7 +444,13 @@ function Wallet() {
     }
     if (!retry) {
       setCreateAttempt(attempt);
-      await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify(attempt));
+      try { await saveRecovery(attempt, userId); }
+      catch {
+        // Without a stored record a lost response could not be resumed with this key: send nothing.
+        transferInFlight.current = false;
+        setTransferError('No se pudo preparar el intento de transferencia.');
+        return;
+      }
     }
     // E: a normal first request is "Enviando" (neutral copy); only a retry of the same attempt, after its outcome
     // became unknown, is shown as "Verificando resultado".
@@ -383,29 +460,31 @@ function Wallet() {
       setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
       setTransfer(finalResult);
-      if (finalResult.id) await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify({ ...attempt, transferId: finalResult.id }));
-      if (isTerminalStatus(finalResult.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+      if (isTerminalStatus(finalResult.status)) await clearRecovery(userId);
+      else if (finalResult.id) await saveRecovery({ ...attempt, transferId: finalResult.id, status: finalResult.status }, userId);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
-      setRejectionUnverified(error instanceof ApiError && error.status !== 422);
-      // M11 shows the source balance: re-read it instead of presenting a cached value as current.
-      if (error instanceof ApiError) void client.invalidateQueries({ queryKey: ['accounts'] });
+      // Round 7 · 7: only a business rejection proves nothing was posted: 422 (e.g. "Saldo insuficiente") or the 429
+      // "Se excedió el límite diario" of the transfer rules. Any other 4xx (401, 409, a rate limit…) stays unverified.
+      setRejectionUnverified(error instanceof ApiError && !isBusinessRejection(error));
+      // M11 shows the source balance and today's remaining limit: re-read them instead of presenting cached values.
+      if (error instanceof ApiError) { void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['transfer-policy'] }); }
       setTransferScreen(error instanceof ApiError && error.status >= 400 && error.status < 500 ? 'rejected' : 'status');
     } finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
-  async function submitRecoveredCreate(attempt: { key: string; payload: TransferRequest }, accessToken: string) {
+  async function submitRecoveredCreate(attempt: { key: string; payload: TransferRequest }, accessToken: string, userId: string) {
     setTransferScreen('status');
     setTransferBusy(true);
     try {
       const result = await request<Transfer>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       if (!result.id) return;
       setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
-      await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify({ ...attempt, transferId: result.id }));
+      await saveRecovery({ ...attempt, transferId: result.id, status: result.status }, userId);
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, accessToken) : result;
       setTransfer(finalResult);
-      if (isTerminalStatus(finalResult.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+      if (isTerminalStatus(finalResult.status)) await clearRecovery(userId);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) { setTransferError(error instanceof Error ? error.message : 'No se pudo recuperar la transferencia.'); setTransferScreen('status'); }
     finally { setTransferBusy(false); }
@@ -428,7 +507,7 @@ function Wallet() {
       const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
       setTransfer(finalResult); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
-      if (isTerminalStatus(finalResult.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+      if (isTerminalStatus(finalResult.status)) await clearRecovery(session.user.id);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) {
       if (!(error instanceof ApiError) || error.status >= 500) {
@@ -438,7 +517,7 @@ function Wallet() {
         try {
           const recovered = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
           setTransfer(recovered); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
-          if (isTerminalStatus(recovered.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          if (isTerminalStatus(recovered.status)) await clearRecovery(session.user.id);
           setTransferScreen(screenForStatus(recovered.status));
           return;
         } catch { /* Recovery query failed too; fall through and show the error with the attempt preserved for retry. */ }
@@ -457,7 +536,7 @@ function Wallet() {
         } else if ((error.status === 422 && /saldo insuficiente/i.test(error.message)) || (error.status === 429 && /límite diario/i.test(error.message))) {
           // Confirmed business rejection at confirm time (M11): no posting happened. The still-pending attempt is closed.
           void cancelPendingAttempt(transfer);
-          await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          await clearRecovery(session.user.id);
           setRejectionUnverified(false); setOtp('');
           setTransferError(error.message);
           void client.invalidateQueries({ queryKey: ['accounts'] });
@@ -476,14 +555,15 @@ function Wallet() {
     try {
       const result = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
       setTransfer(result);
-      if (isTerminalStatus(result.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+      if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
       setTransferScreen(screenForStatus(result.status));
     } catch (error) { setTransferError(error instanceof Error ? error.message : 'No se pudo consultar el estado.'); }
     finally { setTransferBusy(false); }
   }
 
   function resetTransfer() {
-    void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+    // Reached only once the attempt is resolved (receipt, rejected, closed) or before any attempt exists (details).
+    void clearRecovery(session?.user.id).catch(() => undefined);
     setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setRejectionUnverified(false); setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferError(''); setDemoOnlyCode('');
     setRejectedCombo(null); setOriginOpen(false);
     void client.invalidateQueries({ queryKey: ['movements'] });
@@ -529,14 +609,15 @@ function Wallet() {
       if (!closed) { setTransferError(NEW_CODE_UNCERTAIN_MESSAGE); return; }
       if (closed.status !== 'cancelled' && closed.status !== 'expired') {
         setTransfer(closed);
-        if (isTerminalStatus(closed.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+        if (isTerminalStatus(closed.status)) await clearRecovery(session.user.id);
         if (closed.status !== 'awaiting_confirmation') setTransferScreen(screenForStatus(closed.status));
         else setTransferError(NEW_CODE_UNCERTAIN_MESSAGE);
         return;
       }
     }
     setOtp(''); setConfirmAttempt(null); setTransfer(null); setDemoOnlyCode(''); setOtpWrong(false); setOtpLocked(false);
-    await submitCreate(false, payload);
+    // F-21: only an attempt the API confirmed cancelled/expired may be replaced by a new one.
+    await submitCreate(false, payload, Boolean(previous));
   }
 
   function otpTimedOut() {
@@ -546,8 +627,8 @@ function Wallet() {
   }
 
   function leaveUncertainTransfer() {
-    // Deliberately keeps the persisted recovery record (unlike resetTransfer): the next launch resumes this exact
-    // attempt with its original Idempotency-Key instead of forgetting a transfer whose outcome is still unknown.
+    // Deliberately keeps the persisted recovery record (unlike resetTransfer): Home shows it as the only transfer action
+    // (F-21) and every check or resume replays this exact attempt with its original Idempotency-Key.
     setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setRejectionUnverified(false); setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferError(''); setDemoOnlyCode('');
     void client.invalidateQueries({ queryKey: ['accounts'] });
     void client.invalidateQueries({ queryKey: ['movements'] });
@@ -570,7 +651,7 @@ function Wallet() {
       setSelectedId(payload.sourceAccountId);
     }
     setOriginOpen(accountCaused);
-    void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+    void clearRecovery(session?.user.id).catch(() => undefined);
     setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setRejectionUnverified(false); setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferError(''); setDemoOnlyCode('');
     setTransferScreen('details');
   }
@@ -589,7 +670,7 @@ function Wallet() {
         const current = await request<Transfer>(`/transfers/${encodeURIComponent(transfer.id)}`, session.accessToken);
         setTransfer(current); setConfirmUncertain(false); setConfirmAttempt(null); setOtp('');
         if (current.status !== 'awaiting_confirmation') {
-          if (isTerminalStatus(current.status)) await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          if (isTerminalStatus(current.status)) await clearRecovery(session.user.id);
           setTransferScreen(screenForStatus(current.status));
           return;
         }
@@ -599,9 +680,25 @@ function Wallet() {
       } finally { setTransferBusy(false); transferInFlight.current = false; }
     }
     // G (F-10): leaving the code step abandons this attempt; cancel it instead of leaving an orphan pending row.
+    // F-21: the record is dropped only once the API confirms the attempt closed. If that cannot be confirmed the attempt
+    // may still be open, so it stays recorded and Home offers only resuming it (no new attempt can start meanwhile).
     const abandoned = transfer;
-    void cancelPendingAttempt(abandoned);
-    void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+    if (!session) return;
+    if (abandoned) {
+      transferInFlight.current = true;
+      setTransferBusy(true); setTransferError('');
+      let closed: Transfer | null;
+      try { closed = await closePreviousAttempt(abandoned, session.accessToken); }
+      finally { setTransferBusy(false); transferInFlight.current = false; }
+      if (!closed || !isTerminalStatus(closed.status)) { leaveUncertainTransfer(); return; }
+      if (closed.status !== 'cancelled' && closed.status !== 'expired') {
+        setTransfer(closed); setOtp(''); setConfirmAttempt(null);
+        await clearRecovery(session.user.id);
+        setTransferScreen(screenForStatus(closed.status));
+        return;
+      }
+    }
+    await clearRecovery(session.user.id).catch(() => undefined);
     setOtp(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setConfirmAttempt(null); setTransferError(''); setTransfer(null); setCreateAttempt(null); setDemoOnlyCode('');
     // A pending attempt resumed after a restart has no draft in memory; go home rather than to an empty review.
     if (!destination) { resetTransfer(); return; }
@@ -639,6 +736,57 @@ function Wallet() {
   const filteredBeneficiaries = beneficiaries.filter((beneficiary) =>
     [beneficiary.name, beneficiary.alias, beneficiary.clabeMasked].some((value) => value.toLocaleLowerCase('es-MX').includes(normalizedSearch)),
   );
+
+  // F-21: Home resolves a pending attempt by itself whenever Home is shown and when the app returns to the foreground with
+  // a valid session: GET by its id or, when its id never arrived, the idempotent replay of the same create (same key and
+  // body). A resolved attempt shows its real result (receipt when completed) and the transfer flow is enabled again;
+  // otherwise (still pending, processing or no answer) the notice and its single action stay.
+  async function resolvePendingFromHome() {
+    if (!session || pendingCheckInFlight.current || transferInFlight.current) return;
+    const userId = session.user.id;
+    const token = session.accessToken;
+    pendingCheckInFlight.current = true;
+    setPendingCheck('checking');
+    let record: RecoveryRecord | null = null;
+    try {
+      record = await readOwnRecovery(userId);
+      if (sessionUserRef.current !== userId) return;
+      if (!record) { setPendingRecord(null); setPendingCheck('idle'); return; }
+      let result: Transfer;
+      if (record.transferId) result = await request<Transfer>(`/transfers/${encodeURIComponent(record.transferId)}`, token);
+      else {
+        const created = await request<Transfer>('/transfers', token, { method: 'POST', headers: { 'Idempotency-Key': record.key }, body: JSON.stringify(record.payload) });
+        result = created.status === 'completed' ? await request<Transfer>(`/transfers/${encodeURIComponent(created.id)}`, token) : created;
+      }
+      if (sessionUserRef.current !== userId) return;
+      if (isTerminalStatus(result.status)) {
+        await clearRecovery(userId);
+        setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(result); setTransferError(''); setRejectionUnverified(false);
+        setTransferScreen(screenForStatus(result.status));
+      } else {
+        await saveRecovery({ ...record, transferId: result.id, status: result.status }, userId);
+        setPendingCheck('idle');
+      }
+    } catch (error) {
+      if (sessionUserRef.current !== userId) return;
+      if (record && !record.transferId && error instanceof ApiError && isBusinessRejection(error)) {
+        // The replayed create was refused by a business rule, so nothing was posted: M11, and the flow is enabled again.
+        await clearRecovery(userId).catch(() => undefined);
+        setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(null); setTransferError(error.message); setRejectionUnverified(false);
+        void client.invalidateQueries({ queryKey: ['accounts'] });
+        setTransferScreen('rejected');
+        return;
+      }
+      setPendingCheck('failed');
+    } finally { pendingCheckInFlight.current = false; }
+  }
+  const homeVisible = Boolean(session && ready && recoveryReady && !transferScreen && !choosingBeneficiary && !movementDetail && !movementDetailBusy && !movementDetailError && activeTab === 'home');
+  const pendingKey = pendingRecord?.key;
+  useEffect(() => {
+    if (!homeVisible || !pendingKey) return;
+    void resolvePendingFromHome();
+    // Runs when Home is shown, for a new pending key, and on each confirmed return to the foreground (homeCheckTick).
+  }, [homeVisible, pendingKey, homeCheckTick]);
 
   async function login() {
     setFormError(''); setFormErrorKind('validation');
@@ -685,20 +833,23 @@ function Wallet() {
         <View style={styles.accountTabs}>{accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} •• ${lastDigits(account.clabeMasked)}`} accessibilityState={{ selected: selected?.id === account.id }} style={[styles.tab, selected?.id === account.id && styles.tabSelected]} onPress={() => setSelectedId(account.id)}><View style={[styles.tabDot, selected?.id === account.id && styles.tabDotSelected]}/><Text numberOfLines={1} style={[styles.tabText, selected?.id === account.id && styles.tabTextSelected]}>{accountTabLabel(account.name)}</Text><Text numberOfLines={1} style={styles.tabDigits}>•• {lastDigits(account.clabeMasked)}</Text></Pressable>)}</View>
         {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.balanceDigits}>•• {lastDigits(selected.clabeMasked)}</Text></View><View><Text style={styles.balanceLabel}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatMoney(selected.availableBalanceMinor)}</Text><Text style={styles.currency}>MXN</Text></View></View></View>}
       </>}
-        {destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO SELECCIONADO</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text>{destinationIsSource ? <Text accessibilityRole="alert" style={styles.inlineWarningText}>Es la misma cuenta de origen seleccionada.</Text> : null}</View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" hitSlop={8} style={styles.homeChangeLink} onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Transferir dinero, elegir beneficiario" style={({ pressed }) => [styles.transferAction, pressed && styles.buttonPressed]} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><Ionicons name="paper-plane-outline" size={20} color={colors.white} /><Text style={styles.buttonText}>Transferir dinero</Text></Pressable>}
+        {pendingRecord ? <PendingTransferNotice amountMinor={pendingRecord.payload.amountMinor} reference={pendingRecord.payload.reference} awaitingCode={pendingRecord.status === 'awaiting_confirmation'} checking={pendingCheck === 'checking'} checkFailed={pendingCheck === 'failed'} onResume={() => { if (pendingCheckInFlight.current) return; setPendingCheck('idle'); setRecoveryReady(false); }}/> : null}
+        {/* F-21: while an attempt of this user is unresolved or waits for its code, Home offers no way to start another
+            one (no "Transferir dinero", destination card or "Continuar"): only resuming/verifying that attempt. */}
+        {pendingRecord ? null : destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO SELECCIONADO</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text>{destinationIsSource ? <Text accessibilityRole="alert" style={styles.inlineWarningText}>Es la misma cuenta de origen seleccionada.</Text> : null}</View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" hitSlop={8} style={styles.homeChangeLink} onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Transferir dinero, elegir beneficiario" style={({ pressed }) => [styles.transferAction, pressed && styles.buttonPressed]} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><Ionicons name="paper-plane-outline" size={20} color={colors.white} /><Text style={styles.buttonText}>Transferir dinero</Text></Pressable>}
         {/* Round 7 · 1: an incompatible pair (destination = origin, by ownAccountId identity) never offers "Continuar":
             the action leads to M05, which explains the conflict and offers the origin selector when there is another
             own account. A valid pair (e.g. Principal -> Ahorro) keeps "Continuar con transferencia". */}
-        {destination && !choosingBeneficiary && (destinationIsSource
+        {!pendingRecord && destination && !choosingBeneficiary && (destinationIsSource
           ? <Button title="Elegir otro destinatario" variant="secondary" leadingIcon="people-outline" onPress={() => { setBeneficiarySearch(''); setTransferError(''); setChoosingBeneficiary(true); }} />
           : <Button title="Continuar con transferencia" disabled={!selected} onPress={() => { if (sameAccountDestination(destination, selected?.id)) return; setTransferScreen('details'); setTransferError(''); }} />)}
       {accounts.length > 0 && <>
-         <Pressable accessibilityRole="button" accessibilityLabel={`Última actualización de saldo. ${updatedLabel ? `${updatedLabel}. ` : ''}Saldo total ${formatMoney(totalBalanceMinor)} MXN`} accessibilityHint="Actualiza tus cuentas y saldos" style={styles.updateNotice} onPress={() => void accountsQuery.refetch()}><View style={styles.updateIcon}><Ionicons name="sync-outline" size={18} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.updateTitle}>Última actualización de saldo</Text><Text style={styles.updateText}>{updatedLabel ? `${updatedLabel} • ` : ''}Saldo total {formatMoney(totalBalanceMinor)} MXN</Text></View></Pressable>
+         <Pressable accessibilityRole="button" accessibilityLabel={`Última actualización de saldo, ${updatedLabel ? `${updatedLabel} • ` : ''}Saldo total ${formatMoney(totalBalanceMinor)} MXN`} accessibilityHint="Actualiza tus cuentas y saldos" style={styles.updateNotice} onPress={() => void accountsQuery.refetch()}><View style={styles.updateIcon}><Ionicons name="sync-outline" size={18} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.updateTitle}>Última actualización de saldo</Text><Text style={styles.updateText}>{updatedLabel ? `${updatedLabel} • ` : ''}Saldo total {formatMoney(totalBalanceMinor)} MXN</Text></View></Pressable>
          <View style={styles.activityHeader}><Text style={styles.activityTitle}>Actividad reciente</Text><Text style={styles.captionUpper}>ÚLTIMOS MOVIMIENTOS</Text></View>
          {movementsQuery.isPending ? <Centered><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>Cargando movimientos…</Text></Centered> : movementsQuery.isError ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={colors.error} /><View style={{ flex: 1 }}><Text style={styles.errorText}>{movementsQuery.error.message || 'Sin conexión. Revisa tu conexión e inténtalo de nuevo.'}</Text><Button title="Reintentar" onPress={() => void movementsQuery.refetch()} /></View></View> : (movementsQuery.data?.items.length ?? 0) === 0 ? <View style={styles.emptyState}><Ionicons name="receipt-outline" size={28} color={colors.primary} /><Text style={styles.sectionTitle}>Aún no hay movimientos</Text><Text style={styles.muted}>Los movimientos de esta cuenta aparecerán aquí.</Text></View> : <>
            <View style={styles.movementCard}>{movementsQuery.data?.items.slice(0, 3).map((movement, index) => {
              const credit = movement.type === 'credit';
-             return <React.Fragment key={movement.id}>{index > 0 ? <View style={styles.homeDivider}/> : null}<Pressable accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatMoney(movement.amountMinor)} pesos, ${movementTitle(movement)}, ${movement.concept}`} onPress={() => void openMovement(movement)} style={styles.movementRow}>
+             return <React.Fragment key={movement.id}>{index > 0 ? <View style={styles.homeDivider}/> : null}<Pressable accessibilityRole="button" accessibilityLabel={movementLabel([movementTitle(movement), movementSubtitle(movement), formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit', currency: true }), movementStatusLabel(movement.status), formatBusinessShort(movement.occurredAt) ?? DATE_UNAVAILABLE], credit)} onPress={() => void openMovement(movement)} style={styles.movementRow}>
                <MovementIcon movement={movement}/>
                <View style={styles.movementCopy}><Text numberOfLines={1} style={styles.movementTitle}>{movementTitle(movement)}</Text><Text numberOfLines={1} style={styles.movementSub}>{movementSubtitle(movement)}</Text><Text numberOfLines={1} style={styles.movementMeta}>{formatBusinessShort(movement.occurredAt) ?? DATE_UNAVAILABLE}</Text></View>
                <View style={styles.movementAmountColumn}><Text adjustsFontSizeToFit numberOfLines={1} style={[styles.movementAmount, credit && styles.creditAmount]}>{formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit', currency: true })}</Text><Text style={[styles.homeStatus, movement.status === 'completed' && styles.homeStatusDone]}>{movementStatusLabel(movement.status)}</Text></View>
@@ -733,7 +884,7 @@ function MovementListScreen(props: { account: Account | undefined; accounts: Acc
         </Pressable>
         <View style={styles.movementBalance}><Text style={styles.eyebrow}>SALDO DISPONIBLE</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.movementBalanceAmount}>{formatMoney(props.account.availableBalanceMinor)}</Text><Text style={styles.movementCurrency}>MXN</Text></View>
       </View>
-      {multipleAccounts && choosingAccount && <View style={styles.accountOptions}>{props.accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} (•• ${lastDigits(account.clabeMasked)}), ver sus movimientos`} accessibilityState={{ selected: account.id === props.account?.id }} onPress={() => { props.onSelectAccount(account.id); setChoosingAccount(false); }} style={[styles.accountOption, account.id === props.account?.id && styles.accountOptionSelected]}><Text numberOfLines={1} style={[styles.rowTitle, styles.summaryCopy]}>{account.name} (•• {lastDigits(account.clabeMasked)})</Text><Text style={styles.muted}>{formatMoney(account.availableBalanceMinor)} MXN</Text></Pressable>)}</View>}
+      {multipleAccounts && choosingAccount && <View style={styles.accountOptions}>{props.accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} (•• ${lastDigits(account.clabeMasked)}), ${formatMoney(account.availableBalanceMinor)} MXN, ver sus movimientos`} accessibilityState={{ selected: account.id === props.account?.id }} onPress={() => { props.onSelectAccount(account.id); setChoosingAccount(false); }} style={[styles.accountOption, account.id === props.account?.id && styles.accountOptionSelected]}><Text numberOfLines={1} style={[styles.rowTitle, styles.summaryCopy]}>{account.name} (•• {lastDigits(account.clabeMasked)})</Text><Text style={styles.muted}>{formatMoney(account.availableBalanceMinor)} MXN</Text></Pressable>)}</View>}
     </View>}
     <Text style={styles.movementsTitle}>Últimos movimientos</Text>
     {props.pending ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando movimientos…</Text></Centered> : props.error ? <View style={styles.emptyState}><Ionicons name="cloud-offline-outline" size={28} color={colors.error}/><Text style={styles.errorText}>{props.error}</Text><Button title="Reintentar" onPress={props.onRetry}/></View> : props.movements.length === 0 ? <View style={styles.emptyState}><Ionicons name="receipt-outline" size={28} color={colors.primary}/><Text style={styles.sectionTitle}>Aún no hay movimientos</Text><Text style={styles.muted}>Los movimientos de esta cuenta aparecerán aquí.</Text></View> : <>
@@ -741,7 +892,7 @@ function MovementListScreen(props: { account: Account | undefined; accounts: Acc
         <View style={styles.movementGroupHeading}><Text style={styles.groupLabel}>{group.label.toLocaleUpperCase('es-MX')}</Text><Text style={styles.groupCount}>{group.items.length} {group.items.length === 1 ? 'transacción' : 'transacciones'}</Text></View>
         <View style={styles.movementCard}>{group.items.map((movement, index) => {
           const credit = movement.type === 'credit';
-          return <React.Fragment key={movement.id}>{index > 0 ? <View style={styles.listDivider}/> : null}<Pressable accessibilityRole="button" accessibilityLabel={`${credit ? 'Abono' : 'Cargo'} ${formatMoney(movement.amountMinor)} pesos, ${movementTitle(movement)}, ${movement.concept}`} onPress={() => props.onOpen(movement)} style={styles.movementRow}>
+          return <React.Fragment key={movement.id}>{index > 0 ? <View style={styles.listDivider}/> : null}<Pressable accessibilityRole="button" accessibilityLabel={movementLabel([movementTitle(movement), `${movementSubtitle(movement)}${movement.status === 'completed' ? '' : ` · ${movementStatusLabel(movement.status)}`}`, `Ref: ${movement.reference}${formatBusinessTime(movement.occurredAt) ? ` • ${formatBusinessTime(movement.occurredAt)}` : ''}`, `${formatMoney(movement.amountMinor, { sign: credit ? 'credit' : 'debit' })} MXN`, movementStatusLabel(movement.status), group.label], credit)} onPress={() => props.onOpen(movement)} style={styles.movementRow}>
             <MovementIcon movement={movement} list/>
             <View style={styles.movementCopy}>
               <Text numberOfLines={1} style={styles.movementTitle}>{movementTitle(movement)}</Text>
@@ -793,6 +944,11 @@ function MovementIcon({ movement, list = false }: { movement: Movement; list?: b
   return <View style={[styles.movementIcon, list && styles.movementIconList, creditTone && (list ? styles.creditIconList : styles.creditIcon)]}><MaterialIcons name={own ? 'swap-horiz' : credit ? 'south-west' : 'north-east'} size={20} color={tint}/></View>;
 }
 
+// F-20: the accessible name of a movement row carries every visible part (counterparty, account digits and concept,
+// signed amount, status, date) in reading order, then the kind for screen readers.
+function movementLabel(parts: string[], credit: boolean): string {
+  return [...parts.filter(Boolean), credit ? 'Abono' : 'Cargo'].join(', ');
+}
 function movementStatusLabel(status: Movement['status']): string {
   return status === 'completed' ? 'Completado' : status === 'processing' ? 'En proceso' : 'Rechazado';
 }
@@ -807,6 +963,20 @@ function lastDigits(masked: string): string { return masked.replace(/\D/g, '').s
 // M02/M03 header: brand mark, "Billetera MXN" + section caption and the user's initials (Stitch h-16 bar).
 function AppTopbar({ section, initials: userInitials }: { section: string; initials: string }) {
   return <View style={styles.topbar}><View style={styles.topbarBrand}><View style={styles.loginHeaderMark}><Ionicons name="wallet-outline" size={18} color={colors.white}/></View><View><Text style={styles.brand}>Billetera MXN</Text><Text style={styles.topbarSection}>{section}</Text></View></View><View style={styles.avatar}><Text style={styles.avatarText}>{userInitials}</Text></View></View>;
+}
+
+// F-21: Home's only transfer action while an attempt of this user is unresolved or still waits for its code. The action
+// resumes that same attempt (same Idempotency-Key); nothing on Home can start another one until it is resolved.
+function PendingTransferNotice({ amountMinor, reference, awaitingCode, checking, checkFailed, onResume }: { amountMinor: string; reference: string; awaitingCode: boolean; checking: boolean; checkFailed: boolean; onResume: () => void }) {
+  return <View accessibilityRole="alert" testID="pending-transfer-notice" style={styles.pendingNotice}>
+    <View style={styles.estimateLabel}><Ionicons name={awaitingCode ? 'shield-checkmark-outline' : 'hourglass-outline'} size={20} color={colors.primary}/><Text style={styles.pendingNoticeTitle}>{awaitingCode ? 'Transferencia pendiente de autorizar' : 'Transferencia en verificación'}</Text></View>
+    {awaitingCode
+      ? <Text style={styles.pendingNoticeText}>Tu operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}) espera su código de autorización. Continúa con ella o cancélala antes de enviar otra.</Text>
+      : <Text style={styles.pendingNoticeText}>Aún no confirmamos si se aplicó la operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}). No la envíes de nuevo: verifica su estado. Podrás hacer otra transferencia cuando conozcamos su resultado.</Text>}
+    {checking ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Consultando el estado de esta operación…</Text>
+      : checkFailed ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
+    <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onResume}/>
+  </View>;
 }
 
 function BottomNavigation({ active, onChange }: { active: 'home' | 'movements'; onChange: (tab: 'home' | 'movements') => void }) {
@@ -838,12 +1008,12 @@ function BeneficiaryPickerScreen(props: { queryPending: boolean; error: string; 
           </View>}
           {props.beneficiaries.map((beneficiary) => {
             const incompatible = sameAccountDestination(beneficiary, props.source?.id);
-            return <Pressable key={beneficiary.id} accessibilityRole="button" accessibilityLabel={`Seleccionar ${beneficiary.name}, ${beneficiary.alias}, CLABE ${beneficiary.clabeMasked}${incompatible ? ', no disponible: es la misma cuenta de origen' : ''}`} accessibilityState={{ disabled: incompatible }} disabled={incompatible} onPress={() => { if (!incompatible) props.onChoose(beneficiary); }} style={({ pressed }) => [styles.beneficiaryCard, pressed && styles.beneficiaryCardPressed, incompatible && styles.beneficiaryCardDisabled]}>
-              <View style={styles.beneficiaryAvatar}><Text style={styles.beneficiaryInitials}>{initials(beneficiary.name)}</Text></View>
+            return <Pressable key={beneficiary.id} accessibilityRole="button" accessibilityLabel={`Seleccionar ${beneficiary.name}, ${beneficiary.alias}, Billetera MXN •• ${lastDigits(beneficiary.clabeMasked)}, CLABE ${beneficiary.clabeMasked}${incompatible ? `, no disponible: es la misma cuenta de origen. ${INCOMPATIBLE_DESTINATION_TEXT}` : ''}`} accessibilityState={{ disabled: incompatible }} disabled={incompatible} onPress={() => { if (!incompatible) props.onChoose(beneficiary); }} style={({ pressed }) => [styles.beneficiaryCard, pressed && styles.beneficiaryCardPressed, incompatible && styles.beneficiaryCardDisabled]}>
+              <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.beneficiaryAvatar}><Text style={styles.beneficiaryInitials}>{initials(beneficiary.name)}</Text></View>
               <View style={styles.summaryCopy}>
                 <View style={styles.beneficiaryNameLine}><Text numberOfLines={1} style={styles.beneficiaryName}>{beneficiary.name}</Text><Text numberOfLines={1} style={styles.aliasBadge}>{beneficiary.alias}</Text></View>
                 <Text numberOfLines={1} style={styles.beneficiaryAccount}>Billetera MXN •• {lastDigits(beneficiary.clabeMasked)}</Text>
-                {incompatible ? <Text style={styles.inlineWarningText}>Es tu cuenta de origen: elige otra cuenta de origen para enviarle.</Text> : null}
+                {incompatible ? <Text style={styles.inlineWarningText}>{INCOMPATIBLE_DESTINATION_TEXT}</Text> : null}
               </View>
               {incompatible ? <Ionicons name="remove-circle-outline" size={20} color={colors.placeholder}/> : <Ionicons name="chevron-forward" size={20} color={colors.placeholder}/>}
             </Pressable>;
@@ -861,9 +1031,10 @@ function OriginAccountOptions({ accounts, selectedId, destination, onSelect }: {
   return <View accessibilityRole="radiogroup" style={styles.originOptions}>{accounts.map((account) => {
     const selected = account.id === selectedId;
     const isDestination = sameAccountDestination(destination, account.id);
-    return <Pressable key={account.id} accessibilityRole="radio" accessibilityLabel={`Usar ${account.name} •• ${lastDigits(account.clabeMasked)} como cuenta de origen${isDestination ? ', es el destino elegido' : ''}`} accessibilityState={{ selected, checked: selected }} onPress={() => onSelect(account.id)} style={[styles.originOption, selected && styles.originOptionSelected]}>
+    const detail = `Disponible: ${formatMoney(account.availableBalanceMinor, { currency: true })}${isDestination ? ' · es el destino elegido' : ''}`;
+    return <Pressable key={account.id} accessibilityRole="radio" accessibilityLabel={`Usar ${account.name} •• ${lastDigits(account.clabeMasked)} como cuenta de origen${isDestination ? ', es el destino elegido' : ''}, ${detail}`} accessibilityState={{ selected, checked: selected }} onPress={() => onSelect(account.id)} style={[styles.originOption, selected && styles.originOptionSelected]}>
       <View style={[styles.radio, selected && styles.radioSelected]}>{selected ? <View style={styles.radioDot}/> : null}</View>
-      <View style={styles.summaryCopy}><Text numberOfLines={2} style={styles.rowTitle}>{account.name} •• {lastDigits(account.clabeMasked)}</Text><Text style={styles.originBalance}>Disponible: {formatMoney(account.availableBalanceMinor, { currency: true })}{isDestination ? ' · es el destino elegido' : ''}</Text></View>
+      <View style={styles.summaryCopy}><Text numberOfLines={2} style={styles.rowTitle}>{account.name} •• {lastDigits(account.clabeMasked)}</Text><Text style={styles.originBalance}>{detail}</Text></View>
     </Pressable>;
   })}</View>;
 }
@@ -1107,6 +1278,7 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
           <ReceiptRow label="Referencia" value={receipt.reference} strong/>
           <ReceiptRow label="Folio interno" value={receipt.receiptReference ?? receipt.id} shaded folio/>
           <ReceiptRow label="Tipo de operación" value="Transferencia interna"/>
+          <ReceiptShareActions transfer={receipt} accounts={props.accounts}/>
         </View>
         {props.postBalance ? <View style={styles.newBalanceCard}>
           <View style={[styles.estimateLabel, styles.newBalanceHeader]}><Ionicons name="wallet-outline" size={20} color={colors.primary}/><Text style={styles.newBalanceLabel}>Nuevo saldo disponible en {props.postBalance.accountName}:</Text></View>
@@ -1123,11 +1295,15 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
     {props.screen === 'rejected' && (() => {
       const requested = props.pendingPayload?.amountMinor ?? props.transfer?.amountMinor ?? minor;
       const rejectedSource = props.accounts.find((account) => account.id === (props.pendingPayload?.sourceAccountId ?? props.transfer?.sourceAccountId)) ?? props.source;
+      const insufficientReason = /saldo insuficiente/i.test(props.error) && !props.rejectionUnverified;
+      const limitReason = DAILY_LIMIT_PATTERN.test(props.error) && !props.rejectionUnverified;
       return <>
         <View style={styles.rejectedHero}>
           <View style={styles.rejectedIcon}><Ionicons name="close" size={32} color={colors.error}/></View>
           <Text style={styles.rejectedTitle}>No se pudo completar la transferencia</Text>
-          <Text style={styles.rejectedReason}>{/saldo insuficiente/i.test(props.error) && requested ? <>El monto solicitado (<Text style={styles.rejectedReasonStrong}>{formatMoney(requested, { currency: true })}</Text>) supera el saldo disponible actual en tu cuenta.</> : props.error || 'La transferencia fue rechazada. No se completó el movimiento.'}</Text>
+          <Text style={styles.rejectedReason}>{insufficientReason && requested ? <>El monto solicitado (<Text style={styles.rejectedReasonStrong}>{formatMoney(requested, { currency: true })}</Text>) supera el saldo disponible actual en tu cuenta.</>
+            : limitReason && requested ? <>El monto solicitado (<Text style={styles.rejectedReasonStrong}>{formatMoney(requested, { currency: true })}</Text>) supera lo disponible hoy según el límite diario de demostración{props.policy ? <> (<Text style={styles.rejectedReasonStrong}>{formatMoney(props.policy.dailyRemainingMinor, { currency: true })}</Text> disponibles hoy)</> : null}.</>
+              : props.error || 'La transferencia fue rechazada. No se completó el movimiento.'}</Text>
         </View>
         {props.rejectionUnverified
           ? <View style={styles.intactBox}><View style={[styles.intactIcon, styles.neutralIcon]}><Ionicons name="information-circle-outline" size={18} color={colors.primary}/></View><View style={styles.summaryCopy}><Text style={styles.intactTitle}>Revisa tu saldo antes de reintentar</Text><Text style={styles.intactText}>No pudimos confirmar el efecto de este intento en tu cuenta. Consulta tus movimientos antes de volver a enviar.</Text></View></View>
@@ -1135,6 +1311,7 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         <View style={styles.rejectedCard}>
           <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Cuenta de origen</Text><View style={[styles.metaStatus, styles.shrinkRow]}><Ionicons name="card-outline" size={16} color={colors.muted}/><Text numberOfLines={1} style={styles.rejectedAccount}>{rejectedSource ? `${accountTabLabel(rejectedSource.name)} •• ${lastDigits(rejectedSource.clabeMasked)}` : '—'}</Text></View></View>
           <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Saldo disponible</Text><Text style={styles.rejectedValue}>{rejectedSource ? `${formatMoney(rejectedSource.availableBalanceMinor)} MXN` : '—'}</Text></View>
+          {limitReason && props.policy ? <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Disponible hoy (límite diario)</Text><Text style={styles.rejectedValue}>{`${formatMoney(props.policy.dailyRemainingMinor)} MXN`}</Text></View> : null}
           <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Monto solicitado</Text><Text style={[styles.rejectedValue, styles.rejectedRequested]}>{requested ? `${formatMoney(requested)} MXN` : '—'}</Text></View>
           {props.rejectionUnverified ? null : <View style={styles.debitedBox}><View style={styles.summaryCopy}><Text style={styles.debitedTitle}>Importe debitado</Text><Text style={styles.debitedNote}>Ningún dinero fue retirado</Text></View><Text style={styles.debitedValue}>$0.00 MXN</Text></View>}
         </View>
@@ -1152,6 +1329,23 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
       {/* F-12: no exit while the confirm is in flight; the screen only changes once its outcome is known. */}
       <Button title="Cancelar y volver a revisar" variant="surface" leadingIcon="arrow-back" iconSize={18} disabled={props.busy} onPress={props.onBack}/>
     </View>}</KeyboardAvoidingView>;
+}
+
+// M10 "Opciones de comprobante (opcional)": real share sheet actions over the confirmed transfer (src/receiptShare.ts).
+// Only a completed transfer yields a document; otherwise nothing is offered.
+function ReceiptShareActions({ transfer, accounts }: { transfer: Transfer; accounts: Account[] }) {
+  const doc = useMemo(() => receiptFromTransfer(transfer, accounts), [transfer, accounts]);
+  const { busy, error, run } = useReceiptShare(doc);
+  if (!doc) return null;
+  return <View style={styles.receiptShare}>
+    <Text style={styles.receiptShareCaption}>Opciones de comprobante (opcional)</Text>
+    <View style={styles.receiptShareRow}>
+      <Button title={RECEIPT_ACTION_LABELS.text} variant="secondary" leadingIcon="share-outline" iconSize={18} loading={busy === 'text'} disabled={busy !== null} onPress={() => void run('text')} style={styles.receiptShareButton}/>
+      <Button title={RECEIPT_ACTION_LABELS.pdf} variant="secondary" leadingIcon={Platform.OS === 'ios' ? 'download-outline' : 'document-outline'} iconSize={18} loading={busy === 'pdf'} disabled={busy !== null} onPress={() => void run('pdf')} style={styles.receiptShareButton}/>
+    </View>
+    {busy ? <Text accessibilityLiveRegion="polite" style={styles.receiptShareStatus}>{RECEIPT_BUSY_LABELS[busy]}</Text> : null}
+    {error ? <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.receiptShareError}>{error}</Text> : null}
+  </View>;
 }
 
 // M04. Built from the movement itself (amount, concept, reference, counterparty, time) so a RECEIVED transfer from
@@ -1323,7 +1517,7 @@ greetingCopy: { flex: 1, minWidth: 0 }, title: { fontSize: 20, lineHeight: 28, f
   transferAction: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 16, marginBottom: 16, shadowColor: '#141b2c', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 4 }, destinationCard: { minHeight: 92, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16 }, destinationIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, beneficiarySection: { marginTop: 4, marginBottom: 20 }, beneficiaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }, searchWrap: { minHeight: 48, borderRadius: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.white, marginTop: 12, marginBottom: 12, ...cardShadow }, searchInput: { flex: 1, minWidth: 0, minHeight: 48, color: colors.text, fontSize: 14 }, emptyState: { alignItems: 'center', gap: 10, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 24, marginVertical: 8 }, link: { color: colors.primary, fontSize: 14, fontWeight: '700' }, offlineHint: { color: colors.muted, fontSize: 13, marginTop: 8 },
   loginContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 24, width: '100%', maxWidth: 520, alignSelf: 'center' }, dismissArea: { flexGrow: 1 }, loginHeader: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, backgroundColor: colors.bg, ...cardShadow, shadowOpacity: 0.03 }, loginHeaderMark: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryContainer }, loginBrand: { alignItems: 'center', marginBottom: 20 }, walletMark: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paleHigh, marginBottom: 8, ...cardShadow }, loginEyebrow: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.6 }, loginTitle: { color: colors.text, fontSize: 28, lineHeight: 36, fontWeight: '600', marginTop: 4, textAlign: 'center', letterSpacing: -0.28 }, loginSubtitle: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 4, maxWidth: 320 }, loginNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: colors.pale, borderRadius: 16, padding: 16, marginBottom: 16 }, loginError: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.errorPale, borderRadius: 12, padding: 12, marginBottom: 12, ...cardShadow }, loginErrorTitle: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' }, loginErrorText: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, formCard: { backgroundColor: colors.white, borderRadius: 12, padding: 16, ...cardShadow }, label: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500', marginBottom: 4 }, inputWrap: { minHeight: 48, borderRadius: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.input }, input: { flex: 1, minWidth: 0, minHeight: 46, color: colors.text, fontSize: 14 }, button: { minHeight: 48, borderRadius: 12, backgroundColor: colors.primaryContainer, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, ...cardShadow }, buttonPressed: { opacity: 0.86 }, buttonSecondary: { backgroundColor: colors.pale, shadowOpacity: 0, elevation: 0 }, buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 1 }, buttonText: { flexShrink: 1, color: colors.white, fontSize: 14, lineHeight: 20, fontWeight: '600', textAlign: 'center' }, buttonTextSecondary: { color: colors.primary }, buttonSurface: { backgroundColor: colors.white, shadowOpacity: 0, elevation: 0 }, buttonStrong: { backgroundColor: colors.primary }, buttonTextSurface: { color: colors.text, fontWeight: '500' }, buttonDisabled: { opacity: 0.5 }, errorText: { color: colors.error, fontSize: 14, lineHeight: 20, marginTop: 12 }, infoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.input, borderRadius: 12, padding: 12, marginTop: 16 }, infoText: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, infoTitle: { color: colors.text, fontSize: 12, lineHeight: 16, fontWeight: '600' }, loginFooter: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2, textAlign: 'center', marginTop: 24 }, bold: { fontWeight: '700', color: colors.text },
   movementAccountCard: { padding: 16, backgroundColor: colors.white, borderRadius: 12, marginBottom: 16, ...cardShadow }, movementAccountTop: { flexDirection: 'row', alignItems: 'center', gap: 8 }, bankIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, accountPicker: { flex: 1, minWidth: 0, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 4 }, movementAccountName: { flexShrink: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' }, movementBalance: { alignItems: 'flex-end', maxWidth: '50%', flexShrink: 0 }, movementBalanceAmount: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '700', letterSpacing: -0.4, fontFamily: MONO, fontVariant: ['tabular-nums'] }, accountOptions: { marginTop: 12, gap: 6 }, accountOption: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 12, paddingHorizontal: 12, backgroundColor: colors.input }, accountOptionSelected: { backgroundColor: colors.pale }, movementsTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '700', letterSpacing: -0.5, marginBottom: 16 }, movementGroup: { marginBottom: 24, gap: 4 }, movementGroupHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 }, groupLabel: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.5 }, groupCount: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500' }, movementCard: { backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden', ...cardShadow }, movementRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 12 }, movementIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, movementCopy: { flex: 1, minWidth: 0 }, movementTitle: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' }, movementSub: { color: colors.muted, fontSize: 12, lineHeight: 16 }, movementMeta: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', marginTop: 1 }, movementAmountColumn: { alignItems: 'flex-end', maxWidth: '46%', flexShrink: 0 }, movementAmount: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '700', letterSpacing: -0.4, fontVariant: ['tabular-nums'] }, movementsFooter: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center', marginTop: 0, marginBottom: 16 }, creditIcon: { backgroundColor: colors.successPale }, creditAmount: { color: colors.success }, bottomNavigation: { minHeight: 64, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', backgroundColor: colors.bg, paddingHorizontal: 24, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 12, shadowOffset: { width: 0, height: -2 }, elevation: 6 }, navigationItem: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 8 }, navigationLabel: { color: colors.muted, fontSize: 13, lineHeight: 18, fontWeight: '500', letterSpacing: -0.3 }, navigationLabelActive: { color: colors.primary, fontWeight: '600' },
-  pickerContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24, maxWidth: 600, width: '100%', alignSelf: 'center' }, pickerTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', letterSpacing: -0.1 }, pickerDescription: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 4 }, filterRow: { flexDirection: 'row', gap: 8, marginBottom: 12 }, filterChip: { minHeight: 28, borderRadius: 14, paddingHorizontal: 12, justifyContent: 'center', backgroundColor: colors.primary }, filterChipText: { color: colors.white, fontSize: 12, lineHeight: 16, fontWeight: '500' }, pickerMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 4 }, captionLabel: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.5 }, captionMeta: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500' }, beneficiaryCard: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: colors.white, borderRadius: 12, marginBottom: 8, ...cardShadow }, beneficiaryCardPressed: { backgroundColor: colors.input }, beneficiaryCardDisabled: { opacity: 0.6 }, inlineWarningText: { color: colors.warning, fontSize: 14, lineHeight: 20, marginTop: 4 }, originNotice: { backgroundColor: colors.pale, borderRadius: 12, padding: 12, gap: 8, marginBottom: 8 }, originNoticeText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 }, originNoticeCaption: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, originOptions: { gap: 6, marginTop: 8 }, originOption: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.bg }, originOptionSelected: { borderColor: colors.primaryContainer, backgroundColor: colors.white }, radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.placeholder, alignItems: 'center', justifyContent: 'center' }, radioSelected: { borderColor: colors.primaryContainer }, radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primaryContainer }, sameAccountBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 8, padding: 10, marginBottom: 8, backgroundColor: '#fff1ef', borderWidth: 1, borderColor: colors.errorPale }, sameAccountText: { flex: 1, color: colors.warning, fontSize: 14, lineHeight: 20, fontWeight: '500' }, changeOriginLink: { minHeight: 32, justifyContent: 'center' }, homeChangeLink: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }, otpVerifying: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }, otpStateText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '500', textAlign: 'center', marginBottom: 8 }, otpWrongBanner: { width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.errorPale, borderRadius: 8, padding: 12, marginBottom: 8 }, otpWrongText: { flex: 1, color: colors.error, fontSize: 14, lineHeight: 20, fontWeight: '500' }, otpDigitWrong: { borderWidth: 1, borderColor: colors.error }, beneficiaryAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paleHigh }, beneficiaryInitials: { color: colors.primary, fontSize: 16, lineHeight: 24, fontWeight: '600' }, beneficiaryNameLine: { flexDirection: 'row', alignItems: 'center', gap: 6 }, wrapLine: { flexWrap: 'wrap', rowGap: 2 }, beneficiaryName: { flexShrink: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500' }, aliasBadge: { flexShrink: 0, maxWidth: '45%', overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.pale, color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2 }, beneficiaryAccount: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, pickerEmpty: { alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: colors.input, ...cardShadow }, pickerEmptyIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale, marginBottom: 12 }, pickerEmptyTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'center', marginBottom: 4 }, pickerEmptyText: { color: colors.muted, fontSize: 12, lineHeight: 16, textAlign: 'center', maxWidth: 280 }, pickerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.input, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginTop: 'auto' }, pickerFooterText: { flex: 1, color: colors.muted, fontSize: 12, lineHeight: 16, letterSpacing: 0.2, textAlign: 'center' },
+  pickerContent: { flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24, maxWidth: 600, width: '100%', alignSelf: 'center' }, pickerTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', letterSpacing: -0.1 }, pickerDescription: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 4 }, filterRow: { flexDirection: 'row', gap: 8, marginBottom: 12 }, filterChip: { minHeight: 28, borderRadius: 14, paddingHorizontal: 12, justifyContent: 'center', backgroundColor: colors.primary }, filterChipText: { color: colors.white, fontSize: 12, lineHeight: 16, fontWeight: '500' }, pickerMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, paddingBottom: 4 }, captionLabel: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.5 }, captionMeta: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500' }, beneficiaryCard: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: colors.white, borderRadius: 12, marginBottom: 8, ...cardShadow }, beneficiaryCardPressed: { backgroundColor: colors.input }, beneficiaryCardDisabled: { opacity: 0.6 }, inlineWarningText: { color: colors.warning, fontSize: 14, lineHeight: 20, marginTop: 4 }, originNotice: { backgroundColor: colors.pale, borderRadius: 12, padding: 12, gap: 8, marginBottom: 8 }, originNoticeText: { flex: 1, color: colors.text, fontSize: 14, lineHeight: 20 }, originNoticeCaption: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, originOptions: { gap: 6, marginTop: 8 }, originOption: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.bg }, originOptionSelected: { borderColor: colors.primaryContainer, backgroundColor: colors.white }, radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.placeholder, alignItems: 'center', justifyContent: 'center' }, radioSelected: { borderColor: colors.primaryContainer }, radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primaryContainer }, sameAccountBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 8, padding: 10, marginBottom: 8, backgroundColor: '#fff1ef', borderWidth: 1, borderColor: colors.errorPale }, sameAccountText: { flex: 1, color: colors.warning, fontSize: 14, lineHeight: 20, fontWeight: '500' }, changeOriginLink: { minHeight: 32, justifyContent: 'center' }, pendingNotice: { gap: 8, backgroundColor: colors.paleHigh, borderRadius: 12, padding: 12, marginBottom: 12 }, pendingNoticeTitle: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '600' }, pendingNoticeText: { color: colors.muted, fontSize: 14, lineHeight: 20 }, homeChangeLink: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }, otpVerifying: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 }, otpStateText: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: '500', textAlign: 'center', marginBottom: 8 }, otpWrongBanner: { width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: colors.errorPale, borderRadius: 8, padding: 12, marginBottom: 8 }, otpWrongText: { flex: 1, color: colors.error, fontSize: 14, lineHeight: 20, fontWeight: '500' }, otpDigitWrong: { borderWidth: 1, borderColor: colors.error }, beneficiaryAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paleHigh }, beneficiaryInitials: { color: colors.primary, fontSize: 16, lineHeight: 24, fontWeight: '600' }, beneficiaryNameLine: { flexDirection: 'row', alignItems: 'center', gap: 6 }, wrapLine: { flexWrap: 'wrap', rowGap: 2 }, beneficiaryName: { flexShrink: 1, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500' }, aliasBadge: { flexShrink: 0, maxWidth: '45%', overflow: 'hidden', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: colors.pale, color: colors.primary, fontSize: 12, lineHeight: 16, fontWeight: '500', letterSpacing: 0.2 }, beneficiaryAccount: { color: colors.muted, fontSize: 12, lineHeight: 16, marginTop: 2 }, pickerEmpty: { alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: colors.input, ...cardShadow }, pickerEmptyIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale, marginBottom: 12 }, pickerEmptyTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'center', marginBottom: 4 }, pickerEmptyText: { color: colors.muted, fontSize: 12, lineHeight: 16, textAlign: 'center', maxWidth: 280 }, pickerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.input, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, marginTop: 'auto' }, pickerFooterText: { flex: 1, color: colors.muted, fontSize: 12, lineHeight: 16, letterSpacing: 0.2, textAlign: 'center' },
   screenHeader: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, backgroundColor: colors.bg, ...cardShadow, shadowOpacity: 0.03 }, headerBack: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }, headerTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600', flexShrink: 1 }, headerAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primaryFixed, alignItems: 'center', justifyContent: 'center', marginRight: 4 }, headerAvatarSolid: { backgroundColor: colors.primaryContainer }, headerAvatarSolidText: { color: colors.white, fontSize: 12, lineHeight: 16, fontWeight: '600' },
   detailContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 32, maxWidth: 600, width: '100%', alignSelf: 'center' }, detailHero: { alignItems: 'center', marginBottom: 16 }, detailStatusIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.successPale, alignItems: 'center', justifyContent: 'center', marginBottom: 12, ...cardShadow }, detailStatusIconPending: { backgroundColor: colors.pale }, detailStatusIconRejected: { backgroundColor: colors.errorPale }, detailPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 4 }, detailTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', textAlign: 'center', letterSpacing: -0.1 }, detailAmountLine: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'center', columnGap: 8, marginTop: 8, marginBottom: 4 }, detailAmount: { flexShrink: 1, minWidth: 0, color: colors.text, fontSize: 36, lineHeight: 44, fontWeight: '700', letterSpacing: -0.9, fontVariant: ['tabular-nums'] }, detailCurrency: { color: colors.muted, fontSize: 16, lineHeight: 24, fontWeight: '600', letterSpacing: 0 }, detailDate: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' }, detailZone: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center' }, detailCard: { backgroundColor: colors.white, borderRadius: 12, padding: 16, gap: 8, ...cardShadow }, detailStacked: { gap: 4, paddingVertical: 4 }, detailStackedValue: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500', flexShrink: 1 }, detailDestination: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }, detailRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 2, paddingVertical: 4 }, detailRowValue: { color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '500', textAlign: 'right', flexGrow: 1, flexShrink: 1, flexBasis: 0 }, detailRowEmphasis: { fontSize: 16, lineHeight: 24, fontWeight: '600', fontVariant: ['tabular-nums'] }, detailRowAccent: { color: colors.primary, fontWeight: '600', letterSpacing: 0.35 }, detailFootnote: { color: colors.placeholder, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center', paddingVertical: 8, marginTop: 12 },
   centered: { flex: 1, minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.bg }, privacyPage: { flex: 1, backgroundColor: colors.bg }, privacyTopbar: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, backgroundColor: colors.bg, ...cardShadow, shadowOpacity: 0.03 }, privacyBrandMark: { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primaryContainer }, privacy: { flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, backgroundColor: colors.bg }, privacyCard: { minHeight: 460, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(196,197,215,0.3)', ...cardShadow }, privacyIcon: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.input, marginBottom: 16 }, privacyIconInner: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale }, privacyShield: { position: 'absolute', right: -4, bottom: -4, width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceHighest, ...cardShadow }, privacyTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', letterSpacing: -0.5, marginBottom: 8 }, privacyCopy: { color: colors.muted, fontSize: 14, lineHeight: 22, textAlign: 'center', maxWidth: 280 }, privacyNoteTitle: { color: colors.text, fontSize: 16, lineHeight: 24, fontWeight: '600' }, privacyPill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.paleHigh, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 }, privacyPillText: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500' }, privacyNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 12, marginTop: 12, backgroundColor: colors.white, borderWidth: 1, borderColor: 'rgba(196,197,215,0.3)', borderRadius: 12, ...cardShadow }, center: { textAlign: 'center', maxWidth: 320, marginTop: 16 }, privacyFooter: { position: 'absolute', bottom: 36, color: colors.muted, fontSize: 14, fontWeight: '600' },
@@ -1395,6 +1589,12 @@ receiptCurrency: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight
 receiptLabel: { flexShrink: 0, color: colors.muted, fontSize: 12, lineHeight: 20 },
 newBalanceCurrency: { color: colors.muted, fontSize: 16, lineHeight: 24, fontWeight: '600' },
 receiptActions: { gap: 8, marginTop: 24 },
+receiptShare: { gap: 6, marginTop: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(196,197,215,0.3)' },
+receiptShareCaption: { color: colors.muted, fontSize: 12, lineHeight: 16, fontWeight: '500', textAlign: 'center' },
+receiptShareRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
+receiptShareButton: { flexGrow: 1, flexBasis: 140, minHeight: 44, backgroundColor: colors.input, borderWidth: 1, borderColor: 'rgba(196,197,215,0.4)' },
+receiptShareStatus: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+receiptShareError: { color: colors.error, fontSize: 14, lineHeight: 20, textAlign: 'center' },
 rejectedTitle: { color: colors.text, fontSize: 20, lineHeight: 28, fontWeight: '600', textAlign: 'center', marginBottom: 4 },
 rejectedReasonStrong: { color: colors.text, fontWeight: '500' },
 intactTitle: { color: colors.text, fontSize: 12, lineHeight: 16, fontWeight: '600' },

@@ -1,0 +1,18 @@
+AUDIT M02 inicio (sin destino): controls=11 label-missing-visible-text=0 touch<44=0
+AUDIT M05 picker: controls=7 label-missing-visible-text=3 touch<44=0
+   LABEL Seleccionar Cuenta de ahorro demo, Ahorro demo, Billetera MXN •• 4946, :: missing ["CD"]
+   LABEL Seleccionar Cuenta principal demo, Principal demo, Billetera MXN •• 17 :: missing ["CP"]
+   LABEL Seleccionar Carlos Ruiz, Carlos, Billetera MXN •• 6208, CLABE 646••••• :: missing ["CR"]
+  beneficiary labels: ["Seleccionar Cuenta de ahorro demo, Ahorro demo, Billetera MXN •• 4946, CLABE 646•••••••••••4946","Seleccionar Cuenta principal demo, Principal demo, Billetera MXN •• 1782, CLABE 646•••••••••••1782, no disponible: es la misma cuenta de origen. Es tu cuenta de origen: elige otra cuenta de origen para enviarle.","Seleccionar Carlos Ruiz, Carlos, Billetera MXN •• 6208, CLABE 646•••••••••••6208"]
+AUDIT M02 con destino: controls=12 label-missing-visible-text=0 touch<44=0
+AUDIT M02 incompatible: controls=10 label-missing-visible-text=0 touch<44=0
+AUDIT M06 datos (origen abierto): controls=9 label-missing-visible-text=0 touch<44=1
+   SMALL Listo, cerrar las cuentas de origen 28x32
+  origin option labels: ["Usar Cuenta principal •• 1782 como cuenta de origen, Disponible: $9,849.75 MXN","Usar Ahorro •• 4946 como cuenta de origen, es el destino elegido, Disponible: $5,300.25 MXN · es el destino elegido"]
+AUDIT M07 revisión: controls=3 label-missing-visible-text=0 touch<44=0
+AUDIT M07 umbral: controls=3 label-missing-visible-text=0 touch<44=0
+AUDIT M08 código: controls=5 label-missing-visible-text=0 touch<44=0
+AUDIT M10 comprobante: controls=5 label-missing-visible-text=0 touch<44=0
+AUDIT M03 lista: controls=7 label-missing-visible-text=0 touch<44=0
+  movement labels: ["Traspaso a Cuenta de ahorro demo, •• 4946 · Comida, Ref: 131126 • 16:43, -$100.00 MXN, Completado, Hoy (16 nov 2026), Cargo","De Carlos Ruiz, •• 6208 · Abono honorarios, Ref: 994012 • 16:43, +$1,000.00 MXN, Completado, Hoy (16 nov 2026), Abono","Traspaso a Cuenta de ahorro demo, •• 4946 · Ahorro mensual, Ref: 2 • 16:43, -$300.25 MXN, Completado, Hoy (16 nov 2026), Cargo","A Carlos Ruiz, •• 6208 · Comida, Ref: 131126 • 16:43, -$850.00 MXN, Completado, Hoy (16 nov 2026), Cargo"]
+AUDIT M04 detalle recibido: controls=3 label-missing-visible-text=0 touch<44=0

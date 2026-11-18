@@ -1,0 +1,18 @@
+# Verbatim from the first run of tools/ui-otp.cjs (API#2 on :3898 with OTP_THRESHOLD_MINOR=123456); that run was later interrupted
+# by an unrelated script error in the M08 block (BigInt logging) and a too-short 8 s expiry, so the M08 block was re-run (logs/ui-otp.txt).
+API#2 policy {"otpThresholdMinor":"123456","otpExpirySeconds":8,"otpMaxAttempts":3,"dailyLimitMinor":"1500000"}
+PASS M07 amount 1234.55 (policy threshold 1,234.56): code variant=false (expected false); chip text: false
+  bar 1234.55: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+PASS M07 amount 1234.56 (policy threshold 1,234.56): code variant=true (expected true); chip text: true
+SHOT M07-umbral-politica-API2 minFont=12 scrollW=390 offscreen=0 errs=0
+  bar 1234.56: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+PASS M07 amount 1234.57 (policy threshold 1,234.56): code variant=true (expected true); chip text: true
+  bar 1234.57: widths=[292.75,41.25] of 334px; remaining share=0.8765 expected 0.8765; aria-hidden=false; colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+  bar 3000.00: remaining 70.00% spent-segment 30.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+SHOT M07-barra-70-30 minFont=12 scrollW=390 offscreen=0 errs=0
+  bar 9999.99: remaining 0.00% spent-segment 100.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+  bar 10000.00: remaining 0.00% spent-segment 100.00% colors=["rgb(0, 55, 176)","rgb(196, 197, 215)"]
+F-15 M07 umbral @390x844: Continuar a verificación 762-810 | Modificar datos 818-862 (viewport height 844)
+SHOT M07-umbral-844 minFont=12 scrollW=390 offscreen=0 errs=0
+  after scrolling to the end: Continuar 720-768 | Modificar 776-820
+SHOT M07-umbral-844-desplazado minFont=12 scrollW=390 offscreen=0 errs=0

@@ -1,0 +1,19 @@
+SHOT F-M02 minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M05 minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M06 minFont=12 scrollW=390 offscreen=0 errs=0
+KEYBOARD approx M06 (viewport 563): Continuar n/a
+SHOT F-M06-teclado minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M07 minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M10 minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M07-umbral minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M08-vigente minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M08-incompleto minFont=12 scrollW=390 offscreen=0 errs=0
+KEYBOARD approx M08 (viewport 548): Autorizar 428-476 of 548 (inside) | Cancelar 10-54 of 548 (inside)
+SHOT F-M08-teclado minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M08-incorrecto minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT F-M08-expirado minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M09-enviando minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M09-verificando minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT F-M12-cortina minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT F-M11-saldo-insuficiente minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT F-M12-sesion-vencida minFont=12 scrollW=390 offscreen=0 errs=2

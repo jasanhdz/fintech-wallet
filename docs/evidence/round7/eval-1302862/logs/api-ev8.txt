@@ -1,0 +1,19 @@
+policy {"otpThresholdMinor":"500000","otpExpirySeconds":300,"otpMaxAttempts":5,"dailyLimitMinor":"2000000","dailyRemainingMinor":"2000000","demoOnly":true}
+EDGE T-1 (4,999.99): amountMinor=499999 -> HTTP 201 status=completed demoCodePresent=false
+EDGE T (5,000.00): amountMinor=500000 -> HTTP 202 status=awaiting_confirmation demoCodePresent=true
+  cancel -> 200 cancelled
+EDGE T+1 (5,000.01): amountMinor=500001 -> HTTP 202 status=awaiting_confirmation demoCodePresent=true
+  cancel -> 200 cancelled
+EDGE ledger/rows after edges: completed:499999 | cancelled:500000 | cancelled:500001 | ledger 2 rows sum 0
+PASS replay same key -> same attempt id (202)
+NEW KEY while previous pending: HTTP 202 status=awaiting_confirmation sameId=false
+pending attempts for user now: 2
+cancel a1 -> 200 cancelled
+OLD code on cancelled a1 -> 409
+OLD code on new a2 -> 422
+PASS no money moved by old code (principal 1000000 savings 500000)
+NEW code on a2 -> 200 completed
+PASS exactly one debit/credit of 600000
+DB rows: cancelled:600000 | completed:600000 | ledger 2 rows sum 0
+DOUBLE-KEY under threshold: first 201 completed, second(new key, same payload) 201 completed distinctIds=true; debit total=60050
+same key different payload -> 409

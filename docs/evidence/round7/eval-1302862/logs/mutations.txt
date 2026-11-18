@@ -1,0 +1,42 @@
+MUTATION R7-1 M02 always "Continuar" even for origin=destination [mobile/App.tsx] -> 2 failed, 149 passed, 151 total
+    FAIL round 6 · B/C/D: origin = destination is decided by account identity before sending › changing the origin to the destination account (Home tab or M06 selector) invalidate
+    FAIL round 6 · B/C/D: origin = destination is decided by account identity before sending › round 7 · 1: M02 with origin Ahorro and saved destination Ahorro offers "Elegir otro
+MUTATION R7-4 threshold hard-coded 500000n in review prediction [mobile/App.tsx] -> 3 failed, 148 passed, 151 total
+    FAIL F-14: the OTP threshold of M07 comes from the server policy, never from a constant › threshold 1000000 minor, amount 6000.00 -> requires code: false
+    FAIL F-14: the OTP threshold of M07 comes from the server policy, never from a constant › threshold 123456 minor, amount 1234.56 -> requires code: true
+    FAIL F-14: the OTP threshold of M07 comes from the server policy, never from a constant › threshold 123456 minor, amount 4999.99 -> requires code: true
+MUTATION R7-5 new code does not close the previous attempt first [mobile/App.tsx] -> 5 failed, 146 passed, 151 total
+    FAIL round 6 · H: server transfer policy, threshold variant and real code expiry › M08 counts down from Transfer.expiresAt, then shows the real expired state; "Solicitar nuevo
+    FAIL round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts) › attempts exhausted (429): own state, input and Autorizar disabled, demo code hidden; a 
+    FAIL round 7 · 5: "Solicitar un código nuevo" never leaves two open attempts › after a confirmed cancel, the new attempt keeps amount, origin, destination, concept and referen
+    FAIL round 7 · 5: "Solicitar un código nuevo" never leaves two open attempts › creates nothing when neither the cancel nor the status read of the previous attempt answers
+    FAIL round 7 · 5: "Solicitar un código nuevo" never leaves two open attempts › when the cancel is refused (409) and the attempt is completed, shows its receipt and creates not
+MUTATION R7-8 recovery ignores the owning user [mobile/App.tsx] -> 1 failed, 150 passed, 151 total
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it
+MUTATION R7-8 curtain only on background (not inactive) [mobile/App.tsx] -> 1 failed, 150 passed, 151 total
+    FAIL round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: the curtain covers balances on iOS "inactive" (app switcher) as well as "background"
+MUTATION R7-7 429 daily limit treated as unverified [mobile/App.tsx] -> 1 failed, 150 passed, 151 total
+    FAIL round 7 · 7: M11 reasons, real amounts and "no debit" only for confirmed business rejections › daily limit (429 "Se excedió el límite diario"): limit reason with today's 
+MUTATION R7-3 estimate bar visible to screen readers [mobile/App.tsx] -> 1 failed, 150 passed, 151 total
+    FAIL round 7 · 3: M07 estimated-balance bar shows the real split, neutral and decorative › blue = balance after the transfer / current balance, neutral = amount / current bala
+MUTATION H2 escapeHtml is identity [mobile/src/receipt.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: receipt document (M10) › escapes every dynamic value in the PDF HTML
+MUTATION H2 receipt for any status (not only completed) [mobile/src/receipt.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: receipt document (M10) › builds no success receipt for pending, rejected, expired or cancelled transfers
+MUTATION H2 temp file not deleted after share [mobile/src/receiptShare.ts] -> 5 failed, 146 passed, 151 total
+    FAIL H2: PDF share (expo-print + expo-sharing) › closing the sheet is not an error and still deletes the file
+    FAIL H2: PDF share (expo-print + expo-sharing) › happy path: print → native sheet (application/pdf, com.adobe.pdf) → delete the cached file
+    FAIL H2: PDF share (expo-print + expo-sharing) › share error: retryable message without paths, the file is deleted
+    FAIL H2: useReceiptShare state › one generation at a time: a double tap does not print twice; busy until the sheet closes
+    FAIL round 7 H2: M10 receipt share and PDF actions › "Guardar PDF" generates from the confirmed transfer, shows the generating state, blocks double taps and cleans up
+MUTATION H2 unmount does not delete the temp file [mobile/src/receiptShare.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: useReceiptShare state › unmounting while the sheet is open deletes the temporary PDF
+MUTATION H2 cancel treated as error [mobile/src/receiptShare.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: PDF share (expo-print + expo-sharing) › closing the sheet is not an error and still deletes the file
+MUTATION H2 double tap not ignored [mobile/src/receiptShare.ts] -> 2 failed, 149 passed, 151 total
+    FAIL H2: useReceiptShare state › one generation at a time: a double tap does not print twice; busy until the sheet closes
+    FAIL round 7 H2: M10 receipt share and PDF actions › "Guardar PDF" generates from the confirmed transfer, shows the generating state, blocks double taps and cleans up
+MUTATION H2 sharing availability not checked [mobile/src/receiptShare.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: PDF share (expo-print + expo-sharing) › sharing unavailable: message and no PDF is generated
+MUTATION H2 receipt leaks full clabe+requestId in text [mobile/src/receipt.ts] -> 151 passed, 151 total
+restored; git status: clean

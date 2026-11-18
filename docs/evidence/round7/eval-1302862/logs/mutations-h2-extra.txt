@@ -1,0 +1,6 @@
+MUTATION H2 receipt copies the full CLABE of an own-account destination [mobile/src/receipt.ts] -> 2 failed, 149 passed, 151 total
+    FAIL H2: receipt document (M10) › carries the confirmed data: amount, business date, status, masked accounts, concept, reference, full folio and the demo notice
+    FAIL H2: receipt document (M10) › excludes the code, request id, internal ids, full CLABEs, tokens and e-mail
+MUTATION H2 receipt text carries the requestId [mobile/src/receipt.ts] -> 1 failed, 150 passed, 151 total
+    FAIL H2: receipt document (M10) › excludes the code, request id, internal ids, full CLABEs, tokens and e-mail
+restored; git status: clean

@@ -1,0 +1,23 @@
+
+Transferir
+AM
+
+No se pudo completar la transferencia
+El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en tu cuenta.
+
+Tu dinero está intacto
+No se aplicó ningún cargo a tu cuenta por este intento.
+Cuenta de origen
+
+Principal •• 4693
+Saldo disponible
+$0.02 MXN
+Monto solicitado
+$4,000.00 MXN
+Importe debitado
+Ningún dinero fue retirado
+$0.00 MXN
+
+Modificar monto o cuenta
+
+Volver al inicio

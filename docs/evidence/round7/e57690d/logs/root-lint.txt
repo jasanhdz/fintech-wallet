@@ -1,0 +1,24 @@
+
+> fintech-wallet@0.1.0 lint
+> npm run lint --workspaces --if-present && npm run lint:shared
+
+
+> @fintech-wallet/api@0.1.0 lint
+> eslint src tests
+
+
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+
+
+> @fintech-wallet/mobile@0.1.0 lint
+> eslint App.tsx app src tests
+
+
+> @fintech-wallet/shared@0.1.0 lint
+> eslint src
+
+
+> fintech-wallet@0.1.0 lint:shared
+> eslint packages/shared/src
+

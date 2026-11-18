@@ -1,0 +1,12 @@
+◇ injected env (0) from ../.env
+{"event":"request.failed","requestId":"4142dc62-6201-445f-b826-2702b8834184","code":"QueryFailedError"}
+✔ internal transfers enforce owner, idempotency, OTP, ledger, balance and concurrent daily controls in wallet_test (2165.150208ms)
+✔ daily limit usage isolates consumption across the business-midnight boundary of BUSINESS_TIME_ZONE in wallet_test (21.776458ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2580.115917

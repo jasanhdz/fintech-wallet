@@ -1,0 +1,7 @@
+{"M02-par-valido":"m02_inicio_y_cuentas","M02-incompatible":"m02_inicio_y_cuentas","M02-aviso-pendiente":"m02_inicio_y_cuentas",
+"M06-datos":"m06_datos_de_transferencia","M06-teclado-enfocado":"m06_datos_de_transferencia",
+"M07-revision":"m07_revisar_transferencia_1","M07-umbral":"m07_revisar_transferencia_6_000_mxn_verificaci_n",
+"M08-vacio":"m08_c_digo_de_confirmaci_n_2","M08-incompleto":"m08_c_digo_de_confirmaci_n_2","M08-incorrecto":"m08_c_digo_de_confirmaci_n_1","M08-intentos-agotados":"m08_c_digo_de_confirmaci_n_1",
+"M09-verificando":"m09_procesando_y_recuperaci_n_2","M10-comprobante":"m10_transferencia_completada_1",
+"M11-saldo-insuficiente":"m11_transferencia_rechazada","M11-limite-diario":"m11_transferencia_rechazada",
+"M12-cortina":"m12_privacidad_en_segundo_plano"}

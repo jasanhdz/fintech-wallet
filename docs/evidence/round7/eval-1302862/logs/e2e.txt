@@ -1,0 +1,6 @@
+review text: $10,000.00 - $300.25 = $9,699.75 MXN
+PASS principal 1000000->969975, ahorro 500000->530025 (exact 30025)
+PASS total conserved 1500000 = 1500000
+POST /transfers count: 1 | DB completed:30025 | ledger 2 rows sum 0 | receipt true | new balance on receipt true
+history shows the debit: true
+origin Ahorro: own-savings beneficiary disabled = true | POST /transfers 0 | rows with source=destination in DB 0
