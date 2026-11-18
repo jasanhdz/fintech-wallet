@@ -283,7 +283,15 @@ describe('mobile transfer attempt', () => {
     // F-27: after the restart the attempt whose id never arrived is only shown on Home; nothing is sent until the tap.
     assert.equal(createCalls().length, 1, 'no create replay without a tap');
     assert.match(JSON.stringify(renderer!.toJSON()), /Transferencia en verificación/);
+    // H5: "Verificar estado" only reads (there is no id to read: nothing is sent); the resend is its own explicit action,
+    // reviewed first and confirmed with a second tap.
     await TestRenderer.act(async () => { button('Verificar estado de la transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
+    assert.equal(createCalls().length, 1, 'verifying never sends a create');
+    await TestRenderer.act(async () => { button('Reenviar la misma transferencia').props.onPress(); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Grace Hopper \(Grace\) •• 1234/);
+    assert.equal(createCalls().length, 1, 'opening the resend sends nothing');
+    await TestRenderer.act(async () => { button('Reenviar la misma transferencia').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
     const second = createCalls()[1];
     assert.ok(second);
@@ -817,7 +825,7 @@ describe('mobile confirmation code (M08)', () => {
 });
 
 describe('mobile uncertain result (M09)', () => {
-  it('explains the uncertain attempt, verifies it by replaying the same key and never creates a second attempt', async () => {
+  it('explains the uncertain attempt; verifying only reads, and the explicit resend replays the same key (never a second attempt)', async () => {
     let creates = 0;
     const flow = await startTransferFlow((url) => {
       if (url.endsWith('/transfers')) {
@@ -839,7 +847,12 @@ describe('mobile uncertain result (M09)', () => {
     assert.match(uncertain, /"Monto en verificación"/);
     assert.match(uncertain, /"En verificación de estado"/);
     assert.doesNotMatch(uncertain, /Banxico|SPEI|interbancaria|DEMO-0001|"awaiting_confirmation"/);
+    // H5: verifying is read-only (no id yet: nothing to read, nothing sent).
     await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await flow.wait();
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/transfers')).length, 1);
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
     await flow.wait();
     const creations = flow.calls.filter((call) => call.url.endsWith('/transfers'));
     assert.equal(creations.length, 2);
@@ -1252,7 +1265,9 @@ describe('round 6 · E: sending, verifying, completed, rejected, expired and can
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
     await flow.wait();
     assert.match(flow.visible(), /Estamos verificando si tu transferencia se completó/);
-    await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    // H5: the retry of the same attempt is the explicit resend (reviewed, then confirmed); verifying alone sends nothing.
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
     // Loading button renders an ActivityIndicator; the title says what is happening to the same attempt.
     assert.match(flow.visible(), /Verificando resultado…/);
     await TestRenderer.act(async () => { release(Response.json(done, { status: 201 })); });
@@ -2457,7 +2472,7 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
     finally { AppState.addEventListener = original; }
   };
 
-  it('M09 "Ir al inicio" keeps a pending notice on Home; verifying replays the same key and lands on the receipt with one row', async () => {
+  it('M09 "Ir al inicio" keeps a pending notice on Home; verifying only reads and the explicit resend replays the same key: receipt with one row', async () => {
     let sends = 0;
     const done = flowTransfer({ id: 'tr-lost', status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'R-LOST' });
     const flow = await startTransferFlow((url, init) => {
@@ -2479,6 +2494,10 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
     assert.match(home, /"131126"/);
     assert.doesNotMatch(home, /intacto|debitado/);
     await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await flow.wait(60);
+    assert.equal(sends, 1, 'H5: verifying never sends a create');
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
     await flow.wait(60);
     assert.match(flow.visible(), /"Transferencia completada"/);
     const creates = flow.calls.filter((call) => call.url.endsWith('/transfers') && call.init?.method === 'POST');
@@ -2550,10 +2569,11 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
       await flow.wait(60);
       user = 'user-a'; meStatus = 200;
       await signIn();
-      // F-27: the same user sees the attempt on Home; the replay of its create needs the tap.
+      // F-27: the same user sees the attempt on Home; the replay of its create needs the explicit, confirmed resend.
       assert.equal(sends, 1);
       assert.match(flow.visible(), /Transferencia en verificación/);
-      await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+      await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+      await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
       await flow.wait(60);
       assert.equal(sends, 2);
       const creates = flow.calls.filter((call) => call.url.endsWith('/transfers') && call.init?.method === 'POST');
@@ -2586,7 +2606,7 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     await flow.wait(60);
   };
 
-  it('Home with an unresolved attempt offers no way to start another one (neither the kept destination nor "Transferir dinero"); its action resumes the same key', async () => {
+  it('Home with an unresolved attempt offers no way to start another one (neither the kept destination nor "Transferir dinero"); only the explicit resend re-sends, with the same key', async () => {
     const flow = await startTransferFlow((url, init) => {
       if (url.endsWith('/transfers') && init?.method === 'POST') throw new TypeError('response lost');
       return undefined;
@@ -2600,8 +2620,12 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     assert.match(home, /Podrás hacer otra transferencia cuando conozcamos su resultado/);
     assert.doesNotMatch(home, /DESTINO SELECCIONADO/);
     assertNoNewAttemptEntry(flow);
-    assert.ok(pressables(flow, 'Verificar estado de la transferencia').length > 0, 'the only transfer action resumes the pending attempt');
+    assert.ok(pressables(flow, 'Verificar estado de la transferencia').length > 0, 'the notice verifies the pending attempt');
     await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await flow.wait();
+    assert.equal(creates(flow).length, 1, 'H5: verifying never sends a create');
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
     await flow.wait();
     assert.match(flow.visible(), /Estamos verificando si tu transferencia se completó/);
     assert.ok(creates(flow).length >= 2);
@@ -2649,10 +2673,11 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     assert.match(flow.visible(), /Iniciar sesión/);
     assert.equal(mockSecureValues.get(recoveryKeyOf('user-a')), record, 'an explicit logout does not delete the own pending record');
     await signIn(flow);
-    // F-27: resumed by the user's tap (same key), never on its own.
+    // F-27: resumed by the user's explicit, confirmed resend (same key), never on its own.
     assert.equal(sends, 1);
     assert.match(flow.visible(), /Transferencia en verificación/);
-    await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Reenviar la misma transferencia').props.onPress(); });
     await flow.wait(60);
     assert.match(flow.visible(), /"Transferencia completada"/);
     assert.equal(sends, 2);

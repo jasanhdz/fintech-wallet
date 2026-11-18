@@ -51,15 +51,18 @@ const isCreate = (call: Call) => call.url.endsWith('/transfers') && call.init?.m
 const M11 = /No se pudo completar la transferencia|Revisa tu saldo antes de reintentar|Modificar monto o cuenta|Tu dinero está intacto/;
 const NEW_TRANSFER_ENTRIES = ['Transferir dinero, elegir beneficiario', 'Continuar con transferencia', 'Cambiar beneficiario', 'Elegir otro destinatario'];
 
-async function signIn(seed: Record<string, string>, handler: Handler) {
+async function signIn(seed: Record<string, string>, handler: Handler, options: { restore?: boolean } = {}) {
   for (const [key, value] of Object.entries(seed)) mockSecureValues.set(key, value);
+  // restore: the app starts with a stored session (refresh token) instead of the login form.
+  if (options.restore) mockSecureValues.set('wallet.refresh-token', 'refresh-stored');
   const calls: Call[] = [];
   const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     calls.push({ url, init });
     const handled = await handler(url, init);
     if (handled) return handled;
-    if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: USER, fullName: 'Ana López', email: 'ana@example.com' } });
+    if (url.endsWith('/auth/login') || url.endsWith('/auth/refresh')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: USER, fullName: 'Ana López', email: 'ana@example.com' } });
+    if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
     if (url.endsWith('/auth/me')) return Response.json({ id: USER, fullName: 'Ana López', email: 'ana@example.com' });
     if (url.endsWith('/accounts')) return Response.json({ items: [account] });
     if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
@@ -81,9 +84,12 @@ async function signIn(seed: Record<string, string>, handler: Handler) {
   };
   const press = async (title: string) => { await TestRenderer.act(async () => { button(title).props.onPress(); }); };
   const wait = (ms = 40) => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
-  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-  await press('Iniciar sesión');
-  await wait(60);
+  const logIn = async () => {
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await press('Iniciar sesión');
+    await wait(60);
+  };
+  if (options.restore) await wait(60); else await logIn();
   const creates = () => calls.filter(isCreate);
   const homeOffersNewTransfer = () => NEW_TRANSFER_ENTRIES.some((entry) => pressables(entry).length > 0);
   const finish = async () => { await TestRenderer.act(async () => { renderer!.unmount(); }); delete (global as { fetch?: typeof fetch }).fetch; };
@@ -101,7 +107,7 @@ async function signIn(seed: Record<string, string>, handler: Handler) {
   };
   /** A complete new transfer from Home. */
   const transferOnce = async () => { await toReview(); await press('Confirmar transferencia'); await wait(60); };
-  return { renderer: renderer!, visible, pressables, button, press, wait, calls, creates, homeOffersNewTransfer, toHome, toReview, transferOnce, finish };
+  return { renderer: renderer!, visible, pressables, button, press, wait, calls, creates, homeOffersNewTransfer, toHome, toReview, transferOnce, logIn, finish };
 }
 
 const UNCONFIRMED_4XX: Array<[string, () => Response]> = [
@@ -294,5 +300,312 @@ describe('H5 · 4 (F-26): no release without a confirmed final result and no dis
     await app.wait(60);
     assert.ok(!app.homeOffersNewTransfer());
     await app.finish();
+  });
+});
+
+const NO_ID = /Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo./;
+const RESEND = 'Reenviar la misma transferencia';
+const lostOnce = (then: () => Response | undefined = () => undefined) => {
+  let sends = 0;
+  return (url: string, init?: RequestInit) => {
+    if (!isCreate({ url, init })) return undefined;
+    sends += 1;
+    if (sends === 1) throw new TypeError('Network request failed');
+    return then();
+  };
+};
+const withAppState = async (run: (emit: (state: string) => Promise<void>) => Promise<void>) => {
+  const { AppState } = jest.requireActual('react-native') as typeof import('react-native');
+  const listeners: Array<(state: string) => void> = [];
+  const original = AppState.addEventListener;
+  AppState.addEventListener = ((_type: string, listener: (state: string) => void) => { listeners.push(listener); return { remove: () => { listeners.splice(listeners.indexOf(listener), 1); } }; }) as unknown as typeof AppState.addEventListener;
+  try { await run(async (state) => { await TestRenderer.act(async () => { listeners.forEach((listener) => listener(state)); }); }); }
+  finally { AppState.addEventListener = original; }
+};
+
+describe('H5 · 2: verifying (consulting) never creates a transfer', () => {
+  it('M09 "Verificar estado" of an attempt whose id never arrived sends nothing (no POST, no other key) and says why', async () => {
+    const app = await signIn({}, lostOnce(() => Response.json(transferBody(), { status: 201 })));
+    await app.transferOnce();
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
+    const stored = mockSecureValues.get(ownKey());
+    for (let tap = 0; tap < 3; tap += 1) { await app.press('Verificar estado de la transferencia'); await app.wait(); }
+    assert.equal(app.creates().length, 1, '0 POST /transfers from verifying');
+    assert.match(app.visible(), NO_ID);
+    assert.equal(mockSecureValues.get(ownKey()), stored);
+    assert.ok(app.pressables(RESEND).length > 0, 'the explicit resend is offered as a separate action');
+    assert.ok(app.pressables('Ver movimientos').length > 0);
+    await app.finish();
+  });
+
+  it('Home "Verificar estado" of a stored attempt without id sends nothing and explains it with the safe actions', async () => {
+    const app = await signIn({ [ownKey()]: record() }, () => undefined);
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    assert.equal(app.creates().length, 0);
+    assert.match(app.visible(), NO_ID);
+    assert.equal(mockSecureValues.get(ownKey()), record());
+    assert.ok(app.pressables('Ver movimientos').length > 0);
+    assert.ok(app.pressables(RESEND).length > 0);
+    assert.ok(!app.homeOffersNewTransfer());
+    await app.finish();
+  });
+
+  it('with an id, verifying only reads it (GET), from Home and from M09', async () => {
+    let reads = 0;
+    const pending = transferBody({ id: 'tr-proc', status: 'processing', amountMinor: '30025', reference: '4401', completedAt: undefined });
+    const app = await signIn({ [ownKey()]: record({ transferId: 'tr-proc' }) }, (url) => (url.endsWith('/transfers/tr-proc') ? (reads += 1, Response.json(pending)) : undefined));
+    const before = reads;
+    await app.toHome();
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    assert.ok(reads > before);
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/, 'processing: shown on M09');
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    assert.equal(app.creates().length, 0, 'never a POST /transfers');
+    assert.equal(app.pressables(RESEND).length, 0, 'the server knows this attempt: nothing to resend');
+    await app.finish();
+  });
+
+  for (const how of ['start-up', 'sign-in'] as const) {
+    it(`an attempt waiting for its code is reopened (${how}) with a READ only: M08 without the code and 0 POST`, async () => {
+      const pending = transferBody({ id: 'tr-wait', status: 'awaiting_confirmation', amountMinor: '600000', expiresAt: new Date(Date.now() + 120_000).toISOString(), completedAt: undefined, receiptReference: undefined });
+      const app = await signIn({ [ownKey()]: record({ transferId: 'tr-wait', status: 'awaiting_confirmation' }) }, (url, init) => {
+        if (url.endsWith('/transfers/tr-wait')) return Response.json(pending);
+        if (isCreate({ url, init })) return Response.json({ ...pending, demoOnlyCode: '000000' }, { status: 202 });
+        return undefined;
+      }, { restore: how === 'start-up' });
+      assert.equal(app.creates().length, 0, 'no create is replayed to recover the code');
+      assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
+      assert.match(app.visible(), /Por seguridad el código no se guarda en el dispositivo/);
+      assert.doesNotMatch(app.visible(), /Código asignado para esta prueba/);
+      await app.finish();
+    });
+  }
+
+  it('"Continuar con la transferencia pendiente" on Home reads the attempt and opens M08 without sending anything', async () => {
+    let reads = 0;
+    const pending = transferBody({ id: 'tr-wait', status: 'awaiting_confirmation', amountMinor: '600000', expiresAt: new Date(Date.now() + 120_000).toISOString(), completedAt: undefined, receiptReference: undefined });
+    const app = await signIn({ [ownKey()]: record({ transferId: 'tr-wait', status: 'awaiting_confirmation' }) }, (url) => {
+      if (url.endsWith('/transfers/tr-wait')) { reads += 1; if (reads === 1) throw new TypeError('Network request failed'); return Response.json(pending); }
+      return undefined;
+    });
+    await app.toHome();
+    await app.wait(60);
+    await app.press('Continuar con la transferencia pendiente');
+    await app.wait(60);
+    assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
+    assert.equal(app.creates().length, 0);
+    await app.finish();
+  });
+});
+
+describe('H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body', () => {
+  it('the first send stores the user\'s consent with the attempt; the code authorization is recorded without the code', async () => {
+    const pending = transferBody({ id: 'tr-otp', status: 'awaiting_confirmation', amountMinor: '600000', expiresAt: new Date(Date.now() + 120_000).toISOString(), completedAt: undefined, receiptReference: undefined });
+    const app = await signIn({}, (url, init) => {
+      if (isCreate({ url, init })) return Response.json({ ...pending, demoOnlyCode: '000000' }, { status: 202 });
+      if (url.endsWith('/transfers/tr-otp/confirm') || url.endsWith('/transfers/tr-otp')) throw new TypeError('Network request failed');
+      return undefined;
+    });
+    const before = Date.now();
+    await app.toReview('6000.00');
+    await app.wait();
+    await app.press('Continuar a verificación');
+    await app.wait(60);
+    const afterCreate = JSON.parse(mockSecureValues.get(ownKey())!);
+    assert.equal(afterCreate.transferId, 'tr-otp');
+    assert.equal(afterCreate.consent.via, 'confirm');
+    assert.equal(afterCreate.consent.otp, 'required');
+    const confirmedAt = Date.parse(afterCreate.consent.confirmedAt);
+    assert.ok(confirmedAt >= before - 1000 && confirmedAt <= Date.now(), 'the time of the tap');
+    assert.equal(afterCreate.display.source, 'Cuenta Principal •• 8412');
+    assert.equal(afterCreate.display.destination, 'Carlos Ruiz (Carlos) •• 0028');
+    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('000000'); });
+    await app.press('Autorizar transferencia');
+    await app.wait(60);
+    const afterConfirm = JSON.parse(mockSecureValues.get(ownKey())!);
+    assert.equal(afterConfirm.consent.otp, 'authorized');
+    assert.equal(afterConfirm.consent.confirmedAt, afterCreate.consent.confirmedAt);
+    assert.doesNotMatch(mockSecureValues.get(ownKey())!, /000000|demoOnlyCode|"code"/);
+    await app.finish();
+  });
+
+  it('opening it shows the original data and consent and sends nothing; "Volver sin reenviar" changes nothing', async () => {
+    const stored = record({ consent: { confirmedAt: '2026-11-13T20:30:00.000Z', via: 'confirm', otp: 'unknown' }, display: { source: 'Cuenta Principal •• 8412', destination: 'Carlos Ruiz (Carlos) •• 0028' } });
+    const app = await signIn({ [ownKey()]: stored }, () => undefined);
+    await app.press(RESEND);
+    await app.wait();
+    const screen = app.visible();
+    assert.match(screen, /"\$300.25"," MXN"/);
+    assert.match(screen, /Cuenta Principal •• 8412/);
+    assert.match(screen, /Carlos Ruiz \(Carlos\) •• 0028/);
+    assert.match(screen, /"Comida"/);
+    assert.match(screen, /"4401"/);
+    assert.match(screen, /Confirmaste esta transferencia el 13 de noviembre de 2026, 14:30 hrs/);
+    assert.match(screen, /misma clave de la operación: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces/);
+    assert.equal(app.creates().length, 0, 'opening the resend sends nothing');
+    await app.press('Volver sin reenviar');
+    await app.wait(60);
+    assert.match(app.visible(), /Transferencia en verificación/);
+    assert.equal(mockSecureValues.get(ownKey()), stored);
+    assert.equal(app.creates().length, 0);
+    await app.finish();
+  });
+
+  it('the confirmation tap sends EXACTLY the stored key and body (the same bytes the first send used), once', async () => {
+    const app = await signIn({}, lostOnce(() => Response.json(transferBody({ id: 'tr-new' }), { status: 201 })));
+    await app.transferOnce();
+    const first = app.creates()[0]!;
+    const stored = JSON.parse(mockSecureValues.get(ownKey())!);
+    assert.equal(stored.key, keyOf(first));
+    assert.equal(JSON.stringify(stored.payload), String(first.init?.body));
+    await app.press(RESEND);
+    await app.wait();
+    assert.equal(app.creates().length, 1);
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.equal(app.creates().length, 2);
+    const second = app.creates()[1]!;
+    assert.equal(keyOf(second), keyOf(first), 'the original Idempotency-Key, never a new one');
+    assert.equal(String(second.init?.body), String(first.init?.body), 'the original body, never re-captured');
+    assert.match(app.visible(), /"Transferencia completada"/);
+    assert.equal(mockSecureValues.get(ownKey()), undefined, 'completed: released');
+    await app.finish();
+  });
+
+  it('a resend of a stored record (after a restart) sends the record\'s key and payload as stored', async () => {
+    const app = await signIn({ [ownKey()]: record() }, (url, init) => (isCreate({ url, init }) ? Response.json(transferBody({ id: 'tr-new', amountMinor: '30025', reference: '4401' }), { status: 201 }) : undefined));
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.equal(app.creates().length, 1);
+    assert.equal(keyOf(app.creates()[0]!), STORED_KEY);
+    assert.equal(String(app.creates()[0]!.init?.body), JSON.stringify(storedPayload));
+    await app.finish();
+  });
+
+  it('a resend answered 202 (code required) goes to M08: the resend cannot skip the code', async () => {
+    const pending = transferBody({ id: 'tr-otp', status: 'awaiting_confirmation', amountMinor: '30025', reference: '4401', expiresAt: new Date(Date.now() + 120_000).toISOString(), completedAt: undefined, receiptReference: undefined });
+    const app = await signIn({ [ownKey()]: record({ consent: { confirmedAt: '2026-11-13T20:30:00.000Z', via: 'confirm', otp: 'authorized' } }) }, (url, init) => (isCreate({ url, init }) ? Response.json({ ...pending, demoOnlyCode: '000000' }, { status: 202 }) : undefined));
+    await app.press(RESEND);
+    await app.wait();
+    assert.match(app.visible(), /Ya habías autorizado su código. Si el servidor vuelve a pedirlo, tendrás que ingresarlo de nuevo/);
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
+    assert.equal(app.calls.filter((call) => call.url.endsWith('/confirm')).length, 0, 'no confirm without the user typing the code');
+    assert.equal(JSON.parse(mockSecureValues.get(ownKey())!).transferId, 'tr-otp');
+    await app.finish();
+  });
+
+  for (const [label, answer] of UNCONFIRMED_4XX) {
+    it(`a resend answered ${label} stays in verification with the record intact and no path to another attempt`, async () => {
+      const stored = record();
+      const app = await signIn({ [ownKey()]: stored }, (url, init) => (isCreate({ url, init }) ? answer() : undefined));
+      await app.press(RESEND);
+      await app.wait();
+      await app.press(RESEND);
+      await app.wait(60);
+      assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
+      assert.doesNotMatch(app.visible(), M11);
+      assert.equal(mockSecureValues.get(ownKey()), stored);
+      await app.press('Ir al inicio (revisar saldo después)');
+      await app.wait(60);
+      assert.ok(!app.homeOffersNewTransfer());
+      assert.equal(mockSecureValues.get(ownKey()), stored);
+      assert.ok(app.creates().every((call) => keyOf(call) === STORED_KEY));
+      await app.finish();
+    });
+  }
+
+  it('a resend answered 422 (business rejection of the same key) releases the record: M11 with no debit', async () => {
+    const app = await signIn({ [ownKey()]: record() }, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.match(app.visible(), /Tu dinero está intacto/);
+    assert.equal(mockSecureValues.get(ownKey()), undefined);
+    await app.press('Volver al inicio');
+    await app.wait(60);
+    assert.ok(app.homeOffersNewTransfer());
+    await app.finish();
+  });
+
+  it('a legacy record (no owner) whose resend answers 404 is kept: no release, no claim', async () => {
+    const legacy = JSON.stringify({ key: STORED_KEY, payload: { ...storedPayload, beneficiaryId: 'beneficiary-of-someone-else' } });
+    const app = await signIn({ [LEGACY]: legacy }, (url, init) => (isCreate({ url, init }) ? problem(404, 'Beneficiario no encontrado.') : undefined));
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
+    assert.doesNotMatch(app.visible(), M11);
+    assert.equal(JSON.parse(mockSecureValues.get(ownKey())!).key, STORED_KEY, 'migrated to its owner and kept');
+    assert.equal(mockSecureValues.get(LEGACY), undefined);
+    await app.finish();
+  });
+
+  it('after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer', async () => {
+    const stored = record({ transferId: 'tr-gone' });
+    const app = await signIn({ [ownKey()]: stored }, (url, init) => {
+      if (url.endsWith('/transfers/tr-gone')) return problem(404, 'Transferencia no encontrada.');
+      if (isCreate({ url, init })) return Response.json(transferBody({ id: 'tr-new', amountMinor: '30025', reference: '4401' }), { status: 201 });
+      return undefined;
+    });
+    await app.toHome();
+    assert.match(app.visible(), NOT_FOUND);
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.equal(app.creates().length, 1);
+    assert.equal(keyOf(app.creates()[0]!), STORED_KEY);
+    assert.match(app.visible(), /"Transferencia completada"/);
+    await app.finish();
+  });
+});
+
+describe('H5 · 5 (F-27): nothing creates or debits on its own — only reads', () => {
+  it('a record without id, network back: start-up, foreground x3, Home shown again, sign-out + sign-in send 0 creates', async () => {
+    await withAppState(async (emit) => {
+      const app = await signIn({ [ownKey()]: record() }, () => undefined, { restore: true });
+      assert.match(app.visible(), /Transferencia en verificación/);
+      assert.equal(app.creates().length, 0, 'start-up');
+      for (let cycle = 0; cycle < 3; cycle += 1) { await emit('background'); await emit('active'); await app.wait(60); }
+      assert.ok(app.calls.some((call) => call.url.endsWith('/auth/me')), 'the foreground re-check ran');
+      assert.equal(app.creates().length, 0, 'foreground');
+      await tabTo(app, 'Movimientos');
+      await tabTo(app, 'Inicio');
+      assert.equal(app.creates().length, 0, 'Home shown again');
+      await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Cerrar sesión' }).props.onPress(); });
+      await app.wait(60);
+      await app.logIn();
+      assert.match(app.visible(), /Transferencia en verificación/);
+      assert.equal(app.creates().length, 0, 'sign-in');
+      assert.equal(mockSecureValues.get(ownKey()), record());
+      await app.finish();
+    });
+  });
+
+  it('a record WITH id waiting for its code: start-up, foreground and sign-in only read it (GET), 0 creates', async () => {
+    await withAppState(async (emit) => {
+      let reads = 0;
+      const pending = transferBody({ id: 'tr-wait', status: 'awaiting_confirmation', amountMinor: '600000', expiresAt: new Date(Date.now() + 120_000).toISOString(), completedAt: undefined, receiptReference: undefined });
+      const app = await signIn({ [ownKey()]: record({ transferId: 'tr-wait', status: 'awaiting_confirmation' }) }, (url, init) => {
+        if (url.endsWith('/transfers/tr-wait')) { reads += 1; return Response.json(pending); }
+        if (url.endsWith('/transfers/tr-wait/cancel')) throw new TypeError('Network request failed');
+        if (isCreate({ url, init })) return Response.json({ ...pending, demoOnlyCode: '000000' }, { status: 202 });
+        return undefined;
+      }, { restore: true });
+      assert.equal(app.creates().length, 0, 'start-up');
+      for (let cycle = 0; cycle < 2; cycle += 1) { await emit('background'); await emit('active'); await app.wait(60); }
+      assert.equal(app.creates().length, 0, 'foreground');
+      assert.ok(reads >= 1);
+      await app.finish();
+    });
   });
 });

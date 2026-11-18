@@ -20,7 +20,8 @@ type Transfer = ProductComponents['schemas']['Transfer'];
 type TransferRequest = ProductComponents['schemas']['TransferCreateRequest'];
 type Movement = ProductComponents['schemas']['Movement'];
 type TransferPolicy = ProductComponents['schemas']['TransferPolicy'];
-type FlowScreen = 'details' | 'review' | 'sending' | 'otp' | 'status' | 'receipt' | 'rejected' | 'closed';
+type FlowScreen = 'details' | 'review' | 'sending' | 'otp' | 'status' | 'resend' | 'receipt' | 'rejected' | 'closed';
+type PendingLookup = 'idle' | 'checking' | 'failed' | 'not_found' | 'no_id';
 
 // One mapping from the API transfer status to the screen that may show it. Only "completed" reaches the receipt;
 // "expired"/"cancelled" are terminal attempts without postings; an unknown or "processing" state is still being
@@ -55,7 +56,13 @@ const REFRESH_KEY = 'wallet.refresh-token';
 // single pre-round-8 slot is migrated to its owner's key the first time that owner signs in again.
 const LEGACY_RECOVERY_KEY = 'wallet.transfer-recovery';
 function recoveryKeyFor(userId: string): string { return `${LEGACY_RECOVERY_KEY}.${userId.replace(/[^A-Za-z0-9._-]/g, '_')}`; }
-type RecoveryRecord = { key: string; payload: TransferRequest; transferId?: string; userId?: string; status?: Transfer['status'] };
+// H5 (F-27): the user's original consent travels with the record: when "Confirmar transferencia" (or "Solicitar un código
+// nuevo") was tapped and whether the server asked for the authorization code and the user authorized it. It is shown
+// before an explicit resend; the code itself is never stored, so a resend can never skip it (202 -> M08 again).
+type RecoveryConsent = { confirmedAt: string; via: 'confirm' | 'new_code'; otp: 'unknown' | 'required' | 'authorized' };
+// Labels of origin and destination as the user saw them when confirming (masked digits only; never a full CLABE).
+type RecoveryDisplay = { source?: string; destination?: string };
+type RecoveryRecord = { key: string; payload: TransferRequest; transferId?: string; userId?: string; status?: Transfer['status']; consent?: RecoveryConsent; display?: RecoveryDisplay };
 // F-26: a stored record that cannot be used. "damaged" = it exists but is not a valid record (truncated/invalid JSON or
 // missing fields); "unreadable" = the secure store itself failed. Either way nothing new is sent (fail closed) and Home
 // explains it in plain words; the record is never deleted by the app (its key and payload cannot be recovered, so it
@@ -68,10 +75,15 @@ function parseRecovery(raw: string): RecoveryRecord {
   let value: unknown;
   try { value = JSON.parse(raw); } catch { throw new RecoveryReadError('damaged'); }
   const record = value as Partial<RecoveryRecord> | null;
-  const payload = record && typeof record === 'object' ? record.payload as Partial<TransferRequest> | undefined : undefined;
+  const payload = record && typeof record === 'object' ? record.payload as Partial<Record<string, unknown>> | undefined : undefined;
+  // H5: the payload is re-sent byte for byte by an explicit resend, so every field the API needs must be there.
   if (!record || typeof record.key !== 'string' || !record.key || !payload || typeof payload !== 'object'
     || typeof payload.amountMinor !== 'string' || !/^\d+$/.test(payload.amountMinor) || typeof payload.reference !== 'string'
+    || typeof payload.sourceAccountId !== 'string' || typeof payload.concept !== 'string'
+    || !(typeof payload.beneficiaryId === 'string' || typeof payload.destinationAccountId === 'string')
     || (record.transferId !== undefined && typeof record.transferId !== 'string')) throw new RecoveryReadError('damaged');
+  const consent = record.consent;
+  if (consent !== undefined && (typeof consent !== 'object' || consent === null || typeof consent.confirmedAt !== 'string')) delete record.consent;
   return record as RecoveryRecord;
 }
 async function readSecure(key: string): Promise<string | null> {
@@ -85,8 +97,8 @@ async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
   let record: RecoveryRecord;
   try { record = parseRecovery(legacy); }
   catch (error) {
-    // A damaged pre-round-8 slot has no readable owner: like a legacy record without userId it goes to the user signed in
-    // now, so only that user's own key ever has to be discarded (another user's key is never touched).
+    // A damaged pre-round-8 slot has no readable owner: like a legacy record without userId it goes (moved as is, never
+    // deleted) to the user signed in now, who sees it explained on Home; another user's key is never touched.
     try {
       await SecureStore.setItemAsync(recoveryKeyFor(userId), legacy);
       await SecureStore.deleteItemAsync(LEGACY_RECOVERY_KEY);
@@ -108,6 +120,10 @@ async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
 // data is missing: in those cases nobody knows whether money moved, so the record and the block stay.
 // What the user is told when the read of a stored attempt answers 404 (the record is kept).
 const NOT_FOUND_TEXT = 'El servidor no encuentra esta operación. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo.';
+// H5 (F-27): what a read can say about an attempt whose id never arrived (there is nothing to GET; nothing is sent).
+const NO_ID_TEXT = 'Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo.';
+// M08 reopened from a stored attempt: the code is never kept on the device.
+const CODE_NOT_STORED_TEXT = 'Por seguridad el código no se guarda en el dispositivo. Si ya no lo tienes, usa «Solicitar un código nuevo».';
 const RECOVERY_DAMAGED_TEXT = 'No pudimos recuperar los datos de una transferencia en verificación guardada en este dispositivo. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia mientras no pueda leer esos datos.';
 const RECOVERY_UNREADABLE_TEXT = 'No pudimos leer el almacenamiento seguro del dispositivo, así que no podemos recuperar los datos de una transferencia en verificación, si la hay. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia hasta poder leerlo.';
 const PENDING_UNVERIFIABLE_MESSAGE = 'No pudimos comprobar si tienes una transferencia en verificación. Para evitar un cargo doble no enviamos nada; inténtalo de nuevo en un momento.';
@@ -177,10 +193,14 @@ function Wallet() {
   // (no new transfer can be started) and re-checks it, with the same key, whenever Home is shown or the app returns.
   const [pendingRecord, setPendingRecord] = useState<RecoveryRecord | null>(null);
   // Result of the last READ of the attempt: "not_found" = GET /transfers/{id} answered 404 (the record is kept).
-  const [pendingCheck, setPendingCheck] = useState<'idle' | 'checking' | 'failed' | 'not_found'>('idle');
+  // "no_id" = the user asked to verify an attempt whose id never arrived (nothing to read; nothing is sent).
+  const [pendingCheck, setPendingCheck] = useState<PendingLookup>('idle');
+  // H5 (F-27): the explicit resend ("Reenviar la misma transferencia") opens its own review first; this is where its
+  // "Volver sin reenviar" goes back to. M08 reopened from a stored attempt has no code in memory.
+  const [resendFrom, setResendFrom] = useState<'home' | 'status'>('home');
+  const [codeNotStored, setCodeNotStored] = useState(false);
   const [homeCheckTick, setHomeCheckTick] = useState(0);
   const pendingCheckInFlight = useRef(false);
-  const resumeByTap = useRef(false);
   // F-26: an unusable stored record (damaged / store unreadable). It blocks new transfers like an unresolved attempt.
   const [recoveryProblem, setRecoveryProblem] = useState<RecoveryProblem | null>(null);
   const sessionUserRef = useRef<string | null>(null);
@@ -251,7 +271,7 @@ function Wallet() {
       sessionUserRef.current = null;
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
       setRecoveryReady(false); setPendingRecord(null); setPendingCheck('idle');
-      setRecoveryProblem(null);
+      setRecoveryProblem(null); setCodeNotStored(false); setResendFrom('home');
       setSession(null);
       setDestination(null);
       setTransfer(null);
@@ -289,9 +309,6 @@ function Wallet() {
   useEffect(() => {
     if (!session || !ready || recoveryReady) return;
     let active = true;
-    // F-27: set only by the tap on "Verificar estado de la transferencia"; consumed by this run.
-    const byTap = resumeByTap.current;
-    resumeByTap.current = false;
     void (async () => {
       let attempt: RecoveryRecord | null = null;
       try {
@@ -302,31 +319,19 @@ function Wallet() {
         setRecoveryProblem(null);
         if (!attempt) { setPendingRecord(null); return; }
         setPendingRecord(attempt);
-        // F-27: at start-up or sign-in an attempt whose id never arrived is only shown on Home (no request): replaying its
-        // create could create and debit it now, so that needs the user's tap. An attempt with an id is read (GET).
-        if (!attempt.transferId && !byTap) return;
+        // F-27 (H5): start-up and sign-in only READ. An attempt whose id never arrived cannot be read: it is shown on Home
+        // with its safe actions and nothing is sent (re-sending it is the explicit, confirmed "Reenviar…" action).
+        if (!attempt.transferId) return;
         setCreateAttempt({ key: attempt.key, payload: attempt.payload });
         setTransferScreen('status');
-        if (attempt.transferId) {
-          const result = await request<Transfer>(`/transfers/${encodeURIComponent(attempt.transferId)}`, session.accessToken);
-          if (!active) return;
-          setTransfer(result);
-          if (result.status !== 'awaiting_confirmation') {
-            setTransferScreen(screenForStatus(result.status));
-            if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
-          } else {
-            setTransferScreen('otp');
-            setTransferBusy(true);
-            // The demo OTP is intentionally recovered only in memory via the idempotent replay.
-            try {
-              const replay = await request<Transfer & { demoOnlyCode?: string }>('/transfers', session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
-              if (!active) return;
-              setDemoOnlyCode(replay.demoOnlyCode ?? '');
-            } finally { if (active) setTransferBusy(false); }
-          }
-        } else {
-          await submitRecoveredCreate(attempt, session.accessToken, session.user.id);
-        }
+        const result = await request<Transfer>(`/transfers/${encodeURIComponent(attempt.transferId)}`, session.accessToken);
+        if (!active) return;
+        setTransfer(result);
+        if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
+        else await saveRecovery({ ...attempt, status: result.status }, session.user.id).catch(() => undefined);
+        // An attempt waiting for its code reopens M08 without the code (it is never stored; no create is replayed).
+        if (result.status === 'awaiting_confirmation') { setDemoOnlyCode(''); setCodeNotStored(true); }
+        setTransferScreen(screenForStatus(result.status));
       } catch (error) {
         if (!active) return;
         if (error instanceof RecoveryReadError) {
@@ -473,7 +478,20 @@ function Wallet() {
     setChoosingBeneficiary(false); setActiveTab('home');
   }
 
-  async function submitCreate(retry = false, payloadOverride?: TransferRequest, replacesClosedAttempt = false) {
+  // Labels of origin and destination as shown when the user confirms (masked digits only), kept for an explicit resend.
+  function describeAttempt(payload: TransferRequest): RecoveryDisplay {
+    const source = accounts.find((item) => item.id === payload.sourceAccountId);
+    const beneficiaryId = 'beneficiaryId' in payload ? payload.beneficiaryId : undefined;
+    const known = client.getQueryData<Beneficiary[]>(['beneficiaries', session?.user.id]) ?? [];
+    const target = destination && destination.id === beneficiaryId ? destination : known.find((item) => item.id === beneficiaryId);
+    const ownTarget = 'destinationAccountId' in payload ? accounts.find((item) => item.id === payload.destinationAccountId) : undefined;
+    return {
+      source: source ? `${source.name} •• ${lastDigits(source.clabeMasked)}` : undefined,
+      destination: target ? `${target.name} (${target.alias}) •• ${lastDigits(target.clabeMasked)}` : ownTarget ? `${ownTarget.name} •• ${lastDigits(ownTarget.clabeMasked)}` : undefined,
+    };
+  }
+
+  async function submitCreate(payloadOverride?: TransferRequest, replacesClosedAttempt = false) {
     if (!session || transferBusy || transferInFlight.current) return;
     if (confirmUncertain) {
       setTransferError(UNCERTAIN_CONFIRM_MESSAGE);
@@ -484,7 +502,7 @@ function Wallet() {
     // F-21: a NEW attempt (new Idempotency-Key) is never created while this user still has an unresolved or pending one;
     // only "Solicitar un código nuevo", after the API confirmed the previous attempt closed, may replace it. When the
     // store cannot be read nothing is sent (fail closed).
-    if (!retry && !replacesClosedAttempt) {
+    if (!replacesClosedAttempt) {
       let existing: RecoveryRecord | null;
       try { existing = await readOwnRecovery(userId); }
       catch (error) {
@@ -499,10 +517,14 @@ function Wallet() {
       }
       if (existing) { transferInFlight.current = false; holdForPendingAttempt(existing); return; }
     }
-    let attempt: { key: string; payload: TransferRequest; transferId?: string } | null;
+    let attempt: RecoveryRecord | null;
     const payload = payloadOverride ?? transferPayload;
     try {
-      attempt = retry && createAttempt ? createAttempt : payload ? { key: newIdempotencyKey(), payload } : null;
+      // H5: the user's consent (this tap) is stored with the attempt before anything is sent.
+      let display = payload ? describeAttempt(payload) : {};
+      // A new code after a restart has no draft in memory: keep the labels the replaced attempt was confirmed with.
+      if (replacesClosedAttempt && pendingRecord?.display) display = { source: display.source ?? pendingRecord.display.source, destination: display.destination ?? pendingRecord.display.destination };
+      attempt = payload ? { key: newIdempotencyKey(), payload, consent: { confirmedAt: new Date().toISOString(), via: replacesClosedAttempt ? 'new_code' : 'confirm', otp: 'unknown' }, display } : null;
     } catch (error) {
       transferInFlight.current = false;
       setTransferError(error instanceof Error ? error.message : 'No se pudo preparar el intento de transferencia.');
@@ -513,26 +535,36 @@ function Wallet() {
       if (destinationIsSource) setTransferError(SAME_ACCOUNT_MESSAGE);
       return;
     }
-    if (!retry) {
-      setCreateAttempt(attempt);
-      try { await saveRecovery(attempt, userId); }
-      catch {
-        // Without a stored record a lost response could not be resumed with this key: send nothing.
-        transferInFlight.current = false;
-        setTransferError('No se pudo preparar el intento de transferencia.');
-        return;
-      }
+    setCreateAttempt({ key: attempt.key, payload: attempt.payload });
+    try { await saveRecovery(attempt, userId); }
+    catch {
+      // Without a stored record a lost response could not be resumed with this key: send nothing.
+      transferInFlight.current = false;
+      setTransferError('No se pudo preparar el intento de transferencia.');
+      return;
     }
-    // E: a normal first request is "Enviando" (neutral copy); only a retry of the same attempt, after its outcome
-    // became unknown, is shown as "Verificando resultado".
-    setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen(retry ? 'status' : 'sending');
+    // E: a normal first request is "Enviando" (neutral copy).
+    setCodeNotStored(false);
+    setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('sending');
+    try { await sendAttempt({ ...attempt, userId }, userId, session.accessToken); }
+    finally { setTransferBusy(false); transferInFlight.current = false; }
+  }
+
+  // The ONLY place a POST /transfers is sent: the first send (tap on "Confirmar transferencia" / "Continuar a
+  // verificación" or "Solicitar un código nuevo") and the explicit, confirmed "Reenviar la misma transferencia". Both send
+  // the stored record's own key and body. A record is released only by a final result the server confirmed for it.
+  async function sendAttempt(record: RecoveryRecord, userId: string, accessToken: string) {
+    setPendingCheck('idle');
     try {
-      const result = await request<Transfer>('/transfers', session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
-      setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
-      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
+      const result = await request<Transfer & { demoOnlyCode?: string }>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': record.key }, body: JSON.stringify(record.payload) });
+      setDemoOnlyCode(result.demoOnlyCode ?? '');
+      // The server's id is kept before anything else, so a later read (GET) can resolve this attempt.
+      const otp: RecoveryConsent['otp'] = result.status === 'awaiting_confirmation' ? (record.consent?.otp === 'authorized' ? 'authorized' : 'required') : record.consent?.otp ?? 'unknown';
+      const known: RecoveryRecord = { ...record, transferId: result.id, status: result.status, ...(record.consent ? { consent: { ...record.consent, otp } } : {}) };
+      if (!isTerminalStatus(result.status) || result.status === 'completed') await saveRecovery(known, userId).catch(() => undefined);
+      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${encodeURIComponent(result.id)}`, accessToken) : result;
       setTransfer(finalResult);
       if (isTerminalStatus(finalResult.status)) await clearRecovery(userId);
-      else if (finalResult.id) await saveRecovery({ ...attempt, transferId: finalResult.id, status: finalResult.status }, userId);
       setTransferScreen(screenForStatus(finalResult.status));
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
@@ -547,34 +579,42 @@ function Wallet() {
       // the attempt uncertain on M09 with its record intact: M11 is never shown for an outcome nobody confirmed.
       if (confirmed) await clearRecovery(userId).catch(() => undefined);
       setTransferScreen(confirmed ? 'rejected' : 'status');
-    } finally { setTransferBusy(false); transferInFlight.current = false; }
+    }
   }
 
-  async function submitRecoveredCreate(attempt: { key: string; payload: TransferRequest }, accessToken: string, userId: string) {
-    setTransferScreen('status');
-    setTransferBusy(true);
-    try {
-      const result = await request<Transfer>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
-      if (!result.id) return;
-      setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
-      await saveRecovery({ ...attempt, transferId: result.id, status: result.status }, userId);
-      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, accessToken) : result;
-      setTransfer(finalResult);
-      if (isTerminalStatus(finalResult.status)) await clearRecovery(userId);
-      setTransferScreen(screenForStatus(finalResult.status));
-    } catch (error) {
-      if (error instanceof ApiError && isBusinessRejection(error)) {
-        // A business answer (422 / 429 "límite diario") to the send of the same key: nothing was charged by it.
-        // M11 explains the reason and the flow is enabled again.
-        await clearRecovery(userId).catch(() => undefined);
-        setCreateAttempt({ key: attempt.key, payload: attempt.payload }); setTransfer(null); setTransferError(error.message);
-        void client.invalidateQueries({ queryKey: ['accounts'] });
-        setTransferScreen('rejected');
-        return;
-      }
-      setTransferError(error instanceof Error ? error.message : 'No se pudo recuperar la transferencia.'); setTransferScreen('status');
+  // H5 (F-27): "Reenviar la misma transferencia" — never automatic. It first opens a review of the ORIGINAL data (screen
+  // "resend"); only the tap on its own "Reenviar la misma transferencia" sends, and it sends the stored key and body as
+  // they are (re-read from the secure store, never re-captured, never a new key). The API answers a repeated key with
+  // the same attempt, so an attempt that was already applied is not charged again; if it needs the code, M08 asks for it.
+  function openResend(from: 'home' | 'status') {
+    if (!pendingRecord) return;
+    setResendFrom(from); setTransferError('');
+    setCreateAttempt({ key: pendingRecord.key, payload: pendingRecord.payload });
+    setTransferScreen('resend');
+  }
+  function cancelResend() {
+    setTransferError('');
+    if (resendFrom === 'status') { setTransferScreen('status'); return; }
+    leaveUncertainTransfer();
+  }
+  async function resendSameTransfer() {
+    if (!session || transferBusy || transferInFlight.current) return;
+    transferInFlight.current = true;
+    const userId = session.user.id;
+    let record: RecoveryRecord | null;
+    try { record = await readOwnRecovery(userId); }
+    catch (error) {
+      transferInFlight.current = false;
+      setRecoveryProblem(error instanceof RecoveryReadError ? error.kind : 'unreadable');
+      holdForPendingAttempt(null);
+      return;
     }
-    finally { setTransferBusy(false); }
+    // Nothing (or another attempt) stored any more: send nothing and show what is there.
+    if (!record || record.key !== pendingRecord?.key) { transferInFlight.current = false; holdForPendingAttempt(record); if (!record) setPendingRecord(null); return; }
+    setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(null); setCodeNotStored(false);
+    setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('status');
+    try { await sendAttempt(record, userId, session.accessToken); }
+    finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
   async function confirmOtp(retry = false) {
@@ -590,6 +630,10 @@ function Wallet() {
     }
     if (!retry) setConfirmAttempt(attempt);
     setTransferBusy(true); setTransferError(''); setOtpWrong(false);
+    // H5: the record keeps the user's consent: the authorization was given (the code itself is never stored).
+    if (pendingRecord && pendingRecord.transferId === transfer.id && pendingRecord.consent && pendingRecord.consent.otp !== 'authorized') {
+      await saveRecovery({ ...pendingRecord, consent: { ...pendingRecord.consent, otp: 'authorized' } }, session.user.id).catch(() => undefined);
+    }
     try {
       const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
@@ -637,14 +681,25 @@ function Wallet() {
     } finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
+  // M09 "Verificar estado de la transferencia": READ ONLY (H5 · 2). With an id it reads the attempt (GET); without one there
+  // is nothing to read and nothing is sent: it says so and refreshes balances and movements (also reads).
   async function checkTransferStatus() {
-    if (!session || !transfer) return;
-    setTransferBusy(true); setTransferError('');
+    if (!session || transferBusy || transferInFlight.current) return;
+    const transferId = transfer?.id ?? pendingRecord?.transferId;
+    setTransferError('');
+    if (!transferId) {
+      setPendingCheck('no_id');
+      void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] });
+      return;
+    }
+    setTransferBusy(true);
     setPendingCheck('idle');
     try {
-      const result = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
+      const result = await request<Transfer>(`/transfers/${encodeURIComponent(transferId)}`, session.accessToken);
       setTransfer(result);
       if (isTerminalStatus(result.status)) await clearRecovery(session.user.id);
+      else if (pendingRecord) await saveRecovery({ ...pendingRecord, transferId: result.id, status: result.status }, session.user.id).catch(() => undefined);
+      if (result.status === 'awaiting_confirmation' && !demoOnlyCode) setCodeNotStored(true);
       setTransferScreen(screenForStatus(result.status));
     } catch (error) {
       // F-26 (H5): a 404 keeps the record; M09 explains that a charge cannot be confirmed either way.
@@ -703,7 +758,7 @@ function Wallet() {
     }
     setOtp(''); setConfirmAttempt(null); setTransfer(null); setDemoOnlyCode(''); setOtpWrong(false); setOtpLocked(false);
     // F-21: only an attempt the API confirmed cancelled/expired may be replaced by a new one.
-    await submitCreate(false, payload, Boolean(previous));
+    await submitCreate(payload, Boolean(previous));
   }
 
   function otpTimedOut() {
@@ -826,9 +881,10 @@ function Wallet() {
   // F-21: Home resolves a pending attempt by itself whenever Home is shown and when the app returns to the foreground with
   // a valid session, by READING it (GET by its id). A resolved attempt shows its real result (receipt when completed) and
   // the transfer flow is enabled again; otherwise (still pending, processing or no answer) the notice and its action stay.
-  // F-27: Home and the foreground only read. An attempt whose id never arrived cannot be read; replaying its create (which
-  // may create and debit it right now) happens only on the user's tap on "Verificar estado de la transferencia".
-  async function resolvePendingFromHome() {
+  // H5 (F-27 / 2): this is READ ONLY in every case — automatic or tapped ("Verificar estado de la transferencia",
+  // "Verificar de nuevo", "Continuar con la transferencia pendiente"). An attempt whose id never arrived cannot be read:
+  // nothing is sent; on a tap Home says so and offers the safe actions (movements, explicit resend).
+  async function verifyPendingFromHome(byTap: boolean) {
     if (!session || pendingCheckInFlight.current || transferInFlight.current) return;
     const userId = session.user.id;
     const token = session.accessToken;
@@ -837,8 +893,13 @@ function Wallet() {
     try {
       record = await readOwnRecovery(userId);
       if (sessionUserRef.current !== userId) return;
+      setRecoveryProblem(null);
       if (!record) { setPendingRecord(null); setPendingCheck('idle'); return; }
-      if (!record.transferId) { setPendingRecord(record); return; }
+      setPendingRecord(record);
+      if (!record.transferId) {
+        if (byTap) { setPendingCheck('no_id'); void client.invalidateQueries({ queryKey: ['accounts'] }); void client.invalidateQueries({ queryKey: ['movements'] }); }
+        return;
+      }
       setPendingCheck('checking');
       const result = await request<Transfer>(`/transfers/${encodeURIComponent(record.transferId)}`, token);
       if (sessionUserRef.current !== userId) return;
@@ -846,9 +907,15 @@ function Wallet() {
         await clearRecovery(userId);
         setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(result); setTransferError('');
         setTransferScreen(screenForStatus(result.status));
-      } else {
-        await saveRecovery({ ...record, transferId: result.id, status: result.status }, userId);
-        setPendingCheck('idle');
+        return;
+      }
+      await saveRecovery({ ...record, transferId: result.id, status: result.status }, userId);
+      setPendingCheck('idle');
+      if (byTap) {
+        // The user asked to continue: the attempt is shown where it can be acted on (M08 asks for the code again).
+        setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(result); setTransferError(''); setDemoOnlyCode('');
+        setCodeNotStored(result.status === 'awaiting_confirmation');
+        setTransferScreen(screenForStatus(result.status));
       }
     } catch (error) {
       if (sessionUserRef.current !== userId) return;
@@ -864,9 +931,13 @@ function Wallet() {
   const pendingKey = pendingRecord?.key;
   // F-26: no new transfer can start while an own record exists or the stored record cannot be used. There is no discard.
   const transferBlocked = Boolean(pendingRecord || recoveryProblem);
+  // H5 (F-27): the explicit resend is offered only while the attempt's server state is unknown: its id never arrived,
+  // or its read answered 404. It always re-sends the stored key and body (the API answers a repeated key with the same
+  // attempt, so it cannot charge twice). A damaged/unreadable record has no key or body to send: no resend.
+  const canResend = Boolean(pendingRecord && !recoveryProblem && (!(transfer?.id ?? pendingRecord.transferId) || pendingCheck === 'not_found'));
   useEffect(() => {
     if (!homeVisible || !pendingKey) return;
-    void resolvePendingFromHome();
+    void verifyPendingFromHome(false);
     // Runs when Home is shown, for a new pending key, and on each confirmed return to the foreground (homeCheckTick).
   }, [homeVisible, pendingKey, homeCheckTick]);
 
@@ -897,7 +968,7 @@ function Wallet() {
 
   // Opened from Home or from "Cambiar beneficiario" on the transfer details step; any later step keeps priority.
   if (choosingBeneficiary && (!transferScreen || transferScreen === 'details')) return <BeneficiaryPickerScreen queryPending={beneficiariesQuery.isPending} error={beneficiariesQuery.error instanceof Error ? beneficiariesQuery.error.message : ''} beneficiaries={filteredBeneficiaries} total={beneficiaries.length} search={beneficiarySearch} setSearch={setBeneficiarySearch} userInitials={initials(session.user.fullName)} backLabel={transferScreen ? 'Volver a datos de transferencia' : 'Volver a inicio'} source={selected} accounts={accounts} onSelectSource={setSelectedId} onRetry={() => void beneficiariesQuery.refetch()} onClose={() => setChoosingBeneficiary(false)} onChoose={(beneficiary) => { setDestination(beneficiary); setChoosingBeneficiary(false); }} />;
-  if (transferScreen) return <TransferFlow screen={transferScreen} policy={policyQuery.data ?? null} onOtpTimeout={otpTimedOut} confirmUncertain={confirmUncertain} sameAccount={destinationIsSource} originOpen={originOpen} setOriginOpen={setOriginOpen} onSelectSource={(id) => { setSelectedId(id); setTransferError(''); }} rejectedWarning={repeatsRejected && transferScreen === 'review' ? rejectedCombo?.reason ?? null : null} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} otpExpired={otpExpired} otpWrong={otpWrong} otpLocked={otpLocked} verifying={transferBusy && Boolean(confirmAttempt)} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={() => void requestNewCode()} lookup={pendingCheck} onLeave={leaveUncertainTransfer} onViewMovements={() => { leaveUncertainTransfer(); setActiveTab('movements'); }} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { if (destinationIsSource) { setTransferError(SAME_ACCOUNT_MESSAGE); return; } setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
+  if (transferScreen) return <TransferFlow screen={transferScreen} policy={policyQuery.data ?? null} onOtpTimeout={otpTimedOut} confirmUncertain={confirmUncertain} sameAccount={destinationIsSource} originOpen={originOpen} setOriginOpen={setOriginOpen} onSelectSource={(id) => { setSelectedId(id); setTransferError(''); }} rejectedWarning={repeatsRejected && transferScreen === 'review' ? rejectedCombo?.reason ?? null : null} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} confirmRetry={Boolean(confirmAttempt)} codeNotStored={codeNotStored} resendRecord={transferScreen === 'resend' ? pendingRecord : null} canResend={canResend} otpExpired={otpExpired} otpWrong={otpWrong} otpLocked={otpLocked} verifying={transferBusy && Boolean(confirmAttempt)} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={() => void requestNewCode()} lookup={pendingCheck} onLeave={leaveUncertainTransfer} onViewMovements={() => { leaveUncertainTransfer(); setActiveTab('movements'); }} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { if (destinationIsSource) { setTransferError(SAME_ACCOUNT_MESSAGE); return; } setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onResend={() => openResend('status')} onConfirmResend={() => void resendSameTransfer()} onCancelResend={cancelResend} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
 
   if (movementDetailBusy || movementDetailError) return <View style={styles.page}><View style={styles.flowContent}><Pressable accessibilityRole="button" accessibilityLabel="Volver a movimientos" style={styles.backButton} onPress={() => { setMovementDetailError(''); setMovementDetailBusy(false); setMovementDetailId(''); }}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Movimientos</Text></Pressable>{movementDetailBusy ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando comprobante…</Text></Centered> : <View style={styles.notice}><Text accessibilityRole="alert" style={styles.errorText}>{movementDetailError}</Text><Button title="Reintentar" onPress={() => { const item = movementsQuery.data?.items.find((movement) => movement.transferId === movementDetailId); if (item) void openMovement(item); }}/></View>}</View></View>;
   const closeMovementDetail = () => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); };
@@ -915,7 +986,7 @@ function Wallet() {
         <View style={styles.accountTabs}>{accounts.map((account) => <Pressable key={account.id} accessibilityRole="button" accessibilityLabel={`${account.name} •• ${lastDigits(account.clabeMasked)}`} accessibilityState={{ selected: selected?.id === account.id }} style={[styles.tab, selected?.id === account.id && styles.tabSelected]} onPress={() => setSelectedId(account.id)}><View style={[styles.tabDot, selected?.id === account.id && styles.tabDotSelected]}/><Text numberOfLines={1} style={[styles.tabText, selected?.id === account.id && styles.tabTextSelected]}>{accountTabLabel(account.name)}</Text><Text numberOfLines={1} style={styles.tabDigits}>•• {lastDigits(account.clabeMasked)}</Text></Pressable>)}</View>
         {selected && <View style={styles.balanceCard}><View style={styles.accountLabel}><Text style={styles.tag}>{selected.kind === 'checking' ? 'CUENTA PRINCIPAL' : 'CUENTA DE AHORRO'}</Text><Text style={styles.balanceDigits}>•• {lastDigits(selected.clabeMasked)}</Text></View><View><Text style={styles.balanceLabel}>Saldo disponible</Text><View style={styles.balanceLine}><Text adjustsFontSizeToFit numberOfLines={1} style={styles.balance}>{formatMoney(selected.availableBalanceMinor)}</Text><Text style={styles.currency}>MXN</Text></View></View></View>}
       </>}
-        {transferBlocked ? <PendingTransferNotice record={pendingRecord} problem={recoveryProblem} lookup={pendingCheck} onResume={() => { if (pendingCheckInFlight.current) return; resumeByTap.current = true; setPendingCheck('idle'); setRecoveryReady(false); }} onRetryRead={() => { setRecoveryReady(false); }} onMovements={() => setActiveTab('movements')}/> : null}
+        {transferBlocked ? <PendingTransferNotice record={pendingRecord} problem={recoveryProblem} lookup={pendingCheck} canResend={canResend} onVerify={() => void verifyPendingFromHome(true)} onResend={() => openResend('home')} onRetryRead={() => { setRecoveryReady(false); }} onMovements={() => setActiveTab('movements')}/> : null}
         {/* F-21: while an attempt of this user is unresolved or waits for its code, Home offers no way to start another
             one (no "Transferir dinero", destination card or "Continuar"): only resuming/verifying that attempt. F-26: the
             same holds while a stored record is damaged or the secure store cannot be read. */}
@@ -1052,7 +1123,7 @@ function AppTopbar({ section, initials: userInitials }: { section: string; initi
 // Home can start another one until it is resolved. F-26 (H5): the same notice covers an unusable stored record (damaged
 // / secure store unreadable) and a stored attempt the server does not find (404); none of them offers a discard and
 // none deletes the record: only reading again and "Ver movimientos" (read-only).
-function PendingTransferNotice({ record, problem, lookup, onResume, onRetryRead, onMovements }: { record: RecoveryRecord | null; problem: RecoveryProblem | null; lookup: 'idle' | 'checking' | 'failed' | 'not_found'; onResume: () => void; onRetryRead: () => void; onMovements: () => void }) {
+function PendingTransferNotice({ record, problem, lookup, canResend, onVerify, onResend, onRetryRead, onMovements }: { record: RecoveryRecord | null; problem: RecoveryProblem | null; lookup: PendingLookup; canResend: boolean; onVerify: () => void; onResend: () => void; onRetryRead: () => void; onMovements: () => void }) {
   const movements = <Button title="Ver movimientos" variant="secondary" leadingIcon="list-outline" onPress={onMovements}/>;
   if (!record) {
     const damaged = problem === 'damaged';
@@ -1074,9 +1145,11 @@ function PendingTransferNotice({ record, problem, lookup, onResume, onRetryRead,
       : <Text style={styles.pendingNoticeText}>Aún no confirmamos si se aplicó la operación de {formatMoney(amountMinor, { currency: true })} (Ref: {reference}). No la envíes de nuevo: verifica su estado. Podrás hacer otra transferencia cuando conozcamos su resultado.</Text>}
     {checking ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Consultando el estado de esta operación…</Text>
       : notFound ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{NOT_FOUND_TEXT}</Text>
-        : lookup === 'failed' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
-    <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onResume}/>
+        : lookup === 'no_id' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeError}>{NO_ID_TEXT}</Text>
+          : lookup === 'failed' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
+    <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onVerify}/>
     {awaitingCode ? null : movements}
+    {canResend && !checking ? <Button title="Reenviar la misma transferencia" variant="secondary" leadingIcon="repeat-outline" onPress={onResend}/> : null}
   </View>;
 }
 
@@ -1164,7 +1237,7 @@ function LoginScreen(props: { email: string; password: string; setEmail: (value:
   </ScrollView></KeyboardAvoidingView>;
 }
 
-function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null; onOtpTimeout: () => void; confirmUncertain: boolean; sameAccount: boolean; originOpen: boolean; setOriginOpen: (open: boolean) => void; onSelectSource: (id: string) => void; rejectedWarning: string | null; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; demoOnlyCode: string; error: string; busy: boolean; createRetry: boolean; confirmRetry: boolean; otpExpired: boolean; otpWrong: boolean; otpLocked: boolean; verifying: boolean; pendingPayload: TransferRequest | null; accounts: Account[]; postBalance: { accountName: string; minor: string } | null; userInitials: string; onChangeBeneficiary: () => void; onRequestNewCode: () => void; lookup: 'idle' | 'checking' | 'failed' | 'not_found'; onLeave: () => void; onViewMovements: () => void; onMovements: () => void; onEdit: () => void; onBack: () => void; onReview: () => void; onCreate: () => void; onRetryCreate: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
+function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null; onOtpTimeout: () => void; confirmUncertain: boolean; sameAccount: boolean; originOpen: boolean; setOriginOpen: (open: boolean) => void; onSelectSource: (id: string) => void; rejectedWarning: string | null; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; demoOnlyCode: string; error: string; busy: boolean; confirmRetry: boolean; codeNotStored: boolean; resendRecord: RecoveryRecord | null; canResend: boolean; otpExpired: boolean; otpWrong: boolean; otpLocked: boolean; verifying: boolean; pendingPayload: TransferRequest | null; accounts: Account[]; postBalance: { accountName: string; minor: string } | null; userInitials: string; onChangeBeneficiary: () => void; onRequestNewCode: () => void; lookup: PendingLookup; onLeave: () => void; onViewMovements: () => void; onMovements: () => void; onEdit: () => void; onBack: () => void; onReview: () => void; onCreate: () => void; onResend: () => void; onConfirmResend: () => void; onCancelResend: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
   const minor = amountToMinor(props.amount);
   const insufficient = Boolean(minor && props.source && BigInt(minor) > BigInt(props.source.availableBalanceMinor));
   const formValid = Boolean(minor && props.concept.trim().length >= 1 && props.concept.trim().length <= 40 && /^\d{1,7}$/.test(props.reference));
@@ -1187,9 +1260,10 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
   useEffect(() => { if (remainingSeconds === 0 && !otpExpired) onOtpTimeout(); }, [remainingSeconds, otpExpired, onOtpTimeout]);
   const statusTitle = props.busy ? 'Verificando resultado…' : 'Estamos verificando si tu transferencia se completó';
   const notFound = props.screen === 'status' && props.lookup === 'not_found' && !props.busy;
+  const noId = props.screen === 'status' && props.lookup === 'no_id' && !props.busy;
   const headerTitle = props.screen === 'status' || props.screen === 'receipt' || props.screen === 'sending' ? 'Detalle' : 'Transferir';
-  const headerBack = props.screen === 'review' || props.screen === 'otp' ? props.onBack : props.screen === 'status' ? props.onLeave : props.onDone;
-  const headerBackLabel = props.screen === 'otp' ? 'Cancelar y volver a revisar' : props.screen === 'status' ? 'Ir al inicio' : props.screen === 'receipt' || props.screen === 'rejected' ? 'Volver al inicio' : 'Volver';
+  const headerBack = props.screen === 'review' || props.screen === 'otp' ? props.onBack : props.screen === 'status' ? props.onLeave : props.screen === 'resend' ? props.onCancelResend : props.onDone;
+  const headerBackLabel = props.screen === 'otp' ? 'Cancelar y volver a revisar' : props.screen === 'status' ? 'Ir al inicio' : props.screen === 'resend' ? 'Volver sin reenviar' : props.screen === 'receipt' || props.screen === 'rejected' ? 'Volver al inicio' : 'Volver';
   const trackedAmount = props.transfer?.amountMinor ?? props.pendingPayload?.amountMinor;
   const trackedReference = props.transfer?.reference ?? props.pendingPayload?.reference;
   const recipient = props.transfer ? `${props.transfer.destination.name} •• ${lastDigits(props.transfer.destination.clabeMasked)}` : props.destination ? `${props.destination.name} •• ${lastDigits(props.destination.clabeMasked)}` : '—';
@@ -1277,6 +1351,7 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         <View style={styles.otpBadge}><View style={styles.otpBadgeDot}/><Text style={styles.otpBadgeText}>CÓDIGO DE DEMOSTRACIÓN</Text></View>
         <Text style={styles.otpTitle}>Código de confirmación</Text>
         <Text style={styles.otpDescription}>Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por <Text style={styles.strongText}>{props.transfer ? `${formatMoney(props.transfer.amountMinor)} MXN` : '—'}</Text> a {recipient}.</Text>
+        {props.codeNotStored && !props.demoOnlyCode && !otpBlocked ? <Text style={styles.otpStateText}>{CODE_NOT_STORED_TEXT}</Text> : null}
         {props.demoOnlyCode && !otpBlocked ? <View style={styles.demoCodeBox}><Ionicons name="information-circle-outline" size={16} color={colors.muted}/><Text style={styles.demoCodeLabel}>Código asignado para esta prueba: <Text style={styles.demoCodeValue}>{props.demoOnlyCode}</Text></Text></View> : null}
         {/* Round 7 · 4: six visual boxes over ONE hidden native input (accessible name, one-time-code autofill, paste of
             the 6 digits, delete, digits only). The boxes are decorative for assistive technologies. F-24: no maxLength —
@@ -1332,6 +1407,38 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         <Button title="Volver al inicio" leadingIcon="home-outline" onPress={props.onDone}/>
       </>;
     })()}
+    {props.screen === 'resend' && props.resendRecord && (() => {
+      // H5 (F-27 / 3): the ORIGINAL data of the stored attempt (never the form), the user's original consent and what the
+      // resend does. Only the button below sends, with the stored key and body.
+      const original = props.resendRecord;
+      const sourceLabel = original.display?.source ?? (() => { const found = props.accounts.find((item) => item.id === original.payload.sourceAccountId); return found ? `${found.name} •• ${lastDigits(found.clabeMasked)}` : 'Cuenta de origen guardada'; })();
+      const destinationLabel = original.display?.destination ?? 'Destinatario guardado';
+      const confirmedAt = original.consent ? formatBusinessDateTime(original.consent.confirmedAt) : null;
+      const otp = original.consent?.otp;
+      return <>
+        <View style={styles.rejectedHero}>
+          <View style={[styles.rejectedIcon, styles.closedIcon]}><Ionicons name="repeat-outline" size={30} color={colors.primary}/></View>
+          <Text accessibilityRole="header" style={styles.rejectedTitle}>Reenviar la misma transferencia</Text>
+          <Text style={styles.rejectedReason}>Revisa los datos originales. Se reenvía con la misma clave de la operación: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces.</Text>
+        </View>
+        <View testID="resend-original" style={styles.rejectedCard}>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Monto</Text><Text style={styles.rejectedValue}>{formatMoney(original.payload.amountMinor)} MXN</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Cuenta de origen</Text><Text style={styles.rejectedValue}>{sourceLabel}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Destinatario</Text><Text style={styles.rejectedValue}>{destinationLabel}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Concepto</Text><Text style={styles.rejectedValue}>{original.payload.concept}</Text></View>
+          <View style={styles.rejectedRow}><Text style={styles.rejectedLabel}>Referencia</Text><Text style={styles.rejectedValue}>{original.payload.reference}</Text></View>
+        </View>
+        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}>
+          <Text style={styles.warningTitle}>{confirmedAt ? `Confirmaste esta transferencia el ${confirmedAt} (${BUSINESS_ZONE_LABEL}).` : 'Confirmaste esta transferencia antes; la fecha no quedó guardada en este dispositivo.'}</Text>
+          <Text style={styles.warningText}>{otp === 'authorized' ? 'Ya habías autorizado su código. Si el servidor vuelve a pedirlo, tendrás que ingresarlo de nuevo: el reenvío no lo omite.' : otp === 'required' ? 'El servidor pidió su código de autorización y no se autorizó. Si lo vuelve a pedir, tendrás que ingresarlo: el reenvío no lo omite.' : 'Si el servidor pide un código de autorización, tendrás que ingresarlo antes de que se aplique.'}</Text>
+        </View></View>
+        {props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}
+        <View style={styles.actions}>
+          <Button title="Reenviar la misma transferencia" leadingIcon="repeat-outline" loading={props.busy} disabled={props.busy} onPress={props.onConfirmResend}/>
+          <Button title="Volver sin reenviar" variant="secondary" disabled={props.busy} onPress={props.onCancelResend}/>
+        </View>
+      </>;
+    })()}
     {props.screen === 'status' && <>
       <View style={styles.statusSection}>
         <View style={styles.statusIcon}>
@@ -1347,7 +1454,8 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
           : <>No pudimos confirmar el resultado de la operación de <Text style={styles.strongText}>{formatMoney(trackedAmount)} MXN</Text>{recipient !== '—' ? <> a <Text style={styles.strongText}>{recipient}</Text></> : null}. Para evitar cobros duplicados, consultamos el estado del intento original{trackedReference ? <> (Ref: <Text style={[styles.mediumText, styles.mono]}>{trackedReference}</Text>)</> : null}.</>}</Text>
         {props.error ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{props.error}</Text> : null}
         {notFound ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{NOT_FOUND_TEXT}</Text> : null}
-        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}><Text style={styles.warningTitle}>No intentes enviar el dinero nuevamente</Text><Text style={styles.warningText}>Verificar el estado consulta el intento original con su misma clave, sin duplicar el cargo.</Text></View></View>
+        {noId ? <Text accessibilityRole="alert" style={[styles.errorText, styles.statusError]}>{NO_ID_TEXT}</Text> : null}
+        <View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><View style={styles.summaryCopy}><Text style={styles.warningTitle}>No intentes enviar el dinero nuevamente</Text><Text style={styles.warningText}>Verificar el estado solo consulta el intento original; no envía nada ni genera cargos.</Text></View></View>
       </View>
       <View style={styles.statusDetails}>
         <StatusRow label="Destinatario" value={props.transfer?.destination.name ?? props.destination?.name ?? '—'}/>
@@ -1356,8 +1464,10 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         <StatusRow label="Estado actual" value={transferStatusLabel(props.transfer?.status)} badge/>
       </View>
       <View style={styles.actions}>
-        <Button title={notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy || (!props.transfer && !props.createRetry)} onPress={props.transfer ? props.onCheck : props.onRetryCreate}/>
+        {/* H5 · 2: "Verificar" is read-only; the resend is a separate, explicit action with its own confirmation. */}
+        <Button title={notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy} onPress={props.onCheck}/>
         <Button title="Ver movimientos" size="lg" variant="secondary" leadingIcon="list-outline" disabled={props.busy} onPress={props.onViewMovements}/>
+        {props.canResend ? <Button title="Reenviar la misma transferencia" size="lg" variant="secondary" leadingIcon="repeat-outline" disabled={props.busy} onPress={props.onResend}/> : null}
         <Button title="Ir al inicio (revisar saldo después)" size="lg" variant="surfaceLow" disabled={props.busy} onPress={props.onLeave}/>
       </View>
       <View style={styles.statusFooter}>

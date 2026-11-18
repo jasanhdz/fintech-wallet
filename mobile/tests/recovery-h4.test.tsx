@@ -137,7 +137,8 @@ describe('H4 · F-26 (a): only a definitive negative from the server releases a 
     it(`the replay of an attempt without id answers ${label}: the record is kept and only the same key is used`, async () => {
       const stored = record();
       const app = await signIn({ [ownKey()]: stored }, (url, init) => (url.endsWith('/transfers') && init?.method === 'POST' && keyOf({ url, init }) === STORED_KEY ? answer() : undefined));
-      if (app.pressables('Verificar estado de la transferencia').length) { await app.press('Verificar estado de la transferencia'); await app.wait(60); }
+      // H5: the replay is the explicit resend (reviewed, then confirmed).
+      await app.press('Reenviar la misma transferencia'); await app.press('Reenviar la misma transferencia'); await app.wait(60);
       await app.toHome();
       assert.equal(mockSecureValues.get(ownKey()), stored);
       assert.match(app.visible(), /Transferencia en verificación/);
@@ -199,7 +200,9 @@ describe('H4 · F-21 residual: an unverified 4xx never opens a path to a second 
       assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
       const stored = mockSecureValues.get(ownKey());
       assert.ok(stored);
-      await app.press('Verificar estado de la transferencia');
+      // H5: the retry of the same attempt is the explicit resend (reviewed, then confirmed).
+      await app.press('Reenviar la misma transferencia');
+      await app.press('Reenviar la misma transferencia');
       await app.wait(60);
       const screen = app.visible();
       assert.doesNotMatch(screen, /No se pudo completar la transferencia|Revisa tu saldo antes de reintentar|Modificar monto o cuenta/);
@@ -236,7 +239,8 @@ describe('H4 · F-21 residual: an unverified 4xx never opens a path to a second 
   it('a confirmed rejection (422 "Saldo insuficiente") on the retry releases the record: M11 with no debit and the flow enabled again', async () => {
     const app = await signIn({}, lostThen(() => problem(422, 'Saldo insuficiente.')));
     await app.transferOnce();
-    await app.press('Verificar estado de la transferencia');
+    await app.press('Reenviar la misma transferencia');
+    await app.press('Reenviar la misma transferencia');
     await app.wait(60);
     assert.match(app.visible(), /Tu dinero está intacto/);
     assert.equal(mockSecureValues.get(ownKey()), undefined);
@@ -256,7 +260,7 @@ const withAppState = async (run: (emit: (state: string) => Promise<void>) => Pro
 };
 
 describe('H4 · F-27: an attempt whose id never arrived is never re-sent without a tap', () => {
-  it('start-up, Home shown again and returns to the foreground send 0 creates; the tap on "Verificar estado" sends exactly one with the same key', async () => {
+  it('start-up, Home shown again and returns to the foreground send 0 creates; "Verificar estado" sends 0 too and only the confirmed resend sends one with the same key', async () => {
     await withAppState(async (emit) => {
       const app = await signIn({ [ownKey()]: record() }, (url, init) => (url.endsWith('/transfers') && init?.method === 'POST' && keyOf({ url, init }) === STORED_KEY ? Response.json(transferBody({ id: 'tr-stored', amountMinor: '30025', reference: '4401' }), { status: 201 }) : url.endsWith('/transfers/tr-stored') ? Response.json(transferBody({ id: 'tr-stored', amountMinor: '30025', reference: '4401' })) : undefined));
       assert.match(app.visible(), /Transferencia en verificación/);
@@ -277,6 +281,10 @@ describe('H4 · F-27: an attempt whose id never arrived is never re-sent without
       assert.equal(app.creates().length, 0, 'showing Home sends nothing');
       assert.equal(mockSecureValues.get(ownKey()), record());
       await app.press('Verificar estado de la transferencia');
+      await app.wait(60);
+      assert.equal(app.creates().length, 0, 'H5: verifying never sends a create');
+      await app.press('Reenviar la misma transferencia');
+      await app.press('Reenviar la misma transferencia');
       await app.wait(60);
       assert.equal(app.creates().length, 1);
       assert.equal(keyOf(app.creates()[0]!), STORED_KEY);
@@ -302,6 +310,10 @@ describe('H4 · F-27: an attempt whose id never arrived is never re-sent without
       assert.equal(sends, 1, '0 creates without a tap');
       assert.match(app.visible(), /Transferencia en verificación/);
       await app.press('Verificar estado de la transferencia');
+      await app.wait(60);
+      assert.equal(sends, 1, 'H5: verifying never sends a create');
+      await app.press('Reenviar la misma transferencia');
+      await app.press('Reenviar la misma transferencia');
       await app.wait(60);
       assert.equal(sends, 2);
       assert.equal(new Set(app.creates().map(keyOf)).size, 1);
