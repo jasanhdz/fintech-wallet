@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
@@ -71,6 +72,9 @@ function Wallet() {
   const [reference, setReference] = useState('');
   const [transferError, setTransferError] = useState('');
   const [transferBusy, setTransferBusy] = useState(false);
+  // Guards against a double tap or concurrent call racing past the `transferBusy` state check
+  // before React re-renders with it set; a ref mutates synchronously, state does not.
+  const transferInFlight = useRef(false);
   const [transfer, setTransfer] = useState<Transfer | null>(null);
   const [demoOnlyCode, setDemoOnlyCode] = useState('');
   const [createAttempt, setCreateAttempt] = useState<{ key: string; payload: TransferRequest } | null>(null);
@@ -275,9 +279,17 @@ function Wallet() {
     : null;
 
   async function submitCreate(retry = false) {
-    if (!session || transferBusy) return;
-    const attempt = retry && createAttempt ? createAttempt : transferPayload ? { key: newIdempotencyKey(), payload: transferPayload } : null;
-    if (!attempt) return;
+    if (!session || transferBusy || transferInFlight.current) return;
+    transferInFlight.current = true;
+    let attempt: { key: string; payload: TransferRequest; transferId?: string } | null;
+    try {
+      attempt = retry && createAttempt ? createAttempt : transferPayload ? { key: newIdempotencyKey(), payload: transferPayload } : null;
+    } catch (error) {
+      transferInFlight.current = false;
+      setTransferError(error instanceof Error ? error.message : 'No se pudo preparar el intento de transferencia.');
+      return;
+    }
+    if (!attempt) { transferInFlight.current = false; return; }
     if (!retry) {
       setCreateAttempt(attempt);
       await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify(attempt));
@@ -294,7 +306,7 @@ function Wallet() {
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
       setTransferScreen(error instanceof ApiError && error.status >= 400 && error.status < 500 ? 'rejected' : 'status');
-    } finally { setTransferBusy(false); }
+    } finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
   async function submitRecoveredCreate(attempt: { key: string; payload: TransferRequest }, accessToken: string) {
@@ -314,8 +326,16 @@ function Wallet() {
   }
 
   async function confirmOtp(retry = false) {
-    if (!session || !transfer || transferBusy) return;
-    const attempt = retry && confirmAttempt ? confirmAttempt : { key: newIdempotencyKey(), payload: { code: otp } };
+    if (!session || !transfer || transferBusy || transferInFlight.current) return;
+    transferInFlight.current = true;
+    let attempt: { key: string; payload: { code: string } };
+    try {
+      attempt = retry && confirmAttempt ? confirmAttempt : { key: newIdempotencyKey(), payload: { code: otp } };
+    } catch (error) {
+      transferInFlight.current = false;
+      setTransferError(error instanceof Error ? error.message : 'No se pudo preparar la confirmación.');
+      return;
+    }
     if (!retry) setConfirmAttempt(attempt);
     setTransferBusy(true); setTransferError('');
     try {
@@ -338,7 +358,7 @@ function Wallet() {
         } catch { /* Recovery query failed too; fall through and show the error with the attempt preserved for retry. */ }
       }
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
-    } finally { setTransferBusy(false); }
+    } finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
   async function checkTransferStatus() {
@@ -500,7 +520,7 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
       {!insufficient && props.amount && !minor && <Text accessibilityRole="alert" style={styles.errorText}>Escribe un importe positivo con máximo dos decimales.</Text>}
       <Button title="Revisar transferencia" disabled={!formValid || insufficient || !props.source} onPress={props.onReview}/>
     </>}
-    {props.screen === 'review' && <><View style={styles.amountHero}><View style={styles.heroIcon}><Ionicons name="arrow-forward-circle-outline" size={28} color={colors.primary}/></View><Text style={styles.muted}>Monto a transferir</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.flowAmount}>{minor ? formatBalance(minor) : '—'} <Text style={styles.amountCurrency}>MXN</Text></Text><Text style={styles.internalBadge}>● Transferencia interna</Text></View><View style={styles.flowCard}><SummaryRow label="Cuenta de origen" value={props.source?.name ?? '—'} detail={props.source ? `Saldo disponible: ${formatBalance(props.source.availableBalanceMinor)} MXN` : undefined}/><View style={styles.flowDivider}/><SummaryRow label="Destinatario" value={props.destination?.name ?? '—'} detail={props.destination?.clabeMasked}/><View style={styles.flowDivider}/><SummaryRow label="Concepto" value={props.concept.trim()}/><SummaryRow label="Referencia numérica" value={props.reference}/></View>{minor && props.source && <View style={styles.flowCard}><SummaryRow label="Saldo posterior estimado" value={`${formatBalance((BigInt(props.source.availableBalanceMinor) - BigInt(minor)).toString())} MXN`}/><Text style={styles.muted}>El saldo final se actualizará en tu cuenta una vez confirmada la operación.</Text></View>}{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title="Confirmar transferencia" loading={props.busy} disabled={props.busy} onPress={props.onCreate}/><Pressable accessibilityRole="button" style={styles.modifyAction} onPress={props.onBack}><Text style={styles.link}>Modificar datos</Text></Pressable></>}
+    {props.screen === 'review' && <>{__DEV__ && <Text style={{ color: '#ff005c', fontSize: 11, fontWeight: '700', textAlign: 'center' }}>DIAG-MOBILE-32693d3-M07</Text>}<View style={styles.amountHero}><View style={styles.heroIcon}><Ionicons name="arrow-forward-circle-outline" size={28} color={colors.primary}/></View><Text style={styles.muted}>Monto a transferir</Text><Text adjustsFontSizeToFit numberOfLines={1} style={styles.flowAmount}>{minor ? formatBalance(minor) : '—'} <Text style={styles.amountCurrency}>MXN</Text></Text><Text style={styles.internalBadge}>● Transferencia interna</Text></View><View style={styles.flowCard}><SummaryRow label="Cuenta de origen" value={props.source?.name ?? '—'} detail={props.source ? `Saldo disponible: ${formatBalance(props.source.availableBalanceMinor)} MXN` : undefined}/><View style={styles.flowDivider}/><SummaryRow label="Destinatario" value={props.destination?.name ?? '—'} detail={props.destination?.clabeMasked}/><View style={styles.flowDivider}/><SummaryRow label="Concepto" value={props.concept.trim()}/><SummaryRow label="Referencia numérica" value={props.reference}/></View>{minor && props.source && <View style={styles.flowCard}><SummaryRow label="Saldo posterior estimado" value={`${formatBalance((BigInt(props.source.availableBalanceMinor) - BigInt(minor)).toString())} MXN`}/><Text style={styles.muted}>El saldo final se actualizará en tu cuenta una vez confirmada la operación.</Text></View>}{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title="Confirmar transferencia" loading={props.busy} disabled={props.busy} onPress={props.onCreate}/><Pressable accessibilityRole="button" style={styles.modifyAction} onPress={props.onBack}><Text style={styles.link}>Modificar datos</Text></Pressable></>}
     {props.screen === 'otp' && <><View style={styles.otpIntro}><View style={styles.otpBadge}><Ionicons name="shield-checkmark-outline" size={18} color={colors.primary}/><Text style={styles.otpBadgeText}>CONFIRMACIÓN</Text></View><Text style={styles.sectionTitle}>Código de confirmación</Text><Text style={[styles.muted, styles.center]}>Ingresa el código de 6 dígitos asociado a esta operación.</Text>{props.demoOnlyCode ? <Text style={styles.demoCode}>Código de prueba: {props.demoOnlyCode}</Text> : null}<View style={styles.otpDigits} pointerEvents="none">{Array.from({ length: 6 }, (_, index) => <View key={index} style={[styles.otpDigit, index < props.otp.length && styles.otpDigitFilled]}><Text style={styles.otpDigitText}>{props.otp[index] ? '•' : '—'}</Text></View>)}</View><TextInput accessibilityLabel="Código de confirmación" keyboardType="number-pad" maxLength={6} value={props.otp} onChangeText={(value) => props.setOtp(value.replace(/\D/g, '').slice(0, 6))} style={styles.otpInput}/></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title="Autorizar transferencia" loading={props.busy} disabled={props.busy || !/^\d{6}$/.test(props.otp)} onPress={props.onConfirm}/>{props.confirmRetry && <Button title="Reintentar envío del mismo código" loading={props.busy} disabled={props.busy} onPress={props.onRetryConfirm}/>}</>}
     {props.screen === 'status' && <><View style={styles.statusIcon}><Ionicons name={props.busy ? 'sync-outline' : 'cloud-offline-outline'} size={38} color={colors.primary}/></View><View style={styles.statusPill}><Ionicons name="shield-checkmark-outline" size={16} color={colors.primary}/><Text style={styles.statusPillText}>Protección contra duplicados activa</Text></View><View style={styles.flowCard}><Text style={styles.statusMessage}>{props.error || 'Estamos comprobando el estado del intento para evitar una operación duplicada.'}</Text><View style={styles.warningBox}><Ionicons name="information-circle-outline" size={20} color={colors.primary}/><Text style={styles.muted}>No vuelvas a enviar el dinero. Consulta el intento original o reinténtalo con la misma clave.</Text></View>{props.transfer && <SummaryRow label="Estado actual" value={props.transfer.status}/>}</View><Button title="Verificar estado de la transferencia" loading={props.busy} disabled={props.busy || !props.transfer} onPress={props.onCheck}/>{props.createRetry && <Button title="Reintentar el mismo envío" loading={props.busy} disabled={props.busy} onPress={props.onRetryCreate}/>}</>}
     {props.screen === 'receipt' && <>
@@ -554,8 +574,13 @@ function amountToMinor(value: string): string | null {
 }
 
 function newIdempotencyKey(): string {
-  if (!globalThis.crypto?.randomUUID) throw new Error('No se pudo crear una clave segura para el intento.');
-  return globalThis.crypto.randomUUID();
+  // Hermes (the on-device JS engine Expo Go and production builds actually run) does not
+  // reliably expose globalThis.crypto.randomUUID; expo-crypto provides the same RFC4122 v4 UUID
+  // through a native module. Prefer the Web Crypto API where it genuinely exists (web target,
+  // Jest's Node test environment) so behavior there is unchanged.
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  if (typeof Crypto.randomUUID === 'function') return Crypto.randomUUID();
+  throw new Error('No se pudo crear una clave segura para el intento.');
 }
 
 function PrivacyScreen() { return <View style={styles.privacy}><View style={styles.privacyCard}><View style={styles.privacyIcon}><Ionicons name="eye-off-outline" size={34} color={colors.primary} /></View><Text style={styles.brand}>Billetera MXN</Text><View style={styles.privacyPill}><Ionicons name="shield-checkmark-outline" size={17} color={colors.primary}/><Text style={styles.privacyPillText}>Contenido oculto por privacidad</Text></View><Text style={[styles.muted, styles.center]}>La información confidencial y los saldos están ocultos mientras la aplicación está en segundo plano.</Text></View><View style={styles.privacyNote}><View style={styles.accountIcon}><Ionicons name="layers-outline" size={22} color={colors.primary}/></View><View style={styles.summaryCopy}><Text style={styles.rowTitle}>Privacidad en segundo plano</Text><Text style={styles.muted}>Esta vista protege tus saldos y datos de cuenta en el selector de aplicaciones de tu dispositivo móvil.</Text></View></View></View>; }
@@ -581,4 +606,4 @@ const styles = StyleSheet.create({
   centered: { flex: 1, minHeight: 180, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.bg }, privacy: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 24, backgroundColor: colors.bg }, privacyCard: { flex: 1, maxHeight: 560, minHeight: 340, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: colors.white, borderRadius: 24, borderWidth: 1, borderColor: colors.border }, privacyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pale, marginBottom: 24 }, privacyPill: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.pale, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginTop: 16 }, privacyPillText: { color: colors.primary, fontSize: 13, fontWeight: '600' }, privacyNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 16, marginTop: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 18 }, center: { textAlign: 'center', maxWidth: 320, marginTop: 16 }, privacyFooter: { position: 'absolute', bottom: 36, color: colors.muted, fontSize: 14, fontWeight: '600' },
 });
 
-export default function App() { return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}><QueryClientProvider client={queryClient}><Wallet /></QueryClientProvider></SafeAreaView></SafeAreaProvider>; }
+export default function App() { return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>{__DEV__ && <View style={{ backgroundColor: '#ff005c', paddingVertical: 5 }}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '700', textAlign: 'center', letterSpacing: 0.5 }}>DIAG-MOBILE-32693d3-A</Text></View>}<QueryClientProvider client={queryClient}><Wallet /></QueryClientProvider></SafeAreaView></SafeAreaProvider>; }

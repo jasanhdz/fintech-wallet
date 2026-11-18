@@ -22,6 +22,12 @@ beforeEach(() => {
   store.setItemAsync.mockReset().mockImplementation((key: string, value: string) => { mockSecureValues.set(key, value); return Promise.resolve(); });
   store.deleteItemAsync.mockReset().mockImplementation((key: string) => { mockSecureValues.delete(key); return Promise.resolve(); });
 });
+let mockExpoCryptoUuidCalls = 0;
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => `expo-crypto-uuid-${++mockExpoCryptoUuidCalls}`),
+}));
+beforeEach(() => { mockExpoCryptoUuidCalls = 0; });
+
 jest.mock('react-native-safe-area-context', () => {
   const ReactNative = jest.requireActual('react-native') as typeof import('react-native');
   return { SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children, SafeAreaView: ReactNative.View };
@@ -331,6 +337,75 @@ describe('mobile transfer attempt', () => {
 
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
+  });
+
+  it('falls back to expo-crypto for the idempotency key when globalThis.crypto.randomUUID is unavailable, matching Hermes on a real device', async () => {
+    mockSecureValues.clear();
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    const serverTransfer = { id: 'transfer-3', status: 'awaiting_confirmation' as const, sourceAccountId: 'source-1', destination: { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }, amountMinor: '10000', currency: 'MXN', concept: 'Abono', reference: '1546', createdAt: new Date().toISOString() };
+    let createCalls = 0;
+    let observedIdempotencyKey = '';
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'source-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '1000000', clabe: '000000000000000000', clabeMasked: '••••0000' }] });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [{ id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }] });
+      if (url.endsWith('/transfers')) {
+        createCalls += 1;
+        observedIdempotencyKey = (init?.headers as Record<string, string>)['Idempotency-Key'] ?? '';
+        return Response.json({ ...serverTransfer, demoOnlyCode: '552134' }, { status: 202 });
+      }
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+
+    const originalCrypto = globalThis.crypto;
+    // This is the exact condition that crashed on the real iPhone: Hermes does not expose
+    // globalThis.crypto.randomUUID. getRandomValues is kept so other Web Crypto consumers
+    // (none in this app today) would still see a realistic partial shape.
+    Object.defineProperty(globalThis, 'crypto', { configurable: true, value: { getRandomValues: originalCrypto?.getRandomValues?.bind(originalCrypto) } });
+    const unhandledRejections: unknown[] = [];
+    const onUnhandledRejection = (reason: unknown) => { unhandledRejections.push(reason); };
+    process.on('unhandledRejection', onUnhandledRejection);
+
+    try {
+      let renderer: TestRenderer.ReactTestRenderer;
+      await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+      await TestRenderer.act(async () => {
+        renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com');
+        renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
+      });
+      const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+      await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+      await TestRenderer.act(async () => { await Promise.resolve(); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+      await TestRenderer.act(async () => { await Promise.resolve(); });
+      await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+      const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
+      assert.ok(beneficiaryButton);
+      await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
+      await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('100.00'); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Abono'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('1546'); });
+      await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+
+      // This is the exact tap that crashed with "Uncaught (in promise): No se pudo crear una
+      // clave segura para el intento." on the real device.
+      await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
+      await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)); });
+
+      assert.deepEqual(unhandledRejections, [], 'generating the idempotency key must never produce an unhandled promise rejection');
+      assert.equal(createCalls, 1, 'the transfer must still be created exactly once via the expo-crypto fallback');
+      assert.equal(observedIdempotencyKey, 'expo-crypto-uuid-1', 'the Idempotency-Key must come from the expo-crypto fallback, not globalThis.crypto');
+      assert.ok(renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }), 'the flow must proceed to the OTP screen, not get stuck behind the crash');
+
+      await TestRenderer.act(async () => { renderer!.unmount(); });
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+      Object.defineProperty(globalThis, 'crypto', { configurable: true, value: originalCrypto });
+      delete (global as { fetch?: typeof fetch }).fetch;
+    }
   });
 });
 
