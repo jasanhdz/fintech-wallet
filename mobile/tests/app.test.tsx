@@ -269,6 +269,62 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
+
+  it('recovers an uncertain confirm by re-querying the transfer instead of leaving a dead end, without a second confirm POST', async () => {
+    mockSecureValues.clear();
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    let confirmCalls = 0;
+    let serverTransfer: Record<string, unknown> = { id: 'transfer-2', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }, amountMinor: '5000', currency: 'MXN', concept: 'Ahorro', reference: '914', createdAt: new Date().toISOString() };
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'source-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '125000', clabe: '000000000000000000', clabeMasked: '••••0000' }] });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [{ id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }] });
+      if (url.endsWith('/transfers')) return Response.json({ ...serverTransfer, demoOnlyCode: '914823' }, { status: 202 });
+      if (url.endsWith('/transfers/transfer-2/confirm')) {
+        confirmCalls += 1;
+        // The server processes the confirm and consumes the OTP challenge, but the client never sees this response
+        // (e.g. the connection drops on a real device right after the server commits).
+        serverTransfer = { ...serverTransfer, status: 'completed', receiptReference: 'folio-2' };
+        throw new Error('Network request failed');
+      }
+      if (url.endsWith('/transfers/transfer-2')) return Response.json(serverTransfer);
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => {
+      renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com');
+      renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
+    });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
+    assert.ok(beneficiaryButton);
+    await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
+    await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('50.00'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Ahorro'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('914'); });
+    await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('914823'); });
+    await TestRenderer.act(async () => { button('Autorizar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)); });
+
+    assert.equal(confirmCalls, 1, 'an uncertain result must not retry the confirm POST automatically');
+    assert.ok(JSON.stringify(renderer!.toJSON()).includes('Grace Hopper'), 'the real receipt must be shown, not a dead-end error screen');
+    assert.ok(JSON.stringify(renderer!.toJSON()).includes('folio-2'));
+    assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
+
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
 });
 
 describe('mobile movement history', () => {

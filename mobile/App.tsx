@@ -205,11 +205,13 @@ function Wallet() {
       if (previous !== 'active') {
         const token = session?.accessToken;
         if (token) void request<User>('/auth/me', token).catch(async (error: unknown) => {
-          if (error instanceof ApiError && error.status === 401) {
-            const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
-            if (refresh) await refreshSession(refresh).catch(endSession);
-            else await endSession();
-          }
+          try {
+            if (error instanceof ApiError && error.status === 401) {
+              const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
+              if (refresh) await refreshSession(refresh).catch(endSession);
+              else await endSession();
+            }
+          } catch { /* Best-effort background session recheck on foreground; never let it crash the app. */ }
         });
         setHidden(false);
       }
@@ -323,6 +325,18 @@ function Wallet() {
       if (finalResult.status === 'completed' || finalResult.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
       setTransferScreen(finalResult.status === 'rejected' ? 'rejected' : finalResult.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
     } catch (error) {
+      if (!(error instanceof ApiError) || error.status >= 500) {
+        // Result is uncertain: the confirmation may have been processed even though we lost the response.
+        // The OTP challenge is single-consumption server-side (confirmTransfer rejects a second confirm once
+        // consumed_at is set), so re-querying by transfer id is always safe and never duplicates a charge.
+        try {
+          const recovered = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
+          setTransfer(recovered); setConfirmAttempt(null); setOtp('');
+          if (recovered.status === 'completed' || recovered.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          setTransferScreen(recovered.status === 'rejected' ? 'rejected' : recovered.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
+          return;
+        } catch { /* Recovery query failed too; fall through and show the error with the attempt preserved for retry. */ }
+      }
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
     } finally { setTransferBusy(false); }
   }
