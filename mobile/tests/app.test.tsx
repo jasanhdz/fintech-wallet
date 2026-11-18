@@ -461,7 +461,7 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
-  it('M03: groups by relative day, switches account from the balance card and shows the web footer without unsupported claims', async () => {
+  it('M03/M04: groups by relative day, switches account from the balance card, and opens a signed detail that can go home', async () => {
     const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
     secureStore.getItemAsync.mockResolvedValueOnce(null);
     const calls: string[] = [];
@@ -475,6 +475,7 @@ describe('mobile movement history', () => {
       ] });
       if (url.includes('/accounts/own-1/movements?limit=20')) return Response.json({ items: [{ id: 'm-1', transferId: 't-1', type: 'credit', amountMinor: '50000', currency: 'MXN', concept: 'Honorarios', reference: '994012', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
       if (url.includes('/accounts/own-2/movements?limit=20')) return Response.json({ items: [{ id: 'm-2', transferId: 't-2', type: 'debit', amountMinor: '43050', currency: 'MXN', concept: 'Farmacia', reference: '781204', status: 'completed', occurredAt: now.toISOString() }], nextCursor: null });
+      if (url.endsWith('/transfers/t-2')) return Response.json({ id: 't-2', status: 'completed', sourceAccountId: 'own-2', destination: { id: 'b-1', name: 'Farmacia Central', alias: 'Farmacia', clabeMasked: '222•••••••••••5931', destinationAccountId: 'other' }, amountMinor: '43050', currency: 'MXN', concept: 'Farmacia', reference: '781204', createdAt: '2026-11-13T20:32:00.000Z', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'DEMO-0001' });
       throw new Error(`Unexpected API request: ${url}`);
     });
     Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
@@ -499,6 +500,22 @@ describe('mobile movement history', () => {
     assert.ok(calls.some((url) => url.includes('/accounts/own-2/movements?limit=20')));
     assert.match(visible(), /Farmacia/);
     assert.ok(renderer!.root.findByProps({ accessibilityLabel: 'Cuenta Ahorro, cambiar cuenta' }));
+
+    const movement = renderer!.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Cargo '))[0]!;
+    await TestRenderer.act(async () => { movement.props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    const detail = visible();
+    assert.match(detail, /"Detalle"/);
+    assert.match(detail, /"-","\$430\.50"/);
+    assert.match(detail, /13 de noviembre de 2026, 14:32 hrs/);
+    assert.match(detail, /Tiempo del Centro de México/);
+    assert.match(detail, /"Ahorro"," •• ","1111"/);
+    assert.match(detail, /"Farmacia Central"," •• ","5931"/);
+    assert.match(detail, /DEMO-0001/);
+    assert.match(detail, /Transferencia interna/);
+    assert.doesNotMatch(detail, /"completed"/);
+    await TestRenderer.act(async () => { button('Ir al inicio').props.onPress(); });
+    assert.match(visible(), /Hola, /);
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
