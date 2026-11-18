@@ -77,15 +77,15 @@ Expo Go es suficiente con la configuración actual (Expo SDK 58, Expo Router y S
 
 ### Sesión manual aislada en esta Mac
 
-Actualmente los puertos 3000, 5173 y 8081 están ocupados por el smoke ligado a `wallet_test`. Para mantener tus datos manuales aparte, arranca una instancia dedicada a `wallet_dev` en puertos alternos. No detengas los procesos existentes.
+La revisión manual debe conectarse a `wallet_dev` desde el checkout raíz `feature/product-mvp`, no desde los worktrees API/Web: sus `.env` apuntan a las mismas bases, pero tienen llaves criptográficas distintas. En esta Mac ya existe el perfil local reservado y PostgreSQL está saludable; no hace falta volver a sembrar, migrar ni restablecer saldos. Comprueba primero qué procesos escuchan antes de iniciar o detener servicios. La instancia de revisión preparada usa API `3200`, Web `5174` y Metro `8082`; no detengas servicios ajenos.
 
-**Terminal 1 — PostgreSQL, migraciones y seed local** (PostgreSQL ya se verificó healthy en `localhost:55432`):
+**Terminal 1 — PostgreSQL** (solo si el servicio del proyecto no está activo):
 
 ```sh
 npm run db:up
-npm run db:migrate
-npm run db:seed
 ```
+
+El comando reutiliza el volumen persistente del proyecto. No ejecutes `docker-compose down -v`. `db:migrate` y `db:seed` no forman parte del arranque de esta sesión existente.
 
 **Terminal 2 — API con `wallet_dev`:**
 
@@ -101,20 +101,22 @@ WEB_ORIGIN=http://localhost:5174 VITE_API_URL=http://localhost:3200/v1 npm --wor
 
 Abre <http://localhost:5174> e inicia sesión con las credenciales locales de demo indicadas arriba.
 
-**Terminal 4 — Expo Go para el teléfono:**
+**Terminal 4 — Expo Go para el teléfono** (si Metro no está ya activo):
 
 ```sh
-EXPO_PUBLIC_API_URL=http://192.168.100.8:3200/v1 npm --workspace @fintech-wallet/mobile run start -- --port 8082
+EXPO_PUBLIC_API_URL="http://$(ipconfig getifaddr en0):3200/v1" npm --workspace @fintech-wallet/mobile run start -- --port 8082
 ```
 
-La IP del comando es la observada en esta Mac (`ipconfig getifaddr en0`); si cambia de Wi-Fi, vuelve a ejecutar ese comando y sustituye la dirección. Escanea el QR con Expo Go. Los datos permanecen en `wallet_dev`, aislados de las suites que usan `wallet_test`.
+La dirección LAN debe ser accesible desde el teléfono en la misma Wi-Fi. Escanea el QR o introduce la URL `exp://<IP-LAN-del-host>:8082` en Expo Go. Los datos permanecen en `wallet_dev`, aislados de las suites que usan `wallet_test`.
 
 ## Producto y evidencia
 
 - La API de producto está implementada según `specs/openapi.yaml`; el contrato define rutas y esquemas, y `npm run openapi:validate && npm run openapi:check` los valida y comprueba tipos reproducibles.
 - Las migraciones TypeORM se ejecutan con `synchronize: false`; el perfil manual demo se crea con `db:seed` dentro de `wallet_dev`, con ledger de apertura balanceado y sin reset de actividad.
 - `docs/product-integration-report.md` recoge evidencia del ciclo de integración. `docs/integration-review.md` preserva la revisión independiente del SHA `f5e9a4868409740aff29b1f5a4ea11b9a4194413`; no es aprobación de la versión actual ni final.
-- `docs/design-mapping.md` registra la correspondencia de fuentes visuales, estados y alcance. `docs/design/references/` contiene referencias canónicas curadas sin datos operativos de las exportaciones originales.
+- `docs/design-mapping.md` registra la correspondencia de fuentes visuales, estados y alcance. `docs/design/references/round3/` contiene capturas PNG de referencia sanitizadas, capturas PNG de implementación del CI y su matriz de revisión; `docs/design/references/` conserva además dos esquemas SVG complementarios.
+- `docs/design-fidelity-round3.md` distingue implementación, inspección de capturas Web y revisión nativa móvil pendiente. `docs/mobile-review-round3.md` contiene el recorrido de validación con Expo Go.
+- `docs/acceptance-handoff-round3.md` registra el SHA, el arranque no destructivo, la diferencia de llaves entre worktrees y el límite de atribución del request histórico; la aceptación sigue pendiente.
 - `docs/aws-deploy.md` es una propuesta documental; no se despliega AWS. No se publica Expo/EAS ni se abre un túnel público.
 
 ## Contrato y tipos compartidos

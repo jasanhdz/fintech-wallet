@@ -67,4 +67,4 @@ Todos los elementos quedan autorizados dentro del alcance obligatorio del challe
 
 ## Referencias versionadas curadas
 
-Para inspección fuera del checkout que contiene los originales locales, consultar [`docs/design/references/`](design/references/README.md). Incluye esquemas SVG neutrales para escritorio web y móvil, junto con hashes SHA-256 de las fuentes locales inspeccionadas. Los esquemas omiten los datos de muestra de los exports; no sustituyen la revisión del HTML/capturas originales durante el desarrollo y nunca se copian como código de interfaz.
+Para inspección fuera del checkout que contiene los originales locales, consultar [`docs/design/references/round3/`](design/references/round3/README.md): conserva PNG fuente sanitizados que mantienen cada composición, además de capturas PNG reales de Web publicadas como artefacto de CI. El manifiesto registra SHA-256 y regiones cubiertas. Los dos SVG anteriores son resúmenes complementarios; no sustituyen las referencias raster ni la validación móvil nativa.

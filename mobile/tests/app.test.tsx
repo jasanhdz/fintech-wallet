@@ -251,7 +251,7 @@ describe('mobile transfer attempt', () => {
     assert.equal(renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.value, '');
     assert.doesNotMatch([...mockSecureValues.values()].join('|'), /654321|demoOnlyCode/);
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('654321'); });
-    await TestRenderer.act(async () => { button('Confirmar código').props.onPress(); });
+    await TestRenderer.act(async () => { button('Autorizar transferencia').props.onPress(); });
     assert.ok(JSON.stringify(renderer!.toJSON()).includes('Grace Hopper'));
     assert.ok(JSON.stringify(renderer!.toJSON()).includes('folio-1'));
     assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
