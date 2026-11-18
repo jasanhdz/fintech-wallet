@@ -1,0 +1,34 @@
+SHOT M09-enviando minFont=12 scrollW=390 offscreen=0 errs=0
+M09 Enviando: "Enviando transferencia…" true | "Verificando" present false | exits disabled (back arrow aria-disabled): null
+  -> then receipt
+M09 lost-after-apply: verifying text true | claims (intacto/debitado/no se movió) false | DB completed:30025 | record {"userIdSet":true,"hasTransferId":false,"key":"05dbb50d"}
+SHOT M09-tras-recarga minFont=12 scrollW=390 offscreen=0 errs=1
+  after reload (same storage): screen = home notice | POST /transfers replays with key [] original 05dbb50d | DB completed:30025 | ledger 2 rows sum 0 | record {"userIdSet":true,"hasTransferId":false,"key":"05dbb50d"}
+M09 lost-before-apply: DB rows "" (none expected) | balances unchanged true
+  retry: keys ["79fce1ea"] same key false | receipt false | DB  | debit 0
+M11 prep: principal balance now 2
+SHOT M11-saldo-insuficiente minFont=12 scrollW=390 offscreen=0 errs=1
+M11 insufficient: reason shows requested $4,000.00 + balance true | "Tu dinero está intacto" true | "Ningún dinero fue retirado" true | corrective action "Modificar monto o cuenta" 1 | balances unchanged true | DB completed:499999 | completed:499999
+  corrective: back to datos with amount kept true | inline "Saldo insuficiente" true
+M11 limit prep: dailyRemaining 4
+SHOT M11-limite-diario minFont=12 scrollW=390 offscreen=0 errs=1
+M11 daily limit: reason with amounts true | "disponibles hoy" true | row "Disponible hoy (límite diario)" true | "no se debitó"/intacto true | action 1 | balances unchanged true
+SHOT M11-connection-error-reset-before- minFont=12 scrollW=390 offscreen=0 errs=1
+M11 vs connection error (reset before server): screen = M09 verificando | "Tu dinero está intacto" false | "Revisa tu saldo antes de reintentar" false
+SHOT M11-http-500 minFont=12 scrollW=390 offscreen=0 errs=1
+M11 vs HTTP 500: screen = M09 verificando | "Tu dinero está intacto" false | "Revisa tu saldo antes de reintentar" false
+SHOT M11-http-409 minFont=12 scrollW=390 offscreen=0 errs=1
+M11 vs HTTP 409: screen = M09 verificando | "Tu dinero está intacto" false | "Revisa tu saldo antes de reintentar" false
+SHOT M12-cortina minFont=12 scrollW=390 offscreen=0 errs=1
+M12 curtain (document hidden ~ background): "Contenido oculto por privacidad" true | balances/name/amount visible false | biometric claims false
+SHOT M12-sesion-vencida minFont=12 scrollW=390 offscreen=0 errs=5
+M12 expired session: "Tu sesión ha expirado" true | login form true | record kept (bound to user) {"userIdSet":true,"hasTransferId":false,"key":"d996d4b3"}
+SHOT M12-otro-usuario minFont=12 scrollW=390 offscreen=0 errs=5
+M12 user B signs in: sees pending notice/verifying of A false | Home of B visible true | record still there {"userIdSet":true,"hasTransferId":false,"key":"d996d4b3"} | A debit untouched in DB completed:30025
+  B logs out explicitly -> A record {"userIdSet":true,"hasTransferId":false,"key":"d996d4b3"} (null = A's unresolved attempt record was deleted by B)
+SHOT M12-A-vuelve minFont=12 scrollW=390 offscreen=0 errs=5
+M12 user A signs in again: pending notice/verifying true | DB completed:30025 | balance A principal 969975
+SHOT M12-mismo-usuario-reanuda minFont=12 scrollW=390 offscreen=0 errs=3
+M12 same user after expiry: resumed -> other | replay key same as original false | DB completed:30025 | ledger 2 rows sum 0
+Explicit logout from Home WITH a pending (applied, unverified) transfer: record after logout {"userIdSet":true,"hasTransferId":false,"key":"30de5c46"} | DB completed:30025
+  login again: notice or recovery shown true | Home offers new transfer (Transferir dinero) false | principal movements show the 30025 debit true

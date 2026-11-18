@@ -1,0 +1,34 @@
+## root npm run dev:api:testdb (tsx watch, APP_ENV=development, wallet_test) without / with the variable
+{"script":"dev:api:testdb","port":3973,"retention":"UNSET","groupPid":67235,"stillRunningAtProbe":true,"exitCode":143,"getV1TransferPolicyUnauthenticated":"no response (ECONNREFUSED)","getHealth":"no response (ECONNREFUSED)"}
+  | > fintech-wallet@0.1.0 dev:api:testdb
+  | > tsx scripts/env/dev-api-testdb.ts
+  | > @fintech-wallet/api@0.1.0 dev
+  | > tsx watch src/server.ts
+  | {"event":"api.config_invalid","message":"IDEMPOTENCY_RECORD_RETENTION_DAYS is required (positive integer of days; see .env.example)"}
+  | npm error command sh -c tsx watch src/server.ts
+{"script":"dev:api:testdb","port":3974,"retention":"30","groupPid":67315,"stillRunningAtProbe":true,"exitCode":143,"getV1TransferPolicyUnauthenticated":"HTTP 401","getHealth":"HTTP 200"}
+  | > fintech-wallet@0.1.0 dev:api:testdb
+  | > tsx scripts/env/dev-api-testdb.ts
+  | > @fintech-wallet/api@0.1.0 dev
+  | > tsx watch src/server.ts
+  | {"event":"api.listening","port":3974}
+  | npm error command sh -c tsx watch src/server.ts
+## root npm run dev:api (tsx watch) without the variable; DATABASE_URL forced to an unreachable placeholder so no local database is touched
+{"script":"dev:api","port":3977,"retention":"UNSET","groupPid":67401,"stillRunningAtProbe":true,"exitCode":143,"getV1TransferPolicyUnauthenticated":"no response (ECONNREFUSED)","getHealth":"no response (ECONNREFUSED)"}
+  | > fintech-wallet@0.1.0 dev:api
+  | > @fintech-wallet/api@0.1.0 dev
+  | > tsx watch src/server.ts
+  | {"event":"api.config_invalid","message":"IDEMPOTENCY_RECORD_RETENTION_DAYS is required (positive integer of days; see .env.example)"}
+  | npm error command sh -c tsx watch src/server.ts
+## api npm start (built dist/src/server.js) without the variable, APP_ENV=development and APP_ENV=production; unreachable DATABASE_URL placeholder
+{"script":"start","port":3978,"retention":"UNSET","groupPid":67453,"stillRunningAtProbe":false,"exitCode":1,"getV1TransferPolicyUnauthenticated":"no response (ECONNREFUSED)","getHealth":"no response (ECONNREFUSED)"}
+  | > @fintech-wallet/api@0.1.0 start
+  | > node dist/src/server.js
+{"script":"start","port":3978,"retention":"UNSET","groupPid":67483,"stillRunningAtProbe":false,"exitCode":1,"getV1TransferPolicyUnauthenticated":"no response (ECONNREFUSED)","getHealth":"no response (ECONNREFUSED)"}
+  | > @fintech-wallet/api@0.1.0 start
+  | > node dist/src/server.js
+## NOTE (H6): the two `npm start` rows above are NOT evidence for F-32. Run directly, the built `dist/src/server.js` exits 1
+## with `ERR_MODULE_NOT_FOUND` for `packages/shared/src/money.js` (the shared workspace ships TypeScript sources, so the
+## compiled API cannot import it under plain node). That failure is independent of this change (module resolution happens
+## before any configuration check) and is outside H6 scope. The production-mode validation is covered by
+## api/tests/startup.test.ts ("production, variable unset" via the real server.ts under tsx) and config.test.ts.

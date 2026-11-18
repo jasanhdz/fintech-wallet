@@ -1,0 +1,2 @@
+record keeps the demo code? false
+after reload: code step true | demo code box recovered true | rows awaiting_confirmation:200000 | POST /transfers replays 1 | countdown 01:24

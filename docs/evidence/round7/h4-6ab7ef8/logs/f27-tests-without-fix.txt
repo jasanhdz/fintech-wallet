@@ -1,0 +1,7 @@
+  ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+  ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M09 "Ir al inicio" keeps a pending notice on Home; verifying replays the same key and lands on the receipt with one row
+  ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it after signing in, another user never sees it
+  ● round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and lands on the real result
+  ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; the tap on "Verificar estado" sends exactly one with the same key
+  ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › after "Ir al inicio" from M09 (response lost before it was applied) the foreground sends nothing until the tap
+Tests:       6 failed, 177 passed, 183 total

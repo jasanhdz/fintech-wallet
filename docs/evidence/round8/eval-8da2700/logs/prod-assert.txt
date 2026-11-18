@@ -1,0 +1,5 @@
+retention undefined -> IDEMPOTENCY_RECORD_RETENTION_DAYS is required in production
+retention 0 -> IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer
+retention -1 -> IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer
+retention abc -> IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer
+retention 2 -> ok

@@ -1,0 +1,7 @@
+{"M04-detalle-enviada":"m04_detalle_de_movimiento","M04-detalle-recibida":"m04_detalle_de_movimiento",
+"M06-datos":"m06_datos_de_transferencia","M06-datos-propias":"m06_datos_de_transferencia","M06-selector-origen":"m06_datos_de_transferencia",
+"M07-revision":"m07_revisar_transferencia_2","M07-revision-propias":"m07_revisar_transferencia_1","M07-revision-umbral":"m07_revisar_transferencia_6_000_mxn_verificaci_n",
+"M08-codigo-vacio":"m08_c_digo_de_confirmaci_n_2","M08-codigo-vigente":"m08_c_digo_de_confirmaci_n_c_digo_vigente","M08-codigo-expirado":"m08_c_digo_de_confirmaci_n_c_digo_expirado",
+"M10-comprobante":"m10_transferencia_completada_1","M10-comprobante-propias":"m10_transferencia_completada_2",
+"M11-rechazada-saldo":"m11_transferencia_rechazada","M11-intento-expirado":"m11_transferencia_rechazada",
+"I-texto-130-M06":"m06_datos_de_transferencia"}

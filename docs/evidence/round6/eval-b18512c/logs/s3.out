@@ -1,0 +1,61 @@
+SHOT E1-enviando bad=[]
+SHOT E1-completada bad=[]
+E1 sending screen lines: Detalle | AL | Enviando transferencia… | Enviando $150.00 MXN a Carlos Ruiz •• 7867. Por favor no cierres la aplicación. | Destinatario | Carlos Ruiz | Monto | $150.00 MXN | Referencia | 1111 | Estado actual | Enviando
+E1 normal flow shows "Consultando"/"Verificando": false | keys: 1 | DB: completed:15000
+SHOT E2-verificando bad=[]
+E2 verifying screen:  | Detalle | AL |  |  |  | Protección contra duplicados activa | Estamos verificando si tu transferencia se completó | No pudimos confirmar el resultado de la operación de $120.00 MXN a Carlos Ruiz •• 7867. Para evitar cobros duplicados, consultamos el estado del intento original (Ref: 2222). | No pudimos conectar. Revisa tu conexión e inténtalo de nuevo. |  | No intentes enviar el dinero nuevamente | Verificar el estado consulta el intento original con su misma clave, sin duplicar el cargo
+E2 DB after lost response: completed:12000
+SHOT E2-after-reload bad=[]
+E2 after reload: verifying screen
+SHOT E2-resolved bad=[]
+E2 POST keys across attempt+reload+retry: af8f00d3 (count 1) | DB: completed:12000 | resolved screen: true
+SHOT E3-review-otp bad=[]
+SHOT G-otp-empty bad=[]
+G OTP screen lines:  | Transferir | AL |  | Confirmación de seguridad | Monto extraordinario | DESTINATARIO | Carlos Ruiz •• 7867 | (Billetera MXN) | IMPORTE | $6,000.00 MXN |  | Operación mayor o igual a $5,000.00 MXN (umbral de demostración) | CÓDIGO DE DEMOSTRACIÓN | Código de confirmación | Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por $6,000.00 MXN a Carlos Ruiz •• 7867. |  | Código asignado para esta prueba: ###### |  | El código expira en 04:59 |  | Solicitar nuevo código de demostración |  | Autorizar transferencia |  | Cancelar y volver a revisar
+G DB pending: awaiting_confirmation:600000
+SHOT G-after-leave bad=[]
+G after leave (Cancelar y volver): DB: cancelled:600000 | screen:  | Transferir | AL | Paso 2 de 2
+G second attempt DB: cancelled:600000 awaiting_confirmation:600000
+G after header back: DB: cancelled:600000 cancelled:600000
+SHOT G-completed-after-retries bad=[]
+G third attempt confirmed: DB: cancelled:600000 cancelled:600000 completed:600000 | balances: Cuenta principal=988000 Ahorro=500000 -> Cuenta principal=388000 Ahorro=500000
+G keys of POST /transfers (distinct per attempt): 90394431,8a5acf8e,938e1706 | cancel POSTs: 2
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /^Continuar[^a-zA-Z]*$/ })[22m
+[2m    - locator resolved to <button disabled role="button" tabindex="-1" type="button" aria-disabled="true" class="css-g5y9jx r-12vffkv r-1awozwy r-18dmg4z r-t23y2h r-1777fci r-11c0sde r-10gryf7 r-3pj75a r-icoktb">…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+    at go (/private/tmp/claude-501/-Users-jasanhernandez-Develop-fintech-wallet/2ea3dc70-874a-47fc-b6a0-d91389549965/scratchpad/t/s3.cjs:11:160)
+    at async /private/tmp/claude-501/-Users-jasanhernandez-Develop-fintech-wallet/2ea3dc70-874a-47fc-b6a0-d91389549965/scratchpad/t/s3.cjs:69:3 {
+  log: [
+    "  - waiting for getByRole('button', { name: /^Continuar[^a-zA-Z]*$/ })",
+    '    - locator resolved to <button disabled role="button" tabindex="-1" type="button" aria-disabled="true" class="css-g5y9jx r-12vffkv r-1awozwy r-18dmg4z r-t23y2h r-1777fci r-11c0sde r-10gryf7 r-3pj75a r-icoktb">…</button>',
+    '  - attempting click action',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '    - waiting 20ms',
+    '    2 × waiting for element to be visible, enabled and stable',
+    '      - element is not enabled',
+    '    - retrying click action',
+    '      - waiting 100ms',
+    '    58 × waiting for element to be visible, enabled and stable',
+    '       - element is not enabled',
+    '     - retrying click action',
+    '       - waiting 500ms'
+  ],
+  name: 'TimeoutError'
+}

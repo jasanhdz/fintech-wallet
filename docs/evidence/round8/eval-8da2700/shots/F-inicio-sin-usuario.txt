@@ -1,0 +1,47 @@
+
+Billetera MXN
+INICIO
+FS
+Hola, Fito Sinusuario
+Actualizado hoy, 07:14 hrs
+
+Principal
+•• 1462
+Ahorro
+•• 2259
+CUENTA PRINCIPAL
+•• 1462
+Saldo disponible
+$9,876.55
+MXN
+
+Transferencia en verificación
+Aún no confirmamos si se aplicó la operación de $123.45 MXN (Ref: 8307). No hagas otra transferencia igual: las salidas seguras son «Verificar estado» (sólo consulta), «Reenviar la misma transferencia» (misma clave: nunca cobra dos veces) y «Anular esta transferencia». Podrás hacer otra transferencia cuando esta quede resuelta.
+Esta operación se guardó sin indicar a qué usuario pertenecía; la mostramos en tu sesión y lo que hagas con ella sólo afecta a tu usuario.
+Una versión anterior de la app no registró esta operación por número, así que el servidor no puede buscarla y no podemos confirmar si se realizó un cargo. Para resolverla sin riesgo de un cargo doble usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia) o «Anular esta transferencia».
+
+Verificar estado de la transferencia
+
+Anular esta transferencia
+
+Reenviar la misma transferencia
+
+Ver movimientos
+En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.
+
+Última actualización de saldo
+Actualizado hoy, 07:14 hrs • Saldo total $15,000.00 MXN
+Actividad reciente
+ÚLTIMOS MOVIMIENTOS
+
+Traspaso a Cuenta de ahorro demo
+•• 2259 · F antiguo
+17 nov, 07:13
+-$123.45 MXN
+Completado
+Ver los últimos 20 movimientos
+
+
+Inicio
+
+Movimientos

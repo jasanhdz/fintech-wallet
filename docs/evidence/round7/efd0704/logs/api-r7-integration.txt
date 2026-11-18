@@ -1,0 +1,26 @@
+policy {"otpThresholdMinor":"500000","otpExpirySeconds":300,"otpMaxAttempts":5,"dailyLimitMinor":"2000000","demoOnly":true}
+PASS edge 499999 minor -> HTTP 201 completed (expected 201 completed); demo code present: false
+PASS edge 500000 minor -> HTTP 202 awaiting_confirmation (expected 202 awaiting_confirmation); demo code present: true
+PASS edge 500000: pending attempt cancelled (cancelled)
+PASS edge 500001 minor -> HTTP 202 awaiting_confirmation (expected 202 awaiting_confirmation); demo code present: true
+PASS edge 500001: pending attempt cancelled (cancelled)
+PASS attempt 1 cancelled before a new one (cancelled)
+PASS confirming the CANCELLED attempt with its own code -> 409 La transferencia ya no puede confirmarse.
+PASS attempt 2 created with a new key (new id, HTTP 202)
+PASS attempt 2 with the OLD code -> 422 Código incorrecto.
+PASS no money moved by the old code (principal 1000000, ahorro 500000)
+PASS attempt 2 with its own code -> 200 completed
+PASS exactly one debit/credit of 600000 (principal 1000000->400000, ahorro 500000->1100000)
+PASS wrong codes -> 422,422,422,422,429,429 (422 until the 5th, then 429)
+PASS even the right code after exhaustion -> 429
+PASS locked attempt can be cancelled (cancelled)
+PASS balances unchanged
+PASS replay with the same key -> same id, status completed (HTTP 201/201)
+PASS debited once (1000000->876544)
+PASS one movement row with reference 9091 in Principal (1)
+PASS same key with another payload refused (409)
+PASS insufficient balance (1000001 minor, OTP path: create 202 then confirm) -> 422 Saldo insuficiente.
+PASS nothing moved after the insufficient-balance rejection
+PASS daily limit: remaining 4, asking 104 -> 429 Se excedió el límite diario.
+PASS nothing moved by the limit rejection; total of own accounts conserved
+ALL PASS

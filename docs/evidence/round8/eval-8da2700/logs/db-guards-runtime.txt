@@ -1,0 +1,42 @@
+### runtime-role mutation attempts (each expected to FAIL, ON_ERROR_STOP=0)
+-- UPDATE closure
+ERROR:  permission denied for table transfer_attempt_closures
+-- DELETE closure
+ERROR:  permission denied for table transfer_attempt_closures
+-- TRUNCATE closure
+-- lower epoch (gate with epoch>0)
+ERROR:  permission denied for table transfer_attempt_closures
+ERROR:  transfer send epoch can only stay or advance by one
+-- skip epoch +2
+-- change gate owner
+ERROR:  transfer send epoch can only stay or advance by one
+-- DELETE gate
+ERROR:  transfer send epoch can only stay or advance by one
+ERROR:  permission denied for table transfer_send_gates
+-- change client_attempt_id (non-null -> other)
+ERROR:  transfer client_attempt_id is immutable
+-- fill NULL client_attempt_id
+ERROR:  transfer client_attempt_id is immutable
+-- completed -> cancelled
+ERROR:  transfer 1daf2d61-0e45-407d-9766-5d09e5619b93 is in terminal state completed
+-- DELETE transfer
+-- DELETE idempotency_records
+ERROR:  permission denied for table transfers
+-- insert closure for a key that already executed
+ERROR:  permission denied for table idempotency_records
+ERROR:  cannot close an attempt whose key already executed
+-- insert closure for identity that already has a transfer
+ERROR:  cannot close an attempt identity that already has a transfer
+-- insert idempotency record for a closed key
+ERROR:  cannot execute an attempt whose key is closed
+-- CHECK rejected closure without problem
+ERROR:  new row for relation "transfer_attempt_closures" violates check constraint "transfer_attempt_closures_rejected_check"
+-- CHECK bad status
+ERROR:  new row for relation "transfer_attempt_closures" violates check constraint "transfer_attempt_closures_status_check"
+-- CHECK problem_status 500
+ERROR:  new row for relation "transfer_attempt_closures" violates check constraint "transfer_attempt_closures_problem_status_check"
+-- CHECK negative epoch via insert
+-- audit_events UPDATE/DELETE
+ERROR:  new row for relation "transfer_send_gates" violates check constraint "transfer_send_gates_epoch_check"
+ERROR:  permission denied for table audit_events
+ERROR:  permission denied for table audit_events

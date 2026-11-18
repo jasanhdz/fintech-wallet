@@ -1,0 +1,46 @@
+
+Detalle
+WW
+
+
+Transferencia completada
+-$850.00
+MXN
+
+16 de noviembre de 2026, 18:01 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 4665
+Para
+Wanda Wu
+Wanda
+Cuenta destino
+Billetera MXN
+•• 5056
+Concepto
+Comida
+Referencia
+1234
+Folio interno
+5e30495d-6862-43e4-aa1d-21b64a66ca2d
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$9,150.00
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

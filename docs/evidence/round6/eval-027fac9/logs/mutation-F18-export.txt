@@ -1,0 +1,51 @@
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Web Bundling failed 1307ms ../fintech-wallet/node_modules/expo-router/entry.js (786 modules)
+Unable to resolve "./money.js" from "packages/shared/src/index.ts"
+[0m [90m 1 |[39m [36mexport[39m type { components [36mas[39m [33mScaffoldComponents[39m[33m,[39m paths [36mas[39m [33mScaffoldPaths[39m } [36mfrom[39m [32m'./generated/openapi.js'[39m[33m;[39m
+ [90m 2 |[39m [36mexport[39m type { components [36mas[39m [33mProductComponents[39m[33m,[39m paths [36mas[39m [33mProductPaths[39m } [36mfrom[39m [32m'./generated/product-design.js'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./money.js'[39m[33m;[39m
+ [90m   |[39m                [31m[1m^[22m[39m
+ [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./validation.js'[39m[33m;[39m
+ [90m 5 |[39m[0m
+
+Import stack:
+
+ packages/shared/src/index.ts
+ | import "./money.js"
+
+ mobile/App.tsx
+ | import "@fintech-wallet/shared"
+
+ mobile/app/index.tsx
+ | import "../App"
+
+ mobile/app (require.context)
+
+
+Error: Unable to resolve module ./money.js from /Users/jasanhernandez/Develop/fintech-wallet-g1/packages/shared/src/index.ts: 
+
+None of these files exist:
+  * ../packages/shared/src/money.js(.web.ts|.ts|.web.tsx|.tsx|.web.mjs|.mjs|.web.js|.js|.web.jsx|.jsx|.web.json|.json|.web.cjs|.cjs|.web.scss|.scss|.web.sass|.sass|.web.css|.css)
+  * ../packages/shared/src/money.js
+[0m [90m 1 |[39m [36mexport[39m type { components [36mas[39m [33mScaffoldComponents[39m[33m,[39m paths [36mas[39m [33mScaffoldPaths[39m } [36mfrom[39m [32m'./generated/openapi.js'[39m[33m;[39m
+ [90m 2 |[39m [36mexport[39m type { components [36mas[39m [33mProductComponents[39m[33m,[39m paths [36mas[39m [33mProductPaths[39m } [36mfrom[39m [32m'./generated/product-design.js'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 3 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./money.js'[39m[33m;[39m
+ [90m   |[39m                [31m[1m^[22m[39m
+ [90m 4 |[39m [36mexport[39m [33m*[39m [36mfrom[39m [32m'./validation.js'[39m[33m;[39m
+ [90m 5 |[39m[0m
+
+Import stack:
+
+ packages/shared/src/index.ts
+ | import "./money.js"
+
+ mobile/App.tsx
+ | import "@fintech-wallet/shared"
+
+ mobile/app/index.tsx
+ | import "../App"
+
+ mobile/app (require.context)
+

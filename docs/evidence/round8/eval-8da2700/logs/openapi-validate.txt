@@ -1,0 +1,17 @@
+
+> fintech-wallet@0.1.0 openapi:validate
+> tsx scripts/qa/openapi.ts validate
+
+validating specs/openapi.yaml...
+specs/openapi.yaml: validated in 33ms
+
+Woohoo! Your API description is valid. 🎉
+
+
+validating specs/openapi.boot.yaml...
+specs/openapi.boot.yaml: validated in 9ms
+
+Woohoo! Your API description is valid. 🎉
+
+
+exit 0

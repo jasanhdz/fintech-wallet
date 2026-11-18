@@ -1,0 +1,17 @@
+
+Transferir
+FS
+
+Anular esta transferencia
+Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.
+Monto
+$123.45 MXN
+Destinatario
+Destinatario guardado
+Concepto
+F antiguo
+Referencia
+8307
+
+Anular esta transferencia
+Volver sin anular

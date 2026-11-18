@@ -30,3 +30,20 @@ Registro contemporáneo de esta fase; no representa aprobación humana ni revisi
 - No se detectaron ni se rechazan sugerencias AI de lógica financiera insegura: no se propuso ni implementó lógica financiera. Los montos/umbrales y supuestos de producto se mantienen como ilustrativos/propuestos pendientes, no aprobación humana.
 - No se han registrado sugerencias AI inseguras ni intervenciones humanas rechazadas hasta el momento; no se fabrican. Valores financieros de ejemplo y supuestos de producto se etiquetan como propuestas pendientes, no hechos.
 - No se registra aprobación de Planner/specs por persona; la revisión Stitch está pendiente.
+
+## Seguimiento producto y aprobación visual (2026-11-14)
+
+- El usuario sustituyó el stop anterior y aprobó los exports Stitch para implementación; se registra como aprobación del usuario real, no como aprobación de agentes.
+- El usuario eligió la opción de demo balanceada preguntada por el Coordinador: cuenta MXN automática al registrarse y fixture local de dos cuentas propias con contra-asientos. No aprobó importes exactos ni políticas de producción.
+- Tres contextos OpenCode `general` inspeccionaron por separado las fuentes web W01–W07, web W08–W14 y mobile M01–M12. Cada uno leyó los exports HTML y abrió las capturas disponibles; resultados consolidados por el Coordinador en `docs/design-mapping.md`.
+- Se encontraron 12 capturas web no disponibles, dos HTML incompletos y diferencias entre los tokens y el texto narrativo de color. Se registran como tales; no se afirma revisar assets ausentes.
+- El Coordinador fijó el alcance exclusivamente a requisitos obligatorios del challenge. Se excluyen SPEI/bancos externos, CEP/Banxico real, inversiones, garantías, biometría, export mensual y transferencias programadas.
+- En esta fase posterior el host soporta delegación real con la herramienta OpenCode `task` y agentes `general`/`explore`. No se han ejecutado todavía agentes implementadores Backend/Web/Mobile; se delegarán luego de congelar OpenAPI/types/ownership y commit del Planner.
+
+## Forge product cycle — preparación (2026-11-14)
+
+- Planner se ejecutó en tarea independiente OpenCode y modificó únicamente `SPEC.md`; rubric de producto 20 criterios, commit `b7cfa69` anterior a código.
+- Coordinator ajustó OpenAPI/types en `bb73c3c` y preparó la base compartida/dependencias/harness en `9675b79`. En Node 26.13.1 se ejecutaron `npm ci`, typecheck, npm test (API/web/mobile/shared), OpenAPI validation/check y Expo install check; shared money/CLABE reportó cuatro tests passing.
+- Tres task contexts independientes solo inspeccionaron diseños, sin escribir. Worktrees/branches `product/backend`, `product/web`, `product/mobile` quedaron creados e instalados (`npm ci`) sobre `9675b79`. Aún no se han ejecutado agentes implementadores.
+- Las fuentes Stitch permanecen intactas en el working tree local, sin commit por contener credenciales/OTP demo de ejemplo en HTML y ejemplos financieros en capturas. No se añadieron esos valores a logs/docs ni se copiaron exports a app UI.
+- El usuario autorizó únicamente el alcance obligatorio y aprobó cuenta MXN automática más fixture local de dos cuentas propias balanceadas; montos de fixture/límite/OTP/zona/expiry siguen no aprobados para producción. Ninguna sugerencia AI financiera se ha implementado/rechazado fuera de esas decisiones registradas.

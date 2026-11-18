@@ -1,0 +1,53 @@
+expected local (America/Mexico_City) of sent transfer: 16/11/2026 09:54 | raw UTC: 2026-11-16 15:54:02.570954+00
+SHOT A-normal-tz-Tokyo-recibida bad=[]
+SHOT A-normal-tz-Tokyo-enviada bad=[]
+A normal-tz-Tokyo RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A normal-tz-Tokyo ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-normal-tz-LosAngeles-recibida bad=[]
+SHOT A-normal-tz-LosAngeles-enviada bad=[]
+A normal-tz-LosAngeles RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A normal-tz-LosAngeles ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-hermes-parts-literal-only-recibida bad=[]
+SHOT A-hermes-parts-literal-only-enviada bad=[]
+A hermes-parts-literal-only RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A hermes-parts-literal-only ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-hermes-parts-undefined-values-recibida bad=[]
+SHOT A-hermes-parts-undefined-values-enviada bad=[]
+A hermes-parts-undefined-values RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A hermes-parts-undefined-values ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-hermes-parts-reordered-and-wrongzone-recibida bad=[]
+SHOT A-hermes-parts-reordered-and-wrongzone-enviada bad=[]
+A hermes-parts-reordered-and-wrongzone RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A hermes-parts-reordered-and-wrongzone ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-hermes-parts-garbage-values-recibida bad=[]
+SHOT A-hermes-parts-garbage-values-enviada bad=[]
+A hermes-parts-garbage-values RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A hermes-parts-garbage-values ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-intl-formatToParts-throws-recibida bad=[]
+SHOT A-intl-formatToParts-throws-enviada bad=[]
+A intl-formatToParts-throws RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A intl-formatToParts-throws ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+SHOT A-intl-absent-recibida bad=[]
+SHOT A-intl-absent-enviada bad=[]
+A intl-absent RECIBIDA dates: 16 de noviembre de 2026, 09:54 hrs
+A intl-absent ENVIADA dates: 16 de noviembre de 2026, 09:54 hrs
+list text sample:  | Billetera MXN | MOVIMIENTOS | AL |  | Cuenta principal (•• 1845) |  | SALDO DISPONIBLE | $10,150.00 | MXN | Últimos movimientos | HOY (16 NOV 2026) | 2 transacciones |  | A Carlos Ruiz | •• 8689 · Comida | Ref: 131126 • 09:54 | -$850.00 | MXN |  |  | De Carlos Ruiz | •• 8689 · Abono honorarios | Ref: 994012 • 09:54 | +$1,000.00
+SHOT A-bad-invalid-string-list bad=[]
+SHOT A-bad-invalid-string-enviada bad=[]
+A bad invalid-string: sent lines: Fecha no disponible | list headings: FECHA NO DISPONIBLE
+SHOT A-bad-null-list bad=[]
+SHOT A-bad-null-enviada bad=[]
+A bad null: sent lines: Fecha no disponible | list headings: FECHA NO DISPONIBLE
+SHOT A-bad-absent-list bad=[]
+SHOT A-bad-absent-enviada bad=[]
+A bad absent: sent lines: Fecha no disponible | list headings: FECHA NO DISPONIBLE
+SHOT A-bad-feb30-list bad=[]
+SHOT A-bad-feb30-enviada bad=[]
+A bad feb30: sent lines: Fecha no disponible | list headings: FECHA NO DISPONIBLE
+SHOT A-bad-empty-list bad=[]
+SHOT A-bad-empty-enviada bad=[]
+A bad empty: sent lines: Fecha no disponible | list headings: FECHA NO DISPONIBLE
+SHOT A-M10-recibo bad=[]
+A M10 receipt lines:  | Detalle | AL |  | Transferencia completada | -$120.50 MXN |  | 16 de noviembre de 2026, 09:57 hrs (Tiempo del Centro de México) |  | DETALLE DE OPERACIÓN | Confirmada y aplicada | Cuenta origen | Cuenta principal | •• 1845 | Para | Carlos Ruiz | Carlos | Cuenta destino | Billetera MXN | •• 8689 | Concepto | Libros | Referencia | 552211 | Folio interno | 5cf58100-3f83-4311-a257-d02e4875ece6 | Tipo de operación | Transferencia interna |  | Nuevo saldo disponible en Cuenta principal: | $10,029.50 |  MXN |  | Tu saldo se actualizó tras confirmarse la operación. |  | Ir al inicio |  | Ver últimos movimientos | Comprobante de demostración técnica interna de Billetera MXN
+A DB local time of that transfer: 16/11/2026 09:57
+errors: 0

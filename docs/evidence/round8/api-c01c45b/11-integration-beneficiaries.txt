@@ -1,0 +1,13 @@
+$ (cd api && npx tsx --import dotenv/config --test tests/beneficiaries.integration.ts)
+started 2026-11-17T07:33:37Z
+◇ injected env (22) from ../.env
+✔ internal beneficiaries validate, resolve, encrypt and enforce owner isolation in PostgreSQL (930.602209ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1221.585666
+exit=0

@@ -1,0 +1,126 @@
+
+> fintech-wallet@0.1.0 build
+> npm run build --workspaces --if-present
+
+
+> @fintech-wallet/api@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @fintech-wallet/web@0.1.0 build
+> tsc -b && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 175 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:   0.29 kB
+dist/assets/index-CR0dEicH.css   45.90 kB │ gzip:   9.39 kB
+dist/assets/index-DyTjbS0Z.js   443.89 kB │ gzip: 130.08 kB
+
+✓ built in 107ms
+
+> @fintech-wallet/mobile@0.1.0 build
+> expo export --platform all
+
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+Web Bundled 818ms ../fintech-wallet/node_modules/expo-router/entry.js (149 modules)
+Android Bundled 4004ms ../fintech-wallet/node_modules/expo-router/entry.js (606 modules)
+iOS Bundled 7266ms ../fintech-wallet/node_modules/expo-router/entry.js (1287 modules)
+
+› Assets (97):
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.3f78af31cca60105799838a1a7a59fbd.ttf (130KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf (130KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.31b5ffea3daddc69dd01a1f3d6cf63c5.ttf (66KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.ttf (66KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/EvilIcons.140c53a7643ea949007aa9a282153849.ttf (13KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/EvilIcons.ttf (13KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ca4b48e04dc1ce10bfbddb262c8b835f.ttf (56KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf (56KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.b06871f281fee6b241d60582ae9369b9.ttf (166KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf (166KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Brands.3b89dd103490708d19a95adcae52210e.ttf (134KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf (134KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Regular.1f77739ca9ff2188b539c36f30ffa2be.ttf (34KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf (34KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Solid.605ed7926cf39a2ad5ec2d1f9d391d3d.ttf (203KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf (203KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Brands.56c8d80832e37783f12c05db7c8849e2.ttf (209KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Brands.ttf (209KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.370dd5af19f8364907b6e2c41f45dbbf.ttf (68KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf (68KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.adec7d6f310bc577f05e8fe06a5daccf.ttf (424KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf (424KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Fontisto.b49ae8ab2dbccb02c4d11caaacf09eab.ttf (314KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Fontisto.ttf (314KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Foundation.e20945d7c929279ef7a6f1db184a4470.ttf (57KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Foundation.ttf (57KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf (390KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf (390KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.6e435534bd35da5fef04168860a9b8fa.ttf (1.3MB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf (1.3MB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.4e85bc9ebe07e0340c9c4fc2f6c38908.ttf (357KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf (357KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Octicons.871378c6eab492a3e689a9385dc45a12.ttf (69KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Octicons.ttf (69KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/SimpleLineIcons.d2285965fe34b05465047401b8595dd0.ttf (54KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/SimpleLineIcons.ttf (54KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Zocial.1681f34aaca71b8dfb70756bca331eb2.ttf (26KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Zocial.ttf (26KB)
+../../fintech-wallet/node_modules/expo-router/assets/arrow_down.017bc6ba3fc25503e5eb5e53826d48a8.png (9.5KB)
+../../fintech-wallet/node_modules/expo-router/assets/arrow_down.png (9.5KB)
+../../fintech-wallet/node_modules/expo-router/assets/arrow_right.xml (307B)
+../../fintech-wallet/node_modules/expo-router/assets/checkmark.xml (312B)
+../../fintech-wallet/node_modules/expo-router/assets/error.d1ea1496f9057eb392d5bbf3732a61b7.png (469B)
+../../fintech-wallet/node_modules/expo-router/assets/error.png (469B)
+../../fintech-wallet/node_modules/expo-router/assets/file.19eeb73b9593a38f8e9f418337fc7d10.png (138B)
+../../fintech-wallet/node_modules/expo-router/assets/file.png (138B)
+../../fintech-wallet/node_modules/expo-router/assets/forward.d8b800c443b8972542883e0b9de2bdc6.png (188B)
+../../fintech-wallet/node_modules/expo-router/assets/forward.png (188B)
+../../fintech-wallet/node_modules/expo-router/assets/pkg.ab19f4cbc543357183a20571f68380a3.png (364B)
+../../fintech-wallet/node_modules/expo-router/assets/pkg.png (364B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.0a328cd9c1afd0afe8e3b1ec5165b1b4.png (653B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.png (653B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon.35ba0eaec5a4f5ed12ca16fabeae451d.png (207B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon.png (8 variations | 359B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/clear-icon.c94f6478e7ae0cdd9f15de1fcb9e5e55.png (4 variations | 425B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/clear-icon.png (4 variations | 425B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/close-icon.808e1b1b9b53114ec2838071a7e6daa7.png (4 variations | 235B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/close-icon.png (4 variations | 235B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/search-icon.286d67d3f74808a60a78d3ebf1a5fb57.png (928B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/search-icon.png (7 variations | 592B)
+../../fintech-wallet/node_modules/expo-router/assets/sitemap.412dd9275b6b48ad28f5e3d81bb1f626.png (465B)
+../../fintech-wallet/node_modules/expo-router/assets/sitemap.png (465B)
+../../fintech-wallet/node_modules/expo-router/assets/unmatched.20e71bdf79e3a97bf55fd9e164041578.png (4.8KB)
+../../fintech-wallet/node_modules/expo-router/assets/unmatched.png (4.8KB)
+node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.51b6ad87261f18b6433ec52871ddfabc.ttf (342KB)
+node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf (342KB)
+node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.137ab18bace28dd0bd83eb3b8ed2bc54.ttf (343KB)
+node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf (343KB)
+node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.a5f35888d2da465de352e0dcfaf33324.ttf (344KB)
+node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf (344KB)
+node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.6e237de4f1f413afa2fcc45c77ac343a.ttf (344KB)
+node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf (344KB)
+
+› web bundles (3):
+_expo/static/js/web/_layout-222b7375db45e6df4a92cebdae7c71ec.js (18KB)
+_expo/static/js/web/entry-84d9caa465aa97172764430e7a8538d9.js (1.1MB)
+_expo/static/js/web/index-7cbd1ae5803a7ab2e490bfe411e0a31b.js (790KB)
+
+› android bundles (1):
+_expo/static/js/android/entry-cf593de3caf32c80596ac3be6b6c9c6a.hbc (3.3MB)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-b9838e9a2782f7f5c7921fe08cde68b9.hbc (3.3MB)
+
+› Files (2):
+index.html (1.2KB)
+metadata.json (6.2KB)
+
+Exported: dist
+t
+exit 0
+exit 0

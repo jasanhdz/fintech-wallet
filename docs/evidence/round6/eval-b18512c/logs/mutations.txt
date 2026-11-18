@@ -1,0 +1,30 @@
+[sameAccount]   ● round 6 · B/C/D: origin = destination is decided by account identity before sending › M05: from Ahorro, the own "Cuenta de ahorro demo" beneficiary is disabled and explained; Carlos stays available
+[sameAccount]   ● round 6 · B/C/D: origin = destination is decided by account identity before sending › M05: when every destination is the origin itself, an explanatory empty state offers changing the origin
+[sameAccount]   ● round 6 · B/C/D: origin = destination is decided by account identity before sending › changing the origin to the destination account (Home tab or M06 selector) invalidates the beneficiary and blocks Continuar; no POST
+[sameAccount] Tests:       3 failed, 74 passed, 77 total
+[noCancel]   ● round 6 · G (F-10): leaving the code step cancels the pending attempt › "Cancelar y volver a revisar" cancels the pending transfer, clears the recovery record and a new confirm uses a new key
+[noCancel]   ● round 6 · H: server transfer policy, threshold variant and real code expiry › M08 counts down from Transfer.expiresAt, then shows the real expired state; "Solicitar nuevo código" cancels and creates a new attempt with a new key
+[noCancel] Tests:       2 failed, 75 passed, 77 total
+[statusMap]   ● round 6 · E: sending, verifying, completed, rejected, expired and cancelled are distinct › an API status "cancelled" shows a closed attempt without postings, never the receipt
+[statusMap]   ● round 6 · E: sending, verifying, completed, rejected, expired and cancelled are distinct › an API status "expired" shows a closed attempt without postings, never the receipt
+[statusMap]   ● round 6 · E: sending, verifying, completed, rejected, expired and cancelled are distinct › checking an uncertain attempt that the server expired goes to the closed screen
+[statusMap] Tests:       3 failed, 74 passed, 77 total
+[noGrouping]   ● formatMoney (single mobile money formatter) › -123456789 -> -$1,234,567.89
+[noGrouping]   ● formatMoney (single mobile money formatter) › 1000000 -> $10,000.00
+[noGrouping]   ● formatMoney (single mobile money formatter) › 1500000 -> $15,000.00
+[noGrouping]   ● formatMoney (single mobile money formatter) › 505000 -> $5,050.00
+[noGrouping]   ● formatMoney (single mobile money formatter) › 9007199254740993 -> $90,071,992,547,409.93
+[noGrouping]   ● formatMoney (single mobile money formatter) › 922337203685477580700 -> $9,223,372,036,854,775,807.00
+[noGrouping]   ● formatMoney (single mobile money formatter) › 994000 -> $9,940.00
+[noGrouping]   ● formatMoney (single mobile money formatter) › adds direction signs and the currency exactly once
+[noGrouping]   ● formatMoney (single mobile money formatter) › does not depend on toLocaleString/Intl grouping (Hermes may not group BigInt)
+[noGrouping]   ● formatMoney (single mobile money formatter) › groups digit strings
+[noGrouping]   ● mobile background privacy (M12) › replaces every balance with the branded privacy curtain in the background and restores the session on return
+[noGrouping]   ● mobile completed receipt (M10) › shows the signed receipt and the new balance re-read from the API after completion
+[noIntlValidation]   ● business date formatting (America/Mexico_City) › rejects unusable Intl parts and falls back to the deterministic offset table
+[noIntlValidation]   ● round 6 · A: business dates never render undefined (Hermes-like Intl) › M04: a RECEIVED movement shows "De", "+", "Recibida" and a valid business date without reading the sender-only transfer
+[noIntlValidation]   ● round 6 · A: business dates never render undefined (Hermes-like Intl) › M10: the receipt of a SENT transfer shows "Para", "-" and a valid business date
+[noIntlValidation] Tests:       3 failed, 74 passed, 77 total
+[hardOtp] Tests:       77 passed, 77 total
+[noExpoCrypto]   ● mobile transfer attempt › falls back to expo-crypto for the idempotency key when globalThis.crypto.randomUUID is unavailable, matching Hermes on a real device
+[noExpoCrypto] Tests:       1 failed, 76 passed, 77 total

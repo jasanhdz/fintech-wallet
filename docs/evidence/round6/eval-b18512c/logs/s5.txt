@@ -1,0 +1,24 @@
+F API balances (strings): Cuenta principal=900719925474099399 Ahorro=1234567890123456789 | Number() round-trip of principal: 900719925474099500
+SHOT F-home-big bad=[]
+F home money tokens: $9,007,199,254,740,993.99 $21,352,878,155,975,561.88 -$850.00 +$1,000.00
+SHOT F-home-big-ahorro bad=[]
+F ahorro tab: $12,345,678,901,234,567.89 $21,352,878,155,975,561.88
+SHOT F-review-big bad=[]
+F review money tokens: $100.10 $9,007,199,254,740,993.99 $9,007,199,254,740,893.89 $9,007,199,254,740,993.99 $100.10 $9,007,199,254,740,893.89
+SHOT F-receipt-big bad=[]
+F receipt money tokens: -$100.10 $9,007,199,254,740,893.89 | DB bal: Cuenta principal=900719925474089389 Ahorro=1234567890123456789
+SHOT race2-mid bad=[]
+Race2 mid (after tapping Cancelar, confirm response still pending): DB completed:500000 | screen:  | Transferir | CR | Paso 2 de 2 | Revisar transferencia
+SHOT race2-final bad=[]
+Race2 final: DB completed:500000 | bal Cuenta principal=995010 Ahorro=500000 -> Cuenta principal=495010 Ahorro=500000 | screen:  | Detalle | CR |  | Transferencia completada | -$5,000.00 MXN | cancel POSTs: POST /transfers/766e/cancel key=-
+SHOT I-long-home bad=[]
+I home: scrollWidth=390 overflowing=["DIV:Hola, Ana María de los Ángeles r=668","DIV:Hola, Ana María de los Ángeles r=668","DIV:Actualizado hoy, 10:13 hrs r=668","BUTTON:Cerrar sesión r=716","DIV: r=704"]
+SHOT I-long-picker bad=[]
+I picker: scrollWidth=390 overflowing=[]
+SHOT I-long-details bad=[]
+I details: scrollWidth=390 overflowing=[]
+I keyboard-approx (viewport 508px): Continuar box y+h = 496 in viewport: true
+SHOT I-long-details-keyboard bad=[]
+SHOT I-long-details-130 bad=[]
+I details@130%: scrollWidth=390 overflowing=[]
+I 130%: Continuar box y+h= 832 (viewport 844) visible without scrolling: true

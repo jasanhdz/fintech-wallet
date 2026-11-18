@@ -1,0 +1,15 @@
+# ENV-06 cleanup 2026-11-17T08:13:58Z
+docker stop fintech-wallet-web-pg -> ok
+docker rm fintech-wallet-web-pg -> ok
+docker volume rm fintech-wallet-web-pg-data -> ok
+docker ps -a --filter name=^fintech-wallet-web-pg$: ''
+docker volume ls --filter name=^fintech-wallet-web-pg-data$: ''
+listening on 3301-3309/5301-5309: '0'
+
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1   228Gi   196Gi   5.6Gi    98%    1.9M   58M    3%   /System/Volumes/Data
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          3         2         1.457GB   663.4MB (45%)
+Containers      3         2         65.54kB   20.48kB (31%)
+Local Volumes   3         3         446.3MB   0B (0%)
+Build Cache     0         0         0B        0B

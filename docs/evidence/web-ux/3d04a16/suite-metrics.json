@@ -1,0 +1,2354 @@
+{
+  "W10-vacio 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    }
+  },
+  "W10-vacio R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 555.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-vacio-sbs.png",
+      "differentPixelRatio": 0.0973388671875
+    }
+  },
+  "W10-vacio 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 574,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 53,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-vacio 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 500
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 668,
+        "width": 358,
+        "height": 549.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 52,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-incompleto 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    }
+  },
+  "W10-incompleto R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 432
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 555.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-incompleto-sbs.png",
+      "differentPixelRatio": 0.12286376953125
+    }
+  },
+  "W10-incompleto 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 574,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 53,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-incompleto 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 500
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 668,
+        "width": 358,
+        "height": 549.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 52,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-completo 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 380
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 57,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN"
+      ]
+    }
+  },
+  "W10-completo R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 380
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 555.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 57,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-completo-sbs.png",
+      "differentPixelRatio": 0.14510498046875
+    }
+  },
+  "W10-completo 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 380
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 548,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 52,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-completo 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 486
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 654,
+        "width": 358,
+        "height": 549.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 51,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-verificando 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 57,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    }
+  },
+  "W10-verificando R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 555.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 57,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-verificando-sbs.png",
+      "differentPixelRatio": null
+    }
+  },
+  "W10-verificando 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 406
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 574,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 52,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-verificando 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 518
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 686,
+        "width": 358,
+        "height": 549.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 51,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-incorrecto 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 474
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "oklab(0.966101 0.00243524 -0.0159633)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(0, 55, 176)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 59,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN"
+      ]
+    }
+  },
+  "W10-incorrecto R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 474
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 555.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "color(srgb 1 0.927451 0.919608)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(186, 26, 26)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 59,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-incorrecto-sbs.png",
+      "differentPixelRatio": null
+    }
+  },
+  "W10-incorrecto 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 474
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 642,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "color(srgb 1 0.927451 0.919608)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(186, 26, 26)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 54,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-incorrecto 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 598
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 766,
+        "width": 358,
+        "height": 549.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "color(srgb 1 0.927451 0.919608)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(186, 26, 26)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 53,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Código de confirmación de 6 dígitos",
+        "Autorizar transferencia de $4,123.45 MXN",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-expirado 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 128,
+        "width": 587.328125,
+        "height": 556
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 128,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Volver al inicio"
+      ]
+    }
+  },
+  "W10-expirado R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 128,
+        "width": 531.328125,
+        "height": 556
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 128,
+        "width": 372.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 58,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Volver al inicio"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-expirado-sbs.png",
+      "differentPixelRatio": null
+    }
+  },
+  "W10-expirado 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 144,
+        "width": 720,
+        "height": 556
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 724,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 53,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Volver al inicio",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-expirado 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 144,
+        "width": 358,
+        "height": 642
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 810,
+        "width": 358,
+        "height": 539.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 52,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Volver al inicio",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-agotados 1440 1440x960": {
+    "layout": {
+      "codeBox": {
+        "x": 352,
+        "y": 360,
+        "width": 587.328125,
+        "height": 414
+      },
+      "sideBox": {
+        "x": 963.328125,
+        "y": 360,
+        "width": 412.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 79.875
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 51,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Volver al inicio"
+      ]
+    }
+  },
+  "W10-agotados R 1280x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 320,
+        "y": 360,
+        "width": 531.328125,
+        "height": 414
+      },
+      "sideBox": {
+        "x": 875.328125,
+        "y": 360,
+        "width": 372.65625,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 70.546875
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 51,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Volver al inicio"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W10-agotados-sbs.png",
+      "differentPixelRatio": 0.158447265625
+    }
+  },
+  "W10-agotados 768 768x1024": {
+    "layout": {
+      "codeBox": {
+        "x": 24,
+        "y": 410,
+        "width": 720,
+        "height": 414
+      },
+      "sideBox": {
+        "x": 24,
+        "y": 848,
+        "width": 720,
+        "height": 545.1875
+      }
+    },
+    "box": {
+      "height": "56px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "30px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 102
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 46,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Volver al inicio",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10-agotados 390 390x844": {
+    "layout": {
+      "codeBox": {
+        "x": 16,
+        "y": 524,
+        "width": 358,
+        "height": 402
+      },
+      "sideBox": {
+        "x": 16,
+        "y": 950,
+        "width": 358,
+        "height": 539.1875
+      }
+    },
+    "box": {
+      "height": "52px",
+      "border-radius": "8px",
+      "background-color": "rgb(241, 243, 255)",
+      "font-size": "26px",
+      "font-weight": "600",
+      "color": "rgb(116, 118, 134)",
+      "width": 46.328125
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2,
+          2,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 45,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Volver al inicio",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W10 A11Y-05/A11Y-11": {
+    "completo": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "agotados": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "paste": "pegar «13-57 92» → 135792 en el único input"
+  },
+  "W10-F1": {
+    "conflict409": "GET → completed → W12",
+    "expired422": "GET → expired → V9",
+    "network": "aviso; mismo código = misma clave",
+    "provoked": 3
+  },
+  "W10-F2": {
+    "atZero": "un GET; V9 sólo con status expired",
+    "urgentChip": "rgb(255, 218, 214) / rgb(147, 0, 10)"
+  },
+  "W11-V1 1440 1440x960": {
+    "card": {
+      "x": 576,
+      "y": 234,
+      "width": 576,
+      "height": 468
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 32,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión"
+      ]
+    }
+  },
+  "W11-V2/V3/V4 1440 1440x960": {
+    "v2": {
+      "text": "VERIFICANDO RESULTADO",
+      "background-color": "rgb(241, 243, 255)",
+      "color": "rgb(67, 70, 85)",
+      "animated": 1,
+      "icon": "sync",
+      "h1": "Estamos verificando si tu transferencia se completó",
+      "buttonDisabled": true,
+      "responsive": {
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 34,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Cerrar sesión",
+          "Cerrar sesión",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)"
+        ]
+      }
+    },
+    "v3": {
+      "text": "RESULTADO DESCONOCIDO",
+      "background-color": "rgb(255, 219, 205)",
+      "color": "rgb(122, 43, 0)",
+      "animated": 0,
+      "icon": "syncProblem",
+      "h1": "No pudimos confirmar el resultado",
+      "buttonDisabled": false,
+      "responsive": {
+        "scrollWidth": 1440,
+        "innerWidth": 1440,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 35,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Cerrar sesión",
+          "Cerrar sesión",
+          "Reintentar el mismo envío",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)"
+        ]
+      }
+    }
+  },
+  "W11-V1 R 1280x1024": {
+    "card": {
+      "x": 496,
+      "y": 234,
+      "width": 576,
+      "height": 468
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 32,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W11-enviando-sbs.png",
+      "differentPixelRatio": 0.0577392578125
+    }
+  },
+  "W11-V2/V3/V4 R 1280x1024": {
+    "v2": {
+      "text": "VERIFICANDO RESULTADO",
+      "background-color": "rgb(241, 243, 255)",
+      "color": "rgb(67, 70, 85)",
+      "animated": 1,
+      "icon": "sync",
+      "h1": "Estamos verificando si tu transferencia se completó",
+      "buttonDisabled": true,
+      "responsive": {
+        "scrollWidth": 1280,
+        "innerWidth": 1280,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 34,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Cerrar sesión",
+          "Cerrar sesión",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)"
+        ]
+      }
+    },
+    "v2sbs": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W11-verificando-sbs.png",
+      "differentPixelRatio": 0.07373046875
+    },
+    "v3": {
+      "text": "RESULTADO DESCONOCIDO",
+      "background-color": "rgb(255, 219, 205)",
+      "color": "rgb(122, 43, 0)",
+      "animated": 0,
+      "icon": "syncProblem",
+      "h1": "No pudimos confirmar el resultado",
+      "buttonDisabled": false,
+      "responsive": {
+        "scrollWidth": 1280,
+        "innerWidth": 1280,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 35,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Cerrar sesión",
+          "Cerrar sesión",
+          "Reintentar el mismo envío",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)"
+        ]
+      }
+    },
+    "v3sbs": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W11-desconocido-sbs.png",
+      "differentPixelRatio": 0.06593017578125
+    }
+  },
+  "W11-V1 768 768x1024": {
+    "card": {
+      "x": 96,
+      "y": 250,
+      "width": 576,
+      "height": 468
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 27,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W11-V2/V3/V4 768 768x1024": {
+    "v2": {
+      "text": "VERIFICANDO RESULTADO",
+      "background-color": "rgb(241, 243, 255)",
+      "color": "rgb(67, 70, 85)",
+      "animated": 1,
+      "icon": "sync",
+      "h1": "Estamos verificando si tu transferencia se completó",
+      "buttonDisabled": true,
+      "responsive": {
+        "scrollWidth": 768,
+        "innerWidth": 768,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 29,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Cerrar sesión",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Salir"
+        ]
+      }
+    },
+    "v3": {
+      "text": "RESULTADO DESCONOCIDO",
+      "background-color": "rgb(255, 219, 205)",
+      "color": "rgb(122, 43, 0)",
+      "animated": 0,
+      "icon": "syncProblem",
+      "h1": "No pudimos confirmar el resultado",
+      "buttonDisabled": false,
+      "responsive": {
+        "scrollWidth": 768,
+        "innerWidth": 768,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 30,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Cerrar sesión",
+          "Reintentar el mismo envío",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Salir"
+        ]
+      }
+    }
+  },
+  "W11-V1 390 390x844": {
+    "card": {
+      "x": 16,
+      "y": 244,
+      "width": 358,
+      "height": 460
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 26,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W11-V2/V3/V4 390 390x844": {
+    "v2": {
+      "text": "VERIFICANDO RESULTADO",
+      "background-color": "rgb(241, 243, 255)",
+      "color": "rgb(67, 70, 85)",
+      "animated": 1,
+      "icon": "sync",
+      "h1": "Estamos verificando si tu transferencia se completó",
+      "buttonDisabled": true,
+      "responsive": {
+        "scrollWidth": 390,
+        "innerWidth": 390,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 28,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Cerrar sesión",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Salir"
+        ]
+      }
+    },
+    "v3": {
+      "text": "RESULTADO DESCONOCIDO",
+      "background-color": "rgb(255, 219, 205)",
+      "color": "rgb(122, 43, 0)",
+      "animated": 0,
+      "icon": "syncProblem",
+      "h1": "No pudimos confirmar el resultado",
+      "buttonDisabled": false,
+      "responsive": {
+        "scrollWidth": 390,
+        "innerWidth": 390,
+        "offenders": []
+      },
+      "a11y": {
+        "outline": {
+          "lang": "es",
+          "h1": 1,
+          "levels": [
+            1
+          ],
+          "skips": 0
+        },
+        "contrastChecked": 29,
+        "tabOrder": [
+          "Saltar al contenido",
+          "Cerrar sesión",
+          "Reintentar el mismo envío",
+          "Volver al Inicio (conservarás un aviso visible para retomar la verificación)",
+          "Inicio",
+          "Movimientos",
+          "Beneficiarios",
+          "Transferir",
+          "Salir"
+        ]
+      }
+    }
+  },
+  "W11-F1": {
+    "F-W11-3": "GET retenido → V2 «No reenviamos…»; sin POST",
+    "F-W11-5 (estado)": "GET 503 → V3 «Consultar estado» → GET → W12; sin POST",
+    "F-W11-5 (montaje)": "GET 503 → V3 «Reintentar el mismo envío» (acción real: POST con la misma clave)"
+  },
+  "W11-F4": {
+    "recordKept": true,
+    "w03Notice": true
+  },
+  "W12 beneficiario 1440 1440x960": {
+    "card": {
+      "x": 484,
+      "y": 296,
+      "width": 760,
+      "height": 478
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 44,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos"
+      ]
+    }
+  },
+  "W12 beneficiario R 1280x1024": {
+    "card": {
+      "x": 404,
+      "y": 296,
+      "width": 760,
+      "height": 478
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 44,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W12-beneficiario-sbs.png",
+      "differentPixelRatio": 0.10592041015625
+    }
+  },
+  "W12 beneficiario 768 768x1024": {
+    "card": {
+      "x": 24,
+      "y": 312,
+      "width": 720,
+      "height": 478
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 39,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W12 beneficiario 390 390x844": {
+    "card": {
+      "x": 16,
+      "y": 330,
+      "width": 358,
+      "height": 716
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 38,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W12 propias 1440 1440x960": {
+    "card": {
+      "x": 484,
+      "y": 320,
+      "width": 760,
+      "height": 608
+    },
+    "responsive": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 61,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos"
+      ]
+    }
+  },
+  "W12 propias R 1280x1080": {
+    "card": {
+      "x": 404,
+      "y": 320,
+      "width": 760,
+      "height": 608
+    },
+    "responsive": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 61,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Cerrar sesión",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos"
+      ]
+    },
+    "sideBySide": {
+      "file": "/Users/jasanhernandez/Develop/fintech-wallet-web-final/docs/evidence/web-ux/3d04a16/captures/W12-propias-sbs.png",
+      "differentPixelRatio": 0.13796296296296295
+    }
+  },
+  "W12 propias 768 768x1024": {
+    "card": {
+      "x": 24,
+      "y": 336,
+      "width": 720,
+      "height": 608
+    },
+    "responsive": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 56,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W12 propias 390 390x844": {
+    "card": {
+      "x": 16,
+      "y": 354,
+      "width": 358,
+      "height": 966
+    },
+    "responsive": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1,
+          2
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 55,
+      "tabOrder": [
+        "Saltar al contenido",
+        "Cerrar sesión",
+        "Copiar folio",
+        "Volver al inicio",
+        "Ver movimientos",
+        "Inicio",
+        "Movimientos",
+        "Beneficiarios",
+        "Transferir",
+        "Salir"
+      ]
+    }
+  },
+  "W12-F1": {
+    "clipboard": "folio completo",
+    "status": "Folio copiado",
+    "overflow390": false,
+    "reflow": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "WF-T5 [I] P1 FN-10/W12-F2/FN-12": {
+    "create": 202,
+    "confirms": [
+      422,
+      200
+    ],
+    "receipt": "id/folio, importe, concepto, referencia = respuesta de confirm",
+    "balances": "origen −importe, destino +importe",
+    "history": "primera fila = operación"
+  },
+  "WF-T5 [I] P1 I-W11-6": {
+    "posts": 2,
+    "sameKey": true,
+    "sameBodySha256": true,
+    "sameTransferId": true,
+    "movements": 1,
+    "balanceDelta": "-61",
+    "bodySha256": "f58cea6da5df29660059ee78ae124b1a889ea84abf85f77fb862bb8494a577a7"
+  },
+  "WF-T5 [I] P3 W10-F4": {
+    "expiry": "espera > expiresAt → GET → expired → V9",
+    "exhausted": "confirm 422 → 429 → V10",
+    "balancesUnchanged": true,
+    "cancelRequests": 0
+  }
+}

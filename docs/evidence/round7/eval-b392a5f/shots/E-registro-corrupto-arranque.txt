@@ -1,0 +1,26 @@
+
+Detalle
+EP
+
+
+
+Protección contra duplicados activa
+Estamos verificando si tu transferencia se completó
+Estamos comprobando el estado del intento para evitar una operación duplicada.
+Unexpected end of JSON input
+
+No intentes enviar el dinero nuevamente
+Verificar el estado consulta el intento original con su misma clave, sin duplicar el cargo.
+Destinatario
+—
+Monto en verificación
+—
+Referencia de seguimiento
+—
+Estado actual
+En verificación de estado
+
+Verificar estado de la transferencia
+Ir al inicio (revisar saldo después)
+Referencia: —
+Billetera MXN • Validación interna de operación

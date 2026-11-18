@@ -1,0 +1,26 @@
+SHOT M09-enviando minFont=12 scrollW=390 offscreen=0 errs=0
+M09 Enviando: "Enviando transferencia…" true | "Verificando" present false | exits disabled (back arrow aria-disabled): null
+  -> then receipt
+M09 lost-after-apply: verifying text true | claims (intacto/debitado/no se movió) false | DB completed:30025 | record {"userIdSet":true,"hasTransferId":false,"key":"ed167a80"}
+SHOT M09-tras-recarga minFont=12 scrollW=390 offscreen=0 errs=1
+  after reload (same storage): screen = receipt (resolved) | POST /transfers replays with key ["ed167a80"] original ed167a80 | DB completed:30025 | ledger 2 rows sum 0 | record null
+M09 lost-before-apply: DB rows "" (none expected) | balances unchanged true
+  retry: keys ["844bb49e","844bb49e"] same key true | receipt true | DB completed:30025 | debit 30025
+FAILED locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /^Continuar(?! con| a )/ })[22m
+[2m    - locator resolved to <button disabled role="button" tabindex="-1" type="button" aria-disabled="true" class="css-g5y9jx r-12vffkv r-1awozwy r-18dmg4z r-1q9bdsx r-17mqd5a r-1777fci r-1pl7oy7 r-3pj75a r-icoktb">…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    58 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+

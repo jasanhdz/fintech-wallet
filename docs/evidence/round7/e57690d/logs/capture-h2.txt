@@ -1,0 +1,11 @@
+M10 reached: true
+SHOT M10-H2-normal scrollW=390 disabled=[] busy=[] errs=0
+SHOT M10-H2-en-curso scrollW=390 disabled=[
+Compartir PDF] busy=[Compartir comprobante] errs=0
+shared payload has folio: true | demo notice: true | full CLABE: false | e-mail: false | ids: false
+after close: error shown = false | busy text = false
+after AbortError (cancel): error shown = false
+SHOT M10-H2-error scrollW=390 disabled=[] busy=[] errs=0
+SHOT M10-H2-pdf-web scrollW=390 disabled=[] busy=[] errs=0
+API calls: POST /auth/login, GET /accounts, GET /accounts/00000000-0000-4000-8000-0000000000b1/movements, GET /beneficiaries, GET /transfer-policy, POST /transfers, GET /transfers/7c9e6679-7425-40de-944b-e07fc1f90ae7, GET /accounts
+page errors: none

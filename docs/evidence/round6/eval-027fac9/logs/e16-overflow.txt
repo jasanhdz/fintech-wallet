@@ -1,0 +1,74 @@
+beneficiary create 201 {"id":"9bd6e3db-d7a7-4c05-a1b1-378f28582a75","name":"Corporativo Internacional de Servicios Profesionales y Consultoría 
+SHOT F11-x1-home bad=[]
+F11-x1 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+SHOT F11-x1.3-home bad=[]
+F11-x1.3 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+SHOT F11-x2-home bad=[]
+F11-x2 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+SHOT D-x1-M05 bad=[]
+D-x1 M05 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1-M06 bad=[]
+D-x1 M06 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} /^Continuar[^a-zA-Z]*$/: x=16 y=780 w=358 h=48 right=374
+SHOT D-x1-M07 bad=[]
+D-x1 M07 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} Confirmar transferencia: x=16 y=720 w=358 h=48 right=374 Modificar datos: x=16 y=776 w=358 h=44 right=374
+SHOT D-x1-M10 bad=[]
+D-x1 M10 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1-M03 bad=[]
+D-x1 M03 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1-M04 bad=[]
+D-x1 M04 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1.3-M05 bad=[]
+D-x1.3 M05 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1.3-M06 bad=[]
+D-x1.3 M06 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} /^Continuar[^a-zA-Z]*$/: x=16 y=780 w=358 h=48 right=374
+SHOT D-x1.3-M07 bad=[]
+D-x1.3 M07 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} Confirmar transferencia: x=16 y=831 w=358 h=48 right=374 Modificar datos: x=16 y=887 w=358 h=44 right=374
+SHOT D-x1.3-M10 bad=[]
+D-x1.3 M10 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1.3-M03 bad=[]
+D-x1.3 M03 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x1.3-M04 bad=[]
+D-x1.3 M04 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x2-M05 bad=[]
+D-x2 M05 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x2-M06 bad=[]
+D-x2 M06 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} /^Continuar[^a-zA-Z]*$/: x=16 y=780 w=358 h=48 right=374
+SHOT D-x2-M07 bad=[]
+D-x2 M07 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} Confirmar transferencia: x=16 y=1463 w=358 h=80 right=374 Modificar datos: x=16 y=1551 w=358 h=44 right=374
+SHOT D-x2-M10 bad=[]
+D-x2 M10 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x2-M03 bad=[]
+D-x2 M03 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-x2-M04 bad=[]
+D-x2 M04 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-M07-umbral bad=[]
+D M07 umbral {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT D-M08 bad=[]
+D M08 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+X-x1 M06 selector abierto {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+X-x1 M08 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+own benef 0a0b80af-9217-48b0-a553-157882bdebeb
+drain 201 {"id":"c76883fc-3435-43e8-9d7e-634727c605c4","status":"completed","sourceAccountId":"19fc586b-e1eb-4
+drain 201 {"id":"55dc064b-76e5-4fae-a709-b71fe7f3e331","status":"completed","sourceAccountId":"19fc586b-e1eb-4
+drain 201 {"id":"3f5cb010-c4a5-4f99-8326-c4d63eb6a69c","status":"completed","sourceAccountId":"19fc586b-e1eb-4
+X-x1 M11 text head:  | Transferir | AM |  | No se pudo completar la transferencia | El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en t
+X-x1 M11 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT X-x1-M11 bad=[]
+X-x1.3 M06 selector abierto {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+X-x1.3 M08 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+own benef 03ada0ab-e70d-41c7-834c-0998c320c48a
+drain 201 {"id":"59bab59d-a5d2-4753-88ab-acd078ae648f","status":"completed","sourceAccountId":"1589a6fd-c2e0-4
+drain 201 {"id":"1967b949-c7fc-4377-9bfa-e4df3f14b20c","status":"completed","sourceAccountId":"1589a6fd-c2e0-4
+drain 201 {"id":"9904bbe3-3e80-44bf-a660-22755508cfc3","status":"completed","sourceAccountId":"1589a6fd-c2e0-4
+X-x1.3 M11 text head:  | Transferir | AM |  | No se pudo completar la transferencia | El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en t
+X-x1.3 M11 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT X-x1.3-M11 bad=[]
+X-x2 M06 selector abierto {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+X-x2 M08 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+own benef bdc1f963-3180-415d-bcf2-9b9124ecd251
+drain 201 {"id":"2c08bbcb-1ad2-4e49-b7d8-172d5b117016","status":"completed","sourceAccountId":"60111e57-53cf-4
+drain 201 {"id":"1efd1a45-2de0-4d08-b5ee-30ccba57124b","status":"completed","sourceAccountId":"60111e57-53cf-4
+drain 201 {"id":"fd7d331d-a18e-4bb9-8ac7-2a79c115f505","status":"completed","sourceAccountId":"60111e57-53cf-4
+X-x2 M11 text head:  | Transferir | AM |  | No se pudo completar la transferencia | El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en t
+X-x2 M11 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+SHOT X-x2-M11 bad=[]

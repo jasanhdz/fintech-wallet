@@ -1,0 +1,23 @@
+
+Transferir
+ET
+
+No se pudo completar la transferencia
+Beneficiario no encontrado.
+
+Tu dinero está intacto
+No se aplicó ningún cargo a tu cuenta por este intento.
+Cuenta de origen
+
+Principal •• 0598
+Saldo disponible
+$10,000.00 MXN
+Monto solicitado
+$333.33 MXN
+Importe debitado
+Ningún dinero fue retirado
+$0.00 MXN
+
+Modificar monto o cuenta
+
+Volver al inicio

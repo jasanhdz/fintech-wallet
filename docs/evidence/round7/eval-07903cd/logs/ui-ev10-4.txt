@@ -1,0 +1,9 @@
+PASS M09 shown
+M09 (unresolved) share/PDF actions: 0
+PASS M09 pending: no share/PDF
+PASS receipt after the explicit resend
+M10 (completed) actions: 2
+PASS M10 completed: share + PDF offered
+M04 detail share/PDF actions: 0
+PASS M04 detail: no share/PDF
+SHOT ev10-4-m04-detalle minFont=12 scrollW=390 offscreen=0 errs=1

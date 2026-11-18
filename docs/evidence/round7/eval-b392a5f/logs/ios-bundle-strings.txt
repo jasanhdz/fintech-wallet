@@ -1,0 +1,6 @@
+Compartir comprobante: 1
+Guardar PDF: 1
+ExpoPrint: 1
+Transferencia pendiente de autorizar: 1
+Transferencia en verificaci: 0
+wallet.transfer-recovery: 1

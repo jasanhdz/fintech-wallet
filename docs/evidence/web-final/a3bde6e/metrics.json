@@ -1,0 +1,299 @@
+{
+  "FONT-03-04-05 /login": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif",
+      "input": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-03-04-05 /accounts": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "h1": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-06": {
+    "check": true,
+    "inter": 197.5634765625,
+    "arial": 193.388671875
+  },
+  "FONT-07": {
+    "checked": 7,
+    "items": [
+      {
+        "text": "Cuenta •• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "###•••••••••••####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "###•••••••••••####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "−$###.## MXN",
+        "numeric": "tabular-nums"
+      }
+    ]
+  },
+  "SH-01-02-03-05-09 demoOnly=true": {
+    "aside": {
+      "box": {
+        "x": 0,
+        "y": 0,
+        "width": 288,
+        "height": 960
+      },
+      "position": "fixed",
+      "background-color": "rgb(255, 255, 255)",
+      "box-shadow": "rgba(0, 0, 0, 0.04) 0px 1px 8px 0px"
+    },
+    "brandStyle": {
+      "font-size": "16px",
+      "font-weight": "600"
+    },
+    "links": [
+      {
+        "name": "Inicio",
+        "current": "page",
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgb(29, 78, 216)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "12px"
+      },
+      {
+        "name": "Movimientos",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      },
+      {
+        "name": "Beneficiarios",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      },
+      {
+        "name": "Transferir",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      }
+    ],
+    "topbar": {
+      "x": 288,
+      "y": 0,
+      "width": 1152,
+      "height": 64
+    },
+    "shellImages": 0
+  },
+  "SH-02-05 demoOnly=false": {
+    "demoWordCount": 0
+  },
+  "SH-04": {
+    "initials": "PP",
+    "account": "Cuenta •• ####",
+    "logout": "POST /v1/auth/logout → /login"
+  },
+  "SH-07": {
+    "firstFocusable": "Saltar al contenido",
+    "box": {
+      "x": 8,
+      "y": 8,
+      "width": 156.75,
+      "height": 40
+    },
+    "focusAfterEnter": "main#contenido"
+  },
+  "SH-08": {
+    "/login": "Iniciar sesión · Billetera MXN",
+    "/register": "Crear cuenta · Billetera MXN",
+    "/session-expired": "Sesión vencida · Billetera MXN",
+    "/access-denied": "Acceso no disponible · Billetera MXN",
+    "/ruta-inexistente": "Página no encontrada · Billetera MXN",
+    "/accounts": "Inicio · Billetera MXN",
+    "/accounts/:id/movements": "Movimientos · Billetera MXN",
+    "/transfers/:id/movement-receipt": "Comprobante · Billetera MXN",
+    "/beneficiaries": "Beneficiarios · Billetera MXN",
+    "/beneficiaries/new": "Nuevo beneficiario · Billetera MXN",
+    "/transfers/new": "Transferir · Billetera MXN"
+  },
+  "SH-06 390": {
+    "barHeight": 64,
+    "paddingBottom": 96,
+    "sizes": [
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.8125,
+        "height": 55
+      }
+    ]
+  },
+  "SH-06 768": {
+    "barHeight": 64,
+    "paddingBottom": 96,
+    "sizes": [
+      {
+        "width": 150.390625,
+        "height": 55
+      },
+      {
+        "width": 150.40625,
+        "height": 55
+      },
+      {
+        "width": 150.390625,
+        "height": 55
+      },
+      {
+        "width": 150.40625,
+        "height": 55
+      },
+      {
+        "width": 150.390625,
+        "height": 55
+      }
+    ]
+  },
+  "RESP-01 /accounts 1440": {
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "offenders": []
+  },
+  "RESP-01 /accounts R": {
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "offenders": [],
+    "referencePng": "1600x1288",
+    "informativePixelDiff": 0.14783187984496124
+  },
+  "RESP-01 /accounts 768": {
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "offenders": []
+  },
+  "RESP-01 /accounts 390": {
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "offenders": []
+  }
+}

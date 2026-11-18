@@ -1,0 +1,29 @@
+
+Detalle
+AL
+
+Enviada
+Transferencia enviada
+-$300.25
+MXN
+16 de noviembre de 2026, 23:33 hrs
+(Tiempo del Centro de México)
+DETALLES DE LA TRANSACCIÓN
+Cuenta origen
+Cuenta principal •• 2234
+Para
+
+Cuenta de ahorro demo •• 6542
+Concepto
+Prueba Ev10
+Referencia
+9001
+Folio interno
+ffb6b67c-acd5-4f19-9bc1-a64d40f2ef8b
+Tipo de operación
+Entre cuentas propias
+Comprobante de demostración técnica interna de Billetera MXN
+
+Volver a movimientos
+
+Ir al inicio

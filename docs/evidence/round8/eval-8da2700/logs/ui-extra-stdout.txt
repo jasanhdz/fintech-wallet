@@ -1,0 +1,25 @@
+
+===== L: M09 "Verificar" ve un cierre hecho por otro cliente: no libera; Anular confirma =====
+PASS other client voided the identity (server side)
+SHOT L-m09-cierre scrollW=390 errs=0
+requests: ["GET /transfer-attempts?attemptId=079752b8&limit=1"]
+PASS Verificar only read; the record is NOT released by reading a closure; still blocked
+PASS the closure is explained and "Anular" is offered
+SHOT L-anulada scrollW=390 errs=0
+PASS Anular (200) is the terminal result that releases
+PASS "Transferir" returns only after the verified release
+DB L: transfers=[(none)] | 0 debit(s) total 0 | unbalanced tx=0 | max debits/attempt=0 | closures=[voided:079752b8] | epoch=0
+AUDIT L: transfer.attempt_voided
+PASS L: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS L: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS L: 0 transfers, balance unchanged
+
+===== N: un toque = un POST (doble toque en Confirmar) =====
+PASS double tap on Confirmar -> 1 POST /transfers
+record after receipt: released
+DB N: transfers=[completed:9900:6c4cb086] | 1 debit(s) total 9900 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT N: transfer.created {"status": "completed", "amountMinor": "9900"}
+PASS N: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS N: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS N: 1 transfer, 1 debit
+FAILURES: 0

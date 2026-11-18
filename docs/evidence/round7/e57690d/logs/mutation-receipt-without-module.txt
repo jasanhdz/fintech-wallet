@@ -1,0 +1,4 @@
+# without src/receiptShare.ts
+    Cannot find module '../src/receiptShare' from 'tests/receipt.test.tsx'
+Test Suites: 1 failed, 1 total
+Tests:       0 total

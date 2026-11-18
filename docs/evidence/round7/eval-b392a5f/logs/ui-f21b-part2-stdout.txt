@@ -1,0 +1,30 @@
+
+===== C3: confirm en vuelo (F-12) y confirm perdido =====
+while confirm is in flight: Cancelar aria-disabled = true | Solicitar código nuevo aria-disabled = true
+after confirm answered: receipt true | DB: completed:600000 | 1 debit(s)
+PASS C3: forced click during confirm did not cancel/duplicate
+
+===== C4: "Solicitar un código nuevo" =====
+(i) cancel+read fail: POST /transfers (create) count = 0 | message true | DB: awaiting_confirmation:600000 | record keys 1
+PASS (i) no second attempt created
+(ii) happy: DB: cancelled:600000 | awaiting_confirmation:600000 | create keys 1 | record keys 1 | new code differs true
+    old code on NEW attempt -> 422 | old code on CANCELLED attempt -> 409 | balance delta 0
+    new code -> receipt true | DB: cancelled:600000 | completed:600000 | 1 debit(s) | delta 600000
+PASS C4: one debit; old code rejected (422 new / 409 cancelled)
+
+===== C5 (cancel=pass): saldo insuficiente al confirmar =====
+  drain 201
+  drain 201
+SHOT F21-C5-pass-M11 minFont=12 scrollW=390 offscreen=0 errs=1
+M11 shown: true | record keys 0 | DB: cancelled:600000 | completed:499999 | completed:499999
+AUDIT Home after confirm-time rejection: notice=false forbidden=["Cambiar beneficiario","Continuar con transferencia"]
+  flow enabled after rejection (no notice): true | old pending row remains: cancelled:600000 | completed:499999 | completed:499999
+
+===== C5 (cancel=abort): saldo insuficiente al confirmar =====
+  drain 201
+  drain 201
+SHOT F21-C5-abort-M11 minFont=12 scrollW=390 offscreen=0 errs=2
+M11 shown: true | record keys 0 | DB: awaiting_confirmation:600000 | completed:499999 | completed:499999
+AUDIT Home after confirm-time rejection: notice=false forbidden=["Cambiar beneficiario","Continuar con transferencia"]
+  flow enabled after rejection (no notice): true | old pending row remains: awaiting_confirmation:600000 | completed:499999 | completed:499999
+DONE

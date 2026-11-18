@@ -1,0 +1,91 @@
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+
+Running 58 tests using 1 worker
+
+  ✓   1 [final] › web/e2e-final/golden.spec.ts:50:3 › REC-02 golden non-GET traces › S1 create 201 (1.3s)
+  ✓   2 [final] › web/e2e-final/golden.spec.ts:58:3 › REC-02 golden non-GET traces › S2 create 202 + confirm (898ms)
+  ✓   3 [final] › web/e2e-final/golden.spec.ts:67:3 › REC-02 golden non-GET traces › S3 create aborted + explicit retry (879ms)
+  ✓   4 [final] › web/e2e-final/golden.spec.ts:77:3 › REC-02 golden non-GET traces › S4 reload with a record without transferId (909ms)
+  ✓   5 [final] › web/e2e-final/golden.spec.ts:87:3 › REC-02 golden non-GET traces › S5 login with resumeTransfer (809ms)
+  ✓   6 [final] › web/e2e-final/golden.spec.ts:102:3 › REC-02 golden non-GET traces › S6 create 422 then 429 (946ms)
+  ✓   7 [final] › web/e2e-final/golden.spec.ts:116:3 › REC-02 golden non-GET traces › S7 logout with a pending record (880ms)
+  ✓   8 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 vacio 1440 1440x960@1 (615ms)
+  ✓   9 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 vacio R 1280x1024@1.25 (891ms)
+  ✓  10 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 vacio 768 768x1024@1 (560ms)
+  ✓  11 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 vacio 390 390x844@1 (579ms)
+  ✓  12 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incompleto 1440 1440x960@1 (594ms)
+  ✓  13 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incompleto R 1280x1024@1.25 (845ms)
+  ✓  14 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incompleto 768 768x1024@1 (578ms)
+  ✓  15 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incompleto 390 390x844@1 (571ms)
+  ✓  16 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 completo 1440 1440x960@1 (599ms)
+  ✓  17 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 completo R 1280x1024@1.25 (922ms)
+  ✓  18 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 completo 768 768x1024@1 (611ms)
+  ✓  19 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 completo 390 390x844@1 (604ms)
+  ✓  20 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 verificando 1440 1440x960@1 (621ms)
+  ✓  21 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 verificando R 1280x1024@1.25 (986ms)
+  ✓  22 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 verificando 768 768x1024@1 (616ms)
+  ✓  23 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 verificando 390 390x844@1 (619ms)
+  ✓  24 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incorrecto 1440 1440x960@1 (691ms)
+  ✓  25 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incorrecto R 1280x1024@1.25 (1.1s)
+  ✓  26 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incorrecto 768 768x1024@1 (720ms)
+  ✓  27 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 incorrecto 390 390x844@1 (722ms)
+  ✓  28 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 expirado 1440 1440x960@1 (555ms)
+  ✓  29 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 expirado R 1280x1024@1.25 (953ms)
+  ✓  30 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 expirado 768 768x1024@1 (561ms)
+  ✓  31 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 expirado 390 390x844@1 (555ms)
+  ✓  32 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 agotados 1440 1440x960@1 (626ms)
+  ✓  33 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 agotados R 1280x1024@2 (1.0s)
+  ✓  34 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 agotados 768 768x1024@1 (630ms)
+  ✓  35 [final] › web/e2e-final/t5-confirm-result.spec.ts:105:7 › W10 · Código de confirmación › W10 agotados 390 390x844@1 (690ms)
+  ✓  36 [final] › web/e2e-final/t5-confirm-result.spec.ts:231:3 › W10 · Código de confirmación › W10 A11Y-05 reflow (completo, agotados) and paste of six digits (1.1s)
+  ✓  37 [final] › web/e2e-final/t5-confirm-result.spec.ts:248:3 › W10 · Código de confirmación › W10-F1 mapping: 409 → GET completed → W12; 422 expiró → GET expired → V9; red → aviso; same key for the same code (609ms)
+  ✓  38 [final] › web/e2e-final/t5-confirm-result.spec.ts:289:3 › W10 · Código de confirmación › W10-F2 countdown: at 00:00 one GET; V9 only when the server answers expired (263ms)
+  ✓  39 [final] › web/e2e-final/t5-confirm-result.spec.ts:308:3 › W10 · Código de confirmación › W10 rejections in confirm still go to W13 and «Intentos agotados» keeps the record (450ms)
+  ✓  40 [final] › web/e2e-final/t5-confirm-result.spec.ts:395:5 › W11 · Enviando, verificando y resultado desconocido › W11-V1 enviando 1440 1440x960@1 (638ms)
+  ✓  41 [final] › web/e2e-final/t5-confirm-result.spec.ts:430:5 › W11 · Enviando, verificando y resultado desconocido › W11-V2/V3 verificando y desconocido 1440 1440x960@1 (1.3s)
+  ✓  42 [final] › web/e2e-final/t5-confirm-result.spec.ts:395:5 › W11 · Enviando, verificando y resultado desconocido › W11-V1 enviando R 1280x1024@1.25 (834ms)
+  ✓  43 [final] › web/e2e-final/t5-confirm-result.spec.ts:430:5 › W11 · Enviando, verificando y resultado desconocido › W11-V2/V3 verificando y desconocido R 1280x1024@1.25 (1.8s)
+  ✓  44 [final] › web/e2e-final/t5-confirm-result.spec.ts:395:5 › W11 · Enviando, verificando y resultado desconocido › W11-V1 enviando 768 768x1024@1 (586ms)
+  ✓  45 [final] › web/e2e-final/t5-confirm-result.spec.ts:430:5 › W11 · Enviando, verificando y resultado desconocido › W11-V2/V3 verificando y desconocido 768 768x1024@1 (1.2s)
+  ✓  46 [final] › web/e2e-final/t5-confirm-result.spec.ts:395:5 › W11 · Enviando, verificando y resultado desconocido › W11-V1 enviando 390 390x844@1 (775ms)
+  ✓  47 [final] › web/e2e-final/t5-confirm-result.spec.ts:430:5 › W11 · Enviando, verificando y resultado desconocido › W11-V2/V3 verificando y desconocido 390 390x844@1 (1.4s)
+  ✓  48 [final] › web/e2e-final/t5-confirm-result.spec.ts:482:3 › W11 · Enviando, verificando y resultado desconocido › W11-F1 copy per action: GET of a known id says «No reenviamos» and «Consultar estado»; F-W11-3 / F-W11-5 (1.8s)
+  ✓  49 [final] › web/e2e-final/t5-confirm-result.spec.ts:520:3 › W11 · Enviando, verificando y resultado desconocido › W11-F4 «Volver al Inicio» keeps the record and W03 shows the pending notice (299ms)
+  ✓  50 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 beneficiario 1440 1440x960@1 (607ms)
+  ✓  51 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 beneficiario R 1280x1024@1.25 (926ms)
+  ✓  52 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 beneficiario 768 768x1024@1 (601ms)
+  ✓  53 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 beneficiario 390 390x844@1 (600ms)
+  ✓  54 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 propias 1440 1440x960@1 (655ms)
+  ✓  55 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 propias R 1280x1080@2 (1.0s)
+  ✓  56 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 propias 768 768x1024@1 (637ms)
+  ✓  57 [final] › web/e2e-final/t5-confirm-result.spec.ts:565:7 › W12 · Comprobante › W12 propias 390 390x844@1 (619ms)
+  ✓  58 [final] › web/e2e-final/t5-confirm-result.spec.ts:622:3 › W12 · Comprobante › W12-F1 folio: copy to clipboard with «Folio copiado»; long folio does not overflow at 390; reflow (604ms)
+
+  58 passed (50.6s)
+exit 0
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+
+Running 3 tests using 1 worker
+
+  ✓  1 [final] › web/e2e-final/t5-integration.spec.ts:74:3 › WF-T5 [I] P1 › FN-10 · W12-F2 · FN-12: código incorrecto → correcto → comprobante de la misma operación → historial (2.4s)
+  ✓  2 [final] › web/e2e-final/t5-integration.spec.ts:133:3 › WF-T5 [I] P1 › I-W11-6: respuesta perdida real → resultado desconocido → «Reintentar el mismo envío» → mismo id, un movimiento (1.8s)
+  ✓  3 [final] › web/e2e-final/t5-integration.spec.ts:181:3 › WF-T5 [I] P3 (OTP_EXPIRY_SECONDS=5, OTP_MAX_ATTEMPTS=2, demo-only) › W10-F4 expiración real → V9; agotados real → V10; saldos sin cambio (9.3s)
+
+  3 passed (19.7s)
+exit 0

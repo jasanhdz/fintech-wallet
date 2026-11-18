@@ -1,0 +1,34 @@
+API#2 policy {"otpThresholdMinor":"123456","otpExpirySeconds":90,"otpMaxAttempts":3,"dailyLimitMinor":"1500000"}
+PASS M08 shows the demo code box (dev only)
+SHOT M08-vacio minFont=12 scrollW=390 offscreen=0 errs=0
+M08 empty: Autorizar disabled = true | countdown text = 01:28 (expiry 90 s -> 01:2x-01:30 expected) | threshold note: true
+SHOT M08-incompleto minFont=12 scrollW=390 offscreen=0 errs=0
+M08 incomplete "12": false | Autorizar disabled = true
+  after typing "3 4-5" (insertText): value length = 3 (digits only expected 5)
+  Backspace -> length 2 text false
+  paste "12a3456789" -> value length 5 (max 6, digits only)
+SHOT M08-completo minFont=12 scrollW=390 offscreen=0 errs=0
+M08 complete: true | Autorizar disabled = null
+SHOT M08-verificando minFont=12 scrollW=390 offscreen=0 errs=0
+M08 verifying: "Verificando código…" true | "Enviando transferencia" present false | input editable false | exits disabled: Cancelar true
+SHOT M08-incorrecto minFont=12 scrollW=390 offscreen=0 errs=1
+M08 wrong code (422): message true | mentions max attempts (3): true | input cleared true | balances 1000000 unchanged true
+  2nd wrong -> still "incorrecto"
+SHOT M08-intentos-agotados minFont=12 scrollW=390 offscreen=0 errs=3
+M08 3rd wrong -> locked state: true | input editable false | Autorizar disabled true | demo code still shown false | "Solicitar un código nuevo" 1
+  API: correct code after lockout -> 429 (429 expected) | balances unchanged true
+  new code requests: []
+  DB after new code: cancelled:200000 | awaiting_confirmation:200000 | pending= 1 | balances unchanged true
+SHOT M08-codigo-nuevo minFont=12 scrollW=390 offscreen=0 errs=3
+  new attempt: fresh countdown & code box: true differs from old: true | data kept: amount 2,000.00 true | recipient true
+  OLD code on NEW attempt -> 422 | balances unchanged true | old attempt row status: cancelled
+SHOT M10-tras-codigo-nuevo minFont=12 scrollW=390 offscreen=0 errs=3
+  authorize new code -> receipt: true | DB: cancelled:200000 | completed:200000 | ledger 2 rows sum 0 | debit 200000
+SHOT M08-expirado minFont=12 scrollW=390 offscreen=0 errs=0
+M08 expiry: countdown at start 00:07 | expired banner true | input editable false | Autorizar disabled true | demo code hidden true
+  API: correct code after expiry -> 422 El código expiró. | DB status now: expired | balances unchanged true
+  new code after expiry: requests [] | DB expired:200000 | awaiting_confirmation:200000 | balances unchanged true
+SHOT M07-tras-cancelar minFont=12 scrollW=390 offscreen=0 errs=0
+M08 cancel: requests [] | back at review true | data kept (Cancela / 8803 / 2,000.00) true | DB cancelled:200000 | balances unchanged true
+SHOT M08-codigo-nuevo-incierto minFont=12 scrollW=390 offscreen=0 errs=2
+M08 new code with unreadable previous attempt: POST /transfers (create) = 0 | message shown true | pending rows = 1 | still on code step true

@@ -1,0 +1,19 @@
+# 2026-11-17T19:46:48.025Z disk before volume
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1   228Gi   196Gi   3.4Gi    99%    1.9M   36M    5%   /System/Volumes/Data
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          3         2         1.457GB   663.4MB (45%)
+Containers      4         3         90.11kB   20.48kB (22%)
+Local Volumes   4         4         523.8MB   0B (0%)
+Build Cache     0         0         0B        0B
+disk OK: 3.42 GiB free (>= 2.5 GiB)
+created fintech-wallet-web-pg (postgres:16.10-alpine) volume fintech-wallet-web-pg-data bound to 127.0.0.1:55433
+wallet_test ready
+db:migrate:test exit 0
+> fintech-wallet@0.1.0 db:migrate:test
+> npm --workspace @fintech-wallet/api run db:migrate:test
+> @fintech-wallet/api@0.1.0 db:migrate:test
+> tsx --import dotenv/config src/db/command.ts migrate:test
+Database migrations applied.
+◇ injected env (0) from ../.env
+fintech-wallet-web-pg postgres:16.10-alpine 127.0.0.1:55433->5432/tcp Up 3 seconds

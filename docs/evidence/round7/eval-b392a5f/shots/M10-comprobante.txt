@@ -1,0 +1,46 @@
+
+Detalle
+AM
+
+
+Transferencia completada
+-$850.00
+MXN
+
+16 de noviembre de 2026, 18:22 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 3335
+Para
+Constructora y Servicios Profesionales del Centro de México Sociedad Anónima de Capital Variable Sucursal Norte
+Proveedor principal de materiales y servicios generales de mantenimiento del in
+Cuenta destino
+Billetera MXN
+•• 7100
+Concepto
+Pago de servicios profesionales de nov
+Referencia
+1234567
+Folio interno
+e3dc0332-36fc-4eac-a6a5-1dfa7346dde8
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$8,300.00
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

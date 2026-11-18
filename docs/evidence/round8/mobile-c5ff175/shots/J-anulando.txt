@@ -1,0 +1,15 @@
+
+Transferir
+JC
+
+Anular esta transferencia
+Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.
+Monto
+$333.33 MXN
+Destinatario
+Cuenta de ahorro demo (Ahorro demo) •• 1340
+Concepto
+J carrera
+Referencia
+8310
+Volver sin anular

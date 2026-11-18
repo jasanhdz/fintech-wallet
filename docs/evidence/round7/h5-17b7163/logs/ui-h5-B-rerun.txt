@@ -1,0 +1,14 @@
+
+===== B: respuesta perdida antes de aplicarse; consultar no crea; reenvío explícito =====
+SHOT B-M09-verificar-sin-id minFont=12 scrollW=390 offscreen=0 errs=1
+PASS verify: 0 POST, DB 0 rows, says it cannot confirm
+PASS F-27: 2 foreground returns + Home shown again with the network back: 0 POST, DB 0 rows
+PASS Home "Verificar": 0 POST
+SHOT B-reenvio-datos-originales minFont=12 scrollW=390 offscreen=0 errs=1
+PASS resend review shows the original data and consent; opening it sends nothing
+PASS "Volver sin reenviar": record identical, 0 POST
+SHOT B-reenviado-comprobante minFont=12 scrollW=390 offscreen=0 errs=1
+resend: keys ["08cd09fb","08cd09fb"] | same body true | receipt true
+PASS the confirmed resend sent exactly the original key and body
+DB B: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS B: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025

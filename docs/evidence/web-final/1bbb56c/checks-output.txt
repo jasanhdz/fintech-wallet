@@ -1,0 +1,94 @@
+# FN-18 web + e2e static checks · code 1bbb56c · 2026-11-17T13:28:13Z
+$ node -v
+v26.13.1
+exit 0
+$ npm --workspace @fintech-wallet/web run lint
+
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+
+exit 0
+$ npm --workspace @fintech-wallet/web run typecheck
+
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+
+exit 0
+$ npm --workspace @fintech-wallet/web run test
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+✔ W01 login validation reports each empty or malformed field and builds the contract body (1.968ms)
+✔ W02 register validation enforces ≥12 characters and a matching confirmation that is never sent (0.477208ms)
+✔ W01-F3 maps 401, 429 and connectivity to distinct messages without echoing the server detail for 401 (0.185417ms)
+✔ W02-F2 shows the 409 detail verbatim (0.08775ms)
+✔ W14-F2 an unrecoverable 401 marks the session expired and keeps the same-tab transfer record (310.389208ms)
+✔ a browser that never had a session is not marked expired (4.132416ms)
+✔ W07-F1: empty fields and a wrong control digit are rejected in the client with the approved copy (1.92075ms)
+✔ W07: POST /beneficiaries failures map to the contract statuses (409, 404, 422, 400, 401, 403, 5xx, network) (0.2345ms)
+✔ W06-F1: local search by name, alias (accent and case insensitive) or the last four digits only (0.683875ms)
+✔ W07: empty submit marks every field (aria-invalid + aria-describedby), focuses the first one and sends nothing (327.905208ms)
+✔ W07: 503 keeps the values and «Reintentar guardar» resends exactly the same body; 409 offers «Modificar datos» (146.58575ms)
+✔ movement query uses contract filters, limit and cursor without offset (26.15075ms)
+✔ D-4: date filters are business days [00:00, 24:00) of the policy time zone (0.875ms)
+✔ movement history renders rows, applies filters, accumulates pages by cursor, and keeps rows when the next page fails (522.992292ms)
+✔ recent activity requests three real movements for the first account and renders their details (471.080125ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.190208ms)
+✔ hydrates a web session through CSRF and cookie refresh (47.175166ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (343.227333ms)
+✔ provider hydrates a cookie session into in-memory context (15.994ms)
+✔ revoked refresh rejects and network failure remains recoverable (1.359458ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.701458ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.413042ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (7.705417ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.260708ms)
+✔ SH-08 maps every route to its document title (53.385834ms)
+✔ SH-04 initials use two letters and the account tail never exposes the full CLABE (0.507708ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (0.912542ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (10.849584ms)
+✔ create retries forward identical payload and idempotency key (13.679583ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (69.22925ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (338.317542ms)
+✔ login and registration use the shared contract validation (32.636375ms)
+✔ account balance formatting preserves integer minor units (12.110875ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.650417ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2375.474458
+exit 0
+$ env WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+
+> @fintech-wallet/web@0.1.0 build
+> tsc -b && vite build
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 181 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.58 kB │ gzip:   0.32 kB
+dist/assets/index-DOWwMTeB.css   90.93 kB │ gzip:  14.57 kB
+dist/assets/index-D6rTramM.js   494.24 kB │ gzip: 144.62 kB
+
+✓ built in 171ms
+exit 0
+$ npx eslint web/e2e-final web/e2e
+exit 0
+$ npx tsc -p web/e2e-final/tsconfig.json
+exit 0
+$ node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/1bbb56c
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: additions only (removed=0), new exports: export function readActiveTransferContext, storage writes in added code: none
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (28 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit 0

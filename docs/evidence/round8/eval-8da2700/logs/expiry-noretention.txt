@@ -1,0 +1,10 @@
+PASS API up and GET /transfer-policy 200 without the variable 
+POST /transfers without variable -> 500 {"type":"about:blank","title":"Internal Server Error","status":500,"detail":"Ocurrió un error interno.","instance":"/v1/transfers","requestId":"3f061f1e-a4ca-4dbe-a1d4-f6b746ff0fe0"}
+PASS POST /transfers -> 500 (documented deviation) 
+POST invalid body -> 400
+POST without headers (web) -> 500
+PASS nothing written; balance unchanged 
+PASS void still works (500 case has an exit: voided) 
+PASS list works 
+PASS accounts works 
+SUMMARY pass=6 fail=0

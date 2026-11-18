@@ -1,0 +1,80 @@
+# FN-18 web + e2e static checks · code 31f7b30 · 2026-11-17T12:49:23Z
+$ node -v
+v26.13.1
+exit 0
+$ npm --workspace @fintech-wallet/web run lint
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+exit 0
+$ npm --workspace @fintech-wallet/web run typecheck
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+exit 0
+$ npm --workspace @fintech-wallet/web run test
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+✔ W01 login validation reports each empty or malformed field and builds the contract body (4.220875ms)
+✔ W02 register validation enforces ≥12 characters and a matching confirmation that is never sent (1.191458ms)
+✔ W01-F3 maps 401, 429 and connectivity to distinct messages without echoing the server detail for 401 (0.241209ms)
+✔ W02-F2 shows the 409 detail verbatim (0.10325ms)
+✔ W14-F2 an unrecoverable 401 marks the session expired and keeps the same-tab transfer record (196.896625ms)
+✔ a browser that never had a session is not marked expired (4.119375ms)
+✔ movement query uses contract filters, limit and cursor without offset (45.077708ms)
+✔ D-4: date filters are business days [00:00, 24:00) of the policy time zone (1.425583ms)
+✔ movement history renders rows, applies filters, accumulates pages by cursor, and keeps rows when the next page fails (495.940333ms)
+✔ recent activity requests three real movements for the first account and renders their details (452.981416ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.212ms)
+✔ hydrates a web session through CSRF and cookie refresh (16.631042ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (271.998459ms)
+✔ provider hydrates a cookie session into in-memory context (16.481167ms)
+✔ revoked refresh rejects and network failure remains recoverable (0.796833ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.681167ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.400667ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (5.836959ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.481083ms)
+✔ SH-08 maps every route to its document title (0.637166ms)
+✔ SH-04 initials use two letters and the account tail never exposes the full CLABE (0.180792ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (0.869625ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (4.59925ms)
+✔ create retries forward identical payload and idempotency key (9.80925ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (50.5075ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (349.324209ms)
+✔ login and registration use the shared contract validation (2.200875ms)
+✔ account balance formatting preserves integer minor units (73.944625ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.718833ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1917.988792
+exit 0
+$ env WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+> @fintech-wallet/web@0.1.0 build
+> tsc -b && vite build
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 180 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.58 kB │ gzip:   0.32 kB
+dist/assets/index-BeygbjS9.css   86.66 kB │ gzip:  14.01 kB
+dist/assets/index-B92NBdVV.js   482.06 kB │ gzip: 141.65 kB
+✓ built in 224ms
+exit 0
+$ npx eslint web/e2e-final web/e2e
+exit 0
+$ npx tsc -p web/e2e-final/tsconfig.json
+exit 0
+$ node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/31f7b30
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: additions only (removed=0), new exports: export function readActiveTransferContext, storage writes in added code: none
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (26 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit 0

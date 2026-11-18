@@ -1,0 +1,31 @@
+
+Detalle
+LC
+
+
+
+Protección contra duplicados activa
+Estamos verificando si tu transferencia se completó
+No pudimos confirmar el resultado de la operación de $210.00 MXN a Cuenta de ahorro demo •• 2449. Para evitar cobros duplicados, consultamos el estado del intento original (Ref: 8401).
+El servidor registró esta operación como anulada. Toca «Anular esta transferencia» para confirmarlo y liberar este dispositivo.
+
+No hagas otra transferencia igual
+Verificar el estado sólo consulta el intento original; no envía nada ni genera cargos. Las salidas seguras son Verificar, Reenviar la misma transferencia (misma clave) y Anular esta transferencia.
+Destinatario
+Cuenta de ahorro demo
+Monto en verificación
+$210.00 MXN
+Referencia de seguimiento
+8401
+Estado actual
+En verificación de estado
+
+Verificar estado de la transferencia
+
+Anular esta transferencia
+
+Ver movimientos
+En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.
+Ir al inicio (revisar saldo después)
+Referencia: 8401
+Billetera MXN • Validación interna de operación

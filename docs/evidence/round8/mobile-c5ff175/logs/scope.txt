@@ -1,0 +1,30 @@
+## git diff --stat 6375909..c5ff175
+ docs/round8-mobile-notes.md       | 103 +++++
+ mobile/App.tsx                    | 701 +++++++++++++++++++++++++++-------
+ mobile/tests/app.test.tsx         |  54 ++-
+ mobile/tests/recovery-h4.test.tsx |  20 +-
+ mobile/tests/recovery-h5.test.tsx |  75 ++--
+ mobile/tests/recovery-r8.test.tsx | 784 ++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 1550 insertions(+), 187 deletions(-)
+
+## files outside mobile/App.tsx, mobile/tests/** and docs/** (expect none)
+(none)
+
+## lines changed in web/ api/ specs/ packages/ package.json package-lock.json mobile/package.json (expect 0)
+0
+
+## retired texts in mobile/App.tsx and mobile/src (expect 0 each)
+0	No la envíes de nuevo
+0	No intentes enviar el dinero nuevamente
+0	Podrás hacer otra transferencia cuando conozcamos su resultado
+0	Verificar de nuevo
+
+## F-23: amount >= threshold (API, untouched) and client prediction
+108:    const requiresOtp=amount>=threshold;
+1617:  const requiresOtp = Boolean(minor && props.policy && BigInt(minor) >= BigInt(props.policy.otpThresholdMinor));
+
+## send() calls inside sendAttempt (expect 0: one tap = one POST)
+0
+
+## route creating a reservation POST /transfer-attempts (expect none)
+(none)

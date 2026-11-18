@@ -1,0 +1,210 @@
+BASELINE PASS :: Tests:       228 passed, 228 total
+KILLED  16a release on a GET 404 (Home) :: Tests:       6 failed, 222 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › GET /transfers/{id} answered 404 never releases (start-up, Home and M09)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a GET 404 of a stored transferId: no "Verificar de nuevo"; Anular, Reenviar and Ver movimientos; "Anular" resolves it
+KILLED  16b release on a GET 404 (M09 "Verificar") :: Tests:       2 failed, 226 passed, 228 total
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+    ● R8-20 (F-30): texts and spacing › after a GET 404 on M09 there is no "Verificar de nuevo" button
+KILLED  16c release on a GET 404 (start-up) :: Tests:       4 failed, 224 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › GET /transfers/{id} answered 404 never releases (start-up, Home and M09)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a GET 404 of a stored transferId: no "Verificar de nuevo"; Anular, Reenviar and Ver movimientos; "Anular" resolves it
+KILLED  16d release on a 422 without type :: Tests:       3 failed, 225 passed, 228 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered with an UNTYPED 422 is not terminal: ONE POST, M09 and the record intact
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 422 without type: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-19: one tap = one POST (§R8.9) › a resend answered an untyped 422: exactly 1 POST, M09, record intact
+KILLED  16e release on a 429 "límite diario" without type :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 429 without type (daily limit text): ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+KILLED  16f release on transfer-attempt-conflict :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 transfer-attempt-conflict: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+KILLED  16g release on a 409 "en curso" (any 409) :: Tests:       6 failed, 222 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered 409 "en curso" stays in verification with the record intact and no path to another attempt
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 "en curso": ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 transfer-attempt-conflict: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● mobile rejected transfer (M11) › F-09: a 409 answer does not claim the money is intact and keeps the attempt in verification
+KILLED  16h release without the re-read (delete only) :: Tests:       2 failed, 226 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs the re-read to return null: a delete that "succeeds" but leaves the record keeps the block
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an unreadable store: "Reintentar lectura" and "Resolver con el servidor"; if the store still cannot be read after void-all the device stays blocked and explains it (D6)
+KILLED  16i release ignores a failing delete :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs deleteItemAsync WITHOUT error: a delete that removes the value but reports an error keeps the block
+KILLED  16s Home re-read unblocks after a deletion that reported an error :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs deleteItemAsync WITHOUT error: a delete that removes the value but reports an error keeps the block
+KILLED  16j block lifted in memory before the verified deletion (pre-R8 clearRecovery order) :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs the deletion to succeed: a failing delete keeps the block, shows the known result + "No pudimos actualizar este dispositivo" + "Reintentar"
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs deleteItemAsync WITHOUT error: a delete that removes the value but reports an error keeps the block
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs the re-read to return null: a delete that "succeeds" but leaves the record keeps the block
+KILLED  16k void sent automatically at start-up (record without id) :: Tests:       6 failed, 222 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › start-up, foreground x3, sign-in, Home and "Verificar" send 0 POST /transfers, 0 void and 0 void-all (without transferId)
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 voided releases; the confirmation screen shows the mandatory text and only its own tap sends the void
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › "Volver sin anular" sends nothing and keeps everything
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 409 transfer-attempt-conflict does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 500 does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered no answer does not release
+KILLED  16l void sent automatically when Home is shown / foreground :: Tests:       7 failed, 221 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › start-up, foreground x3, sign-in, Home and "Verificar" send 0 POST /transfers, 0 void and 0 void-all (without transferId)
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › start-up, foreground x3, sign-in, Home and "Verificar" send 0 POST /transfers, 0 void and 0 void-all (with transferId)
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 voided releases; the confirmation screen shows the mandatory text and only its own tap sends the void
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › "Volver sin anular" sends nothing and keeps everything
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 409 transfer-attempt-conflict does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 500 does not release
+KILLED  16m "Anular" sends the void on the first tap (no confirmation screen) :: Tests:       13 failed, 215 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 voided releases; the confirmation screen shows the mandatory text and only its own tap sends the void
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › "Volver sin anular" sends nothing and keeps everything
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 transfer_found (already applied) releases and shows that transfer: receipt, never "no charge"
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 rejected releases and says why (typed rejection: no charge)
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 409 transfer-attempt-conflict does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 500 does not release
+KILLED  16n void-all sent without confirmation (as soon as "Resolver con el servidor" lists) :: Tests:       4 failed, 224 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record unblocks ONLY after "Resolver con el servidor" -> list -> explicit void-all (fromEpoch of the list) -> list -> verified deletion
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › "Volver sin anular" from "Resolver con el servidor" sends no void-all and keeps the block
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › after void-all 200, a failed list read is retried WITHOUT a second void-all and then unblocks
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an unreadable store: "Reintentar lectura" and "Resolver con el servidor"; if the store still cannot be read after void-all the device stays blocked and explains it (D6)
+KILLED  16o void-all released without the list read after it :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record unblocks ONLY after "Resolver con el servidor" -> list -> explicit void-all (fromEpoch of the list) -> list -> verified deletion
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record stays blocked when void-all answers 200 but the list read after it fails
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › after void-all 200, a failed list read is retried WITHOUT a second void-all and then unblocks
+KILLED  16p void-all with a fromEpoch that is not the one listed :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record unblocks ONLY after "Resolver con el servidor" -> list -> explicit void-all (fromEpoch of the list) -> list -> verified deletion
+KILLED  16q a failed void (5xx / no answer / conflict) releases :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 409 transfer-attempt-conflict does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 500 does not release
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered no answer does not release
+KILLED  16r "Resolver con el servidor" releases after the first list (no void-all) :: Tests:       5 failed, 223 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record unblocks ONLY after "Resolver con el servidor" -> list -> explicit void-all (fromEpoch of the list) -> list -> verified deletion
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › "Volver sin anular" from "Resolver con el servidor" sends no void-all and keeps the block
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record stays blocked when void-all fails
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record stays blocked when void-all answers 200 but the list read after it fails
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › after void-all 200, a failed list read is retried WITHOUT a second void-all and then unblocks
+KILLED  15a POST without Transfer-Attempt-Id :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › the v2 record (attemptId, key, sendEpoch, payload, userId) is persisted BEFORE the POST, which carries the three headers with its values
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a resend carries the three headers with the STORED values (same key, identity, epoch and body bytes)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId: the resend first reads the policy and PERSISTS its epoch, then sends key, new identity, epoch and the same body
+KILLED  15b POST without Transfer-Send-Epoch :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › the v2 record (attemptId, key, sendEpoch, payload, userId) is persisted BEFORE the POST, which carries the three headers with its values
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a resend carries the three headers with the STORED values (same key, identity, epoch and body bytes)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId: the resend first reads the policy and PERSISTS its epoch, then sends key, new identity, epoch and the same body
+KILLED  15c POST without Idempotency-Key :: Tests:       26 failed, 202 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 401: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 403: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 400: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 429 rate limit: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › the confirmation tap sends EXACTLY the stored key and body (the same bytes the first send used), once
+KILLED  15d sends without a sendEpoch in the policy (fail open, epoch "0") :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a policy whose sendEpoch is missing sends NOTHING (fail closed): 0 POST, no record, a clear message
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a policy whose sendEpoch is malformed sends NOTHING (fail closed): 0 POST, no record, a clear message
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a policy whose sendEpoch is negative sends NOTHING (fail closed): 0 POST, no record, a clear message
+KILLED  15e the record is persisted AFTER the POST leaves :: Tests:       13 failed, 215 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › a confirmed business rejection (422 transfer-attempt-rejected) of the first send is the only 4xx that opens M11 and releases the record
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › a business rejection at confirm time releases the record only once the cancel of that attempt is confirmed
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › the first send stores the user's consent with the attempt; the code authorization is recorded without the code
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › the v2 record (attemptId, key, sendEpoch, payload, userId) is persisted BEFORE the POST, which carries the three headers with its values
+    ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    ● mobile transfer attempt › recovers an uncertain confirm by re-querying the transfer instead of leaving a dead end, without a second confirm POST
+KILLED  15f identity equal to the key :: Tests:       28 failed, 200 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 401: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 403: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 400: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 429 rate limit: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+KILLED  15g "Verificar" without id POSTs the stored attempt :: Tests:       47 failed, 181 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 401: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 403: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 400: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 429 rate limit: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+KILLED  15h "Verificar" without id reads nothing (no GET /transfer-attempts) :: Tests:       3 failed, 225 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › "Verificar" of an attempt without transferId only does GET /transfer-attempts?attemptId=<its id>&limit=1
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a listed item with a transfer id is stored and that transfer is read (GET): completed -> receipt and release
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an identity the list shows closed (voided) is NOT released by the read; "Anular" confirms it
+KILLED  15i resend re-captures the epoch from the policy instead of the stored one :: Tests:       11 failed, 217 passed, 228 total
+    ● R8-15: identity and send (§R8.4-1, §R8.7) › a resend carries the three headers with the STORED values (same key, identity, epoch and body bytes)
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 422 without type: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 429 without type (daily limit text): ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 429 rate limit: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 "en curso": ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 transfer-attempt-conflict: ONE POST, M09, the record byte-identical, no "no charge" claim, Home still blocked
+KILLED  17a legacy upgrade changes the key :: Tests:       5 failed, 223 passed, 228 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a legacy record (no owner) whose resend answers 404 is kept: no release, no claim
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId gets a NEW identity and legacy:true; key and payload bytes are kept; it is explained and voided by its key
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId: the resend first reads the policy and PERSISTS its epoch, then sends key, new identity, epoch and the same body
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without userId (legacy slot) moves to the user signing in, says so, and is voided only in that user's scope
+    ● round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › defence in depth: confirming a new attempt while this user has a stored unresolved one sends nothing new and shows that attempt instead
+KILLED  17b legacy upgrade not persisted (identity changes on every read) :: Tests:       4 failed, 224 passed, 228 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a legacy record (no owner) whose resend answers 404 is kept: no release, no claim
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId gets a NEW identity and legacy:true; key and payload bytes are kept; it is explained and voided by its key
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId: the resend first reads the policy and PERSISTS its epoch, then sends key, new identity, epoch and the same body
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without userId (legacy slot) moves to the user signing in, says so, and is voided only in that user's scope
+KILLED  17c legacy record voided with its never-sent identity :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId gets a NEW identity and legacy:true; key and payload bytes are kept; it is explained and voided by its key
+KILLED  17d legacy resend without persisting the epoch first :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId: the resend first reads the policy and PERSISTS its epoch, then sends key, new identity, epoch and the same body
+KILLED  17e ownerless record not marked (no explanation) :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without userId (legacy slot) moves to the user signing in, says so, and is voided only in that user's scope
+KILLED  17f another user's id under this user's key is used as is :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record in this user's key with another user's id is resolved as damaged (never sent)
+KILLED  17g "Reintentar lectura" deletes the damaged record :: Tests:       3 failed, 225 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › a damaged record is explained without technical text; "Reintentar lectura" re-reads it, nothing is deleted or sent and there is no discard
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › an unreadable secure store blocks with an explanation; "Reintentar lectura" unblocks only once it can be read again
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+KILLED  17h unreadable SecureStore treated as "no record" :: Tests:       5 failed, 223 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › an unreadable secure store blocks with an explanation; "Reintentar lectura" unblocks only once it can be read again
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+    ● H4 · F-28: guard coverage › (1) when the secure store cannot be read at confirm time the guard fails closed: 0 POST /transfers and a clear message
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an unreadable store: "Reintentar lectura" and "Resolver con el servidor"; if the store still cannot be read after void-all the device stays blocked and explains it (D6)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an unreadable store that can be deleted and re-read after void-all unblocks
+KILLED  17i a damaged record releases its block when the problem is cleared without void-all :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › an unreadable store: "Reintentar lectura" and "Resolver con el servidor"; if the store still cannot be read after void-all the device stays blocked and explains it (D6)
+KILLED  17j "Verificar de nuevo" back after a GET 404 on M09 :: Tests:       2 failed, 226 passed, 228 total
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+    ● R8-20 (F-30): texts and spacing › after a GET 404 on M09 there is no "Verificar de nuevo" button
+KILLED  17k "Verificar de nuevo" back after a GET 404 on Home :: Tests:       3 failed, 225 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a GET 404 of a stored transferId: no "Verificar de nuevo"; Anular, Reenviar and Ver movimientos; "Anular" resolves it
+KILLED  17l no "Anular esta transferencia" after a GET 404 :: Tests:       5 failed, 223 passed, 228 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a GET 404 of a stored transferId: no "Verificar de nuevo"; Anular, Reenviar and Ver movimientos; "Anular" resolves it
+    ● R8-20 (F-30): texts and spacing › after a GET 404 on M09 there is no "Verificar de nuevo" button
+KILLED  3g (F-29) resendSameTransfer does not compare the stored record at the tap :: Tests:       2 failed, 226 passed, 228 total
+    ● R8-18 (F-29): the resend is checked against the stored record at the tap › record DELETED between opening the resend review and the tap: 0 POST, Home free
+    ● R8-18 (F-29): the resend is checked against the stored record at the tap › record DELETED between opening the resend review and the tap: 0 POST, Home free
+    ● R8-18 (F-29): the resend is checked against the stored record at the tap › record REPLACED (another key) between opening the resend review and the tap: 0 POST, Home shows the other attempt
+KILLED  19a the second send() of the same tap is back (422/429 re-sent once) :: Tests:       12 failed, 216 passed, 228 total
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 429 rate limit: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered with a typed rejection (422 transfer-attempt-rejected) is final at once: ONE POST, M11, record released
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered with an UNTYPED 422 is not terminal: ONE POST, M09 and the record intact
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a FIRST send answered with a typed 422 is final at once: one POST, M11
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 422 transfer-attempt-rejected: ONE POST, M11, released
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 429 transfer-attempt-rejected: ONE POST, M11, released
+KILLED  20a "No intentes enviar el dinero nuevamente" back on M09 :: Tests:       2 failed, 226 passed, 228 total
+    ● R8-20 (F-30): texts and spacing › M09 and Home name the safe ways out and never say the retired sentences
+    ● mobile uncertain result (M09) › explains the uncertain attempt; verifying only reads, and the explicit resend replays the same key (never a second attempt)
+KILLED  20b "Podrás hacer otra transferencia cuando conozcamos su resultado" back on Home :: Tests:       2 failed, 226 passed, 228 total
+    ● R8-20 (F-30): texts and spacing › M09 and Home name the safe ways out and never say the retired sentences
+    ● round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › Home with an unresolved attempt offers no way to start another one (neither the kept destination nor "Transferir dinero"); only the explicit resend re-sends, with the same key
+KILLED  20c consent box flush against the main button (0 px) :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-20 (F-30): texts and spacing › the resend review keeps >= 12 px between the consent box and the main button (style; measured in the RN-Web render)
+KILLED  20d mandatory void confirmation text missing :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 voided releases; the confirmation screen shows the mandatory text and only its own tap sends the void
+KILLED  20e mandatory "Resolver con el servidor" text missing :: Tests:       1 failed, 227 passed, 228 total
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a damaged record unblocks ONLY after "Resolver con el servidor" -> list -> explicit void-all (fromEpoch of the list) -> list -> verified deletion
+KILLED  20f "voided" answer shown without the mandatory text :: Tests:       7 failed, 221 passed, 228 total
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › POST answered 409 transfer-attempt-voided: released and "Transferencia anulada. No se realizó ningún cargo…"
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › a void answered 200 voided releases; the confirmation screen shows the mandatory text and only its own tap sends the void
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs the deletion to succeed: a failing delete keeps the block, shows the known result + "No pudimos actualizar este dispositivo" + "Reintentar"
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs deleteItemAsync WITHOUT error: a delete that removes the value but reports an error keeps the block
+    ● R8-16: release rules (§R8.7) — only a terminal result decided by the server, then deletion + re-read null › release needs the re-read to return null: a delete that "succeeds" but leaves the record keeps the block
+    ● R8-17: old, ownerless, damaged and unreadable records (§R8.8) › a record without attemptId gets a NEW identity and legacy:true; key and payload bytes are kept; it is explained and voided by its key
+survivors: 0 of 48

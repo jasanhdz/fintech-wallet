@@ -1,0 +1,41 @@
+# scope f0ed4bc..8da2700
+web/** lines:
+       0
+manifests/lockfile:
+       0
+changed non-docs files:
+.env.example
+api/src/config.ts
+api/src/db/data-source.ts
+api/src/db/migrations/1763000009000-TransferAttemptRecovery.ts
+api/src/http/app.ts
+api/src/transfers/attempts.ts
+api/src/transfers/faults.ts
+api/src/transfers/service.ts
+api/tests/config.test.ts
+api/tests/movements.integration.ts
+api/tests/round6-contract.integration.ts
+api/tests/transfer-attempts.test.ts
+api/tests/transfer-recovery.integration.ts
+api/tests/transfers.integration.ts
+mobile/App.tsx
+mobile/tests/app.test.tsx
+mobile/tests/recovery-h4.test.tsx
+mobile/tests/recovery-h5.test.tsx
+mobile/tests/recovery-r8.test.tsx
+packages/shared/src/generated/product-design.ts
+specs/openapi.yaml
+specs/requirements.md
+amount>=threshold in service:
+108:    const requiresOtp=amount>=threshold;
+OTP files diff (otp policy):
+141:-    await applyLedger(r,id,user,String(x.source_account_id),String(x.destination_account_id),amount);await r.query('UPDATE daily_limit_usage SET outgoing_minor=outgoing_minor+$1 WHERE owner_id=$2
+142:+    await applyLedger(r,id,user,String(x.source_account_id),String(x.destination_account_id),amount);await r.query('UPDATE daily_limit_usage SET outgoing_minor=outgoing_minor+$1 WHERE owner_id=$2
+153:-  return {currency:'MXN',businessDate:String(rows[0].day),businessTimeZone:timeZone,dailyLimitMinor:limit.toString(),dailyUsedMinor:used.toString(),dailyRemainingMinor:(limit>used?limit-used:0n).
+154:+  return {currency:'MXN',businessDate:String(rows[0].day),businessTimeZone:timeZone,dailyLimitMinor:limit.toString(),dailyUsedMinor:used.toString(),dailyRemainingMinor:(limit>used?limit-used:0n).
+route creating reservation (POST /transfer-attempts exact):
+       0
+135:  api.get('/transfer-attempts',async(req,res,next)=>{
+138:  api.post('/transfer-attempts/void',async(req,res,next)=>{
+141:  api.post('/transfer-attempts/void-all',async(req,res,next)=>{
+new deps:

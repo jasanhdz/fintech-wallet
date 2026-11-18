@@ -1,0 +1,28 @@
+
+Transferir
+AL
+
+Confirmación de seguridad
+Monto extraordinario
+DESTINATARIO
+Cuenta de ahorro demo •• 6719
+(Billetera MXN)
+IMPORTE
+$2,000.00
+MXN
+
+Operación mayor o igual a $1,234.56 MXN (umbral de demostración)
+CÓDIGO DE DEMOSTRACIÓN
+Código de confirmación
+Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por $2,000.00 MXN a Cuenta de ahorro demo •• 6719.
+
+Código asignado para esta prueba: ••••••
+Código completo. Ya puedes autorizar.
+
+El código expira en 01:26
+
+Solicitar un código nuevo
+
+Autorizar transferencia
+
+Cancelar y volver a revisar

@@ -1,0 +1,15 @@
+◇ injected env (22) from ../.env
+✔ PostgreSQL auth, rotation, csrf and owner-scoped accounts (4133.51875ms)
+✔ runtime role cannot mutate ledger or audit tables (8.664333ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4513.177917
+real 4.77
+user 4.78
+sys 0.14
+exit 0

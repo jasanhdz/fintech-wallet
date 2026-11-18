@@ -1,0 +1,68 @@
+# Playwright final · code ad108db · WF_PROFILES=P1,P2 · 2026-11-17T08:45:25Z
+$ WF_EVIDENCE_SHA=ad108db WF_PROFILES=P1,P2 npx playwright test -c web/e2e-final/playwright.config.ts --project=final
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+[WebServer] ◇ injected env (0) from ../.env
+[WebServer] ◇ injected env (0) from ../.env
+
+Running 50 tests using 1 worker
+
+  ✓   1 [final] › web/e2e-final/golden.spec.ts:50:3 › REC-02 golden non-GET traces › S1 create 201 (1.3s)
+  ✓   2 [final] › web/e2e-final/golden.spec.ts:58:3 › REC-02 golden non-GET traces › S2 create 202 + confirm (812ms)
+  ✓   3 [final] › web/e2e-final/golden.spec.ts:67:3 › REC-02 golden non-GET traces › S3 create aborted + explicit retry (839ms)
+  ✓   4 [final] › web/e2e-final/golden.spec.ts:77:3 › REC-02 golden non-GET traces › S4 reload with a record without transferId (836ms)
+  ✓   5 [final] › web/e2e-final/golden.spec.ts:87:3 › REC-02 golden non-GET traces › S5 login with resumeTransfer (783ms)
+  ✓   6 [final] › web/e2e-final/golden.spec.ts:102:3 › REC-02 golden non-GET traces › S6 create 422 then 429 (855ms)
+  ✓   7 [final] › web/e2e-final/golden.spec.ts:116:3 › REC-02 golden non-GET traces › S7 logout with a pending record (798ms)
+  ✓   8 [final] › web/e2e-final/t0-foundation.spec.ts:43:5 › FONT · Inter self-hosted › FONT-03/04/05 /login (115ms)
+  ✓   9 [final] › web/e2e-final/t0-foundation.spec.ts:43:5 › FONT · Inter self-hosted › FONT-03/04/05 /accounts (168ms)
+  ✓  10 [final] › web/e2e-final/t0-foundation.spec.ts:67:3 › FONT · Inter self-hosted › FONT-06 Inter renders with real metrics (98ms)
+  ✓  11 [final] › web/e2e-final/t0-foundation.spec.ts:76:3 › FONT · Inter self-hosted › FONT-07 amounts and masked CLABEs use tabular numerals (147ms)
+  ✓  12 [final] › web/e2e-final/t0-foundation.spec.ts:96:3 › SH · authenticated shell ≥1024 › SH-01/02/03/05/09 geometry, tokens and demo labelling (demoOnly true) (245ms)
+  ✓  13 [final] › web/e2e-final/t0-foundation.spec.ts:161:3 › SH · authenticated shell ≥1024 › SH-02/05 no demo labelling when demoOnly is false (164ms)
+  ✓  14 [final] › web/e2e-final/t0-foundation.spec.ts:168:3 › SH · authenticated shell ≥1024 › SH-04 user card and logout (221ms)
+  ✓  15 [final] › web/e2e-final/t0-foundation.spec.ts:181:3 › SH · authenticated shell ≥1024 › SH-07 skip link is the first focusable element and focuses main (194ms)
+  ✓  16 [final] › web/e2e-final/t0-foundation.spec.ts:196:3 › SH · authenticated shell ≥1024 › SH-08 document title per route (556ms)
+  ✓  17 [final] › web/e2e-final/t0-foundation.spec.ts:222:5 › SH-06 · shell below 1024 › SH-06 390x844 (179ms)
+  ✓  18 [final] › web/e2e-final/t0-foundation.spec.ts:222:5 › SH-06 · shell below 1024 › SH-06 768x1024 (162ms)
+  ✓  19 [final] › web/e2e-final/t0-foundation.spec.ts:250:5 › RESP-01 · /accounts without horizontal scroll › RESP-01 /accounts 1440 1440x960@1 (224ms)
+  ✓  20 [final] › web/e2e-final/t0-foundation.spec.ts:250:5 › RESP-01 · /accounts without horizontal scroll › RESP-01 /accounts R 1280x1030@1.25 (555ms)
+  ✓  21 [final] › web/e2e-final/t0-foundation.spec.ts:250:5 › RESP-01 · /accounts without horizontal scroll › RESP-01 /accounts 768 768x1024@1 (224ms)
+  ✓  22 [final] › web/e2e-final/t0-foundation.spec.ts:250:5 › RESP-01 · /accounts without horizontal scroll › RESP-01 /accounts 390 390x844@1 (209ms)
+  ✓  23 [final] › web/e2e-final/t1-access.spec.ts:143:3 › W01 · Iniciar sesión › W01-V1…V4 geometry and tokens at R (729ms)
+  ✓  24 [final] › web/e2e-final/t1-access.spec.ts:214:5 › W01 · Iniciar sesión › W01 listo 1440 1440x960: responsive, a11y and capture (416ms)
+  ✓  25 [final] › web/e2e-final/t1-access.spec.ts:214:5 › W01 · Iniciar sesión › W01 listo R 1280x1024: responsive, a11y and capture (460ms)
+  ✓  26 [final] › web/e2e-final/t1-access.spec.ts:214:5 › W01 · Iniciar sesión › W01 listo 768 768x1024: responsive, a11y and capture (425ms)
+  ✓  27 [final] › web/e2e-final/t1-access.spec.ts:214:5 › W01 · Iniciar sesión › W01 listo 390 390x844: responsive, a11y and capture (446ms)
+  ✓  28 [final] › web/e2e-final/t1-access.spec.ts:228:3 › W01 · Iniciar sesión › W01-F1 the eye toggles the secret field visibility with aria-pressed and label (193ms)
+  ✓  29 [final] › web/e2e-final/t1-access.spec.ts:246:3 › W01 · Iniciar sesión › W01-F2 empty submit shows field errors without a request; sending state is disabled with a status (746ms)
+  ✓  30 [final] › web/e2e-final/t1-access.spec.ts:293:3 › W01 · Iniciar sesión › W01-F3 401, 429 and offline show distinct alerts and keep the e-mail (1.6s)
+  ✓  31 [final] › web/e2e-final/t1-access.spec.ts:323:3 › W01 · Iniciar sesión › W01 A11Y-05 zoom 200 % and 320 px reflow (221ms)
+  ✓  32 [final] › web/e2e-final/t1-access.spec.ts:344:3 › W02 · Crear cuenta › W02-V1…V3 geometry and tokens at R (388ms)
+  ✓  33 [final] › web/e2e-final/t1-access.spec.ts:391:5 › W02 · Crear cuenta › W02 listo 1440 1440x960: responsive, a11y and capture (556ms)
+  ✓  34 [final] › web/e2e-final/t1-access.spec.ts:391:5 › W02 · Crear cuenta › W02 listo R 1280x1024: responsive, a11y and capture (590ms)
+  ✓  35 [final] › web/e2e-final/t1-access.spec.ts:391:5 › W02 · Crear cuenta › W02 listo 768 768x1024: responsive, a11y and capture (550ms)
+  ✓  36 [final] › web/e2e-final/t1-access.spec.ts:391:5 › W02 · Crear cuenta › W02 listo 390 390x844: responsive, a11y and capture (553ms)
+  ✓  37 [final] › web/e2e-final/t1-access.spec.ts:404:3 › W02 · Crear cuenta › W02-F1 empty and mismatched confirmation stay client-side; the body has only the three contract fields (462ms)
+  ✓  38 [final] › web/e2e-final/t1-access.spec.ts:433:3 › W02 · Crear cuenta › W02-F2 409 shows the server detail, keeps name/e-mail and clears both secret fields; W02 creating state (816ms)
+  ✓  39 [final] › web/e2e-final/t1-access.spec.ts:470:3 › W02 · Crear cuenta › W02 A11Y-05 zoom 200 % and 320 px reflow (217ms)
+  ✓  40 [final] › web/e2e-final/t1-access.spec.ts:492:3 › W14 · Sesión vencida y acceso no disponible › W14-V1/V2/V4 geometry and tokens at R; side by side (695ms)
+  ✓  41 [final] › web/e2e-final/t1-access.spec.ts:539:3 › W14 · Sesión vencida y acceso no disponible › W14-V3 pending attempt summary inside the same card; button keeps the resume state (1.5s)
+  ✓  42 [final] › web/e2e-final/t1-access.spec.ts:573:5 › W14 · Sesión vencida y acceso no disponible › W14 vencida/acceso/no encontrada 1440: responsive, a11y and captures (689ms)
+  ✓  43 [final] › web/e2e-final/t1-access.spec.ts:573:5 › W14 · Sesión vencida y acceso no disponible › W14 vencida/acceso/no encontrada R: responsive, a11y and captures (755ms)
+  ✓  44 [final] › web/e2e-final/t1-access.spec.ts:573:5 › W14 · Sesión vencida y acceso no disponible › W14 vencida/acceso/no encontrada 768: responsive, a11y and captures (694ms)
+  ✓  45 [final] › web/e2e-final/t1-access.spec.ts:573:5 › W14 · Sesión vencida y acceso no disponible › W14 vencida/acceso/no encontrada 390: responsive, a11y and captures (638ms)
+  ✓  46 [final] › web/e2e-final/t1-access.spec.ts:599:3 › W14 · Sesión vencida y acceso no disponible › W14-F1 403 and 404 by id show «Acceso no disponible» and leave the record byte-identical (5.9s)
+  ✓  47 [final] › web/e2e-final/t1-access.spec.ts:630:3 › W14 · Sesión vencida y acceso no disponible › W14-F2 a 401 that cannot be refreshed keeps the record and shows the session-expired card (863ms)
+  ✓  48 [final] › web/e2e-final/t1-access.spec.ts:673:3 › [I] W01/W02/W14 against the real API › W01-F4 real login (P1) → /accounts; W14 unauthorised access to another user’s resources → V4 (I-W14-6) (5.7s)
+  ✓  49 [final] › web/e2e-final/t1-access.spec.ts:705:3 › [I] W01/W02/W14 against the real API › W02-F3 real registration: P1 → two accounts (997ms)
+  ✓  50 [final] › web/e2e-final/t1-access.spec.ts:718:3 › [I] W01/W02/W14 against the real API › W02-F3 real registration: P2 (fixture off) → one account at $0.00 MXN (1.0s)
+
+  50 passed (45.4s)
+exit 0

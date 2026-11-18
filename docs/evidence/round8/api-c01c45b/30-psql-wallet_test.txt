@@ -1,0 +1,281 @@
+$ docker exec -i fintech-wallet-postgres-1 psql -U postgres -d wallet_test -v since=2026-11-17T07:33:32Z < queries-wallet_test.sql
+Pager usage is off.
+BEGIN
+== R8-01 migration row
+ id |                 name                 
+----+--------------------------------------
+ 10 | TransferAttemptRecovery1763000009000
+(1 row)
+
+== R8-01 column, tables, CHECKs, indexes, triggers
+        table_name         |    column_name    |        data_type         | is_nullable 
+---------------------------+-------------------+--------------------------+-------------
+ transfer_attempt_closures | id                | uuid                     | NO
+ transfer_attempt_closures | owner_id          | uuid                     | NO
+ transfer_attempt_closures | key_hash          | character                | NO
+ transfer_attempt_closures | client_attempt_id | uuid                     | YES
+ transfer_attempt_closures | status            | character varying        | NO
+ transfer_attempt_closures | payload_hash      | character                | YES
+ transfer_attempt_closures | amount_minor      | bigint                   | YES
+ transfer_attempt_closures | problem_status    | smallint                 | YES
+ transfer_attempt_closures | problem_detail    | character varying        | YES
+ transfer_attempt_closures | request_id        | character varying        | YES
+ transfer_attempt_closures | closed_at         | timestamp with time zone | NO
+ transfer_send_gates       | owner_id          | uuid                     | NO
+ transfer_send_gates       | epoch             | bigint                   | NO
+ transfer_send_gates       | updated_at        | timestamp with time zone | NO
+ transfers                 | client_attempt_id | uuid                     | YES
+(15 rows)
+
+           table           |                    conname                     |                                                  definition                                                   
+---------------------------+------------------------------------------------+---------------------------------------------------------------------------------------------------------------
+ transfer_send_gates       | transfer_send_gates_epoch_check                | CHECK ((epoch >= 0))
+ transfer_send_gates       | transfer_send_gates_owner_id_fkey              | FOREIGN KEY (owner_id) REFERENCES users(id)
+ transfer_send_gates       | transfer_send_gates_pkey                       | PRIMARY KEY (owner_id)
+ transfer_attempt_closures | transfer_attempt_closures_amount_check         | CHECK (((amount_minor IS NULL) OR (amount_minor > 0)))
+ transfer_attempt_closures | transfer_attempt_closures_owner_id_fkey        | FOREIGN KEY (owner_id) REFERENCES users(id)
+ transfer_attempt_closures | transfer_attempt_closures_pkey                 | PRIMARY KEY (id)
+ transfer_attempt_closures | transfer_attempt_closures_problem_status_check | CHECK (((problem_status IS NULL) OR (problem_status = ANY (ARRAY[404, 422, 429]))))
+ transfer_attempt_closures | transfer_attempt_closures_rejected_check       | CHECK ((((status)::text = 'rejected'::text) = ((problem_status IS NOT NULL) AND (payload_hash IS NOT NULL))))
+ transfer_attempt_closures | transfer_attempt_closures_status_check         | CHECK (((status)::text = ANY ((ARRAY['voided'::character varying, 'rejected'::character varying])::text[])))
+(9 rows)
+
+                  indexname                   |                                                                                       indexdef                                                                                       
+----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ transfer_attempt_closures_owner_attempt_uidx | CREATE UNIQUE INDEX transfer_attempt_closures_owner_attempt_uidx ON public.transfer_attempt_closures USING btree (owner_id, client_attempt_id) WHERE (client_attempt_id IS NOT NULL)
+ transfer_attempt_closures_owner_closed_idx   | CREATE INDEX transfer_attempt_closures_owner_closed_idx ON public.transfer_attempt_closures USING btree (owner_id, closed_at DESC, id DESC)
+ transfer_attempt_closures_owner_key_uidx     | CREATE UNIQUE INDEX transfer_attempt_closures_owner_key_uidx ON public.transfer_attempt_closures USING btree (owner_id, key_hash)
+ transfers_owner_attempt_uidx                 | CREATE UNIQUE INDEX transfers_owner_attempt_uidx ON public.transfers USING btree (owner_id, client_attempt_id) WHERE (client_attempt_id IS NOT NULL)
+ transfers_owner_created_idx                  | CREATE INDEX transfers_owner_created_idx ON public.transfers USING btree (owner_id, created_at DESC, id DESC)
+(5 rows)
+
+           table           |                tgname                 |                                                                                                      definition                                                                                                       
+---------------------------+---------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ transfers                 | transfers_attempt_id_immutable        | CREATE TRIGGER transfers_attempt_id_immutable BEFORE UPDATE OF client_attempt_id ON public.transfers FOR EACH ROW EXECUTE FUNCTION prevent_transfer_attempt_id_change()
+ transfers                 | transfers_closed_attempt_guard        | CREATE TRIGGER transfers_closed_attempt_guard BEFORE INSERT ON public.transfers FOR EACH ROW WHEN ((new.client_attempt_id IS NOT NULL)) EXECUTE FUNCTION guard_transfer_closed_attempt()
+ transfers                 | transfers_terminal_state_guard        | CREATE TRIGGER transfers_terminal_state_guard BEFORE UPDATE OF status ON public.transfers FOR EACH ROW EXECUTE FUNCTION prevent_transfer_terminal_exit()
+ idempotency_records       | idempotency_records_closed_key_guard  | CREATE TRIGGER idempotency_records_closed_key_guard BEFORE INSERT ON public.idempotency_records FOR EACH ROW WHEN (((new.operation)::text = 'create-transfer'::text)) EXECUTE FUNCTION guard_idempotency_closed_key()
+ transfer_send_gates       | transfer_send_gates_monotonic         | CREATE TRIGGER transfer_send_gates_monotonic BEFORE DELETE OR UPDATE ON public.transfer_send_gates FOR EACH ROW EXECUTE FUNCTION guard_transfer_send_gate()
+ transfer_attempt_closures | transfer_attempt_closures_append_only | CREATE TRIGGER transfer_attempt_closures_append_only BEFORE DELETE OR UPDATE ON public.transfer_attempt_closures FOR EACH ROW EXECUTE FUNCTION prevent_transfer_attempt_closure_mutation()
+ transfer_attempt_closures | transfer_attempt_closures_cross_guard | CREATE TRIGGER transfer_attempt_closures_cross_guard BEFORE INSERT ON public.transfer_attempt_closures FOR EACH ROW EXECUTE FUNCTION guard_transfer_attempt_closure_insert()
+(7 rows)
+
+== R8-01 runtime privileges (wallet_runtime_test)
+            tbl            |   priv   | granted 
+---------------------------+----------+---------
+ transfer_send_gates       | SELECT   | t
+ transfer_send_gates       | INSERT   | t
+ transfer_send_gates       | UPDATE   | t
+ transfer_send_gates       | DELETE   | f
+ transfer_send_gates       | TRUNCATE | f
+ transfer_attempt_closures | SELECT   | t
+ transfer_attempt_closures | INSERT   | t
+ transfer_attempt_closures | UPDATE   | f
+ transfer_attempt_closures | DELETE   | f
+ transfer_attempt_closures | TRUNCATE | f
+ transfers                 | DELETE   | f
+ idempotency_records       | DELETE   | f
+ audit_events              | UPDATE   | f
+ audit_events              | DELETE   | f
+(14 rows)
+
+SELECT 14
+== Run users (fake emails r8-<section>-<uuid>@example.test, created since the run start)
+     label     |                  id                  |          created_at           
+---------------+--------------------------------------+-------------------------------
+ migration     | e06f52ab-3274-4b09-86ce-a6f4d8f392a8 | 2026-11-17 07:33:47.041982+00
+ listing       | 58ef6c7c-3bce-4d6c-bd49-1920bd8a06e5 | 2026-11-17 07:33:47.402798+00
+ lost-send     | 780031e1-93fd-40d2-8841-b81b0350528f | 2026-11-17 07:33:48.291004+00
+ lost-void     | 186f4505-4095-4735-9c9b-7442f640ba09 | 2026-11-17 07:33:48.668194+00
+ races         | c08e9d05-e3f1-4f29-b304-178c2915ebb2 | 2026-11-17 07:33:49.008202+00
+ late-send     | 68b4b218-9a41-459e-8cdd-d5364462a431 | 2026-11-17 07:33:50.913134+00
+ pending       | fad7805f-f36f-477b-8424-93093b180b95 | 2026-11-17 07:33:51.272503+00
+ pending-other | d547e1fb-fdd5-4069-b390-8cc1bfc6274c | 2026-11-17 07:33:51.56113+00
+ rejections    | 8e2fc6fd-ede0-4f60-92f0-78c2df08a435 | 2026-11-17 07:33:52.717539+00
+ threshold     | 51351595-b624-4fef-b9de-b94e4768d395 | 2026-11-17 07:33:53.209564+00
+ iso-a         | 724444ce-963b-40d1-8653-c8191645d43e | 2026-11-17 07:33:53.558519+00
+ iso-b         | 38dbfe6b-cbe8-49c8-b1f4-2886c4303dfc | 2026-11-17 07:33:53.846107+00
+ expiration    | 5dbfddb4-0ca9-4088-8763-b4a4f30571be | 2026-11-17 07:33:54.190432+00
+ other-client  | 6dd8b494-a084-454c-ae25-5f5ab9968d27 | 2026-11-17 07:33:54.545184+00
+(14 rows)
+
+== Transfers per user and status (with / without client_attempt_id)
+     label     |        status         | transfers | with_attempt_id 
+---------------+-----------------------+-----------+-----------------
+ migration     | completed             |         1 |               1
+ listing       | awaiting_confirmation |         6 |               6
+ listing       | cancelled             |         4 |               4
+ listing       | completed             |        23 |              19
+ listing       | expired               |         4 |               4
+ lost-send     | completed             |         1 |               1
+ races         | completed             |        37 |              37
+ late-send     | completed             |         1 |               1
+ pending       | cancelled             |        15 |              14
+ pending       | completed             |        10 |              10
+ pending       | expired               |         1 |               1
+ pending-other | awaiting_confirmation |         2 |               2
+ rejections    | completed             |         4 |               2
+ threshold     | awaiting_confirmation |         4 |               2
+ threshold     | completed             |         2 |               1
+ iso-a         | awaiting_confirmation |         1 |               1
+ iso-a         | completed             |         1 |               1
+ expiration    | completed             |         2 |               2
+ other-client  | completed             |         1 |               1
+(19 rows)
+
+== Closures per user and status (problem_status for rejected)
+   label    |  status  | problem_status | closures | with_attempt_id 
+------------+----------+----------------+----------+-----------------
+ migration  | voided   |                |        2 |               1
+ listing    | rejected |            422 |        5 |               5
+ listing    | voided   |                |        6 |               6
+ lost-void  | voided   |                |        1 |               1
+ races      | voided   |                |       26 |              26
+ late-send  | voided   |                |        1 |               1
+ rejections | rejected |            422 |        1 |               1
+ rejections | rejected |            404 |        1 |               1
+ rejections | rejected |            429 |        1 |               1
+ iso-b      | voided   |                |        1 |               0
+(10 rows)
+
+== Send epoch per user
+     label     | epoch 
+---------------+-------
+ migration     | 1
+ listing       | 0
+ lost-send     | 0
+ lost-void     | 1
+ races         | 20
+ late-send     | 1
+ pending       | 1
+ pending-other | 0
+ rejections    | 0
+ threshold     | 0
+ iso-a         | 0
+ iso-b         | 1
+ expiration    | 0
+ other-client  | 1
+(14 rows)
+
+== Invariants (every count must be 0)
+                             invariant                              | violations 
+--------------------------------------------------------------------+------------
+ ledger transactions of run transfers whose entries do not sum to 0 |          0
+ transfers with more than one debit                                 |          0
+ non-completed transfers with ledger entries                        |          0
+ identities with both a transfer and a closure                      |          0
+ keys with both an executed idempotency record and a closure        |          0
+ duplicated (owner, client_attempt_id) in transfers                 |          0
+ customer accounts whose balance differs from their ledger          |          0
+ negative customer balances                                         |          0
+(8 rows)
+
+== Balances, debits and net per user (minor units; fixture amounts are demo/test only)
+     label     |             balances              | debits | transfer_entries_net 
+---------------+-----------------------------------+--------+----------------------
+ migration     | checking=99999900 savings=100100  |      1 |                    0
+ listing       | checking=99993571 savings=106429  |     23 |                    0
+ lost-send     | checking=99987655 savings=112345  |      1 |                    0
+ lost-void     | checking=100000000 savings=100000 |      0 |                    0
+ races         | checking=99954070 savings=145930  |     37 |                    0
+ late-send     | checking=99995000 savings=105000  |      1 |                    0
+ pending       | checking=94999910 savings=5100090 |     10 |                    0
+ pending-other | checking=100000000 savings=100000 |      0 |                    0
+ rejections    | checking=100297666 savings=802334 |      4 |                    0
+ threshold     | checking=99000002 savings=1099998 |      2 |                    0
+ iso-a         | checking=99995679 savings=104321  |      1 |                    0
+ iso-b         | checking=100000000 savings=100000 |      0 |                    0
+ expiration    | checking=99397532 savings=702468  |      2 |                    0
+ other-client  | checking=99998889 savings=101111  |      1 |                    0
+(14 rows)
+
+== Daily usage per user
+    label     | business_date | outgoing_minor 
+--------------+---------------+----------------
+ migration    | 2026-11-17    |            100
+ listing      | 2026-11-17    |           6429
+ lost-send    | 2026-11-17    |          12345
+ races        | 2026-11-17    |          45930
+ late-send    | 2026-11-17    |           5000
+ pending      | 2026-11-17    |        5000090
+ rejections   | 2026-11-17    |         302334
+ threshold    | 2026-11-17    |         999998
+ iso-a        | 2026-11-17    |           4321
+ expiration   | 2026-11-17    |         602468
+ other-client | 2026-11-17    |           1111
+(11 rows)
+
+== Idempotency retention dates (expires_at - created_at) per user and operation
+     label     |    operation     |         retention         | count 
+---------------+------------------+---------------------------+-------
+ migration     | create-transfer  | 30 days                   |     1
+ listing       | create-transfer  | 30 days                   |    37
+ lost-send     | create-transfer  | 30 days                   |     1
+ races         | create-transfer  | 30 days                   |    37
+ late-send     | create-transfer  | 30 days                   |     1
+ pending       | confirm-transfer | 30 days                   |    10
+ pending       | create-transfer  | 30 days                   |    26
+ pending-other | create-transfer  | 30 days                   |     2
+ rejections    | create-transfer  | 30 days                   |     4
+ threshold     | create-transfer  | 30 days                   |     6
+ iso-a         | create-transfer  | 30 days                   |     2
+ expiration    | confirm-transfer | 2 days                    |     1
+ expiration    | create-transfer  | -44 days -23:59:59.990657 |     1
+ expiration    | create-transfer  | 2 days                    |     1
+ other-client  | create-transfer  | 30 days                   |     1
+(15 rows)
+
+== Round-8 audit events (metadata only; no key, key hash, OTP or CLABE)
+    label     |            action            |  resource_type   |                   metadata                   | events 
+--------------+------------------------------+------------------+----------------------------------------------+--------
+ migration    | transfer.attempt_voided      | transfer_attempt | {}                                           |      2
+ migration    | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+ listing      | transfer.attempt_rejected    | transfer_attempt | {"status": 422}                              |      5
+ listing      | transfer.attempt_voided      | transfer_attempt | {}                                           |      6
+ listing      | transfer.cancelled           | transfer         | {}                                           |      4
+ listing      | transfer.expired             | transfer         | {}                                           |      4
+ lost-void    | transfer.attempt_voided      | transfer_attempt | {}                                           |      1
+ lost-void    | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+ races        | transfer.attempt_voided      | transfer_attempt | {}                                           |     26
+ races        | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "10", "from": "9", "closedCount": 0}  |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "11", "from": "10", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "12", "from": "11", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "13", "from": "12", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "14", "from": "13", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "15", "from": "14", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "16", "from": "15", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "17", "from": "16", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "18", "from": "17", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "19", "from": "18", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "2", "from": "1", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "20", "from": "19", "closedCount": 0} |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "3", "from": "2", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "4", "from": "3", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "5", "from": "4", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "6", "from": "5", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "7", "from": "6", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "8", "from": "7", "closedCount": 0}   |      1
+ races        | transfer.send_epoch_advanced | user             | {"to": "9", "from": "8", "closedCount": 0}   |      1
+ late-send    | transfer.attempt_voided      | transfer_attempt | {}                                           |      1
+ late-send    | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+ pending      | transfer.cancelled           | transfer         | {"via": "void"}                              |     11
+ pending      | transfer.cancelled           | transfer         | {"via": "void_all"}                          |      4
+ pending      | transfer.expired             | transfer         | {"via": "void"}                              |      1
+ pending      | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 4}   |      1
+ rejections   | transfer.attempt_rejected    | transfer_attempt | {"status": 404}                              |      1
+ rejections   | transfer.attempt_rejected    | transfer_attempt | {"status": 422}                              |      1
+ rejections   | transfer.attempt_rejected    | transfer_attempt | {"status": 429}                              |      1
+ iso-b        | transfer.attempt_voided      | transfer_attempt | {}                                           |      1
+ iso-b        | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+ other-client | transfer.send_epoch_advanced | user             | {"to": "1", "from": "0", "closedCount": 0}   |      1
+(41 rows)
+
+== Privacy scan of all audit metadata of the run (every count must be 0)
+ eighteen_digit_values | secret_like_fields | key_hashes_in_metadata | audit_events_scanned 
+-----------------------+--------------------+------------------------+----------------------
+                     0 |                  0 |                      0 |                  241
+(1 row)
+
+ROLLBACK
+exit=0

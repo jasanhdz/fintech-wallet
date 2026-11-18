@@ -1,0 +1,6 @@
+SHOT F-M02 minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M02-aviso minFont=12 scrollW=390 offscreen=0 errs=2
+SHOT F-M07-umbral minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M08-vigente minFont=12 scrollW=390 offscreen=0 errs=0
+SHOT F-M08-incorrecto minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT F-M02-pendiente-codigo minFont=12 scrollW=390 offscreen=0 errs=0

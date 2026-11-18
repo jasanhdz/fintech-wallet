@@ -1,0 +1,337 @@
+escenario	pantalla	estado	nivel	viewport	dpr	archivo	sha256	referencia_aprobada
+F-SH-1	Shell	demoOnly true	F	1440x960	1	captures/SH-shell-1440x960-demo.png	162f7c034f3e8c75033350b4a62d5a951e42c5829fdce5578f5e9905dbef21bc	w03_inicio_y_cuentas_corregido
+F-W01-1	W01	listo	F	1280x1024	1.25	captures/W01-listo-1280x1024@1.25.png	022aa143493f5fcbed7c434902c239917ffccd73be22b5ffc4c58275d8d99b0a	w01_login_demostraci_n
+F-W01-1	W01	listo	F	1440x960	1	captures/W01-listo-1440x960@1.png	75502ec43e195611a8b41fedce28980cc5624aa1b4562f606f70acc127956226	w01_login_demostraci_n
+F-W01-1	W01	listo	F	390x844	1	captures/W01-listo-390x844@1.png	0739b7301db7bd806bba1568e4e06e048e11033c202b84ee3afff25331906671	w01_login_demostraci_n
+F-W01-1	W01	listo	F	768x1024	1	captures/W01-listo-768x1024@1.png	547ccc4ba581bcb5008e8af97f5d8eef5c821fda26bf84379d4836afa97e076e	w01_login_demostraci_n
+F-W01-1	W01	listo (viewport 1280×970, altura de captura de la referencia) · lado a lado	F	1280x970	1.25	captures/W01-listo-sbs-970.png	9b268dc4413ebe647ca5192b553bde314c85a3a2012a739ace7e32b0062018c3	w01_login_demostraci_n
+F-W01-1	W01	listo · lado a lado	F	1280x1024	1.25	captures/W01-listo-sbs.png	4dfb3b8e92b091933af915582a0eb4fda5e63316ebff7fdacc482f811ebd1562	w01_login_demostraci_n
+F-W01-2	W01	errores de campo	F	1280x1024	1.25	captures/W01-errores-campo-1280x1024@1.25.png	71f1d4c26b7426c12a018e3562dd931c4927e32af5ba7f76d52832e9af0c3487	w01_login_demostraci_n
+F-W01-2	W01	errores de campo	F	390x844	1	captures/W01-errores-campo-390x844@1.png	4bde3bf4d584edc8071f62bb99cee445c61e44f6801812c4de981d98f8cff5c6	w01_login_demostraci_n
+F-W01-3	W01	enviando	F	1280x1024	1.25	captures/W01-enviando-1280x1024@1.25.png	a43ea19f97ead8e4bce3e12e5fdef11e04b7dd69c90728fe4ff23179f65386f0	w01_login_demostraci_n
+F-W01-3	W01	enviando	F	390x844	1	captures/W01-enviando-390x844@1.png	1e7a592e9183d6ff3b4d0ec02a859ddbacd3cbd9a7f54a7f4c0f2c1928f8310e	w01_login_demostraci_n
+F-W01-4	W01	401 credenciales	F	1280x1024	1.25	captures/W01-401-1280x1024@1.25.png	de43b43eae431ab38b96f66cff4548bfe0da3b16dfc6a18300e867773396c142	w01_login_demostraci_n
+F-W01-4	W01	401 credenciales	F	390x844	1	captures/W01-401-390x844@1.png	4ecbb7a7347adba5202d76c038f8d800281d361dc287f1b9ccf626d724ce3f4b	w01_login_demostraci_n
+F-W01-5	W01	429 demasiados intentos	F	1280x1024	1.25	captures/W01-429-1280x1024@1.25.png	6ecbb666a83cbd2af30b35d6f0af2dbda9f02933e959b5c8877f5f7334477963	w01_login_demostraci_n
+F-W01-5	W01	429 demasiados intentos	F	390x844	1	captures/W01-429-390x844@1.png	904e4b5f4e01800a078c114adb9c49f6ff6938cafffcd88ed4700d8b29c032a7	w01_login_demostraci_n
+F-W01-6	W01	sin conexión	F	1280x1024	1.25	captures/W01-sin-conexion-1280x1024@1.25.png	628cc748874d6bde6ea07636e6c5500791f0ae135584f46b144a0dff12604d8b	w01_login_demostraci_n
+F-W01-6	W01	sin conexión	F	390x844	1	captures/W01-sin-conexion-390x844@1.png	e4f84715b9cc8658124e65c27ce0e0e5ea9090ae89d9ed8dd353ca61ee0e3466	w01_login_demostraci_n
+F-W02-1	W02	errores de campo	F	1280x1024	1.25	captures/W02-errores-campo-1280x1024@1.25.png	8d79c275443a51fc8e443a27aebffb485cc820218e6d30c87df02e8547fffd5c	w02_registro
+F-W02-1	W02	listo	F	1280x1024	1.25	captures/W02-listo-1280x1024@1.25.png	fac18aea7fe86adec7b04cd03ed89b8aaa07977da58907b5de5fd93784d0f666	w02_registro
+F-W02-1	W02	listo	F	1440x960	1	captures/W02-listo-1440x960@1.png	d84160f1f9e868d2e0a34e37ab92697859f68d9d93f4bba3e18f8a34367ec217	w02_registro
+F-W02-1	W02	listo	F	390x844	1	captures/W02-listo-390x844@1.png	5c882602f1b9bfff041d2ac2785d1a142ecc99eeadf28bbfaf51a2630284ca12	w02_registro
+F-W02-1	W02	listo	F	768x1024	1	captures/W02-listo-768x1024@1.png	8137251a7f7f9db42a86431b7a3fe3a7f291810b78c879ce8fa9c7dfcad4b456	w02_registro
+F-W02-1	W02	listo · lado a lado	F	1280x1024	1.25	captures/W02-listo-sbs.png	7da84e4169235ffcf0de62d11458ed20f6e829bc3aaae2f314d520e3d5ed9b7f	w02_registro
+F-W02-2	W02	contraseñas distintas	F	1280x1024	1.25	captures/W02-contrasenas-distintas-1280x1024@1.25.png	17cdcefaa59c54ccbd31b6b7f261ba5f43f1e93c8bbfa2419c7f746bd2498f6f	w02_registro
+F-W02-3	W02	409 correo no disponible	F	1280x1024	1.25	captures/W02-409-1280x1024@1.25.png	762148c336a49b7d6e71ea4838b11f2ee43a2d3118f3ac5fdc5c065a5ef2d452	w02_registro
+F-W02-3	W02	409 correo no disponible	F	390x844	1	captures/W02-409-390x844@1.png	ce81b61887e638a21cf9f25e73b27644d5fac27d449aef578427427bd66833e4	w02_registro
+F-W02-4	W02	creando	F	1280x1024	1.25	captures/W02-creando-1280x1024@1.25.png	66977e66244c1ceef4588b50a9e35be43b553be309aa47d891953e4bae059010	w02_registro
+F-W02-4	W02	creando	F	390x844	1	captures/W02-creando-390x844@1.png	697a21feb25128078537525da07bae24d5c9949f0be33f7a0753460ddcfd692b	w02_registro
+F-W03-1	W03	con saldo	F	1280x1030	1.25	captures/W03-con-saldo-1280x1030@1.25.png	13b554309691f43299924cf52506f17ae222f42bfd52756e132163fe19129533	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo	F	1440x960	1	captures/W03-con-saldo-1440x960@1.png	89a1c562237837a8f8faaf3898fab918e055d080570ab55aded72c543195de75	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo	F	390x844	1	captures/W03-con-saldo-390x844@1.png	fc227e0164f8c6b57ead6c73a52b1cd0d31d5ce9c149d8d9bbc7c48ba1a341b4	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo	F	768x1024	1	captures/W03-con-saldo-768x1024@1.png	8aac2e931c76938b43accb0c546df72c42be0becf546b03149f71ba73a9db387	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	1280x1030	1.25	captures/W03-accounts-1280x1030@1.25.png	512a0c130a001c9ae48270c7f35cbfe72c06817c87b9ad3afafbf547e801f836	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	1440x960	1	captures/W03-accounts-1440x960@1.png	162f7c034f3e8c75033350b4a62d5a951e42c5829fdce5578f5e9905dbef21bc	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	390x844	1	captures/W03-accounts-390x844@1.png	66e7fedf795c97a59ee9261df9111462adb9cbd3c9c2cf73d4989eb287e200e0	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	768x1024	1	captures/W03-accounts-768x1024@1.png	fc3c2c89ed5cba49dd8cac05f94421226ea45b62a50a90ce24f0f9df00495e14	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo · lado a lado	F	1280x1030	1.25	captures/W03-con-saldo-sbs.png	c03f6f2d7d29bdeb4fa922657c7d678e6a9fc8712335d66223ff34bbfb0bb80e	w03_inicio_y_cuentas_corregido
+F-W03-2	W03	sin saldo	F	1280x1024	1.25	captures/W03-sin-saldo-1280x1024@1.25.png	bb3e6fac745f036ce227852f5c2024a512fe63147370507874aa81497468b37b	w03_inicio_sin_saldo
+F-W03-2	W03	sin saldo	F	1440x960	1	captures/W03-sin-saldo-1440x960@1.png	1b5cce93ba13b0c675f202912b964fd8f5285236553eca5a09873f596dfaa7df	w03_inicio_sin_saldo
+F-W03-2	W03	sin saldo	F	390x844	1	captures/W03-sin-saldo-390x844@1.png	9cbcd003edcc0c7fc48a9f045f79fdda1f2890e78cabb7b7b8725714f122851a	w03_inicio_sin_saldo
+F-W03-2	W03	sin saldo	F	768x1024	1	captures/W03-sin-saldo-768x1024@1.png	7465802fbd034f93bc0bc195fe108129eab855b93e7ab190092c462eb0cee18f	w03_inicio_sin_saldo
+F-W03-2	W03	sin saldo · lado a lado	F	1280x1024	1.25	captures/W03-sin-saldo-sbs.png	77125990d1e134933ee6daca502126e0b693e0e642bd168df330f0bf04447b60	w03_inicio_sin_saldo
+F-W03-3	W03	cargando	F	1280x1030	1.25	captures/W03-cargando-1280x1030@1.25.png	27abf80e615070ea968f58a6acc9930df612a73c41ca37254322916833566881	w03_inicio_y_cuentas_corregido
+F-W03-3	W03	cargando	F	390x844	1	captures/W03-cargando-390x844@1.png	6e526e2ebd8775463e1228e2e0ff0c4b995cbb57a08c999344a7c3787bc96e17	w03_inicio_y_cuentas_corregido
+F-W03-4	W03	error de cuentas	F	1280x1030	1.25	captures/W03-error-cuentas-1280x1030@1.25.png	9bec216c7526bdd3fa401127e8f7bb792286086ce66621342f3951b22c1652fc	w03_inicio_y_cuentas_corregido
+F-W03-4	W03	error de cuentas	F	390x844	1	captures/W03-error-cuentas-390x844@1.png	51a64237820798418e92a16bd9b452d56340a1ff626923f1d24ce6c6ceb11312	w03_inicio_y_cuentas_corregido
+F-W03-5	W03	error de actividad	F	1280x1030	1.25	captures/W03-error-actividad-1280x1030@1.25.png	bc2a7d0e1927518017e27f4ff206dc43a7584366e1f0d41d4c012d2c06c5a0e0	w03_inicio_y_cuentas_corregido
+F-W03-5	W03	error de actividad	F	390x844	1	captures/W03-error-actividad-390x844@1.png	68de74bde55da0a01123a65d13c9c1e9be07b58a4973a5018625072f7fbaa50f	w03_inicio_y_cuentas_corregido
+F-W03-6	W03	aviso pendiente sin transferId	F	1280x1124	2	captures/W03-pendiente-sin-transferId-1280x1124@2.png	ad2bed9bf1ce17806ab9c9597a9079362df550052b026e759a3ea5fbbae76c33	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-6	W03	aviso pendiente sin transferId	F	1440x960	1	captures/W03-pendiente-sin-transferId-1440x960@1.png	930c2c113e02128029e0fd593c535be6b579348d3e1bbe181587572b0f230b1c	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-6	W03	aviso pendiente sin transferId	F	390x844	1	captures/W03-pendiente-sin-transferId-390x844@1.png	021b458f4dce7faa268ada0c17af49bff853e54b0bd7e6aab043c739ac9a3653	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-6	W03	aviso pendiente sin transferId	F	768x1024	1	captures/W03-pendiente-sin-transferId-768x1024@1.png	f109cacc746b2ccbc9541293bfd042ac6142ee0c75c8aff8ee67c03d13f582fe	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-6	W03	aviso pendiente · lado a lado	F	1280x1124	2	captures/W03-pendiente-sin-transferId-sbs.png	4f8bbc1a450c9ca274e5f96554fcf171a4c2e28fe349af59a7904bef11feddad	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-7	W03	aviso pendiente con transferId	F	1280x1124	2	captures/W03-pendiente-con-transferId-1280x1124@2.png	4cfac61390e67f2ca4de4a5242ed41d89acc52c4d564b91524ecda633befa886	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-7	W03	aviso pendiente con transferId	F	1440x960	1	captures/W03-pendiente-con-transferId-1440x960@1.png	a2fd01ac9415e4dad6d7d7423683ecf430d1b047d880054f56994d6885853a7d	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-7	W03	aviso pendiente con transferId	F	390x844	1	captures/W03-pendiente-con-transferId-390x844@1.png	62ddb9ebdad4e79c1f4f1968af0558625dd01cb0dfd3dd9888576a5f9a20db33	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-7	W03	aviso pendiente con transferId	F	768x1024	1	captures/W03-pendiente-con-transferId-768x1024@1.png	bacd1aad269049b7e7ebcba0c4a04302ef713ebbcbdcfdade191283a73f25660	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-7	W03	aviso pendiente · lado a lado	F	1280x1124	2	captures/W03-pendiente-con-transferId-sbs.png	df45e93bb0f6dce26661b5c3deafc59436ca2b3357cf1ac05dd70d2b0701b82b	w03_operaci_n_pendiente_de_verificaci_n
+F-W03-8	W03	textos largos	F	1440x960	1	captures/W03-textos-largos-1440x960@1.png	aa56b913fe94bdd3b65e85cdf166da8b291fd79b095d6f61ac6e67883d79b574	w03_inicio_y_cuentas_corregido
+F-W03-8	W03	textos largos	F	390x844	1	captures/W03-textos-largos-390x844@1.png	f6ee73b17c9481082581970ac91f2012879cf81440124e840980e0932ab90860	w03_inicio_y_cuentas_corregido
+F-W04-1	W04	con movimientos	F	1280x1024	1.25	captures/W04-con-movimientos-1280x1024@1.25.png	569bad91402664d652f792dc7484003e8dc749e1fb3a20fbfff952c738845c82	w04_historial_con_movimientos
+F-W04-1	W04	con movimientos	F	1440x960	1	captures/W04-con-movimientos-1440x960@1.png	d4770cf63865cf4f329fb94635e48a3800adc9bbfe3799afc36f566184059190	w04_historial_con_movimientos
+F-W04-1	W04	con movimientos	F	390x844	1	captures/W04-con-movimientos-390x844@1.png	1a810e21a74c82eca3bd0741e81f0add262d4484b06530470bf48a7251a845a3	w04_historial_con_movimientos
+F-W04-1	W04	con movimientos	F	768x1024	1	captures/W04-con-movimientos-768x1024@1.png	4b74189ecc9a8ada1cdcdb39259dd1d8ac835100f539fbdaf6f3a99f564cedbd	w04_historial_con_movimientos
+F-W04-1	W04	con movimientos · lado a lado	F	1280x1024	1.25	captures/W04-con-movimientos-sbs.png	a89d09b74310301b897d445ea99be16adb0c021e18549edfe546d57379cce278	w04_historial_con_movimientos
+F-W04-1	W04	detalle inline de abono de tercero	F	1440x960	1	captures/W04-detalle-inline-1440x960@1.png	a67c0078739e7484857516891d5be27f0e33aeef61a14187f70a5545ab32e8c5	w04_historial_con_movimientos
+F-W04-2	W04	vacío	F	1280x1024	1.25	captures/W04-vacio-1280x1024@1.25.png	583a8b35b727c561bade8372d90012a04e1ddaeaf99429437c3634c257be9109	w04_sin_movimientos
+F-W04-2	W04	vacío	F	1440x960	1	captures/W04-vacio-1440x960@1.png	df6145656479052b4a196a75fe1a6812283217e7e832c89c36905fd73a0b46e8	w04_sin_movimientos
+F-W04-2	W04	vacío	F	390x844	1	captures/W04-vacio-390x844@1.png	2b064a6d8316c3973abd84a79e9959171cc3f2a8655cdf3bf2a8609c7616ba6e	w04_sin_movimientos
+F-W04-2	W04	vacío	F	768x1024	1	captures/W04-vacio-768x1024@1.png	87801a6fc26c328545301cd007571ed30ec1719131b6dd434f57d0fb1c4ef41a	w04_sin_movimientos
+F-W04-2	W04	vacío · lado a lado	F	1280x1024	1.25	captures/W04-vacio-sbs.png	2421df9ad282cc7251f0cd107299404353719e9c682ce645d99cd008a16f70c9	w04_sin_movimientos
+F-W04-3	W04	sin resultados	F	1280x1024	1.25	captures/W04-sin-resultados-1280x1024@1.25.png	f135e15c196acbdacb49776a0b91d3b5344351988a43b8cec1cc775a5f4a5bd5	w04_sin_resultados
+F-W04-3	W04	sin resultados	F	1440x960	1	captures/W04-sin-resultados-1440x960@1.png	e4f0baef7f5d424f681102b491fa70498c1efac8bcd6a3819d467c2ea8baaaf3	w04_sin_resultados
+F-W04-3	W04	sin resultados	F	390x844	1	captures/W04-sin-resultados-390x844@1.png	d1f647af629f0d0d4bd6c3644b4848cc6fe2cef9a1f9ba4caa683abf74d5b9e6	w04_sin_resultados
+F-W04-3	W04	sin resultados	F	768x1024	1	captures/W04-sin-resultados-768x1024@1.png	417f0d39aa9a21c1fa02e0183b29aa915d4a4e7a0bd5ea83cbf447c21b35a5bf	w04_sin_resultados
+F-W04-3	W04	sin resultados · lado a lado	F	1280x1024	1.25	captures/W04-sin-resultados-sbs.png	e5087b60c5e0047997a813c9f9d61918db35a6353b1ad63cf7e812c8f9dfd75b	w04_sin_resultados
+F-W04-4	W04	cargando	F	1280x1024	1.25	captures/W04-cargando-1280x1024@1.25.png	67421eee4d8d1556658e5a3b078eb5bc3a3a0afc3f8e741d9dfe830f875298ae	w04_cargando
+F-W04-4	W04	cargando	F	1440x960	1	captures/W04-cargando-1440x960@1.png	be76e4e9523a61d3d310f18dfdc4f152c897a6da47fa5ae8ed3ddca9b2532516	w04_cargando
+F-W04-4	W04	cargando	F	390x844	1	captures/W04-cargando-390x844@1.png	71a96757b90f73b1fac53e599004b0178c08044fd7b7b81c64aa98dbf0c0dd24	w04_cargando
+F-W04-4	W04	cargando	F	768x1024	1	captures/W04-cargando-768x1024@1.png	3b0fc6d55f25f8a94de8104df9d98e41c5436a4bd35722477dc2bc2d2fe622b2	w04_cargando
+F-W04-4	W04	cargando · lado a lado	F	1280x1024	1.25	captures/W04-cargando-sbs.png	0138227683735cf1fb5fdf14caa324a80baf66fa0ad877d509ccf8a2c6f5a125	w04_cargando
+F-W04-5	W04	error al cargar más	F	1280x1024	1.25	captures/W04-error-cargar-mas-1280x1024@1.25.png	d55b536778fde30bada0fea435d0dc558eb5f7becdcce5fa3f2d5672f9652da8	w04_error_al_cargar_m_s
+F-W04-5	W04	error al cargar más	F	1440x960	1	captures/W04-error-cargar-mas-1440x960@1.png	a12ac4850147b4f5b15d88cf9d3d57fe09d5ed66fd8619bd4ecd6d71f7b53976	w04_error_al_cargar_m_s
+F-W04-5	W04	error al cargar más	F	390x844	1	captures/W04-error-cargar-mas-390x844@1.png	b9d3d5549a46fcfa5a42855267645172bc0fc058664745e70397b0cba38cceab	w04_error_al_cargar_m_s
+F-W04-5	W04	error al cargar más	F	768x1024	1	captures/W04-error-cargar-mas-768x1024@1.png	cb102f5cacfa79bce9920d77d6085475988e1e45778d2b54d2ca90c7475906f5	w04_error_al_cargar_m_s
+F-W04-5	W04	error al cargar más (inicio) · lado a lado	F	1280x1024	1.25	captures/W04-error-cargar-mas-sbs.png	96a92eec6710848f81e181d5e248d402ef6c3a79bd6dee7852fdd968ab1d1834	w04_error_al_cargar_m_s
+F-W04-5	W04	error al cargar más · banner · lado a lado	F	1280x1024	1.25	captures/W04-error-cargar-mas-banner-sbs.png	a29fa4acfb6d05503b6ac49ea478e327001e65de1d2115262e0f0dda1b3b6159	w04_error_al_cargar_m_s
+F-W04-6	W04	error inicial	F	1280x1024	1.25	captures/W04-error-inicial-1280x1024@1.25.png	4b52cedf9a7a59ac85ad1c98c944cd047c7d9ea08892d0ef1d20ba44ebcd9491	w04_error_al_cargar_m_s
+F-W04-6	W04	error inicial	F	390x844	1	captures/W04-error-inicial-390x844@1.png	98f31f277af42099fd53dd3211fce855998cf13a16b8f6cd52665c0b846dd3fe	w04_error_al_cargar_m_s
+F-W04-7	W04	textos largos	F	1280x1024	1.25	captures/W04-textos-largos-1280x1024@1.25.png	0e512d9c9bbeb6aac27e7ebdef2bbca8c64ccb078ef0a7af78922b3770f1a3e6	w04_historial_con_movimientos
+F-W04-7	W04	textos largos	F	1440x960	1	captures/W04-textos-largos-1440x960@1.png	1fdc7badb52bd14e9300c086bd0e29409409e857e20bf5b8e898bb04392dbb65	w04_historial_con_movimientos
+F-W04-7	W04	textos largos	F	390x844	1	captures/W04-textos-largos-390x844@1.png	5cd407c4f27fcb1ae8aadadc1ad3e2ddc2921a2a36677a78767a67d5025496ab	w04_historial_con_movimientos
+F-W05-1	W05	a beneficiario	F	1280x1024	1.25	captures/W05-beneficiario-1280x1024@1.25.png	d611c1a9e4eac8c8dcf1d13393d523f1a029a537c537db9697ab01fcc3d67bf7	w05_comprobante_de_transferencia
+F-W05-1	W05	a beneficiario	F	1440x960	1	captures/W05-beneficiario-1440x960@1.png	d4b47b833489dcc4b3c949d0e1078ef91075f95ba0b3e1fc85e31b488da49e91	w05_comprobante_de_transferencia
+F-W05-1	W05	a beneficiario	F	390x844	1	captures/W05-beneficiario-390x844@1.png	bdfbe12f9a594e7053cb37f21ac8feba6c70ece3abc6f781a613b8b1dceebd40	w05_comprobante_de_transferencia
+F-W05-1	W05	a beneficiario	F	768x1024	1	captures/W05-beneficiario-768x1024@1.png	4d1ee81680afcecc330678aca5ef3fc77dd4bd3143965b9f1d0a4ae3a0150b67	w05_comprobante_de_transferencia
+F-W05-1	W05	a beneficiario · lado a lado	F	1280x1024	1.25	captures/W05-beneficiario-sbs.png	6bfb059d193436f39bc1c740d0154fefa6a5974c54a45ceb67f4d27b3b308e33	w05_comprobante_de_transferencia
+F-W05-2	W05	entre cuentas propias	F	1440x960	1	captures/W05-propias-1440x960@1.png	7009bd8a703cc9d9d6362050b55254cd863757a3900a2189b6af55db414e8ada	w05_comprobante_de_transferencia
+F-W05-2	W05	entre cuentas propias	F	390x844	1	captures/W05-propias-390x844@1.png	7852e38fa453a9755945aa88fd23618c4f5119686d6eb6128ff4ae7683a77f39	w05_comprobante_de_transferencia
+F-W05-3	W05	error de consulta	F	1280x1024	1.25	captures/W05-error-1280x1024@1.25.png	0d10a33bab6e17267c9f6ddcffd2822d513fd6d0673d9ae83e5099738a482e2b	w05_comprobante_de_transferencia
+F-W05-3	W05	error de consulta	F	390x844	1	captures/W05-error-390x844@1.png	2082b2e2e86949347f5ea7cbaa273eefecbeca6a48aeb55702a9c2a1ef754aae	w05_comprobante_de_transferencia
+F-W06-1	W06	dos beneficiarios	F	1280x1024	1.25	captures/W06-lista-1280x1024@1.25.png	0d4247b1058fda48a1efe19ac7edeea7c71c2926fbae3bcf45eafd6344a455b0	w06_directorio_de_beneficiarios_1
+F-W06-1	W06	dos beneficiarios	F	1440x960	1	captures/W06-lista-1440x960@1.png	a0208567206565fd8666c40e5fd9856407b5e1bdb82cf0bedab6d68e879cbd72	w06_directorio_de_beneficiarios_1
+F-W06-1	W06	dos beneficiarios	F	390x844	1	captures/W06-lista-390x844@1.png	ce454af31c69ca1667a2492f223a269d2a2f1ab711ef7a68030fb53546f60f79	w06_directorio_de_beneficiarios_1
+F-W06-1	W06	dos beneficiarios	F	768x1024	1	captures/W06-lista-768x1024@1.png	f105c1828d1042cfa4fa50567f98b6f925c499f6b9a6954d1674da44c5859925	w06_directorio_de_beneficiarios_1
+F-W06-1	W06	dos beneficiarios · lado a lado	F	1280x1024	1.25	captures/W06-lista-sbs.png	27d6cc4fab120c2c368538475d7eaa7659debb637e9f30165a0cc685d525b3f6	w06_directorio_de_beneficiarios_1
+F-W06-2	W06	vacío	F	1280x1024	1.25	captures/W06-vacio-1280x1024@1.25.png	9a4bbb679bce62cb84e8434efaa45848778fda95c89e4944d52ae6372a8a66cf	w06_sin_beneficiarios
+F-W06-2	W06	vacío	F	1440x960	1	captures/W06-vacio-1440x960@1.png	5fd532b0e3eaa174232bf98307fa4b0820aeacf1b1b2b405b6e3207a343c574b	w06_sin_beneficiarios
+F-W06-2	W06	vacío	F	390x844	1	captures/W06-vacio-390x844@1.png	290990a2348d1e96359e2ebbf5485805c528f9c2727d963980c9325c1abd7120	w06_sin_beneficiarios
+F-W06-2	W06	vacío	F	768x1024	1	captures/W06-vacio-768x1024@1.png	f45c9bba1ba48158cf9ad3099a013523e3c3739c56441f0246935e1a8e7f8780	w06_sin_beneficiarios
+F-W06-2	W06	vacío · lado a lado	F	1280x1024	1.25	captures/W06-vacio-sbs.png	dfe9b4ac90ae8159161aa0012c6be486594fa6c6c160b91b20ce98ff4ad2646a	w06_sin_beneficiarios
+F-W06-3	W06	sin resultados	F	1280x1024	1.25	captures/W06-sin-resultados-1280x1024@1.25.png	a0d0d55a31fa3a233cc7b3de66c37641134030afd2fdbb957caca07a57f47a2d	w06_directorio_de_beneficiarios_1
+F-W06-3	W06	sin resultados	F	1440x960	1	captures/W06-sin-resultados-1440x960@1.png	dd227b1029641bfbe339be188d8a0642172a903c1b82664d15f5e7c28ecd24a1	w06_directorio_de_beneficiarios_1
+F-W06-3	W06	sin resultados	F	390x844	1	captures/W06-sin-resultados-390x844@1.png	5dace66000556a46e218695ed4f191cb2b181dcb5848629a536bfcd23f57c3fa	w06_directorio_de_beneficiarios_1
+F-W06-3	W06	sin resultados	F	768x1024	1	captures/W06-sin-resultados-768x1024@1.png	b0a394f3a18b33ea5b40fd63bb0c6e6462aa54ca3cdac43d3f5a1bbad44580a3	w06_directorio_de_beneficiarios_1
+F-W06-4	W06	cargando	F	1280x1024	1.25	captures/W06-cargando-1280x1024@1.25.png	69f1dae757e212a60b2cd35f9e7bda0d363e0a35752996e43667e4f3ea996111	w06_directorio_de_beneficiarios_1
+F-W06-4	W06	cargando	F	390x844	1	captures/W06-cargando-390x844@1.png	f95d3a8b8b0f75e6caaf4849a392a028d08332630b86c0a9ac40d46889064ecd	w06_directorio_de_beneficiarios_1
+F-W06-5	W06	error	F	1280x1024	1.25	captures/W06-error-1280x1024@1.25.png	7d922da9bb842b94656c68c9d0651e1289f18a1313ad84f9beb8011c892808ab	w06_directorio_de_beneficiarios_1
+F-W06-5	W06	error	F	390x844	1	captures/W06-error-390x844@1.png	83ece3ea8ac3a228b00dce9f3a0962df08dc8bd80ca87bcf288493d77756598f	w06_directorio_de_beneficiarios_1
+F-W06-6	W06	textos largos	F	1280x1024	1.25	captures/W06-textos-largos-1280x1024@1.25.png	8415bc01151824dc1be83bfdb7c6e5295f846bcb37f761779ad5a8c993f5536d	w06_directorio_de_beneficiarios_1
+F-W06-6	W06	textos largos	F	1440x960	1	captures/W06-textos-largos-1440x960@1.png	f5af3a7b03ec279b44b120799564f55e89e46cd349776303d984db1844c65873	w06_directorio_de_beneficiarios_1
+F-W06-6	W06	textos largos	F	390x844	1	captures/W06-textos-largos-390x844@1.png	0f0594673ea28ac59b264311b22b78a78b7ce7082071de37625d4e729abf4f37	w06_directorio_de_beneficiarios_1
+F-W06-6	W06	textos largos	F	768x1024	1	captures/W06-textos-largos-768x1024@1.png	9fbb4689d32fc652f666bff5efba53a1e25c234967a9c4008ef5944f08bc73da	w06_directorio_de_beneficiarios_1
+F-W07-1	W06	aviso de alta	F	1440x960	1	captures/W06-aviso-alta-1440x960@1.png	edbcd94777857b91174de89f4b2af4579d2e249e3e57e3119b65115da1c49759	w06_directorio_de_beneficiarios_1
+F-W07-1	W07	idle	F	1280x1024	1.25	captures/W07-base-1280x1024@1.25.png	a6c2402b16d574b8883cb2b64672c7f030c042e7b6e4959552b79d9b1d20f9f2	w07_agregar_beneficiario
+F-W07-1	W07	idle	F	1440x960	1	captures/W07-base-1440x960@1.png	0138d08483559d8f552624fc00dbd4483f884ac58f9c03aab40b7bf3efa46761	w07_agregar_beneficiario
+F-W07-1	W07	idle	F	390x844	1	captures/W07-base-390x844@1.png	2f0bc32844bcdd54fb99eac4255dbc50b11edff117ba0d5ef4920ac0d1357d1d	w07_agregar_beneficiario
+F-W07-1	W07	idle	F	768x1024	1	captures/W07-base-768x1024@1.png	7376ee4cf836e3c5f253c0a3989a4730415f72826865383778b8a43add407f49	w07_agregar_beneficiario
+F-W07-1	W07	idle · lado a lado	F	1280x1024	1.25	captures/W07-base-sbs.png	fd56c2fb0beae5e7d3a6a52b6cf025bffbd43cd5f5ec52bdd6401f2968dffd2c	w07_agregar_beneficiario
+F-W07-2	W07	campos inválidos	F	1280x1024	1.25	captures/W07-invalidos-1280x1024@1.25.png	4b4271ec77a7ed1f06adba8183dd4372d9c408ad36e32526a113b6b9121e2e72	w07_campos_inv_lidos
+F-W07-2	W07	campos inválidos	F	1440x960	1	captures/W07-invalidos-1440x960@1.png	d29ff6d8cf41301912f51a6ad66364458e2db9e6a00cf625424f78beb6e3824a	w07_campos_inv_lidos
+F-W07-2	W07	campos inválidos	F	390x844	1	captures/W07-invalidos-390x844@1.png	217604150f2b6aa0646955895bc0b8bd6ec4cdd81fea94c39008677bf2b476e5	w07_campos_inv_lidos
+F-W07-2	W07	campos inválidos	F	768x1024	1	captures/W07-invalidos-768x1024@1.png	0869eeb00e18b0d58f6fecbf780ec48aebd916a24d638c3805bb7c54afd11d9c	w07_campos_inv_lidos
+F-W07-2	W07	campos inválidos · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-invalidos-sbs.png	220fd4a4d6a1291be74738c87a9f95054cd511557ecca9ba4830679d6a5ee470	w07_campos_inv_lidos
+F-W07-3	W07	CLABE incorrecta	F	1280x1024	1.25	captures/W07-clabe-incorrecta-1280x1024@1.25.png	537012a8ff441bdc0e4b3df60147f9fbd7e767e962fbf1b2f01c9af72b624835	w07_clabe_incorrecta
+F-W07-3	W07	CLABE incorrecta	F	1440x960	1	captures/W07-clabe-incorrecta-1440x960@1.png	ab574a55df3a13e045fe811c2c9f38066bd26e84df89dde6d04daac063eb5e54	w07_clabe_incorrecta
+F-W07-3	W07	CLABE incorrecta	F	390x844	1	captures/W07-clabe-incorrecta-390x844@1.png	9ca34f0788bbafa4c69484e405545dfeb737a5823210f8f6c7453fe17750728f	w07_clabe_incorrecta
+F-W07-3	W07	CLABE incorrecta	F	768x1024	1	captures/W07-clabe-incorrecta-768x1024@1.png	1a1c4491c4449012461c205df43c4230d85166538e275199e07701f684928de1	w07_clabe_incorrecta
+F-W07-3	W07	CLABE incorrecta · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-clabe-incorrecta-sbs.png	49f387552f8f622844446223affd5db376220fa2a7cbcb01362a197e24275737	w07_clabe_incorrecta
+F-W07-4	W07	duplicado (409)	F	1280x1024	1.25	captures/W07-duplicado-1280x1024@1.25.png	4bf34b4a24285ec793fede97d725f3f29c11de8d483585d586d12a40ff47b4d3	w07_beneficiario_duplicado
+F-W07-4	W07	duplicado (409)	F	1440x960	1	captures/W07-duplicado-1440x960@1.png	f99d6dd3d485672750f984ab7778a600215e9aff135f2409bf055478e68de8ab	w07_beneficiario_duplicado
+F-W07-4	W07	duplicado (409)	F	390x844	1	captures/W07-duplicado-390x844@1.png	48b0c4a30213513371d7c85f8d46272cb7cd88c42ed1306e1668ee35698d108c	w07_beneficiario_duplicado
+F-W07-4	W07	duplicado (409)	F	768x1024	1	captures/W07-duplicado-768x1024@1.png	f37c0e36998f15caf41e7331943c0bb720a6a1e3ccba6b907cc8a6fbf6569f5d	w07_beneficiario_duplicado
+F-W07-4	W07	duplicado (409) · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-duplicado-sbs.png	e024ee94e52d869da48ec9ed3fe4108bfb83d31179f906a07be6eec2cd250e92	w07_beneficiario_duplicado
+F-W07-5	W07	destino no disponible (404)	F	1280x1024	1.25	captures/W07-destino-no-disponible-1280x1024@1.25.png	3dcc510e8aaea19ec2d21b24a242c91f47fbe66b120e01dc890954d4f54de12c	w07_destino_no_disponible
+F-W07-5	W07	destino no disponible (404)	F	1440x960	1	captures/W07-destino-no-disponible-1440x960@1.png	bcf9f8eba6fca6a183984b430f70bce79b2987e77c5b2c26b6979384d910c69a	w07_destino_no_disponible
+F-W07-5	W07	destino no disponible (404)	F	390x844	1	captures/W07-destino-no-disponible-390x844@1.png	9e1e6278dccc3ecb3f8434c6d2f22d6977f6134233c02dfe643861b6f34081a7	w07_destino_no_disponible
+F-W07-5	W07	destino no disponible (404)	F	768x1024	1	captures/W07-destino-no-disponible-768x1024@1.png	549d1650eb3194121fcae478ebad3827707c57e3ea8f6b2a86fde0c4088f2a64	w07_destino_no_disponible
+F-W07-5	W07	destino no disponible (404) · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-destino-no-disponible-sbs.png	243e7122ae309a58765ef8d3a3d28c3cdc9558b202de0b7832cd124959dadeae	w07_destino_no_disponible
+F-W07-6	W07	guardando	F	1280x1024	1.25	captures/W07-guardando-1280x1024@1.25.png	60bffbe6aa42f0843eeb123911fa886304eb3bbba41769f9a906f11120213976	w07_guardando
+F-W07-6	W07	guardando	F	1440x960	1	captures/W07-guardando-1440x960@1.png	52d832d7dd75ff4bd0fa37ae0d055fd7c4e75aa711bfaa60fa2eb490f458b121	w07_guardando
+F-W07-6	W07	guardando	F	390x844	1	captures/W07-guardando-390x844@1.png	cd99a30cee18c0843b3722340db6f4fe34dd354378b95aa5f750a2472f14968c	w07_guardando
+F-W07-6	W07	guardando	F	768x1024	1	captures/W07-guardando-768x1024@1.png	1a1aa8ca16da1dbcb4800348310873a6c818bdd74bbb4f282578f5e74ddda068	w07_guardando
+F-W07-6	W07	guardando · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-guardando-sbs.png	58db2499203b00c698629159eedf044dd5f2b9d6eb6a6455b284888229351a7b	w07_guardando
+F-W07-7	W07	error recuperable (503)	F	1280x1024	1.25	captures/W07-error-recuperable-1280x1024@1.25.png	f44f768589bd8e9cc96af10b4d28cb0080677197428e9d0ae4dfd2bd2845a890	w07_error_recuperable
+F-W07-7	W07	error recuperable (503)	F	1440x960	1	captures/W07-error-recuperable-1440x960@1.png	274111ee423be5362d046544fe3b1634fe35226a028c47e873517b6a9e439e22	w07_error_recuperable
+F-W07-7	W07	error recuperable (503)	F	390x844	1	captures/W07-error-recuperable-390x844@1.png	cf7fe09f33771f6659620f953b870e8ec20e0243e500c2743397ca1d29eff2c3	w07_error_recuperable
+F-W07-7	W07	error recuperable (503)	F	768x1024	1	captures/W07-error-recuperable-768x1024@1.png	a36e98708ae4c1515bb9128f75b9038299cbe04135e567aedb7c82683547e3dc	w07_error_recuperable
+F-W07-7	W07	error recuperable (503) · lado a lado (HTML)	F	1280x1024	1.25	captures/W07-error-recuperable-sbs.png	407c63be0acf08ecc6cd6be0a11de5c670d95e9d67c3d80cc4818af5a7dc1e49	w07_error_recuperable
+F-W08-1	W08	beneficiario seleccionado	F	1280x1024	1.25	captures/W08-beneficiario-1280x1024@1.25.png	a0bc3c03030ef010d998dcbf7d0f2ee74bd229afa8ca0ab9faccfb9c415187fb	w08_formulario_de_transferencia
+F-W08-1	W08	beneficiario seleccionado	F	1440x960	1	captures/W08-beneficiario-1440x960@1.png	144783fd65ab2f7694627f0c1dbd68cce539ee10a6db7d15ff1fefb3e1319e53	w08_formulario_de_transferencia
+F-W08-1	W08	beneficiario seleccionado	F	390x844	1	captures/W08-beneficiario-390x844@1.png	2df20344421639b0286493aeb0ca539dd47c999120481f51a287b1adbd43e1e5	w08_formulario_de_transferencia
+F-W08-1	W08	beneficiario seleccionado	F	768x1024	1	captures/W08-beneficiario-768x1024@1.png	13160d123a61050f52ed78fa612686e17e3d3f43e2b9ef2ef452392c1c83a62f	w08_formulario_de_transferencia
+F-W08-1	W08	beneficiario seleccionado · lado a lado	F	1280x1024	1.25	captures/W08-beneficiario-sbs.png	66b983baa5880e4869ace3864dea75b38295a5eaaf9db685d359ce08ba67a1a7	w08_formulario_de_transferencia
+F-W08-2	W08	entre mis cuentas	F	1280x1116	1.25	captures/W08-propias-1280x1116@1.25.png	898e391c276d7b31a58cc63844d6907e929da16334524d03ba5c9e63efc2be84	w08_entre_mis_cuentas
+F-W08-2	W08	entre mis cuentas	F	1440x960	1	captures/W08-propias-1440x960@1.png	4a4c1bb76990960c6ef3f567af8591419d6dc0d233fe5823d62a273f6260c102	w08_entre_mis_cuentas
+F-W08-2	W08	entre mis cuentas	F	390x844	1	captures/W08-propias-390x844@1.png	9a3288dc171667a9a236b6eda77db3b25b892f215bebdbaf3c2d7711a309e15d	w08_entre_mis_cuentas
+F-W08-2	W08	entre mis cuentas	F	768x1024	1	captures/W08-propias-768x1024@1.png	595f1f3fcb416f5c9ddd0f7657649d0022021376f7da9952151528c20f29444c	w08_entre_mis_cuentas
+F-W08-2	W08	entre mis cuentas · lado a lado	F	1280x1116	1.25	captures/W08-propias-sbs.png	9eb0cbb453c5999ab29786c7a3cf9ebb77848f6e66a9a713bb45f0cf85c560eb	w08_entre_mis_cuentas
+F-W08-3	W08	errores (importe 0, concepto vacío, REF-99X)	F	1280x1103	1.25	captures/W08-errores-1280x1103@1.25.png	fea363d39bf13fa756e7eb5b90e924b9bd3acd7656876b0b3aecb9f6116a121c	w08_errores_en_formulario
+F-W08-3	W08	errores (importe 0, concepto vacío, REF-99X)	F	1440x960	1	captures/W08-errores-1440x960@1.png	2de3230c5e4b033f8394ae5ae673d780ee8477795220410e84f0b28ba87d61b7	w08_errores_en_formulario
+F-W08-3	W08	errores (importe 0, concepto vacío, REF-99X)	F	390x844	1	captures/W08-errores-390x844@1.png	652ef44c812b5e8223b5976910704b222a0903df3607f56777684d587625779f	w08_errores_en_formulario
+F-W08-3	W08	errores (importe 0, concepto vacío, REF-99X)	F	768x1024	1	captures/W08-errores-768x1024@1.png	7023f28b3ef24cf2e8e2d931e07a402ceaf0391da3e6b5a558bc8879bc8ee609	w08_errores_en_formulario
+F-W08-3	W08	errores · lado a lado	F	1280x1103	1.25	captures/W08-errores-sbs.png	237df231e9ef7da4f3d146a516c52f31230814e87a6d02446b10fb1eb45a123f	w08_errores_en_formulario
+F-W08-4	W08	sin beneficiarios	F	1280x1142	1.25	captures/W08-sin-beneficiarios-1280x1142@1.25.png	bc5c8690ee135aeff2095d0d7946acc17b12c3a082d95616e89dae5a4db61b9c	w08_sin_beneficiarios
+F-W08-4	W08	sin beneficiarios	F	1440x960	1	captures/W08-sin-beneficiarios-1440x960@1.png	21b8f0919660be2f9580cacb0baabf0f580eaf146436b5490985c7186a653168	w08_sin_beneficiarios
+F-W08-4	W08	sin beneficiarios	F	390x844	1	captures/W08-sin-beneficiarios-390x844@1.png	c295b60a73f6f234f243efa44f84fb0937a6b23e835ff5062ca581e833cd9a9c	w08_sin_beneficiarios
+F-W08-4	W08	sin beneficiarios	F	768x1024	1	captures/W08-sin-beneficiarios-768x1024@1.png	81f070d86bd48b5689075d06f02f494ba4108aac3fd5070b8356c25ac661f054	w08_sin_beneficiarios
+F-W08-4	W08	sin beneficiarios · lado a lado	F	1280x1142	1.25	captures/W08-sin-beneficiarios-sbs.png	c9c4a5ecc02088a9f6cbe9cfa20e4bcad76e2da070547c8f08586541e48682cc	w08_sin_beneficiarios
+F-W08-5	W08	sin segunda cuenta propia	F	1280x1072	1.25	captures/W08-sin-segunda-cuenta-1280x1072@1.25.png	286f5ed7c1f69083b4e8545eb44f8395f7dc0844e79ba2b023780c99eec7953c	w08_sin_segunda_cuenta_propia
+F-W08-5	W08	sin segunda cuenta propia	F	1440x960	1	captures/W08-sin-segunda-cuenta-1440x960@1.png	36eaa9a4a938a89acd681a30f50eb143cf9181233b2b1b41fcf08ab328a7f8ee	w08_sin_segunda_cuenta_propia
+F-W08-5	W08	sin segunda cuenta propia	F	390x844	1	captures/W08-sin-segunda-cuenta-390x844@1.png	b98f6d5b401ed6e6fe79325b60c0bc9f658809933fb1a55a79234a705438b312	w08_sin_segunda_cuenta_propia
+F-W08-5	W08	sin segunda cuenta propia	F	768x1024	1	captures/W08-sin-segunda-cuenta-768x1024@1.png	1830fc76fe006325b9d4ba23afa1f1366a9757882a14b2847519868fbd54fbe0	w08_sin_segunda_cuenta_propia
+F-W08-5	W08	sin segunda cuenta propia · lado a lado	F	1280x1072	1.25	captures/W08-sin-segunda-cuenta-sbs.png	ff1b6acfb512159261054545bb1dd5553ce1025c2780f3ffc19b0a0298eceaf6	w08_sin_segunda_cuenta_propia
+F-W08-6	W08	beneficiario = cuenta origen (lista abierta)	F	1440x960	1	captures/W08-origen-igual-destino-1440x960@1.png	98cb7cd243745c2d4201f4e119f28f3b519cfb3814a2559ef062bfad216cd92a	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (beneficiary)	F	1280x1024	1.25	captures/W08-textos-largos-beneficiary-1280x1024@1.25.png	72d989c115723dc6483f421793aacaa6d3d65315fa20508813dbd90d87cbf0f8	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (beneficiary)	F	1440x960	1	captures/W08-textos-largos-beneficiary-1440x960@1.png	0bf433e23e3039508ae6d90a28042b9a2dadbffaa19d378aac407a678f6e55d6	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (beneficiary)	F	390x844	1	captures/W08-textos-largos-beneficiary-390x844@1.png	af5e9b30c4af42b79e88016c88a4ee6d910eddab6068b40616f0962e1c2194f3	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (beneficiary)	F	768x1024	1	captures/W08-textos-largos-beneficiary-768x1024@1.png	767e7a80f8972b87bb05e13e0daf6cb85f85ce1f330f3337ef65047113d47a17	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (own_account)	F	1280x1024	1.25	captures/W08-textos-largos-own_account-1280x1024@1.25.png	bc4040001c00a47439ba33ddf0fb7cef168b133ded9129a987946a9fa5f5cde4	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (own_account)	F	1440x960	1	captures/W08-textos-largos-own_account-1440x960@1.png	42d6503a414c881c2ade799b302279dc983181a4d804129772d529c1284c68a8	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (own_account)	F	390x844	1	captures/W08-textos-largos-own_account-390x844@1.png	2d3df252d3245c518538894488f75dcd2d40d66048252aa021d7d4f2c6f268d9	w08_formulario_de_transferencia
+F-W08-7	W08	textos largos (own_account)	F	768x1024	1	captures/W08-textos-largos-own_account-768x1024@1.png	689d1de91ebfad1e9b58e8e264edf675aeacd070487be149507b58b0e6f5c75a	w08_formulario_de_transferencia
+F-W08-7	W09	textos largos (beneficiary)	F	1280x1024	1.25	captures/W09-textos-largos-beneficiary-1280x1024@1.25.png	63cfd0dfd2c1d7820aa142a42a2d449cdff80e2bda2625ed05ade2576de39fe5	w09_revisar_transferencia
+F-W08-7	W09	textos largos (beneficiary)	F	1440x960	1	captures/W09-textos-largos-beneficiary-1440x960@1.png	45f3af25c263e1a2c45384bf4326424b2698accf46774a9331c013c0c868b8c3	w09_revisar_transferencia
+F-W08-7	W09	textos largos (beneficiary)	F	390x844	1	captures/W09-textos-largos-beneficiary-390x844@1.png	0f4574c07e5fda7e766aa04e7d43057cbcf529b0842842b22baac8425efb65c5	w09_revisar_transferencia
+F-W08-7	W09	textos largos (beneficiary)	F	768x1024	1	captures/W09-textos-largos-beneficiary-768x1024@1.png	96cb967275a13a02da7842cdb5410c896393c5f74838e8a08e1ae5971c13a930	w09_revisar_transferencia
+F-W08-7	W09	textos largos (own_account)	F	1280x1024	1.25	captures/W09-textos-largos-own_account-1280x1024@1.25.png	c1bef94227f7340159c716784ec243e496b97b43c992ba3073ce6d547631a5f1	w09_revisi_n_entre_cuentas_propias
+F-W08-7	W09	textos largos (own_account)	F	1440x960	1	captures/W09-textos-largos-own_account-1440x960@1.png	7076e8d79977dbdcea5169d642abd67a9a248d3c1ccf2b1c155bcc3ab3e05545	w09_revisi_n_entre_cuentas_propias
+F-W08-7	W09	textos largos (own_account)	F	390x844	1	captures/W09-textos-largos-own_account-390x844@1.png	c04c117b81ba49f931daf478bc7b47fea24e3de14939e0ac0f55622b39d0be4d	w09_revisi_n_entre_cuentas_propias
+F-W08-7	W09	textos largos (own_account)	F	768x1024	1	captures/W09-textos-largos-own_account-768x1024@1.png	e6646068d902be9c49dec9cf0fb1fe4bed8be2e33543f30c62ecb8d8192336a0	w09_revisi_n_entre_cuentas_propias
+F-W09-1	W09	beneficiario bajo umbral	F	1280x1024	1.25	captures/W09-normal-1280x1024@1.25.png	103157e20e3a8cdde05e730390a23f03a4d4ebd3f06720cd685751ecf7549e00	w09_revisar_transferencia
+F-W09-1	W09	beneficiario bajo umbral	F	1440x960	1	captures/W09-normal-1440x960@1.png	62c2d47091c8a343b46f18d6fc99bbc67b98baf0ff4ac9ca2457246c1bdd95b8	w09_revisar_transferencia
+F-W09-1	W09	beneficiario bajo umbral	F	390x844	1	captures/W09-normal-390x844@1.png	49810416dcf530b2c0e1834c692a8111ff3b687fc75ced4fbee91a067ddfcc73	w09_revisar_transferencia
+F-W09-1	W09	beneficiario bajo umbral	F	768x1024	1	captures/W09-normal-768x1024@1.png	ecaa8ebe88e29b846fcf15d0dcef49f656a976a29040ab068d7647a6f11b5419	w09_revisar_transferencia
+F-W09-1	W09	beneficiario bajo umbral · lado a lado	F	1280x1024	1.25	captures/W09-normal-sbs.png	530622d6bd3321db9b93c4b298a8fae24d6340ca2d01cf95d82216520c85663b	w09_revisar_transferencia
+F-W09-2	W09	importe ≥ umbral (política)	F	1280x1024	1.25	captures/W09-codigo-1280x1024@1.25.png	b8c6bc2d44f92862547ae4217e74c531ab00290284efec5412c0b030c847ca47	w09_revisi_n_6_000_mxn
+F-W09-2	W09	importe ≥ umbral (política)	F	1440x960	1	captures/W09-codigo-1440x960@1.png	dcbf8cb2dc44515fe6f46848babf289354e944c93ad7a1a38da58c988c1f2787	w09_revisi_n_6_000_mxn
+F-W09-2	W09	importe ≥ umbral (política)	F	390x844	1	captures/W09-codigo-390x844@1.png	de101f85fa698284910dec5fb90deecbd4c1872adbd7a88c71763be457c3cb68	w09_revisi_n_6_000_mxn
+F-W09-2	W09	importe ≥ umbral (política)	F	768x1024	1	captures/W09-codigo-768x1024@1.png	e8e6bc5f151de80e061845b1d58df879ebb75dffd3f3109f2439cc35516ac1f3	w09_revisi_n_6_000_mxn
+F-W09-2	W09	importe ≥ umbral · lado a lado	F	1280x1024	1.25	captures/W09-codigo-sbs.png	99dff055eba07814b0a62c4fc96d70fdbe891b773b99490a0d7ca3f4ae071d7a	w09_revisi_n_6_000_mxn
+F-W09-3	W09	cuentas propias	F	1280x1024	1.25	captures/W09-propias-1280x1024@1.25.png	7c06ad2f72dcb96ed6e4bbcb0b7b651d2d8ea1db7072a4532df6b86c7e7bc45a	w09_revisi_n_entre_cuentas_propias
+F-W09-3	W09	cuentas propias	F	1440x960	1	captures/W09-propias-1440x960@1.png	13c97168b46f265d1424c3e6d3588aea1a1b67b6d3dbd0375b50fdf58f12c223	w09_revisi_n_entre_cuentas_propias
+F-W09-3	W09	cuentas propias	F	390x844	1	captures/W09-propias-390x844@1.png	1c9d70b7e1fc5a6816da8e543432432eb6f2c6d864858aa8d6d0716fe867f8f1	w09_revisi_n_entre_cuentas_propias
+F-W09-3	W09	cuentas propias	F	768x1024	1	captures/W09-propias-768x1024@1.png	d7fa18dfcd81454580ffea3d16f3db9699b310be7ca5a0ae6e2afbe1fb072ea6	w09_revisi_n_entre_cuentas_propias
+F-W09-3	W09	cuentas propias · lado a lado (HTML)	F	1280x1024	1.25	captures/W09-propias-sbs.png	d80d44a2d123f47c4e4d11adf1b96be2f648b00249d5cd06b1ca3af3dc099a09	w09_revisi_n_entre_cuentas_propias
+F-W09-4	W09	propias ≥ umbral	F	1440x960	1	captures/W09-propias-codigo-1440x960@1.png	3a50a5c5c59f81edba6685de60e114425105ce3641f01d347a02c1be7f6f2dde	w09_revisi_n_entre_cuentas_propias
+F-W09-5	W09	política no disponible	F	1440x960	1	captures/W09-sin-politica-1440x960@1.png	465516b1acb37b4ae36feb6a96adf9921601e5e939c4963e92ddd3d61eb88b30	w09_revisar_transferencia
+F-W10-agotados	W10	agotados	F	1280x1024	2	captures/W10-agotados-1280x1024@2.png	11a2f823966e96261b87e25157b324e0ec157d4e7e4f2425b710ef06bb1f7e30	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	1440x960	1	captures/W10-agotados-1440x960@1.png	2a94d5a0d2ef637e7b29c5ba5af50d89af97a9f13b3751de0a6c59f5dad1e064	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	390x844	1	captures/W10-agotados-390x844@1.png	4661ea74bc4a882e86bfee809fe3ac715682522add7558ae4e84a3c34193fa15	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	768x1024	1	captures/W10-agotados-768x1024@1.png	7f0be2bd1c6267b6275dbf52644e1032c225846af4b9260f340e103efda0f873	w10_intentos_agotados
+F-W10-agotados	W10	agotados · lado a lado	F	1280x1024	2	captures/W10-agotados-sbs.png	ebf0b38d39e90b2ef88be7c2ab671e933dc44f23501623997b8d88f7e8a27f0c	w10_intentos_agotados
+F-W10-completo	W10	completo	F	1280x1024	1.25	captures/W10-completo-1280x1024@1.25.png	ac62ff56cbe40757470bf2a7f0a672feca7a23ec8ed0ba711b280f2ffe8aed54	w10_c_digo_completo
+F-W10-completo	W10	completo	F	1440x960	1	captures/W10-completo-1440x960@1.png	462b9f9acc165fc6695bfce0667ada849d23615bd7e1a532353a73d01f12f9a7	w10_c_digo_completo
+F-W10-completo	W10	completo	F	390x844	1	captures/W10-completo-390x844@1.png	3f6d8a6ae84ad1c3f09b57190c927d889ee4f2e55bcab9e6f5d6acde068b5747	w10_c_digo_completo
+F-W10-completo	W10	completo	F	768x1024	1	captures/W10-completo-768x1024@1.png	516263fcce0af641e3cf53e03e186fa711e14d81744b3fb4d884e881af408657	w10_c_digo_completo
+F-W10-completo	W10	completo · lado a lado	F	1280x1024	1.25	captures/W10-completo-sbs.png	04aa8f37379e0656f8f59e274d5651422a11a20526d3cc87b1f4ad7c23f9f079	w10_c_digo_completo
+F-W10-expirado	W10	expirado	F	1280x1024	1.25	captures/W10-expirado-1280x1024@1.25.png	5ae077b821e3742c657b9e491d878bc4dbf9fe387d3a155052e3fc0c73f625ae	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	1440x960	1	captures/W10-expirado-1440x960@1.png	b6dc28ce37fd0c83c4294c803d4fc14b4a8a41aa25439bf731f1b394866cbe08	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	390x844	1	captures/W10-expirado-390x844@1.png	e65f38088a26a87dd37e80f30b9a57bd018224ce8ac8a6042a583579de5aa219	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	768x1024	1	captures/W10-expirado-768x1024@1.png	62e8f615c5d5fb25502ff60603098ca6fd18348fe59d6107d5ee6b856f6da9fe	w10_c_digo_expirado
+F-W10-expirado	W10	expirado · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-expirado-sbs.png	02b8fe134618884ec0b4eb04a98b7645b72b34b3e26ff5c4dd69d80fb539da84	w10_c_digo_expirado
+F-W10-incompleto	W10	incompleto	F	1280x1024	1.25	captures/W10-incompleto-1280x1024@1.25.png	0aa4bbfd535898e8d71148372588cd2647f5f1ffaaaaa5362a7534ed9bb983a3	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	1440x960	1	captures/W10-incompleto-1440x960@1.png	ab11fe20d786d6f03764f63eb15361cb571ebd9b94017f8459ef1c7d18b61441	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	390x844	1	captures/W10-incompleto-390x844@1.png	91b87de2f3380eea2bdb1634a81415b497b2087e4b22462850ae33894e955175	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	768x1024	1	captures/W10-incompleto-768x1024@1.png	562073be1134605a7f86c2a49dc0aed5a8ea0d3bc0f8f65c60ff591bd57965d4	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto · lado a lado	F	1280x1024	1.25	captures/W10-incompleto-sbs.png	5147ea46ff335aee800ed133f2d4123781af309f813d27dc883ff2c2c5e1b20a	w10_c_digo_incompleto
+F-W10-incorrecto	W10	incorrecto	F	1280x1024	1.25	captures/W10-incorrecto-1280x1024@1.25.png	4e99dfac813de5333c9bae193cea23e3a483d2053eadb9b023510b05debc72e9	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	1440x960	1	captures/W10-incorrecto-1440x960@1.png	0646b265888e3bdc123b6965e1115a16d85d658b1b8f2d8d3ffccead97f8a7f2	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	390x844	1	captures/W10-incorrecto-390x844@1.png	4df5252d1e0226c077dd0660fb06e1ede91c5cf1ab12f19a91e8a581eba228dc	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	768x1024	1	captures/W10-incorrecto-768x1024@1.png	6a0c7f3629f818688c852a6ddce2f69216417892d6d4801fe29c8bba67c4b035	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-incorrecto-sbs.png	1847b73280a0208737ee19844032caeeba284857cbd1427f6058961015cb2ffc	w10_c_digo_incorrecto
+F-W10-vacio	W10	vacio	F	1280x1024	1.25	captures/W10-vacio-1280x1024@1.25.png	ec17d1cc1f056ecceda81db6cabb0626d4a311b29f13b978659615f89ee230f3	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	1440x960	1	captures/W10-vacio-1440x960@1.png	cff51f0b148c9e0b8c7450078551242afdfe2892169f387ea5201a8aae4a158b	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	390x844	1	captures/W10-vacio-390x844@1.png	6ab4a7f7ed05682c236bb1564b421fd195e1a063855a024166b737982d58024f	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	768x1024	1	captures/W10-vacio-768x1024@1.png	4529f2e01cff130bd9d52c1e39391f1a37a61a53bb6dcbbec2cf43a26ef977c5	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio · lado a lado	F	1280x1024	1.25	captures/W10-vacio-sbs.png	ed1b3799439357d8a4eb1995225c39432942e2aa69d3e81d531b41536cb34895	w10_c_digo_de_confirmaci_n
+F-W10-verificando	W10	verificando	F	1280x1024	1.25	captures/W10-verificando-1280x1024@1.25.png	dbdb910ff6535e5bd57fb3f259b8aae8b5fd04934f23d4e7ef3c6ca8b08474ab	w10_verificando
+F-W10-verificando	W10	verificando	F	1440x960	1	captures/W10-verificando-1440x960@1.png	6abd7ca6c190556ba1b35abacf06326fc151c1c4ce4474484e22fa0a348eb3d3	w10_verificando
+F-W10-verificando	W10	verificando	F	390x844	1	captures/W10-verificando-390x844@1.png	c4c6aeb5887c00840851f8e003a5c00396bb642d5daa7ffec63dd58807f68174	w10_verificando
+F-W10-verificando	W10	verificando	F	768x1024	1	captures/W10-verificando-768x1024@1.png	987adfec94d3e0c13298227515c90d30102d6271c3c0731d766f4797043fc94c	w10_verificando
+F-W10-verificando	W10	verificando · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-verificando-sbs.png	16c487aee7ad383cfb274a9ae1cc782f485b5abeb01249629fbad16d44995868	w10_verificando
+F-W11-1	W11	enviando	F	1280x1024	1.25	captures/W11-enviando-1280x1024@1.25.png	6b2c91d190d0466c5682135c96506cbfe7c52f716a71ac0a969fc06702e0a13c	w11_enviando
+F-W11-1	W11	enviando	F	1440x960	1	captures/W11-enviando-1440x960@1.png	59ae85cb1349f6a8e98d7e64009eb8bdbc731c20dee26a5e73b2912d6f78128a	w11_enviando
+F-W11-1	W11	enviando	F	390x844	1	captures/W11-enviando-390x844@1.png	9228d75de47b3e4c69994b9a7a37cc87201f92c894b08d2f964d314bfb94795c	w11_enviando
+F-W11-1	W11	enviando	F	768x1024	1	captures/W11-enviando-768x1024@1.png	a21e58fac864813970564a7e0ff4651988bb1fb9d31709b9ed3475512496ebce	w11_enviando
+F-W11-1	W11	enviando · lado a lado	F	1280x1024	1.25	captures/W11-enviando-sbs.png	2be326f67f49cfe0c9f8c72d9ab1d46d1f35cb644c0ac09e4c607da8768128a0	w11_enviando
+F-W11-2	W11	verificando resultado	F	1280x1024	1.25	captures/W11-verificando-1280x1024@1.25.png	a9a26f6707d36b41e8928cd1e25f138fd69ab1cf325d8d754f3170322ce88701	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	1440x960	1	captures/W11-verificando-1440x960@1.png	a473e7c349a60dbb55aae48d404cd8281dc2d595f2646190093312d1f4c34e65	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	390x844	1	captures/W11-verificando-390x844@1.png	952e0027ce661f180920b18747dc80cdefdc551bae56c29fa48bfa44b15017ed	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	768x1024	1	captures/W11-verificando-768x1024@1.png	cd0dc3d8b1f06fc65c53c3125e244792f054ddd7108e492e3a9f75cbbc1df8d4	w11_verificando_resultado
+F-W11-2	W11	verificando resultado · lado a lado	F	1280x1024	1.25	captures/W11-verificando-sbs.png	a5047d8ea305f91183c13d9bbb7267fa7da7b24369dd9e2fb4086de9658f4532	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	1280x1024	1.25	captures/W11-desconocido-1280x1024@1.25.png	89fb4a58f6bd60cb735e8c5b92b9f90401c4d9c9181c1dbb556f442100ea883f	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	1440x960	1	captures/W11-desconocido-1440x960@1.png	34daf0b1934401f4f09554ac22e7ef7dafa41d8886fb1501d5493cb8ca05d31a	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	390x844	1	captures/W11-desconocido-390x844@1.png	4d5454f5f8e6507c06b274f560c97a96bc2f344a05fb01036115c8ea54dd57ac	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	768x1024	1	captures/W11-desconocido-768x1024@1.png	65c6f99437858d25a735d6dd0d8d038211ed9ba46af34bd00567f069ccca9284	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido · lado a lado	F	1280x1024	1.25	captures/W11-desconocido-sbs.png	e3ae94245060bea81df59f6e73b08ee8f82f5ba2adaefcf39b38a851157b1611	w11_verificando_resultado
+F-W12-1	W12	beneficiario	F	1280x1024	1.25	captures/W12-beneficiario-1280x1024@1.25.png	35c75d5134c5d9a871909cd57a00d6d26cf88a6b57d5385b484ae751f88e8616	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	1440x960	1	captures/W12-beneficiario-1440x960@1.png	4645ee2f6f2ba48f5e5489228f624fa8119c6513ee29bd275d537d7eae35aa43	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	390x844	1	captures/W12-beneficiario-390x844@1.png	90dbc848aa5e283e679a2191edd0eac425bfff46c4d4d8c003ed7be844588107	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	768x1024	1	captures/W12-beneficiario-768x1024@1.png	0db4676c08b47562170695d5956955cc045f02196335264169f766d93d60395f	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario · lado a lado	F	1280x1024	1.25	captures/W12-beneficiario-sbs.png	fe858779daecd6dc18671082dcaee78343397923b47d5f681bc6861f86f1d3f9	w12_comprobante_850_mxn
+F-W12-2	W12	propias	F	1280x1080	2	captures/W12-propias-1280x1080@2.png	ce4baa5f9a6c9e4ec4fe1b6595fb90e3d80dd3fa067c20dbf0edb7857c264bd4	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	1440x960	1	captures/W12-propias-1440x960@1.png	2d914cdc337a7d94352acea07fbc46a3007ebfb5262b0c032dc2720121a002d8	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	390x844	1	captures/W12-propias-390x844@1.png	13b387dfc3c22a05a1b5b7118122e2a3b7f2496e2bf1c5117e8bdec0cdd060dd	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	768x1024	1	captures/W12-propias-768x1024@1.png	5dc872565e6a610d0a35b399593fd26cfa0516e6035ca5cae4224400b3876030	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias · lado a lado	F	1280x1080	2	captures/W12-propias-sbs.png	ab10520a14a9d28498ce46971c9d463de2f7a9b115186f4def5274eaeb737e25	w12_comprobante_entre_cuentas_propias
+F-W12-3	W12	folio largo	F	390x844	1	captures/W12-folio-largo-390x844@1.png	0d5602c1cadf2da4dcd39d10249592d78085681b2dc5bd93963d560bed2138f8	w12_comprobante_850_mxn
+F-W13-1	W13	422 «Saldo insuficiente.» en create	F	1280x1024	1.25	captures/W13-saldo-1280x1024@1.25.png	215b523f36b083c423e9fec2d97beabf274432b9f777189af2ed8f03288a7f1e	w13_saldo_insuficiente
+F-W13-1	W13	422 «Saldo insuficiente.» en create	F	1440x960	1	captures/W13-saldo-1440x960@1.png	2ea245587678a529e33b34e6e95d0b0a6b03c84cde7a22c5e06b1f6fef1d063d	w13_saldo_insuficiente
+F-W13-1	W13	422 «Saldo insuficiente.» en create	F	390x844	1	captures/W13-saldo-390x844@1.png	7e093d6f42da9b9a07084418c32b2fbc3cf97e9e7309bd9a8feaeda048154176	w13_saldo_insuficiente
+F-W13-1	W13	422 «Saldo insuficiente.» en create	F	768x1024	1	captures/W13-saldo-768x1024@1.png	afa92672f3e686d9c632b940903b46741b8ce136a3dbb199c6c6a2426cd842c3	w13_saldo_insuficiente
+F-W13-1	W13	saldo insuficiente · lado a lado	F	1280x1024	1.25	captures/W13-saldo-sbs.png	ca1431911fb6fddf6fd809ac6a80cd58c480503038e11584e18cf62b78bec1bf	w13_saldo_insuficiente
+F-W13-2	W13	429 «Se excedió el límite diario.» en create	F	1280x1024	1.25	captures/W13-limite-1280x1024@1.25.png	74a35f3fec57b7fafeefb3d7570a8ea5d48e3d62fe677cdabd86396d811dd6ce	w13_l_mite_diario
+F-W13-2	W13	429 «Se excedió el límite diario.» en create	F	1440x960	1	captures/W13-limite-1440x960@1.png	8f19d3ed0968e114187100f45e048cc69bcd5d6e32aef851ced7ea88785d0917	w13_l_mite_diario
+F-W13-2	W13	429 «Se excedió el límite diario.» en create	F	390x844	1	captures/W13-limite-390x844@1.png	e0ab3b4f6f6fcf4b5e613fe832015ff77b896a0fab859e6a60ed66e61538f14a	w13_l_mite_diario
+F-W13-2	W13	429 «Se excedió el límite diario.» en create	F	768x1024	1	captures/W13-limite-768x1024@1.png	ccb9622c8ff5c8412ea1a61bc5de7f9d9d6894b9304353ff1dd54f747c70a262	w13_l_mite_diario
+F-W13-2	W13	límite diario · lado a lado	F	1280x1024	1.25	captures/W13-limite-sbs.png	b171b22085fccad21785fb65eff8c8bd35af6b9630ef40362244e3caa5e226c8	w13_l_mite_diario
+F-W13-3	W13	422 en confirm	F	1440x960	1	captures/W13-confirm-422-1440x960@1.png	7184dfe90b5a4b27aa645ccda5351932755e4dd752c7107c840b99aa82b6a79c	w13_saldo_insuficiente
+F-W13-3	W13	429 en confirm	F	1440x960	1	captures/W13-confirm-429-1440x960@1.png	727c044b647104c07791b1b4346ed08f24a2db65b2c085cac5411e743af42f3d	w13_l_mite_diario
+F-W13-4	W13	política no disponible	F	1440x960	1	captures/W13-limite-sin-politica-1440x960@1.png	ffbe5481680a7572a544db569e68425a590bbd37749d1b19721eab2f74583db1	w13_l_mite_diario
+F-W14-1	W14	sesión vencida	F	1280x1024	1.25	captures/W14-vencida-1280x1024@1.25.png	5239a167a0d736cbc56f08e922423f980a2f303171578e6101e973465bd76f70	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	1440x960	1	captures/W14-vencida-1440x960@1.png	e754a101bc7770dcc249845923280656cae19a548a609b3dce62038a9dc403e1	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	390x844	1	captures/W14-vencida-390x844@1.png	6da6f43ed4fe4afcfc9fb9f31ae6c9d22bb7378df3819d43f284190e50976e1f	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	768x1024	1	captures/W14-vencida-768x1024@1.png	a4889ad19426a2fb20a42a638c52a2aae8a8547d5b8791c197abcf0e82b575ee	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida · lado a lado	F	1280x1024	1.25	captures/W14-vencida-sbs.png	d775ebbec11583692ff94e05ba188343da8f0495492ad8ea5126929e621fa280	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento (contexto permitido) · lado a lado	F	1280x1024	1.25	captures/W14-vencida-con-intento-sbs.png	f446865f2ddcd1416993bb8a5dd53eebadb738d71d9d6699fa5494686cc0e606	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	1280x1024	1.25	captures/W14-vencida-con-intento-1280x1024@1.25.png	30cd4ca032a06b24c12ca336ac57b0f01ba29c79f5c9037b3362218e03652443	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	1440x960	1	captures/W14-vencida-con-intento-1440x960@1.png	d5bf595690967a8b41dd6b7f6aa81b6830b929187e2753c7711140efe5aa452b	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	390x844	1	captures/W14-vencida-con-intento-390x844@1.png	7179f4b0283ea8051ca1a97c983b79b1e25bc75b3a4f5bebb41525f6f2c6436e	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	768x1024	1	captures/W14-vencida-con-intento-768x1024@1.png	f567b205d9b35d65e92e4cef6159941cf0ec475282979269566574607e3705cd	w14_sesi_n_vencida
+F-W14-3	W14	403 en /accounts	F	1280x1024	1.25	captures/W14-acceso-403-cuentas-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	1280x1024	1.25	captures/W14-acceso-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	1440x960	1	captures/W14-acceso-1440x960@1.png	2706bf3cf92f3be8ed5b1ff4d3af9c533991de6587be2bf464a452deefa42b30	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	390x844	1	captures/W14-acceso-390x844@1.png	671174b2a94bba499c5106517c56e426876448c48250378e6589a9344a847f1c	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	768x1024	1	captures/W14-acceso-768x1024@1.png	0fbfcbd9e8e7b78947bcc6d2736589fc87dbd9c8ca9ee643e6cd0e09f63fecf0	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible · lado a lado	F	1280x1024	1.25	captures/W14-acceso-sbs.png	a7f2a2ea2496508f005970d55cecfcbace2be229c4dbe29dedc5dc181733b66b	w14_acceso_no_autorizado
+F-W14-4	W14	404 en /transfers/{id}/status	F	1280x1024	1.25	captures/W14-acceso-404-transferencia-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-6	W14	401 sin refresh → vencida con intento	F	1280x1024	1.25	captures/W14-vencida-por-401-1280x1024@1.25.png	30cd4ca032a06b24c12ca336ac57b0f01ba29c79f5c9037b3362218e03652443	w14_sesi_n_vencida
+F-W14-NF	W14	página no encontrada (estilo V4)	F	1280x1024	1.25	captures/W14-no-encontrada-1280x1024@1.25.png	fd7e60fbc7479c4b957123585aa9e2221c527395a303c0f90ba9647584682bda	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	1440x960	1	captures/W14-no-encontrada-1440x960@1.png	b5d41812a22f6e31194a5520faf3902bad7b52f33eb87043fb92789697342282	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	390x844	1	captures/W14-no-encontrada-390x844@1.png	24185d95a3c78d59281c3315b82daf30158024f2c6320c8ae5662880280cbcfe	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	768x1024	1	captures/W14-no-encontrada-768x1024@1.png	758aa48d1df769f17ba549fae1f7f205c1a6047fd48658cadf5716eef2f5b264	w14_acceso_no_autorizado
+I-W02-5/W03	W03	P2 real sin saldo	I	1440x960	1	captures/I-W03-sin-saldo-P2-1440x960@1.png	bde5d0b47df92e2f7aa955ee98e497fde0972559238a54f4289346bd6d975b72	w03_inicio_sin_saldo
+I-W03-10	W03	aviso tras respuesta perdida real	I	1440x960	1	captures/I-W03-aviso-pendiente-1440x960@1.png	f5d383b998498ec5f879c069e5655d514e27aa3a2d4551e8f4a1e8b22ddbc60a	w03_operaci_n_pendiente_de_verificaci_n
+I-W03-9	W03	P1 real tras transferencias	I	1440x960	1	captures/I-W03-cuentas-1440x960@1.png	d2948c5e9d95250381bc601fc26e945463a11378f26ad7b7ed52d4c7d742a1da	w03_inicio_y_cuentas_corregido
+I-W04-8	W04	P1 real, 22 movimientos tras «Cargar más»	I	1440x960	1	captures/I-W04-historial-1440x960@1.png	d10dc631b8e1da71895de1cfcd72e4c6924218fe13161b1683d639ae9f4220a8	w04_historial_con_movimientos
+I-W05-5	W05	P1 real desde historial	I	1440x960	1	captures/I-W05-comprobante-1440x960@1.png	5aa486001c6b2f1b91b4ecaf24d943d1a228e4498aff84433eb109915310ba73	w05_comprobante_de_transferencia
+I-W06-7	W06	tras FN-02 (201)	I	1440x960	1	captures/I-W06-alta-1440x960@1.png	9d446c30564a8ded89514e497eabb42d66ec0881f19fa49339a5cc76edd55ccf	w06_directorio_de_beneficiarios_1
+I-W06-7	W06	vacío [I]	I	1440x960	1	captures/I-W06-vacio-1440x960@1.png	d999cf1861cba22799072ddd2e69df5b78e055f253530ea44c7a8c515870d556	w06_sin_beneficiarios
+I-W07-8	W07	CLABE incorrecta (sin petición)	I	1440x960	1	captures/I-W07-clabe-incorrecta-1440x960@1.png	e8451add881f8889b2afc4c145829951190ad0d9b18d23bd4782f0935573d3c0	w07_clabe_incorrecta
+I-W07-8	W07	destino no disponible (404 real)	I	1440x960	1	captures/I-W07-destino-no-disponible-1440x960@1.png	a0dcc0253c26fa864b138eec55965f78f95bd2b3df8dba5e9c6508142e93ccb9	w07_destino_no_disponible
+I-W07-8	W07	duplicado (409 real)	I	1440x960	1	captures/I-W07-duplicado-1440x960@1.png	0d423edd6bd9026e7c598a728b3e624e1531ac603fc9bc31d843038804b6a467	w07_beneficiario_duplicado
+I-W08-8	W08	P1 beneficiario = cuenta origen	I	1440x960	1	captures/I-W08-origen-igual-destino-1440x960@1.png	92b7f444addc7639917e240305b45d4d656f020edc9f7a60fd3aa313c0a357d9	w08_formulario_de_transferencia
+I-W08-9	W08	P2 real una cuenta	I	1440x960	1	captures/I-W08-sin-segunda-cuenta-P2-1440x960@1.png	e150fb00c3a4081c492ea9a34b4007d308d68406fbf12fe4fca0b56e1c36fadb	w08_sin_segunda_cuenta_propia
+I-W09-6	W09	P1 real bajo umbral	I	1440x960	1	captures/I-W09-normal-1440x960@1.png	da1e8a6355c4912824f03ece20c01ef340998449f4f7773fa0d8a30a17c5dc8d	w09_revisar_transferencia
+I-W09-6	W09	P1 real propias	I	1440x960	1	captures/I-W09-propias-1440x960@1.png	8eaca2f30be1b887b131f752bc2f7a6ce80fa704a4a8ff7d3a36188e2943e724	w09_revisi_n_entre_cuentas_propias
+I-W09-6	W09	P1 real ≥ umbral	I	1440x960	1	captures/I-W09-codigo-1440x960@1.png	46ff7d1f3c7842aa1cc787f2b139bd4cd3c0ef7844b3c432cb748dcfaab8ac58	w09_revisi_n_6_000_mxn
+I-W10-10	W10	P1 código incorrecto real	I	1440x960	1	captures/I-W10-incorrecto-1440x960@1.png	9b240609b165a43f0362e0f8a1af7bf3643b2d20ce8f79452e079e698b467838	w10_c_digo_incorrecto
+I-W10-11	W10	P3 expiración real	I	1440x960	1	captures/I-W10-expirado-1440x960@1.png	0b92e777a5c4219bc26477e8b20e3b673a57499df30879e37775d5f166afdea7	w10_c_digo_expirado
+I-W10-12	W10	P3 intentos agotados real	I	1440x960	1	captures/I-W10-agotados-1440x960@1.png	fc41a822c672b994c9848f9e60c3d7416fa66ca88c9ee6d767d6ef76706b1695	w10_intentos_agotados
+I-W11-6	W11	P1 respuesta perdida real	I	1440x960	1	captures/I-W11-desconocido-1440x960@1.png	977c7125db6c88cd64124632aa18f0d0775a26e84d8d5217ffabfd6d344b35ce	w11_verificando_resultado
+I-W12-5	W12	P1 propias tras código	I	1440x960	1	captures/I-W12-propias-1440x960@1.png	f6caba0d126152fd5a913732272ddad3c9d5c9fb09a47a3a6ac463d2b93a9226	w12_comprobante_entre_cuentas_propias
+I-W13-5	W13	P2 real 422	I	1440x960	1	captures/I-W13-saldo-P2-1440x960@1.png	981f57d12cb1d110f8dc52f31cb20142816626ee6dbde026605311414855efdc	w13_saldo_insuficiente
+I-W13-6	W13	P4 real 429	I	1440x960	1	captures/I-W13-limite-P4-1440x960@1.png	83f7a693cf4ca8579bf974b8848bd4c00737b1a1b1b83bf84ff2c176419667ac	w13_l_mite_diario

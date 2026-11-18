@@ -1,0 +1,6 @@
+F13 844 normal: primary {"top":720,"bottom":768} Modificar {"top":776,"bottom":820} | all inside viewport: true
+F13 844 propias: primary {"top":736,"bottom":784} Modificar {"top":792,"bottom":836} | all inside viewport: true
+F13 844 umbral: primary {"top":756,"bottom":804} Modificar {"top":812,"bottom":856} | all inside viewport: false
+F13 884 normal: primary {"top":721,"bottom":769} Modificar {"top":777,"bottom":821} | all inside viewport: true
+F13 884 propias: primary {"top":741,"bottom":789} Modificar {"top":797,"bottom":841} | all inside viewport: true
+F13 884 umbral: primary {"top":761,"bottom":809} Modificar {"top":817,"bottom":861} | all inside viewport: true

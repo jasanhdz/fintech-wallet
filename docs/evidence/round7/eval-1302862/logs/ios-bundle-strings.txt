@@ -1,0 +1,7 @@
+ExpoPrint: 1
+ExpoSharing: 1
+printToFileAsync: 1
+shareAsync: 1
+Compartir comprobante: 1
+Guardar PDF: 1
+transfer-policy: 1

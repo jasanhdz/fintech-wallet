@@ -1,0 +1,88 @@
+$ npm run test
+
+> fintech-wallet@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @fintech-wallet/api@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ production configuration accepts explicit operational values without imposing example policy (34.499417ms)
+✔ production requires every operational setting and rejects malformed, fractional, zero, and out-of-range values (0.901125ms)
+✔ production requires a valid IANA time zone and disallows the development fixture (0.16525ms)
+✔ test and development environments retain existing harness configuration behavior (0.068042ms)
+✔ R8-12: idempotency retention days come only from IDEMPOTENCY_RECORD_RETENTION_DAYS (no default, positive integer) (0.205291ms)
+✔ R8-12: the transfer module has no hard-coded idempotency retention interval (0.66875ms)
+✔ health returns status and propagates request ID (218.885ms)
+✔ invalid request ID is replaced; not found uses RFC 7807 (81.612917ms)
+✔ generated CLABEs pass checksum and are encrypted with separate lookup fingerprints (1.356791ms)
+✔ attempt cursor round-trips canonically and rejects any alteration (2.11575ms)
+✔ attempt query validates status list, dates, attemptId and limit 1..50 (0.408958ms)
+✔ Transfer-Attempt-Id and Transfer-Send-Epoch are both-or-none, UUID and bigint decimal (0.216042ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 750.376167
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+✔ movement query uses contract filters, limit and cursor without offset (1.995708ms)
+✔ movement history renders rows, applies filters, pages by cursor, and preserves rows on retry error (354.156375ms)
+✔ recent activity requests three real movements for the first account and renders their details (385.427958ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.168959ms)
+✔ hydrates a web session through CSRF and cookie refresh (11.282625ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (177.454084ms)
+✔ provider hydrates a cookie session into in-memory context (24.495958ms)
+✔ revoked refresh rejects and network failure remains recoverable (0.791916ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.666833ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.374416ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (7.796125ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.507667ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (0.916208ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (1.82025ms)
+✔ create retries forward identical payload and idempotency key (11.90525ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (38.513375ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (279.625584ms)
+✔ login and registration use the shared contract validation (3.217041ms)
+✔ account balance formatting preserves integer minor units (21.75125ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.868667ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1282.10075
+
+> @fintech-wallet/mobile@0.1.0 test
+> jest --runInBand
+
+
+Test Suites: 9 passed, 9 total
+Tests:       217 passed, 217 total
+Snapshots:   0 total
+Time:        41.93 s, estimated 47 s
+Ran all test suites.
+
+> @fintech-wallet/shared@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ CLABE validation checks length, digits and verification digit (0.425833ms)
+✔ MXN decimal input converts exactly to bigint minor-unit string (0.302166ms)
+✔ minor-unit formatting and addition do not use binary floating point (11.56875ms)
+✔ shared request schemas reject invalid CLABE and transfer payload (2.753375ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.456292
+exit=0

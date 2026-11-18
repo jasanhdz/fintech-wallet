@@ -1,0 +1,15 @@
+## mobile source (excluding node_modules, evidence)
+mobile/tests/receipt.test.tsx:70:      assert.doesNotMatch(output, /SPEI|cifrad|biom|Face ID|huella/i, 'no unsupported claims');
+mobile/tests/app.test.tsx:980:      assert.doesNotMatch(curtain, /256|biométric|SSL|Blindaje/);
+mobile/tests/app.test.tsx:2418:      assert.doesNotMatch(flow.visible(), /biométric|Face ID|huella/i);
+## docs (product docs, README, specs)
+docs/acceptance-handoff-round3.md:18:Los `.env` del checkout raíz y de los worktrees API/Web tenían los mismos destinos: runtime y migrator de desarrollo apuntan a `wallet_dev`, y los equivalentes de test a `wallet_test`. **Las cuatro llave
+docs/challenge.md:92:- Bonus: desbloqueo biométrico con Face ID o huella.
+docs/handoff-mobile-fidelity-round.md:55:| M12 Privacidad | **No tocado.** Claims "cifrado 256-bit/biométrico" del PNG correctamente ausentes del código actual (ya excluidos en ronda anterior) |
+docs/version-decisions.md:23:| Expo SecureStore | 58.0.3 | [Expo SDK 58 SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/): SDK-compatible; no biometric requirement enabled. |
+docs/round7-notes.md:88:  de apps de iOS) y `background`. No es protección biométrica.
+docs/round7-notes.md:97:`grep` de "biométric", "Face ID", "Touch ID" y "huella" en `mobile/` y documentación de producto: no hay afirmaciones
+docs/round7-notes.md:98:biométricas en la app; las únicas menciones son el bonus opcional de `docs/challenge.md` y notas que confirman su ausencia. No
+docs/round7-notes.md:99:se implementa Face ID/Touch ID ni se añaden dependencias. Queda como mejora futura opcional (p. ej. `expo-local-authentication`
+## unsupported claims in mobile source (SPEI|Banxico|cifrad|encrypt|256|SSL|garant|CEP(word)|KYC|biom)
+(none)

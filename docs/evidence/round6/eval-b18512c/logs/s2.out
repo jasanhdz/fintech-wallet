@@ -1,0 +1,37 @@
+SHOT B-M05-ahorro bad=[]
+B selector: own aria-disabled= true | carlos disabled= 
+B after clicking blocked row still on picker: true | explanation: Enviando desde Ahorro •• 5968. Un destino que es esta misma cuenta no está disponible. / Cuenta de origen / Es tu cuenta de origen: elige otra cuenta de origen para enviarle.
+SHOT B-M06-ahorro-carlos-valid bad=[]
+B valid Ahorro->Carlos: estimate shown= false Continuar disabled= 
+SHOT B-M06-principal-own-valid bad=[]
+B2 Principal->Ahorro valid: estimate shown= false | disabled= 
+SHOT B-M06-selector bad=[]
+SHOT B-M06-ahorro-own-blocked bad=[]
+B3 Ahorro->own: disabled= true | estimate shown= false | msg= true
+B3 forced click -> still on details: true | POST /transfers count: 0
+B3 "Cambiar beneficiario" present: 1
+B3 back to Principal: disabled= 
+SHOT B-M07-review-own bad=[]
+SHOT B-M10-receipt-own bad=[]
+B4 balances before: Cuenta principal=1015000 Ahorro=500000 | after: Cuenta principal=984975 Ahorro=530025
+B4 ledger: -30025@Cuenta principal,30025@Ahorro
+B4 total before/after: 1515000 1515000
+B4 receipt lines: -$300.25 MXN | Cuenta origen | Cuenta principal | Para | Cuenta de ahorro demo | Cuenta destino | Nuevo saldo disponible en Cuenta principal: | $9,849.75
+SHOT B-hist-principal bad=[]
+SHOT B-hist-ahorro bad=[]
+B4 history principal: $9,849.75 | Traspaso a Cuenta de ahorro demo | •• 5968 · Traspaso | -$300.25 | -$850.00 | +$1,000.00
+B4 history ahorro: Cuenta principal (•• 0956) | $9,849.75 | Traspaso a Cuenta de ahorro demo | •• 5968 · Traspaso | -$300.25 | -$850.00 | De Carlos Ruiz | +$1,000.00
+SHOT C-M11-rejected bad=[]
+SHOT C-after-modificar bad=[]
+C after Modificar: selector shown= true | amount= 77.70 concept= Concepto largo de prueba ref= 2468
+C usar buttons: 2
+C Continuar disabled now (combo same as rejected)= 
+SHOT C2-M11-insufficient bad=[]
+SHOT C2-after-modificar bad=[]
+SHOT C2-review-same-combo bad=[]
+C2 rejected text:  | Transferir | AL |  | No se pudo completar la transferencia | El monto solicitado ($400.00 MXN) supera el saldo disponible actual en tu cuenta. |  | Tu dinero está intacto | No se aplicó ningún cargo a tu cuenta por este intento. | Cuenta de origen |  | Principal •• 0956 | Saldo disponible | $100.00 MXN
+C2 review warns on repeated combo: (no warning)
+C2 balance chips: $ lines in M11: El monto solicitado ($400.00 MXN) supera el saldo disponible actual en tu cuenta. | $100.00 MXN | $400.00 MXN | $0.00 MXN
+SHOT C3-no-destinations bad=[]
+C3 only-own-beneficiary + Ahorro origin text:  | Transferir | SP | Elegir beneficiario | Selecciona la cuenta destino para enviar fondos. |  | Todos (1) | CONTACTOS DISPONIBLES | Billetera MXN |  | No hay destinos disponibles desde Ahorro •• 8162: tu beneficiario es esta misma cuenta. | Cuenta de origen | Cuenta principal •• 7202 | Disponible: $10,000.00 MXN | Ahorro •• 8162 | Disponible: $5,000.00 MXN | MA | Mi ahorro | ah | Billetera MXN •• 8162 | Es tu cuenta de origen: elige otra cuenta de origen para enviarle. |  |  | Los benefici
+accounts for a freshly registered user: ["savings","checking"]

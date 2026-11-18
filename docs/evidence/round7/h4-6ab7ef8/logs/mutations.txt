@@ -1,0 +1,53 @@
+KILLED  F-28.1 guard fails OPEN when SecureStore cannot be read :: Tests:       2 failed, 134 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged record found by the guard when confirming sends nothing and shows the same notice on Home
+    ● H4 · F-28: guard coverage › (1) when the secure store cannot be read at confirm time the guard fails closed: 0 POST /transfers and a clear message
+KILLED  F-28.2 requestNewCode always passes replacesClosedAttempt=true :: Tests:       1 failed, 135 passed, 136 total
+    ● H4 · F-28: guard coverage › (2) "Solicitar un código nuevo" without a previous attempt does not bypass the guard: a stored unresolved attempt still blocks the new key
+KILLED  F-26a GET releases on ANY error (500/network/401/409) :: Tests:       8 failed, 128 passed, 136 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers 404 (Home): the record is released, Home says why and exactly one new transfer goes through with a new key
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 500: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers no answer: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 409: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 401: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an attempt the server confirms is waiting for its code offers no discard (its way out is the confirmed cancel in M08)
+KILLED  F-26a GET 404 never releases :: Tests:       2 failed, 134 passed, 136 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers 404 (start-up): the record is released, Home says why and exactly one new transfer goes through with a new key
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers 404 (Home): the record is released, Home says why and exactly one new transfer goes through with a new key
+KILLED  F-26a replay 409/400 treated as definitive :: Tests:       3 failed, 133 passed, 136 total
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 400 (validated before the key lookup) keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● mobile rejected transfer (M11) › F-09: a 409 answer does not claim the money is intact
+KILLED  F-26c discard also deletes the legacy slot (may be another user's) :: Tests:       1 failed, 135 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged (truncated JSON) record is explained in plain words, never as a parser error; discarding it after confirming deletes only this user's record and enables one new transfer
+KILLED  F-26c discard without confirmation dialog :: Tests:       3 failed, 133 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged (truncated JSON) record is explained in plain words, never as a parser error; discarding it after confirming deletes only this user's record and enables one new transfer
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › cancelling the confirmation keeps the record and the notice exactly as they were
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an unreadable secure store fails closed; the discard tries to delete and, when it cannot, says so without claiming success
+KILLED  F-26d discard reports success although the store failed :: Tests:       1 failed, 135 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an unreadable secure store fails closed; the discard tries to delete and, when it cannot, says so without claiming success
+KILLED  F-26c discard offered even when the server confirmed "awaiting code" :: Tests:       1 failed, 135 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an attempt the server confirms is waiting for its code offers no discard (its way out is the confirmed cancel in M08)
+KILLED  F-26b damaged record shown as raw error on M09 :: Tests:       2 failed, 134 passed, 136 total
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged (truncated JSON) record is explained in plain words, never as a parser error; discarding it after confirming deletes only this user's record and enables one new transfer
+    ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an unreadable secure store fails closed; the discard tries to delete and, when it cannot, says so without claiming success
+KILLED  F-21 unverified 4xx on retry goes to M11 :: Tests:       5 failed, 131 passed, 136 total
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 401 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 403 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 429 rate limit keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 400 (validated before the key lookup) keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+KILLED  F-21 M11 exits always release the record :: Tests:       1 failed, 135 passed, 136 total
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › a first send answered with an unverified 4xx shows M11 "Revisa tu saldo" whose exits keep the record (no edit path)
+KILLED  F-27 Home replays the create of an attempt without id :: Tests:       7 failed, 129 passed, 136 total
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; the tap on "Verificar estado" sends exactly one with the same key
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › after "Ir al inicio" from M09 (response lost before it was applied) the foreground sends nothing until the tap
+    ● H4 · F-28: guard coverage › (2) "Solicitar un código nuevo" without a previous attempt does not bypass the guard: a stored unresolved attempt still blocks the new key
+    ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M09 "Ir al inicio" keeps a pending notice on Home; verifying replays the same key and lands on the receipt with one row
+    ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it after signing in, another user never sees it
+KILLED  F-27 start-up/sign-in replays without a tap :: Tests:       4 failed, 132 passed, 136 total
+    ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M12: an expired session keeps the pending record bound to its user; the same user resumes it after signing in, another user never sees it
+    ● round 8 · F-21/F-22: one unresolved attempt at a time, bound to its user › "Cerrar sesión" keeps the user's own record; signing in again resumes it with the same key and lands on the real result
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; the tap on "Verificar estado" sends exactly one with the same key
+survivors: 0 of 14

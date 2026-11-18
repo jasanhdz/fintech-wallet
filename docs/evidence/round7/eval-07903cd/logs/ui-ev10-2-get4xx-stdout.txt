@@ -1,0 +1,75 @@
+
+===== get4xx-400: the create returned 201 (record keeps the id) but every READ of the attempt answers err:400:Datos inválidos. =====
+PASS get4xx-400: M09 (never M11, no receipt claimed)
+PASS get4xx-400: record holds the server id
+PASS get4xx-400: "Verificar" keeps verification
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 9457","Ahorro •• 7259","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-400: no path to another attempt (Inicio/reload/foreground)
+PASS get4xx-400: 0 new POST, record kept
+AUDIT after relogin: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 9457","Ahorro •• 7259","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-400: relogin still locked
+DB while reads fail: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-400: DB 1 transfer / 1 debit
+PASS get4xx-400: once a READ succeeds the attempt resolves (completed) and releases
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-400: 1 transfer, 1 debit, record released only by the server's completed
+
+===== get4xx-401: the create returned 201 (record keeps the id) but every READ of the attempt answers err:401:La sesión expiró. =====
+PASS get4xx-401: M09 (never M11, no receipt claimed)
+PASS get4xx-401: record holds the server id
+PASS get4xx-401: "Verificar" keeps verification
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2019","Ahorro •• 5788","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-401: no path to another attempt (Inicio/reload/foreground)
+PASS get4xx-401: 0 new POST, record kept
+AUDIT after relogin: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2019","Ahorro •• 5788","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-401: relogin still locked
+DB while reads fail: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-401: DB 1 transfer / 1 debit
+PASS get4xx-401: once a READ succeeds the attempt resolves (completed) and releases
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-401: 1 transfer, 1 debit, record released only by the server's completed
+
+===== get4xx-403: the create returned 201 (record keeps the id) but every READ of the attempt answers err:403:Acceso denegado. =====
+PASS get4xx-403: M09 (never M11, no receipt claimed)
+PASS get4xx-403: record holds the server id
+PASS get4xx-403: "Verificar" keeps verification
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0396","Ahorro •• 3215","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-403: no path to another attempt (Inicio/reload/foreground)
+PASS get4xx-403: 0 new POST, record kept
+AUDIT after relogin: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0396","Ahorro •• 3215","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-403: relogin still locked
+DB while reads fail: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-403: DB 1 transfer / 1 debit
+PASS get4xx-403: once a READ succeeds the attempt resolves (completed) and releases
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-403: 1 transfer, 1 debit, record released only by the server's completed
+
+===== get4xx-429-rate: the create returned 201 (record keeps the id) but every READ of the attempt answers err:429:Demasiadas solicit =====
+PASS get4xx-429-rate: M09 (never M11, no receipt claimed)
+PASS get4xx-429-rate: record holds the server id
+PASS get4xx-429-rate: "Verificar" keeps verification
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1919","Ahorro •• 7663","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-429-rate: no path to another attempt (Inicio/reload/foreground)
+PASS get4xx-429-rate: 0 new POST, record kept
+AUDIT after relogin: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1919","Ahorro •• 7663","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-429-rate: relogin still locked
+DB while reads fail: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-429-rate: DB 1 transfer / 1 debit
+PASS get4xx-429-rate: once a READ succeeds the attempt resolves (completed) and releases
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-429-rate: 1 transfer, 1 debit, record released only by the server's completed
+
+===== get4xx-409: the create returned 201 (record keeps the id) but every READ of the attempt answers err:409:La solicitud idemp =====
+PASS get4xx-409: M09 (never M11, no receipt claimed)
+PASS get4xx-409: record holds the server id
+PASS get4xx-409: "Verificar" keeps verification
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7550","Ahorro •• 3470","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-409: no path to another attempt (Inicio/reload/foreground)
+PASS get4xx-409: 0 new POST, record kept
+AUDIT after relogin: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7550","Ahorro •• 3470","\nVerificar estado de la transfere","\nVer movimientos","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS get4xx-409: relogin still locked
+DB while reads fail: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-409: DB 1 transfer / 1 debit
+PASS get4xx-409: once a READ succeeds the attempt resolves (completed) and releases
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get4xx-409: 1 transfer, 1 debit, record released only by the server's completed

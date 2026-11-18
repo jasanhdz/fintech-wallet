@@ -1,0 +1,16 @@
+after-server arrow+cancel elements in flight [{"dis":"true","tab":"-1","x":30,"y":32,"w":44},{"dis":"true","tab":"-1","x":195,"y":804,"w":358}]
+after-server clicked both with real mouse events; screen now has code step: true
+after-server after clicking cancel+arrow, screen:  | Transferir | AL |  | Confirmación de seguridad
+after-server cancel POSTs so far: 0 | DB during: completed:500000
+after-server final screen:  | Detalle | AL | 
+after-server POST /transfers: 1 cancel: 0 confirm: 1
+after-server DB rows: completed:500000 | ledger entries: 2/0
+after-server balances before Cuenta principal=1015000 Ahorro=500000 after Cuenta principal=515000 Ahorro=500000
+before-server arrow+cancel elements in flight [{"dis":"true","tab":"-1","x":30,"y":32,"w":44},{"dis":"true","tab":"-1","x":195,"y":804,"w":358}]
+before-server clicked both with real mouse events; screen now has code step: true
+before-server after clicking cancel+arrow, screen:  | Transferir | AL |  | Confirmación de seguridad
+before-server cancel POSTs so far: 0 | DB during: awaiting_confirmation:500000
+before-server final screen:  | Detalle | AL | 
+before-server POST /transfers: 1 cancel: 0 confirm: 1
+before-server DB rows: completed:500000 | ledger entries: 2/0
+before-server balances before Cuenta principal=1015000 Ahorro=500000 after Cuenta principal=515000 Ahorro=500000

@@ -1,0 +1,10 @@
+user 0: gate rows before=0 -> epoch 1; transfers=2 closures=0; statuses=201,201,200,201,200
+user 1: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=409,200,409,409,200
+user 2: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=409,200,409,409,200
+user 3: gate rows before=0 -> epoch 1; transfers=2 closures=0; statuses=201,201,201,200,200
+user 4: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=409,409,200,409,200
+user 5: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=409,200,409,409,200
+user 6: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=200,200,409,409,409
+user 7: gate rows before=0 -> epoch 1; transfers=0 closures=1; statuses=200,409,409,200,409
+PASS first-send gate race over 8 fresh users: <=1 outcome per attempt, epoch 1, no double debit 
+SUMMARY pass=1 fail=0

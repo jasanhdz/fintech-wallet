@@ -1,0 +1,32 @@
+===== variant after =====
+SHOT A-M09-despues minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT A-tras-ir-al-inicio-despues minFont=12 scrollW=390 offscreen=0 errs=1
+A after "Ir al inicio": receipt shown true | notice false | entries {"continuar":0,"transferir":0,"cambiar":0,"verificar":0,"pendiente":0} | record []
+SHOT A-inicio-rehabilitado-despues minFont=12 scrollW=390 offscreen=0 errs=1
+A back on Home: notice false | entries {"continuar":1,"transferir":0,"cambiar":1,"verificar":0,"pendiente":0} | record []
+A keys ["75b08ae2","75b08ae2"] distinct 1 | POST /transfers 2
+A principal 1000000 -> 969975 (debit 30025 ) savings 500000 -> 530025
+A DB transfers [completed:30025] ledger 2 rows sum 0
+A page errors ["console Failed to load resource: net::ERR_CONNECTION_RESET"]
+PASS A: one key, one debit of 300.25
+SHOT B-inicio-bloqueado-despues minFont=12 scrollW=390 offscreen=0 errs=2
+B Home locked: notice true | "Sin respuesta por ahora" true | entries {"continuar":0,"transferir":0,"cambiar":0,"verificar":1,"pendiente":0} | record [{"slot":"wallet.transfer-recovery.0e6c3ce3…","key":"50cbd7bd","transferId":null,"status":null}]
+PASS B: Home offers no new-attempt entry, only "Verificar estado"
+B after Movimientos -> Inicio: entries {"continuar":0,"transferir":0,"cambiar":0,"verificar":1,"pendiente":0} | POST so far 3
+B after "Cerrar sesión": login shown true | record [{"slot":"wallet.transfer-recovery.0e6c3ce3…","key":"50cbd7bd","transferId":null,"status":null}]
+PASS B: logout keeps the own record
+SHOT B-reanudado-tras-reentrar-despues minFont=12 scrollW=390 offscreen=0 errs=3
+B after signing in again: receipt true | record []
+B keys ["50cbd7bd","50cbd7bd","50cbd7bd","50cbd7bd"] distinct 1 | POST /transfers 4 | principal debit 30025
+B DB transfers [completed:30025] ledger 2 rows sum 0
+PASS B: one key, one debit
+C A signed out: records [{"slot":"wallet.transfer-recovery.725e5470…","key":"c9956247","transferId":null,"status":null}]
+SHOT C-usuario-B-despues minFont=12 scrollW=390 offscreen=0 errs=2
+C B Home: sees A notice false | entries {"continuar":0,"transferir":1,"cambiar":0,"verificar":0,"pendiente":0}
+C B transfer completed true
+C after B signs out: records [{"slot":"wallet.transfer-recovery.725e5470…","key":"c9956247","transferId":null,"status":null}]
+PASS C: B never deletes nor replaces A's record
+SHOT C-usuario-A-reanuda-despues minFont=12 scrollW=390 offscreen=0 errs=2
+C A resumes: receipt true | replay key equals original true | record []
+C A DB transfers [completed:30025] ledger 2 rows sum 0 | A principal debit 30025 | B DB transfers [completed:1000] ledger 2 rows sum 0
+PASS C: A debited once

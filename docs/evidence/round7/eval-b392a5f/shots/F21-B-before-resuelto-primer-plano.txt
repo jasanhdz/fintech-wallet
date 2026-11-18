@@ -1,0 +1,46 @@
+
+Detalle
+AL
+
+
+Transferencia completada
+-$300.25
+MXN
+
+16 de noviembre de 2026, 17:41 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 7657
+Para
+Cuenta de ahorro demo
+Ahorro demo
+Cuenta destino
+Billetera MXN
+•• 4085
+Concepto
+Prueba F21
+Referencia
+9001
+Folio interno
+77c56e82-85cf-48ec-bbe4-e090608f7c01
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$9,699.75
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

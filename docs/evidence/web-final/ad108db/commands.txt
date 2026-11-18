@@ -1,0 +1,22 @@
+# WF-T1 commands (worktree root /Users/jasanhernandez/Develop/fintech-wallet-web-final). No npm ci/install; no root test:e2e/test:visual.
+# Demo (API 3200 / web 5174 / Metro 8083, wallet_dev) and the g1 round were not touched; only own container/ports.
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH
+node -v                                                    # v26.13.1
+df -h /System/Volumes/Data                                 # 5.6 GiB free before starting
+node web/e2e-final/scripts/make-env.mjs                    # .env.web-final kept (already present, 0600, never printed)
+node web/e2e-final/scripts/db-up.mjs --evidence <scratch>/db-up.txt   # -> env-01-disk.txt (4.65 GiB free >= 2.5)
+# development iterations (evidence folder "wip", not versioned): WF_EVIDENCE_SHA=wip WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t1-access.spec.ts
+npm --workspace @fintech-wallet/web run lint
+npm --workspace @fintech-wallet/web run typecheck
+npm --workspace @fintech-wallet/web run test
+WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+npx eslint web/e2e-final web/e2e
+npx tsc -p web/e2e-final/tsconfig.json
+node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/ad108db
+WF_EVIDENCE_SHA=ad108db WF_PROFILES=P1,P2 npx playwright test -c web/e2e-final/playwright.config.ts --project=final   # T0 + golden + T1 (incl. [I] P2)
+WF_EVIDENCE_SHA=ad108db WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy own-account-transfer.spec.ts product.spec.ts
+WF_EVIDENCE_SHA=ad108db WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy w13-rejections.spec.ts
+python3 <inline> f0ed4bc/network-golden.json vs ad108db/network-traces.json   # -> golden-comparison.txt
+rg (SC-01/02/03/04, parseFloat|toFixed) web/src web/dist/p1                    # -> scope-sweeps.txt (informative)
+python3 crop.py <reference screen.png> <R capture> ...                          # 2x detail crops for the side-by-side review (scratchpad, not versioned)
+node web/e2e-final/scripts/db-down.mjs                     # cleanup: own container and volume only -> env-06-cleanup.txt

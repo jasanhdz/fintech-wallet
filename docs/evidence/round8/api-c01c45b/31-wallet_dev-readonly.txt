@@ -1,0 +1,19 @@
+$ docker exec fintech-wallet-postgres-1 psql -U postgres -d wallet_dev (BEGIN READ ONLY ... ROLLBACK)
+BEGIN
+ rows_1763000009000 
+--------------------
+                  0
+(1 row)
+
+          latest_migration           
+-------------------------------------
+ TransferTerminalStates1763000008000
+(1 row)
+
+ closures_table | gates_table | client_attempt_id_columns 
+----------------+-------------+---------------------------
+                |             |                         0
+(1 row)
+
+ROLLBACK
+exit=0

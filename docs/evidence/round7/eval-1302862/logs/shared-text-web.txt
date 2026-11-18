@@ -1,0 +1,14 @@
+Comprobante de transferencia · Billetera MXN
+Transferencia completada
+Monto: -$850.00 MXN
+Fecha: 16 de noviembre de 2026, 16:30 hrs (Tiempo del Centro de México)
+Estado: Completada — confirmada y aplicada
+Cuenta origen: Cuenta principal •• 6948
+Para: Carlos Ruiz (Carlos)
+Cuenta destino: Billetera MXN •• 0758
+Concepto: <b>Comida</b> & "x"
+Referencia: ••••••
+Folio interno: 184ddb60-bd36-487e-b29d-57a24c2754ff
+Tipo de operación: Transferencia interna
+
+Comprobante interno de demostración — no es un comprobante bancario oficial

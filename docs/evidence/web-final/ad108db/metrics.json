@@ -1,0 +1,1909 @@
+{
+  "FONT-03-04-05 /login": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif",
+      "input": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-03-04-05 /accounts": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "h1": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-06": {
+    "check": true,
+    "inter": 197.5634765625,
+    "arial": 193.388671875
+  },
+  "FONT-07": {
+    "checked": 7,
+    "items": [
+      {
+        "text": "Cuenta •• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "###•••••••••••####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "###•••••••••••####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "−$###.## MXN",
+        "numeric": "tabular-nums"
+      }
+    ]
+  },
+  "SH-01-02-03-05-09 demoOnly=true": {
+    "aside": {
+      "box": {
+        "x": 0,
+        "y": 0,
+        "width": 288,
+        "height": 960
+      },
+      "position": "fixed",
+      "background-color": "rgb(255, 255, 255)",
+      "box-shadow": "rgba(0, 0, 0, 0.04) 0px 1px 8px 0px"
+    },
+    "brandStyle": {
+      "font-size": "16px",
+      "font-weight": "600"
+    },
+    "links": [
+      {
+        "name": "Inicio",
+        "current": "page",
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgb(29, 78, 216)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "12px"
+      },
+      {
+        "name": "Movimientos",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      },
+      {
+        "name": "Beneficiarios",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      },
+      {
+        "name": "Transferir",
+        "current": null,
+        "svgSize": 20,
+        "svgHidden": "true",
+        "fontSize": "14px",
+        "background": "rgba(0, 0, 0, 0)",
+        "color": "rgb(67, 70, 85)",
+        "radius": "12px"
+      }
+    ],
+    "topbar": {
+      "x": 288,
+      "y": 0,
+      "width": 1152,
+      "height": 64
+    },
+    "shellImages": 0
+  },
+  "SH-02-05 demoOnly=false": {
+    "demoWordCount": 0
+  },
+  "SH-04": {
+    "initials": "PP",
+    "account": "Cuenta •• ####",
+    "logout": "POST /v1/auth/logout → /login"
+  },
+  "SH-07": {
+    "firstFocusable": "Saltar al contenido",
+    "box": {
+      "x": 8,
+      "y": 8,
+      "width": 156.75,
+      "height": 40
+    },
+    "focusAfterEnter": "main#contenido"
+  },
+  "SH-08": {
+    "/login": "Iniciar sesión · Billetera MXN",
+    "/register": "Crear cuenta · Billetera MXN",
+    "/session-expired": "Sesión vencida · Billetera MXN",
+    "/access-denied": "Acceso no disponible · Billetera MXN",
+    "/ruta-inexistente": "Página no encontrada · Billetera MXN",
+    "/accounts": "Inicio · Billetera MXN",
+    "/accounts/:id/movements": "Movimientos · Billetera MXN",
+    "/transfers/:id/movement-receipt": "Comprobante · Billetera MXN",
+    "/beneficiaries": "Beneficiarios · Billetera MXN",
+    "/beneficiaries/new": "Nuevo beneficiario · Billetera MXN",
+    "/transfers/new": "Transferir · Billetera MXN"
+  },
+  "SH-06 390": {
+    "barHeight": 64,
+    "paddingBottom": 96,
+    "sizes": [
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.796875,
+        "height": 55
+      },
+      {
+        "width": 74.8125,
+        "height": 55
+      }
+    ]
+  },
+  "SH-06 768": {
+    "barHeight": 64,
+    "paddingBottom": 96,
+    "sizes": [
+      {
+        "width": 150.390625,
+        "height": 55
+      },
+      {
+        "width": 150.40625,
+        "height": 55
+      },
+      {
+        "width": 150.390625,
+        "height": 55
+      },
+      {
+        "width": 150.40625,
+        "height": 55
+      },
+      {
+        "width": 150.390625,
+        "height": 55
+      }
+    ]
+  },
+  "RESP-01 /accounts 1440": {
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "offenders": []
+  },
+  "RESP-01 /accounts R": {
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "offenders": [],
+    "referencePng": "1600x1288",
+    "informativePixelDiff": 0.14783187984496124
+  },
+  "RESP-01 /accounts 768": {
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "offenders": []
+  },
+  "RESP-01 /accounts 390": {
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "offenders": []
+  },
+  "W01-V1-V4 R": {
+    "screen": {
+      "background-color": "rgb(246, 248, 251)"
+    },
+    "tile": {
+      "box": {
+        "x": 616,
+        "y": 48,
+        "width": 48,
+        "height": 48
+      },
+      "border-radius": "14px",
+      "background-color": "rgb(29, 78, 216)"
+    },
+    "card": {
+      "box": {
+        "x": 420,
+        "y": 358.5,
+        "width": 440,
+        "height": 427
+      },
+      "border-top-left-radius": "16px",
+      "padding-top": "32px",
+      "padding-left": "32px",
+      "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+      "background-color": "rgb(255, 255, 255)"
+    },
+    "h1": {
+      "font-size": "24px",
+      "font-weight": "700",
+      "line-height": "32px",
+      "color": "rgb(20, 27, 44)"
+    },
+    "fields": [
+      {
+        "label": "Correo electrónico",
+        "labelStyle": {
+          "font-size": "12px",
+          "font-weight": "600",
+          "line-height": "16px",
+          "color": "rgb(67, 70, 85)"
+        },
+        "inputBox": {
+          "x": 453,
+          "y": 493.5,
+          "width": 374,
+          "height": 44
+        },
+        "inputStyle": {
+          "border-top-left-radius": "10px",
+          "border-top-width": "1px",
+          "border-top-color": "rgb(226, 232, 240)",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "iconBox": {
+          "x": 467,
+          "y": 505.5,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "label": "Contraseña",
+        "labelStyle": {
+          "font-size": "12px",
+          "font-weight": "600",
+          "line-height": "16px",
+          "color": "rgb(67, 70, 85)"
+        },
+        "inputBox": {
+          "x": 453,
+          "y": 575.5,
+          "width": 374,
+          "height": 44
+        },
+        "inputStyle": {
+          "border-top-left-radius": "10px",
+          "border-top-width": "1px",
+          "border-top-color": "rgb(226, 232, 240)",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "iconBox": {
+          "x": 467,
+          "y": 587.5,
+          "width": 20,
+          "height": 20
+        }
+      }
+    ],
+    "eye": {
+      "x": 785,
+      "y": 581.5,
+      "width": 32,
+      "height": 32
+    },
+    "submit": {
+      "box": {
+        "x": 453,
+        "y": 643.5,
+        "width": 374,
+        "height": 44
+      },
+      "background-color": "rgb(29, 78, 216)",
+      "color": "rgb(255, 255, 255)",
+      "border-top-left-radius": "10px",
+      "font-size": "14px",
+      "font-weight": "500"
+    },
+    "informativePixelDiff": 0.0403076171875,
+    "at970": {
+      "cardTop": 331.5,
+      "informativePixelDiff": 0.06624755859375
+    }
+  },
+  "W01 listo 1440": {
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo R": {
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo 768": {
+    "overflow": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo 390": {
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01-F1": {
+    "toggle": "type oculto→visible→oculto",
+    "ariaPressed": [
+      "false",
+      "true",
+      "false"
+    ],
+    "labels": [
+      "Mostrar contraseña",
+      "Ocultar contraseña"
+    ]
+  },
+  "W01-F2": {
+    "emptySubmit": "aria-invalid + describedby + icon, focus on first invalid, 0 POST /auth/login",
+    "busy": "disabled, «Iniciando sesión…», spinner, role=status, aria-describedby"
+  },
+  "W01-F3": {
+    "messages": [
+      {
+        "scenario": "F-W01-4",
+        "text": "Correo o contraseña incorrectos."
+      },
+      {
+        "scenario": "F-W01-5",
+        "text": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
+      },
+      {
+        "scenario": "F-W01-6",
+        "text": "No fue posible conectar. Revisa tu conexión e inténtalo de nuevo."
+      }
+    ],
+    "provokedConsoleMessages": {
+      "F-W01-4 R": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "F-W01-4 390": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "F-W01-5 R": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ],
+      "F-W01-5 390": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ],
+      "F-W01-6 R": [
+        "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      ],
+      "F-W01-6 390": [
+        "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      ]
+    }
+  },
+  "W01 A11Y-05": {
+    "zoom200": {
+      "scrollWidth": 640,
+      "innerWidth": 640,
+      "clipped": []
+    },
+    "reflow320": {
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "clipped": []
+    }
+  },
+  "W02-V1-V3 R": {
+    "card": {
+      "box": {
+        "x": 420,
+        "y": 254,
+        "width": 440,
+        "height": 636
+      },
+      "border-top-left-radius": "16px",
+      "padding-top": "32px",
+      "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
+    },
+    "h1": {
+      "font-size": "20px",
+      "line-height": "28px",
+      "font-weight": "600",
+      "text-align": "center"
+    },
+    "labels": [
+      "Nombre completo",
+      "Correo electrónico",
+      "Contraseña",
+      "Confirmar contraseña"
+    ],
+    "submit": {
+      "x": 452,
+      "y": 758,
+      "width": 376,
+      "height": 44
+    },
+    "informativePixelDiff": 0.05240478515625
+  },
+  "W02 listo 1440": {
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo R": {
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo 768": {
+    "overflow": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo 390": {
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02-F1": {
+    "clientOnly": "confirmación distinta → error, 0 POST",
+    "sentFields": "fullName, email y la contraseña (3 campos del contrato; la confirmación nunca se envía)"
+  },
+  "W02-F2": {
+    "detail": "No fue posible crear la cuenta con esos datos.",
+    "kept": [
+      "Nombre completo",
+      "Correo electrónico"
+    ],
+    "cleared": [
+      "Contraseña",
+      "Confirmar contraseña"
+    ]
+  },
+  "W02 A11Y-05": {
+    "zoom200": {
+      "scrollWidth": 640,
+      "innerWidth": 640,
+      "clipped": []
+    },
+    "reflow320": {
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "clipped": []
+    }
+  },
+  "W14-V1-V2-V4 R": {
+    "expired": {
+      "main": {
+        "x": 416,
+        "y": 322,
+        "width": 448,
+        "height": 380
+      },
+      "card": {
+        "box": {
+          "x": 440,
+          "y": 402,
+          "width": 400,
+          "height": 276
+        },
+        "border-top-left-radius": "12px",
+        "padding-top": "24px",
+        "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "text-align": "center"
+      },
+      "tile": {
+        "x": 570.5625,
+        "y": 346,
+        "width": 32,
+        "height": 32
+      },
+      "icon": {
+        "x": 608,
+        "y": 426,
+        "width": 64,
+        "height": 64
+      },
+      "button": {
+        "x": 464,
+        "y": 610,
+        "width": 352,
+        "height": 44
+      },
+      "informativePixelDiff": 0.02291259765625
+    },
+    "access": {
+      "main": {
+        "x": 416,
+        "y": 326,
+        "width": 448,
+        "height": 372
+      },
+      "card": {
+        "box": {
+          "x": 440,
+          "y": 406,
+          "width": 400,
+          "height": 268
+        },
+        "border-top-left-radius": "12px",
+        "padding-top": "24px",
+        "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "text-align": "center"
+      },
+      "tile": {
+        "x": 570.5625,
+        "y": 350,
+        "width": 32,
+        "height": 32
+      },
+      "icon": {
+        "x": 612,
+        "y": 430,
+        "width": 56,
+        "height": 56
+      },
+      "button": {
+        "x": 464,
+        "y": 606,
+        "width": 352,
+        "height": 44
+      },
+      "informativePixelDiff": 0.01456298828125
+    }
+  },
+  "W14-V3 1440": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 R": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 768": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 390": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14 1440": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 R": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 768": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 390": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14-F1 [F]": {
+    "F-W14-3": {
+      "path": "/accounts",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+      ]
+    },
+    "F-W14-4": {
+      "path": "/transfers/:id/status",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "F-W14-5": {
+      "path": "/accounts/:id/movements",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "F-W14-5b": {
+      "path": "/transfers/:id/movement-receipt",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  },
+  "W14-F2": {
+    "route": "/beneficiaries → 401 → refresh 204 → /session-expired",
+    "recordByteIdentical": true,
+    "nonGet": [
+      "POST /v1/auth/refresh",
+      "POST /v1/auth/refresh"
+    ],
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ]
+  },
+  "W01-F4 + I-W14-6 [I]": {
+    "login": "P1 real → /accounts",
+    "visits": {
+      "/transfers/:id/status": "Acceso no disponible",
+      "/accounts/:id/movements": "Acceso no disponible",
+      "/transfers/:id/movement-receipt": "Acceso no disponible"
+    },
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  "W02-F3 P1 [I]": {
+    "accounts": 2
+  },
+  "W02-F3 P2 [I]": {
+    "accounts": 1,
+    "balance": "$0.00 MXN"
+  }
+}

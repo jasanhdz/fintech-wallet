@@ -1,0 +1,13 @@
+E17 normal run1: login usable 985 ms {"Inter SemiBold|custom=true":118,"Ionicons|custom=true":14,"Inter Medium|custom=true":154,"Inter|custom=true":304}
+E17 normal run2: login usable 878 ms 
+E17 normal run3: login usable 884 ms 
+E17 normal run4: login usable 876 ms 
+E17 abort run1: login usable 884 ms {".SF NS|custom=false":576}
+E17 abort run2: login usable 876 ms 
+E17 abort run3: login usable 879 ms 
+E17 abort run4: login usable 882 ms 
+E17 hang run1: login usable 3408 ms {".SF NS|custom=false":576}
+E17 hang run2: login usable 3393 ms 
+E17 hang run3: login usable 3410 ms 
+E17 hang run4: login usable 3401 ms 
+E17 hang @1.2s visible text: ""

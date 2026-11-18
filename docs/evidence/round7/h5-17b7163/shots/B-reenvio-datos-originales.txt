@@ -1,0 +1,22 @@
+
+Transferir
+BA
+
+Reenviar la misma transferencia
+Revisa los datos originales. Se reenvía con la misma clave de la operación: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces.
+Monto
+$300.25 MXN
+Cuenta de origen
+Cuenta principal •• 6799
+Destinatario
+Cuenta de ahorro demo (Ahorro demo) •• 7914
+Concepto
+B antes
+Referencia
+8202
+
+Confirmaste esta transferencia el 16 de noviembre de 2026, 22:03 hrs (Tiempo del Centro de México).
+Si el servidor pide un código de autorización, tendrás que ingresarlo antes de que se aplique.
+
+Reenviar la misma transferencia
+Volver sin reenviar

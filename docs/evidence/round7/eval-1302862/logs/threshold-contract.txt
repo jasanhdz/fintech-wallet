@@ -1,0 +1,16 @@
+## REQ-XFER-11 / design / backend / UI / openapi mentions of the OTP threshold comparison
+47:- **REQ-XFER-11 (obligatorio, API).** Given transferencia de monto superior al umbral pendiente de aprobación, when se confirma, then exige código de un solo uso (simulable) ligado al intento concreto, con expiración/uso único definidos antes de implementar.
+17:| OTP sobre 5,000 MXN | Política configurable, valor ilustrativo pendiente | Umbral demo desde env (`5,000 MXN` como ejemplo, no exigencia aprobada); OTP simulado y ligado a un intento, sin proveedor externo ni logging del código |
+51:    const requiresOtp=amount>=threshold;
+52:    if(!requiresOtp){await runner.query('INSERT INTO daily_limit_usage(owner_id,business_date,outgoing_minor) VALUES($1,$2,0) ON CONFLICT DO NOTHING',[userId,day]);await runner.query('SELECT 1 FROM
+53:    const status=requiresOtp?'awaiting_confirmation':'completed';await runner.query('INSERT INTO transfers(id,owner_id,source_account_id,destination_account_id,beneficiary_id,amount_minor,concept,r
+55:     if(requiresOtp){demoCode=String(randomInt(0,1000000)).padStart(6,'0');await runner.query('INSERT INTO otp_challenges(transfer_id,code_hash,demo_code_ciphertext,expires_at,max_attempts) VALUES(
+60:     await runner.query("INSERT INTO idempotency_records(user_id,operation,key_hash,payload_hash,transfer_id,response_status,response_snapshot,expires_at) VALUES($1,'create-transfer',$2,$3,$4,$5,$6
+61:    await runner.commitTransaction();return {status:requiresOtp?202:201,body:response};
+608:      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly]
+616:        otpThresholdMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Se exige OTP cuando amountMinor >= otpThresholdMinor. }
+982:        {requiresOtp && thresholdLabel ? <View style={styles.thresholdPill}><Ionicons name="shield-checkmark-outline" size={14} color={colors.primary}/><Tex
+1026:        <View style={styles.otpContextNote}><Ionicons name="information-circle-outline" size={16} color={colors.placeholder}/><Text style={[styles.estimate
+specs/requirements.md:47:- **REQ-XFER-11 (obligatorio, API).** Given transferencia de monto superior al umbral pendiente de aprobación, when se confirma, then exige código de un solo uso (simulable) ligado al intento con
+docs/round7-notes.md:11:| `specs/requirements.md` REQ-XFER-11 | "monto **superior** al umbral" | `amount > threshold` |
+docs/round7-notes.md:13:| `api/src/transfers/service.ts` | `const requiresOtp=amount>=threshold;` | `amount >= threshold` |

@@ -1,0 +1,19 @@
+
+Transferir
+EC
+
+Operación cancelada
+Cancelaste este intento antes de autorizarlo.
+
+No se movió dinero
+Un intento cancelado no genera cargo ni abono.
+Destinatario
+Cuenta de ahorro demo
+Monto
+$6,000.00 MXN
+Referencia
+7501
+Estado actual
+Cancelada
+
+Volver al inicio

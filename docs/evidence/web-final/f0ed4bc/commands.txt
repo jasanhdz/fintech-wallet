@@ -1,0 +1,8 @@
+# WF-T0 · traza dorada sobre el código Web de f0ed4bc (desde la raíz del worktree)
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH
+node -v                                                   # v26.13.1
+df -h /System/Volumes/Data && docker system df            # antes de crear el volumen (ver ../<sha>/env-summary.txt)
+node web/e2e-final/scripts/make-env.mjs
+node web/e2e-final/scripts/db-up.mjs --evidence <scratch>/db-up.txt
+git diff --stat f0ed4bc -- web/src web/index.html          # vacío
+WF_GOLDEN_RECORD=1 WF_EVIDENCE_SHA=f0ed4bc WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final golden.spec.ts

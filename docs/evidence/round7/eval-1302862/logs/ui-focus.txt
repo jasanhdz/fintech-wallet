@@ -1,0 +1,9 @@
+M06 amount: mouse tap focuses input: false
+  typed "12" -> ""
+M08 hidden input box {"y":492,"h":52} | element at tap point: INPUT aria-label=Código de confirmación pe=auto
+M08 mouse tap on boxes area: input focused: false
+  typed "123456" -> 0 digits
+  after programmatic focus(), typed "123456" -> 6 digits | Autorizar enabled true
+  Backspace -> 5
+  Backspace -> 4
+  insertText "12 34-56" -> 4 digits (6 expected)

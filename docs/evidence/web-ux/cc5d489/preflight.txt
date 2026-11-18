@@ -1,0 +1,9 @@
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS

@@ -1,0 +1,5 @@
+record before expiry: 1
+after expiry + foreground: login form true | record kept true | byte-identical true
+PASS session expiry keeps the user record
+A signs in again: receipt true | DB completed:30025 | record entries 0
+PASS resumed, 1 transfer

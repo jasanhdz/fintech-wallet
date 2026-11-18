@@ -1,0 +1,4 @@
+# node v26.13.1 npm 11.20.0 code c01c45b78978361fb4509ffb7600d5e3356d9ab8
+utc 2026-11-17T07:33:31Z
+Darwin arm64
+postgres (PostgreSQL) 16.10

@@ -1,0 +1,11 @@
+== (1) same tick, no offset, 50 iterations send vs void (random launch order)
+PASS same-tick 50: all consistent 
+distribution exec/voided {"a":0,"b":50}
+== (2) send vs void: gate row held FOR UPDATE by an external txn; both requests queue in PostgreSQL; 50 iterations
+PASS send vs void: 50 iterations consistent 
+distribution executed/vetoed {"ex":18,"vo":32,"bothQueued":50,"of":50}
+PASS send vs void: both outcomes occurred under queued overlap 
+== (2b) send vs void-all with gate held, 50 iterations
+PASS send vs void-all queued: consistent; both outcomes 
+PASS ledger sum 0 
+SUMMARY pass=5 fail=0

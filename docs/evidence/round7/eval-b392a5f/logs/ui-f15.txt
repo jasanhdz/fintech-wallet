@@ -1,0 +1,12 @@
+M07 normal (Carlos Ruiz, 850.00) @390x844: primary / Modificar = 720-768 / 776-820 ; after scrolling to the end = 720-768 / 776-820
+M07 normal (Carlos Ruiz, 850.00) @390x884: primary / Modificar = 753-801 / 809-853 ; after scrolling to the end = 753-801 / 809-853
+M07 normal (Carlos Ruiz, 850.00) @390x763: primary / Modificar = 639-687 / 695-739 ; after scrolling to the end = 639-687 / 695-739
+M07 propias (Ahorro, 850.00) @390x844: primary / Modificar = 722-770 / 778-822 ; after scrolling to the end = 720-768 / 776-820
+M07 propias (Ahorro, 850.00) @390x884: primary / Modificar = 762-810 / 818-862 ; after scrolling to the end = 760-808 / 816-860
+M07 propias (Ahorro, 850.00) @390x763: primary / Modificar = 641-689 / 697-741 ; after scrolling to the end = 639-687 / 695-739
+M07 umbral (Ahorro, 6000.00) @390x844: primary / Modificar = 720-768 / 776-820 ; after scrolling to the end = 720-768 / 776-820
+SHOT M07-umbral-844-real-names minFont=12 scrollW=390 offscreen=0 errs=0
+M07 umbral (Ahorro, 6000.00) @390x884: primary / Modificar = 760-808 / 816-860 ; after scrolling to the end = 760-808 / 816-860
+M07 umbral (Ahorro, 6000.00) @390x763: primary / Modificar = 639-687 / 695-739 ; after scrolling to the end = 639-687 / 695-739
+M06 keyboard approx (viewport 563, amount focused): Continuar 499-547 (inside: true)
+SHOT M06-teclado-aprox minFont=12 scrollW=390 offscreen=0 errs=0

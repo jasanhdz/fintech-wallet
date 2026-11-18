@@ -1,0 +1,35 @@
+
+Transferir
+AL
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$300.25
+MXN
+
+CUENTA DE ORIGEN
+Cuenta principal •• 8609
+Saldo disponible: $9,699.75 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Cuenta de ahorro demo (Ahorro demo) •• 6366
+Billetera MXN
+Concepto
+Prueba doble
+Referencia numérica
+4401
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$9,399.50 MXN
+Cálculo:
+$9,699.75 - $300.25 = $9,399.50 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+Confirmar transferencia
+
+Modificar datos

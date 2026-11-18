@@ -1,0 +1,32 @@
+index-15dfebb8b5cac87cdd8db5de63e6c387.js
+  OK  retired    0  No la envíes de nuevo
+  OK  retired    0  No intentes enviar el dinero nuevamente
+  OK  retired    0  Podrás hacer otra transferencia cuando conozcamos su resultado
+  OK  retired    0  Verificar de nuevo
+  OK  required   1  Podrás hacer otra transferencia cuando esta quede resuelta.
+  OK  required   2  No hagas otra transferencia igual
+  OK  required   1  Transferencia anulada. No se realizó ningún cargo por esta operación.
+  OK  required   1  Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.
+  OK  required   1  también se detienen las transferencias aún no aplicadas enviadas desde otros dispositivos y se cancelan las pendientes de código
+  OK  required  10  Anular esta transferencia
+  OK  required   6  Resolver con el servidor
+  OK  required   2  Anular pendientes y desbloquear
+  OK  required   1  Transfer-Attempt-Id
+  OK  required   1  Transfer-Send-Epoch
+  OK  required   1  /transfer-attempts/void-all
+entry-6cdf3e3ec374f85d82174cb17c229397.hbc
+  OK  retired    0  No la envíes de nuevo
+  OK  retired    0  No intentes enviar el dinero nuevamente
+  OK  retired    0  Podrás hacer otra transferencia cuando conozcamos su resultado
+  OK  retired    0  Verificar de nuevo
+  OK  required   1  Podrás hacer otra transferencia cuando esta quede resuelta.
+  OK  required   2  No hagas otra transferencia igual
+  OK  required   1  Transferencia anulada. No se realizó ningún cargo por esta operación.
+  OK  required   1  Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.
+  OK  required   1  también se detienen las transferencias aún no aplicadas enviadas desde otros dispositivos y se cancelan las pendientes de código
+  OK  required   6  Anular esta transferencia
+  OK  required   4  Resolver con el servidor
+  OK  required   2  Anular pendientes y desbloquear
+  OK  required   1  Transfer-Attempt-Id
+  OK  required   1  Transfer-Send-Epoch
+  OK  required   1  /transfer-attempts/void-all

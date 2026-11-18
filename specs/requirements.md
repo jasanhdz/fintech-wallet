@@ -1,6 +1,6 @@
 # Requisitos derivados de la prueba técnica
 
-**Fuente normativa:** [`../docs/challenge.md`](../docs/challenge.md), copia del enunciado original suministrado. Las etiquetas **obligatorio**, **bonus** y **BOOT-00** distinguen el requisito de producto de la fase autorizada actual. Todos los requisitos de producto quedan pendientes; BOOT-00 no los implementa.
+**Fuente normativa:** [`../docs/challenge.md`](../docs/challenge.md), copia del enunciado original suministrado. Las etiquetas **obligatorio**, **bonus** y **BOOT-00** distinguen el requisito de producto del scaffold inicial. El usuario autorizó el producto obligatorio tras aprobar las referencias visuales Stitch; los bonus siguen fuera del alcance actual.
 
 ## Alcance por cliente
 
@@ -8,7 +8,8 @@
 - **Web:** login, resumen de cuentas, historial, alta de beneficiarios y transferencia con confirmación/comprobante; estados de carga/vacío/error, validación, accesibilidad y bloqueo/idempotencia del envío.
 - **Móvil (alcance reducido):** login, saldo, últimos 20 movimientos y transferencia a beneficiario existente; almacenamiento seguro de tokens, reintento idempotente ante red inestable y ocultamiento sensible en background.
 - **Bonus:** exportar estado mensual CSV/PDF o transferencias futuras; biometría móvil. Ninguno es obligatorio.
-- **BOOT-00:** solo estructura reproducible y scaffold técnico; ninguna funcionalidad anterior se considera entregada.
+- **BOOT-00:** commit histórico que solo entregó estructura reproducible y scaffold técnico; no se considera que aquellas pruebas cubran funcionalidades financieras.
+- **Estado actual:** los criterios funcionales REQ-* están autorizados para implementación; verificar extremo a extremo con servicios reales y PostgreSQL, sin aceptar mocks como entrega integrada.
 
 ## Criterios obligatorios Given/When/Then
 
@@ -44,6 +45,7 @@
 - **REQ-XFER-09 (obligatorio, móvil).** Given solicitud de transferencia enviada y respuesta perdida por desconexión, when la app reintenta, then reutiliza la misma llave idempotente y consulta/muestra el estado real, sin duplicar la transferencia.
 - **REQ-XFER-10 (obligatorio, API).** Given la misma llave de idempotencia y mismo principal/operación, when se repite con mismo payload, then se devuelve el resultado original; si el payload difiere, se rechaza de forma definida. La llave queda única en persistencia.
 - **REQ-XFER-11 (obligatorio, API).** Given transferencia de monto superior al umbral pendiente de aprobación, when se confirma, then exige código de un solo uso (simulable) ligado al intento concreto, con expiración/uso único definidos antes de implementar.
+- **REQ-XFER-12 (obligatorio, API/móvil; ronda 8, cierre de F-26).** Given un intento de transferencia propio cuyo resultado el cliente desconoce (respuesta perdida, registro local antiguo, dañado, ilegible o ausente, u otro dispositivo de la misma persona), when el usuario autenticado lo consulta o lo anula explícitamente, then el servidor lo lleva a un resultado terminal autoritativo sin duplicar cargos: `GET /transfer-attempts` lista lo recibido (incluida la identidad `Transfer-Attempt-Id` elegida por el cliente) y los cierres `rejected`/`voided`; `POST /transfer-attempts/void` devuelve el resultado ya ejecutado o veta para siempre esa identidad/llave; `POST /transfer-attempts/void-all` avanza la época de envío del usuario, veta todo envío con cabeceras de una época anterior que no haya llegado y cierra los pendientes de código. Un resultado ejecutado nunca se oculta; los rechazos 404/422/429 de envíos con cabeceras son terminales para su identidad; los envíos de una misma llave se serializan. La web conserva su comportamiento sin cabeceras. El registro local móvil sólo se libera tras un resultado terminal y su borrado verificado. Contrato: OpenAPI 0.4.0; diseño en `docs/round8-api-notes.md`.
 
 ### Límites diarios e historial (REQ-LIMIT / REQ-HIST)
 

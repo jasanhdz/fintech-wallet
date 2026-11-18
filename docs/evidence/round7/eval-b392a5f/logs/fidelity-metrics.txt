@@ -1,0 +1,6 @@
+F-M02 vs m02_inicio_y_cuentas: mean diff 25.64/255 (heights at 360 px wide: ref 858, mine 858)
+F-M02-aviso vs m02_inicio_y_cuentas: mean diff 27.77/255 (heights at 360 px wide: ref 858, mine 858)
+F-M02-pendiente-codigo vs m02_inicio_y_cuentas: mean diff 26.70/255 (heights at 360 px wide: ref 858, mine 858)
+F-M07-umbral vs m07_revisar_transferencia_6_000_mxn_verificaci_n: mean diff 22.65/255 (heights at 360 px wide: ref 860, mine 859)
+F-M08-vigente vs m08_c_digo_de_confirmaci_n_c_digo_vigente: mean diff 24.77/255 (heights at 360 px wide: ref 816, mine 816)
+F-M08-incorrecto vs m08_c_digo_de_confirmaci_n_1: mean diff 28.28/255 (heights at 360 px wide: ref 816, mine 816)

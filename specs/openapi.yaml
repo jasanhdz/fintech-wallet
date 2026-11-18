@@ -1,34 +1,65 @@
 openapi: 3.1.0
 info:
-  title: Fintech Wallet API (design draft)
-  version: 0.1.0-draft
-  summary: Propuesta inicial de contrato; no describe endpoints de producto implementados.
+  title: Fintech Wallet API
+  version: 0.4.0
+  summary: Contrato de implementación del producto obligatorio de la prueba.
   description: >-
-    Borrador derivado de docs/challenge.md y sujeto a design review. Ninguna ruta
-    de producto está autorizada para implementación durante BOOT-00. Seguridad,
-    límites, campos y políticas marcados como propuestos requieren aprobación.
+    Contrato aprobado para el alcance de docs/challenge.md y specs/requirements.md.
+    Implementación por fases; las respuestas se implementan de forma progresiva.
+    No cubre SPEI real, bancos externos, inversiones, biometría ni bonus opcionales.
+    0.3.0 (ronda 6, aditivo): Beneficiary.ownAccountId, GET /transfer-policy,
+    POST /transfers/{transferId}/cancel, Transfer.expiresAt, estados terminales
+    expired/cancelled, Movement.counterparty y formato de fecha fijo
+    (YYYY-MM-DDTHH:mm:ss.sssZ, UTC). Ver docs/round6-contract-notes.md.
+    0.4.0 (ronda 8, aditivo): recuperación autoritativa de intentos de transferencia
+    (GET /transfer-attempts, POST /transfer-attempts/void, POST /transfer-attempts/void-all),
+    cabeceras opcionales Transfer-Attempt-Id y Transfer-Send-Epoch en POST /transfers,
+    TransferPolicy.sendEpoch y tipos de problema urn:billetera:problem:transfer-attempt-*.
+    Las peticiones sin las cabeceras nuevas conservan su comportamiento. Ver
+    docs/round8-api-notes.md.
 servers:
-  - url: http://localhost:3000
-    description: Desarrollo local; solo endpoints de scaffold BOOT-00 están previstos en código.
+  - url: http://localhost:3000/v1
+    description: Desarrollo local
 tags:
   - name: Auth
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Registro, inicio/cierre de sesión y rotación segura de credenciales.
   - name: Accounts
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Cuentas MXN propias y saldos disponibles.
   - name: Beneficiaries
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Beneficiarios de cuentas internas registradas por el usuario.
   - name: Transfers
-    description: Propuesto, pendiente de diseño y autorización.
-  - name: Activity
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Intentos idempotentes entre cuentas internas, confirmación OTP y comprobantes.
+  - name: Movements
+    description: Historial de la cuenta propia paginado con cursor.
 paths:
-  /v1/auth/register:
+  /auth/csrf:
+    get:
+      tags: [Auth]
+      operationId: getCsrfToken
+      summary: Obtener token CSRF para sesión web
+      security: []
+      responses:
+        '200':
+          description: Token para enviar en X-CSRF-Token; API también coloca cookie no HttpOnly de comprobación.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [csrfToken]
+                properties:
+                  csrfToken: { type: string }
+  /auth/register:
     post:
       tags: [Auth]
-      operationId: registerUser
-      summary: "[PENDIENTE] Registrar usuario"
-      description: No implementado. Campos/política de identidad requieren aprobación.
+      operationId: register
+      summary: Registrar usuario desde web y abrir cuenta MXN
+      description: >-
+        Crea una cuenta MXN al registrar. En desarrollo local puede crear el fixture
+        configurado de dos cuentas propias con contra-asientos de apertura; nunca
+        reutiliza esas cantidades como saldo o política de producción.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -36,19 +67,25 @@ paths:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
         '201':
-          description: Cuenta creada (propuesto).
+          description: Usuario y cuenta MXN creados; refresh web por cookie HttpOnly.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Cookie rotativa HttpOnly para cliente web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
         '400': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
-  /v1/auth/login:
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/login:
     post:
       tags: [Auth]
       operationId: login
-      summary: "[PENDIENTE] Iniciar sesión"
-      description: Access JWT corto y refresh rotativo son requisitos del reto; transporte web y duraciones pendientes.
+      summary: Iniciar sesión web o móvil
+      description: Access JWT de corta vida permanece en memoria web; móvil recibe refresh token para SecureStore. No guardar credenciales/tokens en web localStorage ni mobile AsyncStorage.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -56,41 +93,82 @@ paths:
             schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
         '200':
-          description: Sesión creada (propuesto).
+          description: Sesión creada; web usa Set-Cookie, móvil indica client=mobile y guarda refresh en SecureStore.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Solo cliente web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
-        '400': { $ref: '#/components/responses/Problem' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
         '401': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
-  /v1/auth/refresh:
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/refresh:
     post:
       tags: [Auth]
       operationId: refreshSession
-      summary: "[PENDIENTE] Rotar refresh token"
-      description: No implementado; rotación/reutilización revocada propuestas, detalles pendientes.
+      summary: Rotar refresh y renovar access token
+      description: Web envía cookie HttpOnly y CSRF; móvil envía refresh token almacenado en SecureStore. Una rotación invalida el token previo y detecta reutilización.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RefreshRequest' }
+            schema: { $ref: '#/components/schemas/MobileRefreshRequest' }
       responses:
         '200':
-          description: Credenciales rotadas (propuesto).
+          description: Refresh rotado y access renovado.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Cookie rotativa solo para web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '204':
+          description: Cliente web sin cookie de refresh; no hay sesión que restaurar. Cliente móvil sin token no usa este resultado.
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/accounts:
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Revocar sesión actual
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MobileRefreshRequest' }
+      responses:
+        '204': { description: Sesión revocada y cookie web expirada. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /auth/me:
     get:
-      tags: [Accounts]
-      operationId: listAccounts
-      summary: "[PENDIENTE] Listar cuentas propias"
+      tags: [Auth]
+      operationId: getCurrentUser
+      summary: Obtener identidad de sesión actual
       security: [{ bearerAuth: [] }]
       responses:
         '200':
-          description: Cuentas propias (propuesto).
+          description: Usuario autenticado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Listar cuentas propias y saldo disponible
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Solo cuentas del usuario autenticado.
           content:
             application/json:
               schema:
@@ -101,15 +179,33 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Account' }
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/beneficiaries:
+        '503': { $ref: '#/components/responses/Problem' }
+  /accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Consultar una cuenta propia
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Cuenta del usuario actual.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /beneficiaries:
     get:
       tags: [Beneficiaries]
       operationId: listBeneficiaries
-      summary: "[PENDIENTE] Listar beneficiarios propios"
+      summary: Listar beneficiarios registrados por el usuario
       security: [{ bearerAuth: [] }]
       responses:
         '200':
-          description: Beneficiarios propios (propuesto).
+          description: Solo beneficiarios propios, con CLABE enmascarada.
           content:
             application/json:
               schema:
@@ -123,7 +219,8 @@ paths:
     post:
       tags: [Beneficiaries]
       operationId: createBeneficiary
-      summary: "[PENDIENTE] Registrar beneficiario"
+      summary: Registrar beneficiario interno por CLABE
+      description: CLABE de 18 dígitos, checksum válido y destino existente en la misma plataforma. No se conecta a SPEI ni bancos externos.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -132,47 +229,283 @@ paths:
             schema: { $ref: '#/components/schemas/BeneficiaryInput' }
       responses:
         '201':
-          description: Beneficiario creado (propuesto).
+          description: Beneficiario interno guardado.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Beneficiary' }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/transfers:
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /beneficiaries/{beneficiaryId}:
+    get:
+      tags: [Beneficiaries]
+      operationId: getBeneficiary
+      summary: Consultar beneficiario propio
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: beneficiaryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Beneficiario propio; CLABE enmascarada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Beneficiary' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfers:
     post:
       tags: [Transfers]
       operationId: createTransfer
-      summary: "[PENDIENTE] Crear transferencia"
+      summary: Crear intento de transferencia interna
       description: >-
-        Requiere Idempotency-Key único por intento. La serialización amountMinor
-        evita precisión JSON insegura; moneda, límites y máximo siguen pendientes.
+        Idempotency-Key identifica la operación create-transfer (unique por usuario
+        y operación). Si requiere OTP se crea estado awaiting_confirmation sin
+        debitar; la confirmación se liga a transferId. Repetir igual key+payload
+        devuelve el mismo intento; key con payload distinto produce 409.
+        Si el intento original quedó awaiting_confirmation, la repetición informa
+        su estado actual: 202 mientras siga pendiente, 200 si ya es completed,
+        expired o cancelled (demoOnlyCode solo mientras siga pendiente).
+        Ronda 8 (aditivo): Transfer-Attempt-Id y Transfer-Send-Epoch son opcionales pero
+        van juntas (sólo una → 400). Con ellas la identidad del intento queda persistida
+        (TransferAttemptSummary.attemptId); un intento anulado o de una época vieja responde
+        409 con type urn:billetera:problem:transfer-attempt-voided (terminal, sin cargo);
+        un rechazo de negocio 404/422/429 queda cerrado para esa identidad y responde el
+        mismo status con type urn:billetera:problem:transfer-attempt-rejected (terminal,
+        sin cargo; repetirlo devuelve el mismo rechazo); una identidad ligada a otra llave
+        responde 409 urn:billetera:problem:transfer-attempt-conflict. Una época mayor que
+        la vigente o cabeceras malformadas → 400. Un envío ya ejecutado nunca se oculta:
+        la repetición con su llave devuelve su resultado cualquiera que sea la época, y una
+        llave anulada se rechaza (409 transfer-attempt-voided) también sin cabeceras. Los
+        envíos de la misma llave se serializan: el segundo siempre ve el resultado del primero.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TransferAttemptId'
+        - $ref: '#/components/parameters/TransferSendEpoch'
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/TransferRequest' }
+            schema: { $ref: '#/components/schemas/TransferCreateRequest' }
       responses:
         '201':
-          description: Transferencia creada (propuesto).
+          description: Transferencia inmediata completada en transacción.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '200':
+          description: Repetición idempotente de un intento OTP que ya alcanzó estado completed, expired o cancelled.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '202':
+          description: Requiere OTP simulado; no se ha debitado ni acreditado.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Transfer' }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}:
     get:
-      tags: [Activity]
-      operationId: listTransfers
-      summary: "[PENDIENTE] Consultar historial con cursor"
-      description: Cursor keyset opaco; filtros de fecha/tipo y orden estable pendientes de decisión.
+      tags: [Transfers]
+      operationId: getTransfer
+      summary: Consultar estado/comprobante del intento propio
       security: [{ bearerAuth: [] }]
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Estado actual del mismo intento; sólo actor/propietario autorizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}/cancel:
+    post:
+      tags: [Transfers]
+      operationId: cancelTransfer
+      summary: Cancelar un intento propio pendiente de OTP
+      description: >-
+        Cierra un intento awaiting_confirmation como cancelled (o expired si su código
+        ya venció) sin mover dinero ni borrar filas; queda auditado. Es idempotente por
+        estado: repetirlo sobre un intento cancelled/expired devuelve 200 con ese estado
+        y no requiere Idempotency-Key. Un intento completed no se puede cancelar (409).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Intento en estado terminal cancelled o expired.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-policy:
+    get:
+      tags: [Transfers]
+      operationId: getTransferPolicy
+      summary: Controles de transferencia configurados en el servidor
+      description: >-
+        Límite diario, consumo del día de negocio del usuario autenticado, umbral y
+        vigencia del OTP tal como están configurados en este servidor. Fuera de
+        producción son valores de ejemplo demo (demoOnly=true), no política aprobada.
+        El cliente no debe fijar estas cifras en código.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Configuración vigente y consumo diario.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransferPolicy' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}/confirm:
+    post:
+      tags: [Transfers]
+      operationId: confirmTransfer
+      summary: Confirmar intento con OTP simulado
+      description: >-
+        El challenge pertenece a un único transferId y expira según configuración;
+        no genera SPEI/banco externo. Cada envío de código OTP usa una key de
+        confirm-transfer; ante pérdida de respuesta se reintenta misma key+payload,
+        y un nuevo código usa una nueva key.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferConfirmRequest' }
+      responses:
+        '200':
+          description: Resultado del intento confirmado; repetición idempotente devuelve el mismo resultado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts:
+    get:
+      tags: [Transfers]
+      operationId: listTransferAttempts
+      summary: Listado autoritativo de intentos de transferencia propios
+      description: >-
+        Une las transferencias del usuario autenticado (con o sin attemptId) y los cierres
+        de intentos que nunca crearon transferencia (rejected, voided). Antes de leer se
+        cierran como expired los intentos cuyo OTP ya venció. Orden total createdAt DESC,
+        luego transferencias antes que cierres, luego id DESC; cursor keyset opaco (sin
+        OFFSET). Nunca incluye CLABE completa, demoOnlyCode, código OTP, llave de
+        idempotencia, su hash ni requestId. Un attemptId de otro usuario se comporta como
+        inexistente (items vacíos).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 'Lista separada por comas de awaiting_confirmation, completed, expired, cancelled, rejected, voided. Por defecto todos.'
+          schema: { type: string, pattern: '^(awaiting_confirmation|completed|expired|cancelled|rejected|voided)(,(awaiting_confirmation|completed|expired|cancelled|rejected|voided))*$' }
+        - { name: from, in: query, required: false, description: 'Incluye intentos con createdAt >= from.', schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: false, description: 'Incluye intentos con createdAt <= to; from <= to.', schema: { type: string, format: date-time } }
+        - { name: attemptId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Página de intentos propios y época de envío vigente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransferAttemptPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts/void:
+    post:
+      tags: [Transfers]
+      operationId: voidTransferAttempt
+      summary: Anular un intento de transferencia por su identidad
+      description: >-
+        Espera a los envíos en curso del usuario y resuelve el intento identificado por su
+        llave de idempotencia (y attemptId opcional) a un resultado terminal: transfer_found
+        si el servidor ya lo había recibido (se devuelve su estado; si estaba
+        awaiting_confirmation se cierra cancelled, o expired si su código ya venció; un
+        cargo aplicado nunca se revierte), rejected si ya estaba rechazado, o voided si nunca
+        se recibió (desde ese momento jamás podrá ejecutarse, aunque llegue después). Es
+        idempotente por estado: repetirlo devuelve la misma resolución, por eso no usa
+        Idempotency-Key de cabecera. Una llave desconocida no es 404. Llave y attemptId
+        ligados a intentos distintos → 409 transfer-attempt-conflict.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VoidAttemptRequest' }
+      responses:
+        '200':
+          description: Resolución terminal del intento.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VoidAttemptResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/TransferAttemptProblem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts/void-all:
+    post:
+      tags: [Transfers]
+      operationId: voidAllTransferAttempts
+      summary: Anular todo lo no terminal del usuario (identidad desconocida)
+      description: >-
+        Espera a los envíos en curso del usuario. Si fromEpoch es la época vigente, la
+        avanza en uno: todo envío con cabeceras de una época anterior que aún no haya
+        llegado queda vetado (409 transfer-attempt-voided), y todo intento
+        awaiting_confirmation del usuario (de cualquier cliente, también web) se cierra
+        cancelled o expired. Lo ya ejecutado no cambia y aparece en el listado. Repetir con
+        el mismo fromEpoch es un no-op (advanced=false). fromEpoch mayor que la vigente → 400.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VoidAllRequest' }
+      responses:
+        '200':
+          description: Época resultante y pendientes cerrados por esta llamada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VoidAllResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /accounts/{accountId}/movements:
+    get:
+      tags: [Movements]
+      operationId: listMovements
+      summary: Historial propio paginado por cursor
+      description: Cursor keyset estable; no usar OFFSET. Los últimos 20 son el tamaño por defecto en móvil.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: from, in: query, required: false, schema: { type: string, format: date-time } }
         - { name: to, in: query, required: false, schema: { type: string, format: date-time } }
         - { name: type, in: query, required: false, schema: { type: string, enum: [debit, credit] } }
@@ -180,88 +513,122 @@ paths:
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
       responses:
         '200':
-          description: Página de historial propia (propuesto).
+          description: Movimientos de la cuenta propia.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TransferPage' }
+              schema: { $ref: '#/components/schemas/MovementPage' }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
-  /v1/transfers/{transferId}:
-    get:
-      tags: [Transfers]
-      operationId: getTransfer
-      summary: "[PENDIENTE] Consultar resultado por ID"
-      description: Necesario para estado incierto/reintento móvil; ownership y política de visibilidad pendientes.
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
-      responses:
-        '200':
-          description: Resultado (propuesto).
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Transfer' }
-        '401': { $ref: '#/components/responses/Problem' }
-        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Propuesto para API; estrategia segura web pendiente.
+      description: Access JWT breve en memoria web y móvil. Refresh no se persiste en web JavaScript.
   parameters:
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf.
+      schema: { type: string }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
       required: true
-      description: Clave aleatoria por intento; reutilizarla solo para retries exactos.
+      description: Aleatoria por operación; se reutiliza en retries exactos del mismo intento.
       schema:
         type: string
         minLength: 16
         maxLength: 128
+    TransferAttemptId:
+      name: Transfer-Attempt-Id
+      in: header
+      required: false
+      description: >-
+        Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional,
+        pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y
+        aparece en GET /transfer-attempts.
+      schema: { type: string, format: uuid }
+    TransferSendEpoch:
+      name: Transfer-Send-Epoch
+      in: header
+      required: false
+      description: >-
+        Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional,
+        pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409
+        transfer-attempt-voided; mayor → 400.
+      schema: { $ref: '#/components/schemas/SendEpoch' }
   responses:
     Problem:
-      description: Error compatible RFC 7807/9457.
+      description: RFC 7807 `application/problem+json` con requestId; no filtra detalles internos.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+    TransferAttemptProblem:
+      description: RFC 7807 `application/problem+json` con requestId y type de TransferAttemptProblemType.
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Problem'
+              - type: object
+                properties:
+                  type: { $ref: '#/components/schemas/TransferAttemptProblemType' }
   schemas:
     RegisterRequest:
       type: object
       additionalProperties: false
-      required: [email, password]
+      required: [email, password, fullName]
       properties:
-        email: { type: string, format: email }
-        password: { type: string, format: password, minLength: 12, writeOnly: true, description: Requisito propuesto, longitud final pendiente. }
+        fullName: { type: string, minLength: 1, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, format: password, minLength: 12, writeOnly: true }
     LoginRequest:
       type: object
       additionalProperties: false
-      required: [email, password]
+      required: [email, password, client]
       properties:
         email: { type: string, format: email }
         password: { type: string, format: password, writeOnly: true }
-    RefreshRequest:
+        client: { type: string, enum: [web, mobile] }
+    MobileRefreshRequest:
       type: object
       additionalProperties: false
-      required: [refreshToken]
       properties:
-        refreshToken: { type: string, writeOnly: true }
-    SessionResponse:
+        refreshToken: { type: string, writeOnly: true, description: Required for mobile; web sends HttpOnly cookie. }
+        client: { type: string, enum: [web, mobile] }
+    AuthResponse:
       type: object
-      required: [accessToken, tokenType, expiresIn]
+      required: [accessToken, tokenType, expiresIn, user]
       properties:
-        accessToken: { type: string, description: JWT corto propuesto; transporte web pendiente. }
-        refreshToken: { type: string, writeOnly: true, description: En móvil solo almacenamiento seguro; en web evaluar cookie HttpOnly. }
+        accessToken: { type: string, description: Short-lived JWT held in memory on web. }
+        refreshToken: { type: string, writeOnly: true, description: Returned only for mobile and stored in SecureStore; web uses HttpOnly cookie. }
         tokenType: { type: string, const: Bearer }
-        expiresIn: { type: integer, minimum: 1, description: Segundos, valor pendiente. }
-    Account:
+        expiresIn: { type: integer, minimum: 1 }
+        user: { $ref: '#/components/schemas/User' }
+    User:
       type: object
-      required: [id, currency, availableBalanceMinor]
+      required: [id, fullName, email]
       properties:
         id: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+    Account:
+      type: object
+      required: [id, name, kind, currency, availableBalanceMinor, clabe, clabeMasked]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        kind: { type: string, enum: [checking, savings] }
         currency: { type: string, const: MXN }
-        availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: Centavos como entero serializado; rango pendiente. }
+        availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        clabe: { type: string, pattern: '^[0-9]{18}$', readOnly: true, description: CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. }
+        clabeMasked: { type: string }
+        dailyLimitMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', deprecated: true, description: 'No se devuelve; el límite es por usuario, no por cuenta. Usar GET /transfer-policy.' }
+        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', deprecated: true, description: No se devuelve; usar GET /transfer-policy. }
     BeneficiaryInput:
       type: object
       additionalProperties: false
@@ -269,52 +636,263 @@ components:
       properties:
         name: { type: string, minLength: 1, maxLength: 120 }
         alias: { type: string, minLength: 1, maxLength: 80 }
-        clabe: { type: string, pattern: '^[0-9]{18}$', description: Dígito verificador CLABE requerido por el reto. }
+        clabe: { type: string, pattern: '^[0-9]{18}$', writeOnly: true, description: Checksum válido y vinculado a cuenta interna de Billetera MXN. }
     Beneficiary:
-      allOf:
-        - { $ref: '#/components/schemas/BeneficiaryInput' }
-        - type: object
-          required: [id]
-          properties:
-            id: { type: string, format: uuid }
-            clabe: { type: string, writeOnly: true, description: Valor completo no se devolvería; representación de salida pendiente. }
-            clabeMasked: { type: string, readOnly: true }
-    TransferRequest:
       type: object
-      additionalProperties: false
-      required: [sourceAccountId, amountMinor, concept, reference]
-      properties:
-        sourceAccountId: { type: string, format: uuid }
-        destinationAccountId: { type: string, format: uuid, description: Cuenta propia de destino; mutually exclusive with beneficiaryId pendiente. }
-        beneficiaryId: { type: string, format: uuid, description: Beneficiario propio; mutually exclusive with destinationAccountId pendiente. }
-        amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Centavos MXN serializados como string para evitar float; techo pendiente. }
-        concept: { type: string, maxLength: 140 }
-        reference: { type: string, pattern: '^[0-9]{1,7}$', description: Longitud exacta pendiente de aprobar. }
-        otp: { type: string, writeOnly: true, description: Necesario sobre umbral solo cuando política futura lo indique. }
-    Transfer:
-      type: object
-      required: [id, status, amountMinor, currency, createdAt]
+      required: [id, name, alias, clabeMasked, destinationAccountId]
       properties:
         id: { type: string, format: uuid }
-        status: { type: string, enum: [pending, completed, rejected], description: Estados propuestos; máquina de estados pendiente. }
+        name: { type: string }
+        alias: { type: string }
+        clabeMasked: { type: string }
+        destinationAccountId: { type: string, format: uuid, readOnly: true, description: 'Cuenta interna a la que resuelve la CLABE (identidad que usa el servidor para validar origen distinto de destino).' }
+        ownAccountId:
+          type: string
+          format: uuid
+          readOnly: true
+          description: >-
+            Presente solo cuando el beneficiario resuelve a una cuenta del mismo usuario
+            (igual a destinationAccountId); nunca aparece para cuentas de terceros. El
+            cliente lo compara con la cuenta origen para impedir origen = destino antes de
+            enviar; el servidor sigue rechazando con 422.
+        isFrequent: { type: boolean }
+    TransferCreateRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [sourceAccountId, destinationType, beneficiaryId, amountMinor, concept, reference]
+          properties:
+            sourceAccountId: { type: string, format: uuid }
+            destinationType: { type: string, const: beneficiary }
+            beneficiaryId: { type: string, format: uuid }
+            amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: MXN cents as decimal string. }
+            concept: { type: string, minLength: 1, maxLength: 40 }
+            reference: { type: string, pattern: '^[0-9]{1,7}$' }
+        - type: object
+          additionalProperties: false
+          required: [sourceAccountId, destinationType, destinationAccountId, amountMinor, concept, reference]
+          properties:
+            sourceAccountId: { type: string, format: uuid }
+            destinationType: { type: string, const: own_account }
+            destinationAccountId: { type: string, format: uuid }
+            amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: MXN cents as decimal string. }
+            concept: { type: string, minLength: 1, maxLength: 40 }
+            reference: { type: string, pattern: '^[0-9]{1,7}$' }
+    TransferConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: { type: string, pattern: '^[0-9]{6}$', writeOnly: true }
+    Transfer:
+      type: object
+      required: [id, status, sourceAccountId, destination, amountMinor, currency, concept, reference, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [awaiting_confirmation, processing, completed, rejected, expired, cancelled]
+          description: >-
+            awaiting_confirmation (sin asientos) pasa a completed (OTP correcto), expired
+            (venció el código) o cancelled (POST /cancel). completed, expired, cancelled y
+            rejected son terminales; expired/cancelled nunca tienen asientos.
+        sourceAccountId: { type: string, format: uuid }
+        destination:
+          oneOf:
+            - { $ref: '#/components/schemas/Beneficiary' }
+            - { $ref: '#/components/schemas/Account' }
         amountMinor: { type: string, pattern: '^[1-9][0-9]*$' }
         currency: { type: string, const: MXN }
-        createdAt: { type: string, format: date-time }
-        receiptReference: { type: string, readOnly: true }
-    TransferPage:
+        concept: { type: string }
+        reference: { type: string }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        completedAt:
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        expiresAt:
+          description: 'Vencimiento del código OTP de este intento (createdAt + OTP_EXPIRY_SECONDS); null si no requirió OTP. Pasado este instante el intento pasa a expired.'
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        receiptReference: { type: [string, 'null'] }
+        requestId: { type: string }
+        demoOnlyCode: { type: string, pattern: '^[0-9]{6}$', readOnly: true, description: Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. }
+    Movement:
+      type: object
+      required: [id, type, amountMinor, currency, concept, reference, status, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        transferId: { type: string, format: uuid }
+        type: { type: string, enum: [debit, credit] }
+        amountMinor: { type: string, pattern: '^[1-9][0-9]*$' }
+        currency: { type: string, const: MXN }
+        concept: { type: string }
+        reference: { type: string }
+        status: { type: string, enum: [processing, completed, rejected], description: 'Hoy solo se listan movimientos completed; intentos pendientes, expirados o cancelados no generan movimientos.' }
+        occurredAt: { $ref: '#/components/schemas/Timestamp' }
+        counterparty: { $ref: '#/components/schemas/MovementCounterparty' }
+    MovementCounterparty:
+      type: object
+      required: [name, clabeMasked]
+      description: >-
+        La otra parte vista por el dueño de la cuenta. Enviado (debit): el beneficiario tal
+        como lo registró el emisor, o la cuenta propia destino. Recibido (credit): la cuenta
+        propia origen, o el nombre del usuario emisor con su CLABE enmascarada.
+      properties:
+        name: { type: string }
+        clabeMasked: { type: string, description: 'Primeros 3 y últimos 4 dígitos; nunca la CLABE completa.' }
+        ownAccountId: { type: string, format: uuid, description: Solo cuando la otra parte es una cuenta del mismo usuario. }
+    TransferPolicy:
+      type: object
+      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly, sendEpoch]
+      properties:
+        currency: { type: string, const: MXN }
+        businessDate: { type: string, format: date, description: Día de negocio actual en businessTimeZone. }
+        businessTimeZone: { type: string, description: Zona IANA configurada para el día de negocio. }
+        dailyLimitMinor: { type: string, pattern: '^[1-9][0-9]*$' }
+        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: 'Salidas completadas del usuario en businessDate. Los intentos pendientes de OTP no reservan límite; se valida al confirmar.' }
+        dailyRemainingMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        otpThresholdMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Se exige OTP cuando amountMinor >= otpThresholdMinor. }
+        otpExpirySeconds: { type: integer, minimum: 1 }
+        otpMaxAttempts: { type: integer, minimum: 1 }
+        demoOnly: { type: boolean, description: 'true fuera de producción; las cifras son ejemplos demo, no política aprobada.' }
+        sendEpoch:
+          $ref: '#/components/schemas/SendEpoch'
+    Timestamp:
+      type: string
+      format: date-time
+      pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
+      description: 'Instante UTC en el formato de fecha-hora de ECMAScript (YYYY-MM-DDTHH:mm:ss.sssZ, siempre con milisegundos y Z); parseable con Date.parse en cualquier motor conforme.'
+      examples: ['2026-11-16T05:59:00.000Z']
+    MovementPage:
       type: object
       required: [items]
       properties:
-        items: { type: array, items: { $ref: '#/components/schemas/Transfer' } }
-        nextCursor: { type: [string, 'null'], description: Cursor opaco de keyset. }
+        items: { type: array, items: { $ref: '#/components/schemas/Movement' } }
+        nextCursor: { type: [string, 'null'] }
+    SendEpoch:
+      type: string
+      pattern: '^(0|[1-9][0-9]{0,18})$'
+      description: >-
+        Época de envío del usuario (entero no negativo monotónico como cadena decimal). Sólo
+        avanza con POST /transfer-attempts/void-all; los envíos con Transfer-Send-Epoch menor
+        quedan vetados.
+      examples: ['0']
+    TransferAttemptStatus:
+      type: string
+      enum: [awaiting_confirmation, completed, expired, cancelled, rejected, voided]
+      description: >-
+        awaiting_confirmation es el único no terminal. completed tiene asientos; expired,
+        cancelled, rejected y voided nunca tienen asientos. rejected y voided son cierres de
+        intentos que no crearon transferencia (transferId null).
+    TransferAttemptSummary:
+      type: object
+      required: [attemptId, transferId, status, amountMinor, currency, concept, reference, sourceAccountId, destination, createdAt, completedAt, closedAt, expiresAt, problem]
+      description: >-
+        Resumen de un intento propio. Nunca contiene CLABE completa, demoOnlyCode, código
+        OTP, llave de idempotencia, su hash ni requestId.
+      properties:
+        attemptId: { type: [string, 'null'], format: uuid, description: 'Transfer-Attempt-Id con que se envió; null si se envió sin cabeceras.' }
+        transferId: { type: [string, 'null'], format: uuid, description: 'Id de la transferencia (GET /transfers/{transferId}); null para rejected/voided.' }
+        status: { $ref: '#/components/schemas/TransferAttemptStatus' }
+        amountMinor: { type: [string, 'null'], pattern: '^[1-9][0-9]*$', description: 'Importe en centavos; null para voided (nunca se recibió el cuerpo).' }
+        currency: { type: string, const: MXN }
+        concept: { type: [string, 'null'] }
+        reference: { type: [string, 'null'] }
+        sourceAccountId: { type: [string, 'null'], format: uuid }
+        destination:
+          oneOf:
+            - $ref: '#/components/schemas/TransferAttemptDestination'
+            - { type: 'null' }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        completedAt:
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        closedAt:
+          description: 'Instante de cierre para expired, cancelled, rejected y voided; null en otro caso.'
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        expiresAt:
+          description: Vencimiento del OTP si el intento lo requirió; null en otro caso.
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        problem:
+          description: Rechazo de negocio registrado (sólo status rejected).
+          oneOf:
+            - $ref: '#/components/schemas/TransferAttemptProblem'
+            - { type: 'null' }
+    TransferAttemptDestination:
+      type: object
+      required: [name, clabeMasked]
+      properties:
+        name: { type: string }
+        clabeMasked: { type: string, description: 'Primeros 3 y últimos 4 dígitos; nunca la CLABE completa.' }
+        ownAccountId: { type: string, format: uuid, description: Sólo cuando el destino es una cuenta del mismo usuario. }
+    TransferAttemptProblem:
+      type: object
+      required: [status, detail]
+      properties:
+        status: { type: integer, enum: [404, 422, 429] }
+        detail: { type: string }
+    TransferAttemptPage:
+      type: object
+      required: [items, nextCursor, sendEpoch]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/TransferAttemptSummary' } }
+        nextCursor: { type: [string, 'null'] }
+        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+    VoidAttemptRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey]
+      properties:
+        idempotencyKey: { type: string, minLength: 16, maxLength: 128, writeOnly: true, description: 'La misma Idempotency-Key del envío; viaja sólo en el cuerpo y nunca se devuelve ni se registra.' }
+        attemptId: { type: string, format: uuid }
+    VoidAttemptResult:
+      type: object
+      required: [resolution, attempt]
+      properties:
+        resolution:
+          type: string
+          enum: [transfer_found, rejected, voided]
+          description: 'transfer_found: el servidor ya lo había recibido (attempt trae su estado). rejected: ya estaba rechazado. voided: nunca se recibió y ya no podrá ejecutarse. Las tres son terminales.'
+        attempt: { $ref: '#/components/schemas/TransferAttemptSummary' }
+    VoidAllRequest:
+      type: object
+      additionalProperties: false
+      required: [fromEpoch]
+      properties:
+        fromEpoch: { $ref: '#/components/schemas/SendEpoch' }
+    VoidAllResult:
+      type: object
+      required: [sendEpoch, advanced, closedTransferIds]
+      properties:
+        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+        advanced: { type: boolean, description: 'true sólo si esta llamada avanzó la época (fromEpoch era la vigente).' }
+        closedTransferIds: { type: array, items: { type: string, format: uuid }, description: Intentos awaiting_confirmation cerrados por esta llamada. }
+    TransferAttemptProblemType:
+      type: string
+      enum:
+        - urn:billetera:problem:transfer-attempt-voided
+        - urn:billetera:problem:transfer-attempt-rejected
+        - urn:billetera:problem:transfer-attempt-conflict
+      description: >-
+        Valores de Problem.type para intentos de transferencia (ronda 8). voided: identidad
+        anulada o época vieja (409, terminal, sin cargo). rejected: rechazo de negocio
+        404/422/429 cerrado para esa identidad (terminal, sin cargo). conflict: identidad
+        ligada a otra llave o intento (409, no terminal). El resto de problemas usa about:blank.
     Problem:
       type: object
-      required: [type, title, status]
+      required: [type, title, status, instance, requestId]
       properties:
         type: { type: string, format: uri-reference }
         title: { type: string }
         status: { type: integer, minimum: 400, maximum: 599 }
-        detail: { type: string, description: Detalle no sensible y sin información interna. }
+        detail: { type: string, description: Safe user-facing message only. }
         instance: { type: string, format: uri-reference }
         requestId: { type: string }
         errors:

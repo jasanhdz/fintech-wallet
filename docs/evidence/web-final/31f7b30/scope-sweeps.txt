@@ -1,0 +1,22 @@
+# Informative scope sweeps at code 31f7b30 (formal SC-01…05 sweep is WF-T6)
+$ rg -i -c "<SC-01 pattern>" web/src web/dist/p1
+web/src/transfers.tsx:1
+web/dist/p1/assets/index-DlOosqiU.js:1
+(remaining: «No es un comprobante CEP» in the W12 disclaimer of transfers.tsx, present at f0ed4bc, WF-T5 scope; the W05 disclaimer no longer mentions CEP)
+$ rg -c "IVA|INE" web/src web/dist/p1
+(rg exit 1 = no matches)
+$ rg -c "<SC-02 pattern>" web/src web/dist/p1
+(rg exit 1 = no matches)
+$ rg -i -c "material-symbols|tailwind|googleusercontent|cdn\." web/src web/index.html
+(rg exit 1 = no matches)
+$ rg -i -c "simulat|mock|fixture" web/src
+(rg exit 1 = no matches)
+$ rg -n "parseFloat|toFixed|Number\(" web/src
+(rg exit 1 = no matches)
+$ rg -n "500000|2000000|5000|20000|6,000|850" web/src
+(rg exit 1 = no matches)
+$ rg -n "movements" web/src/transfers.tsx (REC-04: only the FN-12 navigation link)
+278:URIComponent(transfer.sourceAccountId)}/movements`}>Ver movimientos</
+$ EV-03 rg -n "Bearer |[0-9]{18}|demoOnlyCode|Idempotency-Key: [0-9a-f-]{36}|password" docs/evidence/web-final/31f7b30 (sin captures/)
+docs/evidence/web-final/31f7b30/captures-manifest.tsv:44:F-W03-3	W03	cargando	F	1280x1030	1.25	captures/W03-cargando-1280x1030@1.25.png	27abf80e615070ea968f58a6acc9930df612a73c41ca37254322916833566881	w03_inicio_y_cuentas_corregido
+docs/evidence/web-final/31f7b30/captures-manifest.tsv:112:F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	768x1024	1	captures/W14-vencida-con-intento-768x1024@1.png	f567b205d9b35d65e92e4cef6159941cf0ec475282979269566574607e3705cd	w14_sesi_n_vencida

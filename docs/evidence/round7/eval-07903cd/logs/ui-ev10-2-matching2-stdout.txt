@@ -1,0 +1,11 @@
+
+===== matching2: the attempt was NEVER applied (lost-before); a foreign identical charge is visible in Movimientos (fresh load) =====
+foreign identical transfer (other key) -> 201 completed
+SHOT ev10-2-matching2-movimientos minFont=12 scrollW=390 offscreen=0 errs=1
+PASS matching2: Movimientos really shows a charge with the same amount, concept and reference as the unresolved attempt
+AUDIT after Verificar with a matching charge: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7084","Ahorro •• 5939","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS matching2: NOT resolved, NOT released, no receipt
+PASS matching2: record intact, 0 POST
+PASS matching2: "Ver movimientos" resolves nothing, sends nothing
+DB after the consented resend: transfers=2 [completed:30025 | completed:30025] debits=2 ledger=4 rows sum 0 idem=2 balances principal=939950 ahorro=560050
+PASS matching2: the attempt was never applied, so the resend creates it: 2 distinct operations (foreign + resend), each 1 debit - the coincidence proved nothing

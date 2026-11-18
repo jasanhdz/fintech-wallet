@@ -1,0 +1,409 @@
+escenario	pantalla	estado	nivel	viewport	dpr	fase	archivo	sha256
+W01-error	W01	con error	F	1024x768	1	antes	captures/ux/antes/W01-error-1024x768@1.png	372afdb4442015a90048eb70655459eeae032ce9127cc32c7908396f24e08c26
+W01-error	W01	con error	F	1280x800	1	antes	captures/ux/antes/W01-error-1280x800@1.png	3dd2d00c92f3104b0191ae0003994e926af3416b752701473463c2e71e256e4e
+W01-error	W01	con error	F	1440x900	1	antes	captures/ux/antes/W01-error-1440x900@1.png	8fa628547c8d625326a25e54ac65b8b77b008b58181b52a19823aff214db53c0
+W01-error	W01	con error	F	1920x1080	1	antes	captures/ux/antes/W01-error-1920x1080@1.png	1ae0b82752640a8a74cb03be2ae615c7661cd5611fbf2c1b2ebc4e5d1bb08592
+W01-error	W01	con error	F	320x640	1	antes	captures/ux/antes/W01-error-320x640@1.png	f621bc72facf7e272051e82e71678765b112c31da5449ecfbf15c1aa326dafca
+W01-error	W01	con error	F	390x844	1	antes	captures/ux/antes/W01-error-390x844@1.png	20844733d1f6e1dc00b90c160b5cd0172a177ae2cf435ed32783298a8e3628a8
+W01-error	W01	con error	F	640x512	2	antes	captures/ux/antes/W01-error-640x512@2.png	83a5ff62f7dea7db62508c228548872e7924a1b2a72f8130546d89fa55518772
+W01-error	W01	con error	F	768x1024	1	antes	captures/ux/antes/W01-error-768x1024@1.png	485f539bce397e7a58f2bc87276fd0c5210b3c0e0a35a224b66ba39e5b974480
+W01-listo	W01	listo	F	1024x768	1	antes	captures/ux/antes/W01-listo-1024x768@1.png	32808acc641951e54339555aa10d5feac9166416792476790edf27b40ef99d20
+W01-listo	W01	listo	F	1280x800	1	antes	captures/ux/antes/W01-listo-1280x800@1.png	9aaf7bfee86b719ab9f867dbeb97b3cfc22b39a70d642a564dd80b3179ee9918
+W01-listo	W01	listo	F	1440x900	1	antes	captures/ux/antes/W01-listo-1440x900@1.png	7110564012fce505d38f3c4e389e75776461d04022d9007bbf06c418d5501823
+W01-listo	W01	listo	F	1920x1080	1	antes	captures/ux/antes/W01-listo-1920x1080@1.png	9f7d6125d3db6d727baa4314c7d22d3c2006c485b9a5e7e46597f9e4f755f0bb
+W01-listo	W01	listo	F	320x640	1	antes	captures/ux/antes/W01-listo-320x640@1.png	3bf2f428b9e48457583610fcef6265ca6d20552426410f1eaeede5960ecb3ec7
+W01-listo	W01	listo	F	390x844	1	antes	captures/ux/antes/W01-listo-390x844@1.png	0739b7301db7bd806bba1568e4e06e048e11033c202b84ee3afff25331906671
+W01-listo	W01	listo	F	640x512	2	antes	captures/ux/antes/W01-listo-640x512@2.png	8fa8a1c0dec5535c6a2e70de9aa430aaa4154eee675bf802247ad03304ad74e3
+W01-listo	W01	listo	F	768x1024	1	antes	captures/ux/antes/W01-listo-768x1024@1.png	547ccc4ba581bcb5008e8af97f5d8eef5c821fda26bf84379d4836afa97e076e
+W02-errores	W02	con errores	F	1024x768	1	antes	captures/ux/antes/W02-errores-1024x768@1.png	6316458f4c683eb7cc69e4b8f2eab8c57c4a461d5e9f4f2bcfafd48f034bcd09
+W02-errores	W02	con errores	F	1280x800	1	antes	captures/ux/antes/W02-errores-1280x800@1.png	b4df843a42fe253a1ff7e4654e68d4c7f9220a15eac2709d8c4296d3f55d075d
+W02-errores	W02	con errores	F	1440x900	1	antes	captures/ux/antes/W02-errores-1440x900@1.png	8ddd59c6e1edbd013cfe60df9ffd1cf7eca91bcfd8663969acd8d2c40d9d206f
+W02-errores	W02	con errores	F	1920x1080	1	antes	captures/ux/antes/W02-errores-1920x1080@1.png	1525730fdedf2a991678b4f40a7adfbbb68a56ae8d2ab872766b759521edfa09
+W02-errores	W02	con errores	F	320x640	1	antes	captures/ux/antes/W02-errores-320x640@1.png	449052fe6a5b234eb94f25dc7356e8edaa93994b9b2c0f6d13e75318e8d517a1
+W02-errores	W02	con errores	F	390x844	1	antes	captures/ux/antes/W02-errores-390x844@1.png	c224cee09c193c01a27f99f6d7bb141a9736e0724af15e101a7316c39740ca69
+W02-errores	W02	con errores	F	640x512	2	antes	captures/ux/antes/W02-errores-640x512@2.png	14f6b804f16c8ba3cbfb4070d8cff8771438045cc926c42c2b4bbb487fbd72fd
+W02-errores	W02	con errores	F	768x1024	1	antes	captures/ux/antes/W02-errores-768x1024@1.png	796c35178f7b03582cb2836cffb59976dad5c66509e3d179b98a3ce881e38c6a
+W03-aviso-pendiente	W03	con aviso pendiente	F	1024x768	1	antes	captures/ux/antes/W03-aviso-pendiente-1024x768@1.png	833f580f1ee59184a242becca527eec8e795a9cae2f31ad51556b145b12ee8e0
+W03-aviso-pendiente	W03	con aviso pendiente	F	1280x800	1	antes	captures/ux/antes/W03-aviso-pendiente-1280x800@1.png	d81d03f5cea1305487fc017d866ab04227261361ac6e4c4f193c2ac9992ae677
+W03-aviso-pendiente	W03	con aviso pendiente	F	1440x900	1	antes	captures/ux/antes/W03-aviso-pendiente-1440x900@1.png	d6bac7ee165645923e27eef0094a8747d17bce330bfffc5475349aad3a4e2d57
+W03-aviso-pendiente	W03	con aviso pendiente	F	1920x1080	1	antes	captures/ux/antes/W03-aviso-pendiente-1920x1080@1.png	34d25dfce34ed28ed6c4bca8aabc349f337bc466fd4fb5f831b782de9fe068d5
+W03-aviso-pendiente	W03	con aviso pendiente	F	320x640	1	antes	captures/ux/antes/W03-aviso-pendiente-320x640@1.png	28ed199b2cae9fdd1d667434262e2a34ba17a6ac44e9011f96b81f704e0beabd
+W03-aviso-pendiente	W03	con aviso pendiente	F	390x844	1	antes	captures/ux/antes/W03-aviso-pendiente-390x844@1.png	021b458f4dce7faa268ada0c17af49bff853e54b0bd7e6aab043c739ac9a3653
+W03-aviso-pendiente	W03	con aviso pendiente	F	640x512	2	antes	captures/ux/antes/W03-aviso-pendiente-640x512@2.png	bfbb9a4a36ad1a1ffe63a5018b5eeab6bfbba472cad4c98f7d3160a506439800
+W03-aviso-pendiente	W03	con aviso pendiente	F	768x1024	1	antes	captures/ux/antes/W03-aviso-pendiente-768x1024@1.png	f109cacc746b2ccbc9541293bfd042ac6142ee0c75c8aff8ee67c03d13f582fe
+W03-cargando	W03	cargando	F	1024x768	1	antes	captures/ux/antes/W03-cargando-1024x768@1.png	33f8094fe7665fd752da15c38ec50a2eb7fa8cb5bf669cdf2b0f60cd5edfa187
+W03-cargando	W03	cargando	F	1280x800	1	antes	captures/ux/antes/W03-cargando-1280x800@1.png	a7f66f0c317f1509d967c55c642f05ab2dd2c75fc3f873c34f9c57a9a5b0a0a4
+W03-cargando	W03	cargando	F	1440x900	1	antes	captures/ux/antes/W03-cargando-1440x900@1.png	5d238cfc1d739f7b1f49a92507d46ff4f08ef7161e05df64f43b52af9c3a57de
+W03-cargando	W03	cargando	F	1920x1080	1	antes	captures/ux/antes/W03-cargando-1920x1080@1.png	b4575b687246dc3643650c0a6f2b0ea7a4fbcaa4f3f5b77b3a563c531a71432f
+W03-cargando	W03	cargando	F	320x640	1	antes	captures/ux/antes/W03-cargando-320x640@1.png	584826fe298dd67ac27348e48c5c45bfe661a77e69708ccf8fb38d8398d8a21d
+W03-cargando	W03	cargando	F	390x844	1	antes	captures/ux/antes/W03-cargando-390x844@1.png	6e526e2ebd8775463e1228e2e0ff0c4b995cbb57a08c999344a7c3787bc96e17
+W03-cargando	W03	cargando	F	640x512	2	antes	captures/ux/antes/W03-cargando-640x512@2.png	4de663277530ef7eb7403cde3add82947c8a216b687303de90d4e43dbfbddc38
+W03-cargando	W03	cargando	F	768x1024	1	antes	captures/ux/antes/W03-cargando-768x1024@1.png	c55fba85a8d79813a4ca3826043954910c31fc4e1a8a35ecf1c19384d343e097
+W03-con-saldo	W03	con saldo	F	1024x768	1	antes	captures/ux/antes/W03-con-saldo-1024x768@1.png	668dbfe36bc26b287923fadb9acd2d193bb0e6a0c29354b51b63ebaa254a02b6
+W03-con-saldo	W03	con saldo	F	1280x800	1	antes	captures/ux/antes/W03-con-saldo-1280x800@1.png	7c97854bfc6daae7289a2c22870d9f1a66cda2e93aa91ee0868580a4b78df3a5
+W03-con-saldo	W03	con saldo	F	1440x900	1	antes	captures/ux/antes/W03-con-saldo-1440x900@1.png	970b4676ee217f68eeecad9a0ec28cbe663ce20c2e715d979e73f89d2107c0e4
+W03-con-saldo	W03	con saldo	F	1920x1080	1	antes	captures/ux/antes/W03-con-saldo-1920x1080@1.png	d4051a56e882bf53ab4ef7160a94064df886b43f481e3eab7d1a7cc89f3eb439
+W03-con-saldo	W03	con saldo	F	320x640	1	antes	captures/ux/antes/W03-con-saldo-320x640@1.png	af79f55c175719b9ee733d84eecf28965599dcbefdd8d13a3f0526fb4da69a27
+W03-con-saldo	W03	con saldo	F	390x844	1	antes	captures/ux/antes/W03-con-saldo-390x844@1.png	fc227e0164f8c6b57ead6c73a52b1cd0d31d5ce9c149d8d9bbc7c48ba1a341b4
+W03-con-saldo	W03	con saldo	F	640x512	2	antes	captures/ux/antes/W03-con-saldo-640x512@2.png	22423db73e5da96625d0f8061b85b0919848cb03cbaffd2837d4e5d9d8399da8
+W03-con-saldo	W03	con saldo	F	768x1024	1	antes	captures/ux/antes/W03-con-saldo-768x1024@1.png	8aac2e931c76938b43accb0c546df72c42be0becf546b03149f71ba73a9db387
+W03-sin-saldo	W03	sin saldo	F	1024x768	1	antes	captures/ux/antes/W03-sin-saldo-1024x768@1.png	134ce4b9f56003573459f23104a10781288402f3c69c74a33210d45370336974
+W03-sin-saldo	W03	sin saldo	F	1280x800	1	antes	captures/ux/antes/W03-sin-saldo-1280x800@1.png	28ab422bfde48c39aa9d783d089c56b47cf0f863c231063eeb3e52a1b7d6a14c
+W03-sin-saldo	W03	sin saldo	F	1440x900	1	antes	captures/ux/antes/W03-sin-saldo-1440x900@1.png	abd230df1262514e5f646fa4da69655cce0db3f9cf806face2fa6618b2ce5b20
+W03-sin-saldo	W03	sin saldo	F	1920x1080	1	antes	captures/ux/antes/W03-sin-saldo-1920x1080@1.png	a22812325c59948d1203927dcfe27ef6d5bfb56c67c2fa8575f4bb2dc373778f
+W03-sin-saldo	W03	sin saldo	F	320x640	1	antes	captures/ux/antes/W03-sin-saldo-320x640@1.png	c3c381a6da03f7010efdb3355add7b23ff70774e3aa33fdbc5d60da80f9aba17
+W03-sin-saldo	W03	sin saldo	F	390x844	1	antes	captures/ux/antes/W03-sin-saldo-390x844@1.png	e091963bfdf701f244afd2e3bf9499b8f2cef936ed73d83dafcc5cba78677bd4
+W03-sin-saldo	W03	sin saldo	F	640x512	2	antes	captures/ux/antes/W03-sin-saldo-640x512@2.png	e40760c3448124386f086cbffac5e4aa2a728c6d1761cd17f50089a5453f23a9
+W03-sin-saldo	W03	sin saldo	F	768x1024	1	antes	captures/ux/antes/W03-sin-saldo-768x1024@1.png	840d6344116a7e4849c9f88de8903e43a9918a039bd465a0525ed938b3f6209e
+W04-cargando	W04	cargando	F	1024x768	1	antes	captures/ux/antes/W04-cargando-1024x768@1.png	2616440dac96d2c53aa4f8eb3109366c5e967923cba0d44c7bc40b102c27067b
+W04-cargando	W04	cargando	F	1280x800	1	antes	captures/ux/antes/W04-cargando-1280x800@1.png	e5b7db99cefc783bfa74f8b67520032a8af166630ae4a7c287485791ed31fd4d
+W04-cargando	W04	cargando	F	1440x900	1	antes	captures/ux/antes/W04-cargando-1440x900@1.png	8a595e12389d3e77809ba67ee239bcbddf96eeddfdeb070e5a3c1c3d6a2a0c49
+W04-cargando	W04	cargando	F	1920x1080	1	antes	captures/ux/antes/W04-cargando-1920x1080@1.png	342708932f53165c9aa9e5d9a229e91c74d8ef8984ff67b907ded31109c2c2ec
+W04-cargando	W04	cargando	F	320x640	1	antes	captures/ux/antes/W04-cargando-320x640@1.png	632fd8fde72195e9ddaf91553ffe7f8391de9ee1aacb6867617a5de6f151e7ba
+W04-cargando	W04	cargando	F	390x844	1	antes	captures/ux/antes/W04-cargando-390x844@1.png	71a96757b90f73b1fac53e599004b0178c08044fd7b7b81c64aa98dbf0c0dd24
+W04-cargando	W04	cargando	F	640x512	2	antes	captures/ux/antes/W04-cargando-640x512@2.png	17875c4c2c110c8d6933620227950e5d581f195abb584a5553fba841f6952d40
+W04-cargando	W04	cargando	F	768x1024	1	antes	captures/ux/antes/W04-cargando-768x1024@1.png	f745a63bd322db6e1afa7785bd770820dddb8c3a4c31d78565b5e992192334a0
+W04-con-movimientos	W04	con movimientos (22)	F	1024x768	1	antes	captures/ux/antes/W04-con-movimientos-1024x768@1.png	39fd90eba25ae2f3b611a9f2420eb458456108d0acdbd7639d11571466467ca1
+W04-con-movimientos	W04	con movimientos (22)	F	1280x800	1	antes	captures/ux/antes/W04-con-movimientos-1280x800@1.png	6ab829f8d38de877c6392600732c189502e4336e7131d068d0f5e6ba3c4a5cc3
+W04-con-movimientos	W04	con movimientos (22)	F	1440x900	1	antes	captures/ux/antes/W04-con-movimientos-1440x900@1.png	d99770339a88d42ae3f917cca7b60baf1e9ac9d5e1bfe5a424a65e1bb9b1f58f
+W04-con-movimientos	W04	con movimientos (22)	F	1920x1080	1	antes	captures/ux/antes/W04-con-movimientos-1920x1080@1.png	58eae0f920b5dbf799768d326e5d8e799c3430f9a564271b222ac1ddc3850e34
+W04-con-movimientos	W04	con movimientos (22)	F	320x640	1	antes	captures/ux/antes/W04-con-movimientos-320x640@1.png	98d179a592daca14bc1d4558a448d1cf7e247c6f5016b813db108200732b8c33
+W04-con-movimientos	W04	con movimientos (22)	F	390x844	1	antes	captures/ux/antes/W04-con-movimientos-390x844@1.png	1a810e21a74c82eca3bd0741e81f0add262d4484b06530470bf48a7251a845a3
+W04-con-movimientos	W04	con movimientos (22)	F	640x512	2	antes	captures/ux/antes/W04-con-movimientos-640x512@2.png	c61eb0b0b18b9b0daa978e00182706431fe8039dabd920635231b6d0a5922d84
+W04-con-movimientos	W04	con movimientos (22)	F	768x1024	1	antes	captures/ux/antes/W04-con-movimientos-768x1024@1.png	4b74189ecc9a8ada1cdcdb39259dd1d8ac835100f539fbdaf6f3a99f564cedbd
+W04-error	W04	error	F	1024x768	1	antes	captures/ux/antes/W04-error-1024x768@1.png	f5ece9e692d16b9cb845127378c5bcdacea26aba25ec39a7eb25bce0b9ec5b11
+W04-error	W04	error	F	1280x800	1	antes	captures/ux/antes/W04-error-1280x800@1.png	fd8b4dcd0a9865640d228586e141e799bf911b820608479c15094b1fdb70d7de
+W04-error	W04	error	F	1440x900	1	antes	captures/ux/antes/W04-error-1440x900@1.png	3dc050861e64523938514a33772b0c877222b2798cd46653bcef05bf771cf7b6
+W04-error	W04	error	F	1920x1080	1	antes	captures/ux/antes/W04-error-1920x1080@1.png	bb9ec6622459c6208aebbb5a15d406f9ed36efcef59c43ed8705a143582661b7
+W04-error	W04	error	F	320x640	1	antes	captures/ux/antes/W04-error-320x640@1.png	97afaefbaf83a150fa9c5f78c3f733020b188c92713bf365b38cee4365dff52e
+W04-error	W04	error	F	390x844	1	antes	captures/ux/antes/W04-error-390x844@1.png	aeae11236b629de2417233aa83ffedcd9d5f8ed3a311eb8d840651786a5fd7b3
+W04-error	W04	error	F	640x512	2	antes	captures/ux/antes/W04-error-640x512@2.png	1e1d045cb628820cf31ecb008969527bd081843b9f7eb99dc2d31c25104b8958
+W04-error	W04	error	F	768x1024	1	antes	captures/ux/antes/W04-error-768x1024@1.png	4a7c25e0b9b6980d633f7c588a5e8b17452b0b0a6f52f4bdd8c68274f94ef608
+W04-error-mas	W04	error al cargar más	F	1024x768	1	antes	captures/ux/antes/W04-error-mas-1024x768@1.png	31f60a6a72adf1e26b661ad26b080904b07af1be96c353bdb25f268cbf3b04f9
+W04-error-mas	W04	error al cargar más	F	1280x800	1	antes	captures/ux/antes/W04-error-mas-1280x800@1.png	d18d50602fc3d50c0cb9d4e734e6cbcd6466c278382839272b300a016965a6e4
+W04-error-mas	W04	error al cargar más	F	1440x900	1	antes	captures/ux/antes/W04-error-mas-1440x900@1.png	0480f4be9b5b8e4f07e926d5ed0a78cdc009bcb215e330148589e172d7e8aaca
+W04-error-mas	W04	error al cargar más	F	1920x1080	1	antes	captures/ux/antes/W04-error-mas-1920x1080@1.png	c3edc6e3239eedc3e75123e5b00db8caca25cd88814c1bf87205bcce820ba972
+W04-error-mas	W04	error al cargar más	F	320x640	1	antes	captures/ux/antes/W04-error-mas-320x640@1.png	979d91479e5603ae12106639b389927a52ddbb38ddfc94064ee05050e2b757f4
+W04-error-mas	W04	error al cargar más	F	390x844	1	antes	captures/ux/antes/W04-error-mas-390x844@1.png	b9d3d5549a46fcfa5a42855267645172bc0fc058664745e70397b0cba38cceab
+W04-error-mas	W04	error al cargar más	F	640x512	2	antes	captures/ux/antes/W04-error-mas-640x512@2.png	242c35b10c948be914c1f7e7e42bbb865434b12f470f2bd3bd490a7e816c7ba9
+W04-error-mas	W04	error al cargar más	F	768x1024	1	antes	captures/ux/antes/W04-error-mas-768x1024@1.png	cb102f5cacfa79bce9920d77d6085475988e1e45778d2b54d2ca90c7475906f5
+W04-sin-resultados	W04	sin resultados	F	1024x768	1	antes	captures/ux/antes/W04-sin-resultados-1024x768@1.png	41f4b0f0f5ac4d179705641799277df8428c66406bb22e68eebc808ef1e200a8
+W04-sin-resultados	W04	sin resultados	F	1280x800	1	antes	captures/ux/antes/W04-sin-resultados-1280x800@1.png	48949a292e0ad4bcee9ab13ae685f3f55da51c31017d2c5fb5d59b57870233ec
+W04-sin-resultados	W04	sin resultados	F	1440x900	1	antes	captures/ux/antes/W04-sin-resultados-1440x900@1.png	412fcd1569dc3f6f3ad4815ef858cc28237e120ab7ae128e15d7468dae50adfb
+W04-sin-resultados	W04	sin resultados	F	1920x1080	1	antes	captures/ux/antes/W04-sin-resultados-1920x1080@1.png	8ee911f23db97436a80621c8fd7182e2b96e52beba33c6b2e52f148f305953b5
+W04-sin-resultados	W04	sin resultados	F	320x640	1	antes	captures/ux/antes/W04-sin-resultados-320x640@1.png	404ad4bd0fbb48ae80e11b980e7a5bfcaef72e3d5396a9551abf15f8c1083578
+W04-sin-resultados	W04	sin resultados	F	390x844	1	antes	captures/ux/antes/W04-sin-resultados-390x844@1.png	7be741736879c59164c00c72624de009b59f6b102b9eb22b75b9f23b39b7dbf0
+W04-sin-resultados	W04	sin resultados	F	640x512	2	antes	captures/ux/antes/W04-sin-resultados-640x512@2.png	812e9aad56081ad75c502c20ed33a7a8723f5d45deced5fdd74631b754645907
+W04-sin-resultados	W04	sin resultados	F	768x1024	1	antes	captures/ux/antes/W04-sin-resultados-768x1024@1.png	ca0ced0267b809bc99bb7b6dfa29149edbf7284c34fc48a6eb6059584a78eea3
+W04-vacio	W04	vacío	F	1024x768	1	antes	captures/ux/antes/W04-vacio-1024x768@1.png	fa396c9081350b1ad1c35540df77370b4d240ab67b9f2407a5050924a3131dc2
+W04-vacio	W04	vacío	F	1280x800	1	antes	captures/ux/antes/W04-vacio-1280x800@1.png	550eb4750e467d41c219a836d4e32b54507667926ec4dc6a693acfb87cd33c12
+W04-vacio	W04	vacío	F	1440x900	1	antes	captures/ux/antes/W04-vacio-1440x900@1.png	5da9374f4410e8310153ed24d54de4ffc0630e4ab0373e7a4dcb557f4e29df21
+W04-vacio	W04	vacío	F	1920x1080	1	antes	captures/ux/antes/W04-vacio-1920x1080@1.png	5bde94dbe1ad7c7368f269be6c107545b965022d713475fdc26c1e8c429d22c6
+W04-vacio	W04	vacío	F	320x640	1	antes	captures/ux/antes/W04-vacio-320x640@1.png	e0f878d5aa8d0e5e8a1ef34d8631bcfec2da4f1d413d99d29584910e03f321be
+W04-vacio	W04	vacío	F	390x844	1	antes	captures/ux/antes/W04-vacio-390x844@1.png	b2917d2e05ee5f9837e76f74b58d0c2aaa53b4b18e09f82b43b0479f69cad18c
+W04-vacio	W04	vacío	F	640x512	2	antes	captures/ux/antes/W04-vacio-640x512@2.png	53eaefaea0fafb262b63fef2a9d70e88508a874a45f28d2e06d24411a306c279
+W04-vacio	W04	vacío	F	768x1024	1	antes	captures/ux/antes/W04-vacio-768x1024@1.png	56236c3abcfe5b8df766129eb9a480be0495116f32e170347cb679959cfc65af
+W05	W05	comprobante	F	1024x768	1	antes	captures/ux/antes/W05-1024x768@1.png	befa405864020988eb2c0fe9d5825208cfdefc817234f9dd6badbe41a827f097
+W05	W05	comprobante	F	1280x800	1	antes	captures/ux/antes/W05-1280x800@1.png	5dfe35fd00c27ae6b4641b3a93818a056584ea07a3ee185b67eb6209efc2061c
+W05	W05	comprobante	F	1440x900	1	antes	captures/ux/antes/W05-1440x900@1.png	aba4e104c748233f0980ba1d02f1f4ac71e3e178033d880b24e3cab3df922d2a
+W05	W05	comprobante	F	1920x1080	1	antes	captures/ux/antes/W05-1920x1080@1.png	5bdcee5a9dbcb582a62cc95335ebeb41f886822b7a7f164fae64028342e783b0
+W05	W05	comprobante	F	320x640	1	antes	captures/ux/antes/W05-320x640@1.png	dbd634f610d3fdf835e713ff49598fe24ac2a13b58c904634c31b908597adf97
+W05	W05	comprobante	F	390x844	1	antes	captures/ux/antes/W05-390x844@1.png	bdfbe12f9a594e7053cb37f21ac8feba6c70ece3abc6f781a613b8b1dceebd40
+W05	W05	comprobante	F	640x512	2	antes	captures/ux/antes/W05-640x512@2.png	e4dbff9155d2f55bf97e60ee025b065284b30c88f99bc00a1c4ad1c3b1952436
+W05	W05	comprobante	F	768x1024	1	antes	captures/ux/antes/W05-768x1024@1.png	90a9ce8deb01f325c8c253fad8e9a3e704ff3f529b574210429976440f09a3ed
+W06-lista-1	W06	lista (1)	F	1024x768	1	antes	captures/ux/antes/W06-lista-1-1024x768@1.png	9a0956389c63988244292cbaf136d697bffdb1ceff1c693e95af2d69e9526859
+W06-lista-1	W06	lista (1)	F	1280x800	1	antes	captures/ux/antes/W06-lista-1-1280x800@1.png	9bcd2cd12ca1d60e6ad464f190e350e3e126ebaa839cfb6a96efa9831e9a9aa6
+W06-lista-1	W06	lista (1)	F	1440x900	1	antes	captures/ux/antes/W06-lista-1-1440x900@1.png	f19a73330653b8d9cad1bb817ae5266b1bc0f9595e79a415c84de3775f00e357
+W06-lista-1	W06	lista (1)	F	1920x1080	1	antes	captures/ux/antes/W06-lista-1-1920x1080@1.png	7fa52da49844d39f5401cd3f7408c8a92e0452d424d0160afb418d924af35495
+W06-lista-1	W06	lista (1)	F	320x640	1	antes	captures/ux/antes/W06-lista-1-320x640@1.png	5520cd7b7426d157342de9667a3eeeba621cb34ff2f56b08f62719fcdd7e2b86
+W06-lista-1	W06	lista (1)	F	390x844	1	antes	captures/ux/antes/W06-lista-1-390x844@1.png	eebe2275f65cb2c7fa3399fbafdf3ef02483047fe82fe057ebeea99fb6acc2a2
+W06-lista-1	W06	lista (1)	F	640x512	2	antes	captures/ux/antes/W06-lista-1-640x512@2.png	615ba7bd6f79134eb243c5c05d89ecda752116f93ff9de73e653549139c9d2a8
+W06-lista-1	W06	lista (1)	F	768x1024	1	antes	captures/ux/antes/W06-lista-1-768x1024@1.png	a978f13cb4e49d6b984546bf0b3c6a398fd567dd28303367d04f4471ba67e26e
+W06-lista-2	W06	lista (2)	F	1024x768	1	antes	captures/ux/antes/W06-lista-2-1024x768@1.png	89a4fb66978c9afad93befac482c9b9050c509cfa31bef43f4c0baf2fb327afa
+W06-lista-2	W06	lista (2)	F	1280x800	1	antes	captures/ux/antes/W06-lista-2-1280x800@1.png	62c182cc11a33fccc24c7a4974194930529a43c616bd70a8a21620f8a1cd34dc
+W06-lista-2	W06	lista (2)	F	1440x900	1	antes	captures/ux/antes/W06-lista-2-1440x900@1.png	ce7ea6bbd5e1e30119e8a215eb74932e71eef3702a0201e92974969106cff2cc
+W06-lista-2	W06	lista (2)	F	1920x1080	1	antes	captures/ux/antes/W06-lista-2-1920x1080@1.png	45883812adce2db35b4b64c2f5a2cdd2d131d2af3617157e1af46277b464a341
+W06-lista-2	W06	lista (2)	F	320x640	1	antes	captures/ux/antes/W06-lista-2-320x640@1.png	cc3e385dd40372f974576c570343cc45efd50b11c0da544b6557170c9bbd1683
+W06-lista-2	W06	lista (2)	F	390x844	1	antes	captures/ux/antes/W06-lista-2-390x844@1.png	df0d10bfb286baa3a67271b2d44a3e7edf3889dd7ee4555f9b50737c598ddf52
+W06-lista-2	W06	lista (2)	F	640x512	2	antes	captures/ux/antes/W06-lista-2-640x512@2.png	a0f18cd906b1afa1df6c4fbfbd967d46b36b429f367b38e9578e8659f6d194ce
+W06-lista-2	W06	lista (2)	F	768x1024	1	antes	captures/ux/antes/W06-lista-2-768x1024@1.png	ea76f9eacaef8bcf13251983cdf2c3d688b6fa969d6a5d227e0576459811714e
+W06-lista-5	W06	lista (5)	F	1024x768	1	antes	captures/ux/antes/W06-lista-5-1024x768@1.png	4ae14d1a36c7d6e68854f7c885bb587e0d3ec75aa22390a67422c3512992c8e5
+W06-lista-5	W06	lista (5)	F	1280x800	1	antes	captures/ux/antes/W06-lista-5-1280x800@1.png	5a3758c7b7f9a61839290ac33c610d69269a66d9c34ea1e530326142833c0678
+W06-lista-5	W06	lista (5)	F	1440x900	1	antes	captures/ux/antes/W06-lista-5-1440x900@1.png	c89287a49a906fb17e3a05e20b6416ae0e68f399c7279f73857253d4ab959301
+W06-lista-5	W06	lista (5)	F	1920x1080	1	antes	captures/ux/antes/W06-lista-5-1920x1080@1.png	6965f371167c37123013e8dcaa47cfeca3693c58022b2459b6551eb79ceab94f
+W06-lista-5	W06	lista (5)	F	320x640	1	antes	captures/ux/antes/W06-lista-5-320x640@1.png	d9d8f992efc823341bd9c9186bfc607da588cf32b0808dc3bb888e5d0f92c3c3
+W06-lista-5	W06	lista (5)	F	390x844	1	antes	captures/ux/antes/W06-lista-5-390x844@1.png	ef20c60e476cc0221b5b6f844fb724751dd10fa96535376e5419665b37bc551b
+W06-lista-5	W06	lista (5)	F	640x512	2	antes	captures/ux/antes/W06-lista-5-640x512@2.png	7987595e6e6d439420612062e5037f91fd78761ce8d4ce8494204c8f3ca51e20
+W06-lista-5	W06	lista (5)	F	768x1024	1	antes	captures/ux/antes/W06-lista-5-768x1024@1.png	a41edb4f041905282af2041ecd1307bbf13766152ade3fbcc20125b49d9b089b
+W06-sin-resultados	W06	sin resultados	F	1024x768	1	antes	captures/ux/antes/W06-sin-resultados-1024x768@1.png	2fd3d8aa6fba96e1554fb0b477c57b7b2b136ac1c8f818c75da2bcb5d4ca5978
+W06-sin-resultados	W06	sin resultados	F	1280x800	1	antes	captures/ux/antes/W06-sin-resultados-1280x800@1.png	a3f579d3adb2dcd2dcfdc15a78bf5ce0432dbd3bcf3b4360e6f8b62e003514c7
+W06-sin-resultados	W06	sin resultados	F	1440x900	1	antes	captures/ux/antes/W06-sin-resultados-1440x900@1.png	2087484162667e7d10c4b6614a95d45b0276e23edb0346d3b9f36e05c6a6227b
+W06-sin-resultados	W06	sin resultados	F	1920x1080	1	antes	captures/ux/antes/W06-sin-resultados-1920x1080@1.png	19d4632649eef3e45e8ba411e51a6bfc7b9724c9462a2cb2c054ccbc8c1d598f
+W06-sin-resultados	W06	sin resultados	F	320x640	1	antes	captures/ux/antes/W06-sin-resultados-320x640@1.png	3394f36521abb637dc832284ba6241bdde80a134c707db08e79de0d50d28d220
+W06-sin-resultados	W06	sin resultados	F	390x844	1	antes	captures/ux/antes/W06-sin-resultados-390x844@1.png	60c3fc3758c3204a55dd05b2e7a96220520f5d3f71a8d4fb5a1e8fb4810b4bb2
+W06-sin-resultados	W06	sin resultados	F	640x512	2	antes	captures/ux/antes/W06-sin-resultados-640x512@2.png	7e8432c005eb8ec2bae86e4943380b471bb783704c12956232beb97356541ac6
+W06-sin-resultados	W06	sin resultados	F	768x1024	1	antes	captures/ux/antes/W06-sin-resultados-768x1024@1.png	734dd5e2ead5b071d878e20d1184e6de158890d2bf7e8df6070cd1174a4de1c2
+W06-vacio	W06	vacío	F	1024x768	1	antes	captures/ux/antes/W06-vacio-1024x768@1.png	e31e70f4ca55e153edf9a3d6118f3b27af82a5d27f4716f5e7b2444215226c7a
+W06-vacio	W06	vacío	F	1280x800	1	antes	captures/ux/antes/W06-vacio-1280x800@1.png	2ee3cdef7f7b4b06c2e8998c4e3c6f37d78b989daa0899fbc0c2664bbd3fb0ec
+W06-vacio	W06	vacío	F	1440x900	1	antes	captures/ux/antes/W06-vacio-1440x900@1.png	0ddbafb31590292fd4f03359589fd2e157fbcc9735a1ab1bda56f4fa1a5799d5
+W06-vacio	W06	vacío	F	1920x1080	1	antes	captures/ux/antes/W06-vacio-1920x1080@1.png	57dcfbbadd9888a5cb952251bc1683a93c86e34647df4389f0603e5cb90edb2b
+W06-vacio	W06	vacío	F	320x640	1	antes	captures/ux/antes/W06-vacio-320x640@1.png	bcb05bead401bc3f60521b24e002f4700f763425fc20160eb15673930cd1ba94
+W06-vacio	W06	vacío	F	390x844	1	antes	captures/ux/antes/W06-vacio-390x844@1.png	290990a2348d1e96359e2ebbf5485805c528f9c2727d963980c9325c1abd7120
+W06-vacio	W06	vacío	F	640x512	2	antes	captures/ux/antes/W06-vacio-640x512@2.png	412c79e58d5f06ac557875c27a360d3968be81ee646ba82fb6717e8d5a407cc4
+W06-vacio	W06	vacío	F	768x1024	1	antes	captures/ux/antes/W06-vacio-768x1024@1.png	07260116cf2b31a3d072dc8301cb7252f7ff7e8c06dbab298fbc2a6905c20466
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	1024x768	1	antes	captures/ux/antes/W07-clabe-incorrecta-1024x768@1.png	447cc01a1a939f15b9c986411dc1bf6b2bdd14745cf9f295d78e0a49f6583a0b
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	1280x800	1	antes	captures/ux/antes/W07-clabe-incorrecta-1280x800@1.png	c73acd059429f803f312bd2a6d8a91b188a3ff8dd21030aca1f3748589435e0d
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	1440x900	1	antes	captures/ux/antes/W07-clabe-incorrecta-1440x900@1.png	bd2fd871af52dd2803af83cd9c75adf29107c6f3b2eda67c600db24bed8ffe43
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	1920x1080	1	antes	captures/ux/antes/W07-clabe-incorrecta-1920x1080@1.png	09358b3c488e78f6f1b7d990b63c6f5154d325b7006bf39a4cc73c6b1a4ce512
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	320x640	1	antes	captures/ux/antes/W07-clabe-incorrecta-320x640@1.png	a63b540d5fc2d242fb458506c965d0a5fc3581af0155e6a1ec00e3b2a6adebab
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	390x844	1	antes	captures/ux/antes/W07-clabe-incorrecta-390x844@1.png	7bd2b6d64c6fc961d1754d8d3a5955c466c6682f0e79ce5488ee1462702c8d32
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	640x512	2	antes	captures/ux/antes/W07-clabe-incorrecta-640x512@2.png	82310f38d2c36d2fb1e486cd4ae802201fe33ffc173bc90193dffcf4b74b33bf
+W07-clabe-incorrecta	W07	CLABE incorrecta	F	768x1024	1	antes	captures/ux/antes/W07-clabe-incorrecta-768x1024@1.png	9098f6e8f8bfa54560713aede83ee30eb5b9549042e6f64f3c3b3676fdf35aad
+W07-destino-no-disponible	W07	destino no disponible	F	1024x768	1	antes	captures/ux/antes/W07-destino-no-disponible-1024x768@1.png	991cc726bb26c521dad4c77e4861e888a46eee7affc8d54f77d403c4f41d00dc
+W07-destino-no-disponible	W07	destino no disponible	F	1280x800	1	antes	captures/ux/antes/W07-destino-no-disponible-1280x800@1.png	3acc880c27f12c1e8ff81bd368a0eb85a1e812a9e7a4a49c49afc320ee5ad1a2
+W07-destino-no-disponible	W07	destino no disponible	F	1440x900	1	antes	captures/ux/antes/W07-destino-no-disponible-1440x900@1.png	0966b5d2fed49ef8eaad958ce633c8dbd57fce9541312826a46fe279c39504f4
+W07-destino-no-disponible	W07	destino no disponible	F	1920x1080	1	antes	captures/ux/antes/W07-destino-no-disponible-1920x1080@1.png	b8e449ae155befa6ccce03d1e2531566fb548be25aa382275938593deb106075
+W07-destino-no-disponible	W07	destino no disponible	F	320x640	1	antes	captures/ux/antes/W07-destino-no-disponible-320x640@1.png	c54ce9b36b3b85c40500c8d996665a59f7f18b6e415a9504aabfa9dadc12721b
+W07-destino-no-disponible	W07	destino no disponible	F	390x844	1	antes	captures/ux/antes/W07-destino-no-disponible-390x844@1.png	9e1e6278dccc3ecb3f8434c6d2f22d6977f6134233c02dfe643861b6f34081a7
+W07-destino-no-disponible	W07	destino no disponible	F	640x512	2	antes	captures/ux/antes/W07-destino-no-disponible-640x512@2.png	f2a89146c994b42c05803d06f0f94b6d910cf929fd82695d22fb172cb3852be3
+W07-destino-no-disponible	W07	destino no disponible	F	768x1024	1	antes	captures/ux/antes/W07-destino-no-disponible-768x1024@1.png	549d1650eb3194121fcae478ebad3827707c57e3ea8f6b2a86fde0c4088f2a64
+W07-duplicado	W07	duplicado	F	1024x768	1	antes	captures/ux/antes/W07-duplicado-1024x768@1.png	929dd59e721042b9f4bcac961ba960997ee6770200d7d6101576d1d783cc76fa
+W07-duplicado	W07	duplicado	F	1280x800	1	antes	captures/ux/antes/W07-duplicado-1280x800@1.png	21474bee67d9719fd6d9df794e967e8a20ba6d3f27c60d7a8e7194761d25371a
+W07-duplicado	W07	duplicado	F	1440x900	1	antes	captures/ux/antes/W07-duplicado-1440x900@1.png	2d70d90b4f3c7ac70f36abf9917ee73c40c1b91f3f205498bc92d611ac375a04
+W07-duplicado	W07	duplicado	F	1920x1080	1	antes	captures/ux/antes/W07-duplicado-1920x1080@1.png	8fceaa17fb4257baa5205f527bd62fc72332c5c2864a5d3826c69262d5e5a663
+W07-duplicado	W07	duplicado	F	320x640	1	antes	captures/ux/antes/W07-duplicado-320x640@1.png	e79ecc69308f6c564b5dc351b52ef2a93d5a1dd57151494a8280d679701ed46b
+W07-duplicado	W07	duplicado	F	390x844	1	antes	captures/ux/antes/W07-duplicado-390x844@1.png	48b0c4a30213513371d7c85f8d46272cb7cd88c42ed1306e1668ee35698d108c
+W07-duplicado	W07	duplicado	F	640x512	2	antes	captures/ux/antes/W07-duplicado-640x512@2.png	ef80cff6546f80fa39321cc565ce8a55f3f3c386a5336aa75fc0f345b5082294
+W07-duplicado	W07	duplicado	F	768x1024	1	antes	captures/ux/antes/W07-duplicado-768x1024@1.png	f37c0e36998f15caf41e7331943c0bb720a6a1e3ccba6b907cc8a6fbf6569f5d
+W07-error-recuperable	W07	error recuperable	F	1024x768	1	antes	captures/ux/antes/W07-error-recuperable-1024x768@1.png	a467f2cea4445cca87c25e66e655966904fdb9b5d2dc055950c3ccd997dee924
+W07-error-recuperable	W07	error recuperable	F	1280x800	1	antes	captures/ux/antes/W07-error-recuperable-1280x800@1.png	dabbc2fb8c906d6b8a5c665857f7dd963918eb514993e6292b186dd21d41f6bb
+W07-error-recuperable	W07	error recuperable	F	1440x900	1	antes	captures/ux/antes/W07-error-recuperable-1440x900@1.png	67c35ce1842bf0c269334c52dd5dcb895c087ab57b9b625bb8ead3bb3c2021ef
+W07-error-recuperable	W07	error recuperable	F	1920x1080	1	antes	captures/ux/antes/W07-error-recuperable-1920x1080@1.png	8ead863e627617cf8c694ee3156bb8615ba8f55367e8e920451fb580db86cb3a
+W07-error-recuperable	W07	error recuperable	F	320x640	1	antes	captures/ux/antes/W07-error-recuperable-320x640@1.png	b27312a517e6702b28379ec62fb550d6b6eceaf85c3c49619005fee807beff11
+W07-error-recuperable	W07	error recuperable	F	390x844	1	antes	captures/ux/antes/W07-error-recuperable-390x844@1.png	cf7fe09f33771f6659620f953b870e8ec20e0243e500c2743397ca1d29eff2c3
+W07-error-recuperable	W07	error recuperable	F	640x512	2	antes	captures/ux/antes/W07-error-recuperable-640x512@2.png	168883638fd4766d302ffdfa20f59244a09d23a78247cee1b0a1ca5ad52da9f0
+W07-error-recuperable	W07	error recuperable	F	768x1024	1	antes	captures/ux/antes/W07-error-recuperable-768x1024@1.png	a36e98708ae4c1515bb9128f75b9038299cbe04135e567aedb7c82683547e3dc
+W07-guardando	W07	guardando	F	1024x768	1	antes	captures/ux/antes/W07-guardando-1024x768@1.png	8f19ce65cae2271ad92c9d3628c6e7f18b9ab9e1f1eb64bf1a6ef2c90fc14e9a
+W07-guardando	W07	guardando	F	1280x800	1	antes	captures/ux/antes/W07-guardando-1280x800@1.png	ad2bc812fce6c25570ccb78505428556146c6e039b81c76b67191355e6785773
+W07-guardando	W07	guardando	F	1440x900	1	antes	captures/ux/antes/W07-guardando-1440x900@1.png	152249cec1d69883a73557ed7347722640284f3720c4d23069f220159ab683f0
+W07-guardando	W07	guardando	F	1920x1080	1	antes	captures/ux/antes/W07-guardando-1920x1080@1.png	4181d7e70ecafdb7fa3c8a8fa8be4d27607b55e97d5085a16c0af4163b15f145
+W07-guardando	W07	guardando	F	320x640	1	antes	captures/ux/antes/W07-guardando-320x640@1.png	409b7530905a03dba87f212e10b0ecbcb4f526bfc2e1b652f986e63b2546a465
+W07-guardando	W07	guardando	F	390x844	1	antes	captures/ux/antes/W07-guardando-390x844@1.png	cd99a30cee18c0843b3722340db6f4fe34dd354378b95aa5f750a2472f14968c
+W07-guardando	W07	guardando	F	640x512	2	antes	captures/ux/antes/W07-guardando-640x512@2.png	1bd2016cb97be0cd707ee003a8c7f660f870b88707301a41c73c2b8f37d565c8
+W07-guardando	W07	guardando	F	768x1024	1	antes	captures/ux/antes/W07-guardando-768x1024@1.png	1a1aa8ca16da1dbcb4800348310873a6c818bdd74bbb4f282578f5e74ddda068
+W07-inicial	W07	inicial	F	1024x768	1	antes	captures/ux/antes/W07-inicial-1024x768@1.png	6af0a704b631b0b45cec43b336f683f2b1c7b4e86413c7ebf2792166c447df84
+W07-inicial	W07	inicial	F	1280x800	1	antes	captures/ux/antes/W07-inicial-1280x800@1.png	517932e128fd970affb2c7f24cad86a68c8d4d7a703c73c65b6974dda4fcc289
+W07-inicial	W07	inicial	F	1440x900	1	antes	captures/ux/antes/W07-inicial-1440x900@1.png	69f190417775346828a7762c68f75adf9fd0decc4659a81c0a4b52825753a6bb
+W07-inicial	W07	inicial	F	1920x1080	1	antes	captures/ux/antes/W07-inicial-1920x1080@1.png	9cab47ea552015f774c7e8bada05897668bb827781b5e272fe57ed14b41d3502
+W07-inicial	W07	inicial	F	320x640	1	antes	captures/ux/antes/W07-inicial-320x640@1.png	d18e4f72c4e80f5ec429440e20367734d6c55c69074bcb56a2d91d10e7476846
+W07-inicial	W07	inicial	F	390x844	1	antes	captures/ux/antes/W07-inicial-390x844@1.png	2f0bc32844bcdd54fb99eac4255dbc50b11edff117ba0d5ef4920ac0d1357d1d
+W07-inicial	W07	inicial	F	640x512	2	antes	captures/ux/antes/W07-inicial-640x512@2.png	fe60a08cda372e302f3aa31f315752e13a4ad54ec03b0d30a7983083025d2a38
+W07-inicial	W07	inicial	F	768x1024	1	antes	captures/ux/antes/W07-inicial-768x1024@1.png	13da921415faf10be80dc6c79a3c79e364216ad8d6c66c5f67b1290752adae6b
+W07-invalidos	W07	inválidos	F	1024x768	1	antes	captures/ux/antes/W07-invalidos-1024x768@1.png	b42282c80900ce7da871f4d572d9cbf9296396d863665fdce06fa2ef8491609c
+W07-invalidos	W07	inválidos	F	1280x800	1	antes	captures/ux/antes/W07-invalidos-1280x800@1.png	070f1696ed788029351fca65f7d5b8d9f396dd67af459e4eb111f79e81fc0f92
+W07-invalidos	W07	inválidos	F	1440x900	1	antes	captures/ux/antes/W07-invalidos-1440x900@1.png	3d46f8ce2e63b8a081f36ed80f5aa604957d005d02377c176c7c2fb6fe08efb8
+W07-invalidos	W07	inválidos	F	1920x1080	1	antes	captures/ux/antes/W07-invalidos-1920x1080@1.png	591a8593e3c1e1eab9156a54538616a0e22acf28b50418a359a0975d34dbc880
+W07-invalidos	W07	inválidos	F	320x640	1	antes	captures/ux/antes/W07-invalidos-320x640@1.png	3e1ef0d5fc9e7c21602a916008cb54dae667dc3bd581578d75f70f8b086aa119
+W07-invalidos	W07	inválidos	F	390x844	1	antes	captures/ux/antes/W07-invalidos-390x844@1.png	602ffbd954395db7b6b701dfc83a4debcb426d12b1cc056778194be606d34c40
+W07-invalidos	W07	inválidos	F	640x512	2	antes	captures/ux/antes/W07-invalidos-640x512@2.png	daa7d772603ddb2500d24d12b10d801a3a385b6853ac1653def7db899cbfe84f
+W07-invalidos	W07	inválidos	F	768x1024	1	antes	captures/ux/antes/W07-invalidos-768x1024@1.png	d22d4ae035c5071cd82186e6666777d5e647d9fb1b063073393ba91b52de98ec
+W08-beneficiario	W08	beneficiario	F	1024x768	1	antes	captures/ux/antes/W08-beneficiario-1024x768@1.png	1fa982bbf24ad6f1ea36eee9f0235349263ed2c4351010780fa0afa20c773b56
+W08-beneficiario	W08	beneficiario	F	1280x800	1	antes	captures/ux/antes/W08-beneficiario-1280x800@1.png	67d4b295d89b688e4d3e7dbcb486545d5f21b9d71061a454c145bdf02c59b88b
+W08-beneficiario	W08	beneficiario	F	1440x900	1	antes	captures/ux/antes/W08-beneficiario-1440x900@1.png	cb570b467c370abfdb1506d1f745fdff2c509481b59b158365923ac751b2057e
+W08-beneficiario	W08	beneficiario	F	1920x1080	1	antes	captures/ux/antes/W08-beneficiario-1920x1080@1.png	576b8f8063b9efdfe6320e712284dad4406f86fa141d6ecc1d2f6bdac3a2f2a5
+W08-beneficiario	W08	beneficiario	F	320x640	1	antes	captures/ux/antes/W08-beneficiario-320x640@1.png	1602e9a843d8f6c65cb5ec29859491409e1959fdf1f7fbc32f34c3f7153a7d90
+W08-beneficiario	W08	beneficiario	F	390x844	1	antes	captures/ux/antes/W08-beneficiario-390x844@1.png	e2770b68c059e0f7dce7bccda20726e12d75d4593971812056e1fd1b97a53b3d
+W08-beneficiario	W08	beneficiario	F	640x512	2	antes	captures/ux/antes/W08-beneficiario-640x512@2.png	3fbe61aaad9f3fa093ad866cc3a76d6d7b1619af70233231fcf2b28fee02d6f9
+W08-beneficiario	W08	beneficiario	F	768x1024	1	antes	captures/ux/antes/W08-beneficiario-768x1024@1.png	ff79799270813a9c8c2a0f780d798809a1b5dbb8528c0ff9cbff09e1c9830d74
+W08-errores	W08	errores	F	1024x768	1	antes	captures/ux/antes/W08-errores-1024x768@1.png	0063c56e8481666a09ad1bb17f640beed34bc3843dc99fc40b4d05178cc1fab3
+W08-errores	W08	errores	F	1280x800	1	antes	captures/ux/antes/W08-errores-1280x800@1.png	034631c2c5b42ae4e93890a3bd87feda5b2f78079848ad26dd4abfc74b488496
+W08-errores	W08	errores	F	1440x900	1	antes	captures/ux/antes/W08-errores-1440x900@1.png	43a1c4eb36f4afecd8435f84cb0e53ec3b3cc96f7248ca6282a098ae78af3ffc
+W08-errores	W08	errores	F	1920x1080	1	antes	captures/ux/antes/W08-errores-1920x1080@1.png	6c381951b775188ae6f825d9c99a444bb6bdea540375e65cf15eaa938448eb63
+W08-errores	W08	errores	F	320x640	1	antes	captures/ux/antes/W08-errores-320x640@1.png	085701c8de0c8b513df13c48925c8c023895aadb135648134b32069f986e4318
+W08-errores	W08	errores	F	390x844	1	antes	captures/ux/antes/W08-errores-390x844@1.png	440bd5e7b9912367c4d2a698949b9da6413268f313772068b3bf13ee96636738
+W08-errores	W08	errores	F	640x512	2	antes	captures/ux/antes/W08-errores-640x512@2.png	c864b9b680c9ac16c65282cbbc7e6c8fd2e1217bfae57bca8bd4e6af790d70a6
+W08-errores	W08	errores	F	768x1024	1	antes	captures/ux/antes/W08-errores-768x1024@1.png	1d6e5e09798afea1255f3743abf46454a2254d06f5005c678ffee28f843a3d2e
+W08-propias	W08	propias	F	1024x768	1	antes	captures/ux/antes/W08-propias-1024x768@1.png	ba1add896f9917e921888490c84476cf220bedfd341e4d99a5ffb805f5700173
+W08-propias	W08	propias	F	1280x800	1	antes	captures/ux/antes/W08-propias-1280x800@1.png	8cc034d93900c655c1f4c43470c29762845b62db73b016b8c2d2924e883d9b04
+W08-propias	W08	propias	F	1440x900	1	antes	captures/ux/antes/W08-propias-1440x900@1.png	9405000a445063b5fcfe4f44bf7ec4273387f08a20c3f2deb08567d4aefa3fc6
+W08-propias	W08	propias	F	1920x1080	1	antes	captures/ux/antes/W08-propias-1920x1080@1.png	5478950ac2add0d242f76a03ef5635e34680933a7471733823525f9f4a50ddd3
+W08-propias	W08	propias	F	320x640	1	antes	captures/ux/antes/W08-propias-320x640@1.png	9e26b74d9920af7027bbda828c2f8fead0c3bc2d7c327d947990455ea6695630
+W08-propias	W08	propias	F	390x844	1	antes	captures/ux/antes/W08-propias-390x844@1.png	428eeb25696e49a0f1ef9c5a9ee510ce9e034c0b9a0c3fcd96f9edf9367d5044
+W08-propias	W08	propias	F	640x512	2	antes	captures/ux/antes/W08-propias-640x512@2.png	e4362a2d339d477deff8ccc9017dda2662ff5187fb2b2b47ec7cea7d74a5c1f5
+W08-propias	W08	propias	F	768x1024	1	antes	captures/ux/antes/W08-propias-768x1024@1.png	ae4b9f7417e51ec951e18463982eb260d70b9e10020a804091f6a2e13828db53
+W08-sin-beneficiarios	W08	sin beneficiarios	F	1024x768	1	antes	captures/ux/antes/W08-sin-beneficiarios-1024x768@1.png	dcd66b50329eacaf68c36b3fbc635f61a48f57d47b7763f3bbc4dae92f4a9422
+W08-sin-beneficiarios	W08	sin beneficiarios	F	1280x800	1	antes	captures/ux/antes/W08-sin-beneficiarios-1280x800@1.png	8eeeb665a51d51de5bdcd851b2f2e0c01e13f90739ab93da13c9608e923e6aa3
+W08-sin-beneficiarios	W08	sin beneficiarios	F	1440x900	1	antes	captures/ux/antes/W08-sin-beneficiarios-1440x900@1.png	12707e96c900a736c0d1c4684b08c666dafa8d732851fe364d0067908c8604c1
+W08-sin-beneficiarios	W08	sin beneficiarios	F	1920x1080	1	antes	captures/ux/antes/W08-sin-beneficiarios-1920x1080@1.png	5d1103ff615628688bbd2bc21a765012182ecf2033d1adf05a6fc8197d602952
+W08-sin-beneficiarios	W08	sin beneficiarios	F	320x640	1	antes	captures/ux/antes/W08-sin-beneficiarios-320x640@1.png	25c4597538a653cd633951ff4e12027687adb775725809bfbc9c6fa9c6ddac61
+W08-sin-beneficiarios	W08	sin beneficiarios	F	390x844	1	antes	captures/ux/antes/W08-sin-beneficiarios-390x844@1.png	d343123cb15ec3be023f37dfdb2b293d0759e328ae2c6571df6d7be230bf1d58
+W08-sin-beneficiarios	W08	sin beneficiarios	F	640x512	2	antes	captures/ux/antes/W08-sin-beneficiarios-640x512@2.png	5a1a1b4bae4478b8dad468ebdc93dc91dcf5094eec295915bf807e37afe1834c
+W08-sin-beneficiarios	W08	sin beneficiarios	F	768x1024	1	antes	captures/ux/antes/W08-sin-beneficiarios-768x1024@1.png	4a87cea0dcc244f2a0c66a68aced32ddc382cb3ab251d5aef387c8c79b584879
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	1024x768	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-1024x768@1.png	5765697e4c4f8186c146b723edc41cfd76ab548c9364024e346cb2dc5e0821b6
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	1280x800	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-1280x800@1.png	c4f4ce51a79b354ab2024fcfec4fd8f79323ec803da59b0c4ecf237104b80370
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	1440x900	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-1440x900@1.png	8dfb21dc13d5d5e1194529494913d6e79caedc2eaf9f53dce5811b9ce84ce506
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	1920x1080	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-1920x1080@1.png	60eaaf556c95951c539881b5a2336f9f7c9f8e149dec77ba432b41c262db1e00
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	320x640	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-320x640@1.png	b85e8883ef56ea26033c47eddf9b95fce5cbb2a0c726d45e0944de55d03015ea
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	390x844	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-390x844@1.png	c4f747cbf699f311d2d591b9e09d75e30f9fb24da3f4cdcb51d929dd1126ef8f
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	640x512	2	antes	captures/ux/antes/W08-sin-segunda-cuenta-640x512@2.png	b93cf763400785c9a186075ce8676831457a1aa4508210b76aba0cdd3a3bead3
+W08-sin-segunda-cuenta	W08	sin segunda cuenta	F	768x1024	1	antes	captures/ux/antes/W08-sin-segunda-cuenta-768x1024@1.png	e468a8694651d745ab9ea37f529fb1c18a3ab38bae13c006b7c24bb03a1dff03
+W09-codigo	W09	código	F	1024x768	1	antes	captures/ux/antes/W09-codigo-1024x768@1.png	130cd9982cb0295a704b4bf67f77a520c2408f3608f2e0a1accb6a9ff054880b
+W09-codigo	W09	código	F	1280x800	1	antes	captures/ux/antes/W09-codigo-1280x800@1.png	bc303cc89ea5fead1d70d5dd4cdeaf94e4655c8ab7a78f6a770d803b6a4b7bc1
+W09-codigo	W09	código	F	1440x900	1	antes	captures/ux/antes/W09-codigo-1440x900@1.png	deb7b5bde1e08d0c1fa117ee015a004848655c96f1ce72fbcdbb10f619bab2a0
+W09-codigo	W09	código	F	1920x1080	1	antes	captures/ux/antes/W09-codigo-1920x1080@1.png	d75b5d3123e3074aae4cf7175ee48a431673e272a452cf775b0dd2f9bef513bf
+W09-codigo	W09	código	F	320x640	1	antes	captures/ux/antes/W09-codigo-320x640@1.png	ee8c1d8eaca94eeb4e9fd3a4cf8c6c56f4c217ac21b3989463cdd75b884e5661
+W09-codigo	W09	código	F	390x844	1	antes	captures/ux/antes/W09-codigo-390x844@1.png	de101f85fa698284910dec5fb90deecbd4c1872adbd7a88c71763be457c3cb68
+W09-codigo	W09	código	F	640x512	2	antes	captures/ux/antes/W09-codigo-640x512@2.png	9d945b589094716d2b0f4f25e8732ebd64a9265558480862eda486b9ce28c53f
+W09-codigo	W09	código	F	768x1024	1	antes	captures/ux/antes/W09-codigo-768x1024@1.png	e8e6bc5f151de80e061845b1d58df879ebb75dffd3f3109f2439cc35516ac1f3
+W09-normal	W09	normal	F	1024x768	1	antes	captures/ux/antes/W09-normal-1024x768@1.png	e58274d2e3d8684c157ed88a41b1cc06ff16b07e44afe340e3535a3d9cd16052
+W09-normal	W09	normal	F	1280x800	1	antes	captures/ux/antes/W09-normal-1280x800@1.png	85520a611ddd7035933e02b6114359ad69a8c3368cff2172a4a1ffe899b80e9b
+W09-normal	W09	normal	F	1440x900	1	antes	captures/ux/antes/W09-normal-1440x900@1.png	9faeb3fb9bcaab519183056ec3e3c0f81f5cb355babdce5204ead1deb92ba9dc
+W09-normal	W09	normal	F	1920x1080	1	antes	captures/ux/antes/W09-normal-1920x1080@1.png	2cd2d5ae1334303ff3a3401c7effc9ac5809c952993d9e7cc5a657926df38b1a
+W09-normal	W09	normal	F	320x640	1	antes	captures/ux/antes/W09-normal-320x640@1.png	85468cf065405cfb012cf549bbe5a37b4da8f2ab4ca1f7326d8d761e20f669bc
+W09-normal	W09	normal	F	390x844	1	antes	captures/ux/antes/W09-normal-390x844@1.png	e9eb1b8d2be70bf9b131eeea603af85e217fb5c13d4572466e651c93d509bea9
+W09-normal	W09	normal	F	640x512	2	antes	captures/ux/antes/W09-normal-640x512@2.png	74b5269d19c52ef1a4136a9e261bb94a5effe542bbef1657ca5fa0793e904339
+W09-normal	W09	normal	F	768x1024	1	antes	captures/ux/antes/W09-normal-768x1024@1.png	cf71e6d166e93664b0df8e7a758637f1b94ead07072201224cf07a9318d49c15
+W09-propias	W09	propias	F	1024x768	1	antes	captures/ux/antes/W09-propias-1024x768@1.png	4827bc437a5475168a52ce1dd71741c864a9ada1d5eea435c57b5f68f94cbfe8
+W09-propias	W09	propias	F	1280x800	1	antes	captures/ux/antes/W09-propias-1280x800@1.png	a17485909b375fe99f30a0f1b85239ec5d95626bcfd38a36e73f72fa257007d0
+W09-propias	W09	propias	F	1440x900	1	antes	captures/ux/antes/W09-propias-1440x900@1.png	2f5da8ef8bfee6e591b2736434de886cde3e02cf2382b54208cc67cdc6c69c47
+W09-propias	W09	propias	F	1920x1080	1	antes	captures/ux/antes/W09-propias-1920x1080@1.png	11782e6349821fdf6e19e46b30fa6b439aedb7b4b1d260e736f2b139b200e421
+W09-propias	W09	propias	F	320x640	1	antes	captures/ux/antes/W09-propias-320x640@1.png	c01fb1cb7ce4f223c0c5c6e50acecc7b37cd0637fecd0bae632376cb7b0fbcb4
+W09-propias	W09	propias	F	390x844	1	antes	captures/ux/antes/W09-propias-390x844@1.png	1c9d70b7e1fc5a6816da8e543432432eb6f2c6d864858aa8d6d0716fe867f8f1
+W09-propias	W09	propias	F	640x512	2	antes	captures/ux/antes/W09-propias-640x512@2.png	628eaef86e654ca279b3b6c2adffcff4ce467cb4d556e89b29f431da036edf65
+W09-propias	W09	propias	F	768x1024	1	antes	captures/ux/antes/W09-propias-768x1024@1.png	d7fa18dfcd81454580ffea3d16f3db9699b310be7ca5a0ae6e2afbe1fb072ea6
+W10-agotados	W10	agotados	F	1024x768	1	antes	captures/ux/antes/W10-agotados-1024x768@1.png	02a87906423864879521de0b200bdeeba9f69f4f3a63aad3877f582ff63f2602
+W10-agotados	W10	agotados	F	1280x800	1	antes	captures/ux/antes/W10-agotados-1280x800@1.png	a4826dbcf23957ab5f59447ec73d01cb148bdc325715b0b972322788b4ffe6bd
+W10-agotados	W10	agotados	F	1440x900	1	antes	captures/ux/antes/W10-agotados-1440x900@1.png	eab533c5f23eea0e3c3bce2b49f3ecddf530715baffec3b1539587d0cbcce309
+W10-agotados	W10	agotados	F	1920x1080	1	antes	captures/ux/antes/W10-agotados-1920x1080@1.png	8c1389266cf07fb423ad34c86a238a095fad8579b0f146309377118bf632fdb1
+W10-agotados	W10	agotados	F	320x640	1	antes	captures/ux/antes/W10-agotados-320x640@1.png	4dd85748ecdda9f7dea8248ab7d4410de6ca970072fb773e8a3c3a9ba92157fa
+W10-agotados	W10	agotados	F	390x844	1	antes	captures/ux/antes/W10-agotados-390x844@1.png	4661ea74bc4a882e86bfee809fe3ac715682522add7558ae4e84a3c34193fa15
+W10-agotados	W10	agotados	F	640x512	2	antes	captures/ux/antes/W10-agotados-640x512@2.png	30f3a2b3e36c8260d935122d3a0029da0f98ba087a5f6d4f42e46bc6376af01c
+W10-agotados	W10	agotados	F	768x1024	1	antes	captures/ux/antes/W10-agotados-768x1024@1.png	7f0be2bd1c6267b6275dbf52644e1032c225846af4b9260f340e103efda0f873
+W10-completo	W10	completo	F	1024x768	1	antes	captures/ux/antes/W10-completo-1024x768@1.png	35acc3a2cc7d40a459b46a5aca70eb22ac704b84c2824962a14c638e260c280c
+W10-completo	W10	completo	F	1280x800	1	antes	captures/ux/antes/W10-completo-1280x800@1.png	04f8d84b903454d4d8a20e6a9f5fe4223268d34271b0c79f0c0e8828a99928ca
+W10-completo	W10	completo	F	1440x900	1	antes	captures/ux/antes/W10-completo-1440x900@1.png	9182c052477d3d8527dc6957b0d151ced3d29c8f10cddafe58f9ed87dde6b779
+W10-completo	W10	completo	F	1920x1080	1	antes	captures/ux/antes/W10-completo-1920x1080@1.png	c1ba1e16a4ac09bb4076448bdd99b0a0a83919a27dfd16d965c67d115b75dd48
+W10-completo	W10	completo	F	320x640	1	antes	captures/ux/antes/W10-completo-320x640@1.png	953b282c2c3fea5248e8f6029fa906d877c56902855f87e2d0b5dc107cc2f976
+W10-completo	W10	completo	F	390x844	1	antes	captures/ux/antes/W10-completo-390x844@1.png	7c350d2fee04e7cb8b5afca556d5be00c6ff046c0e63cef01a9f46f85e4634d2
+W10-completo	W10	completo	F	640x512	2	antes	captures/ux/antes/W10-completo-640x512@2.png	76387150d334982d4aa4db0e6664d9af2a904c584431af1af7146db3e2a2a66a
+W10-completo	W10	completo	F	768x1024	1	antes	captures/ux/antes/W10-completo-768x1024@1.png	15bc0f2aeedb667fd05f9d7f80815e684ecc94e2d1b7e3f1eb89eea2f14d4428
+W10-expirado	W10	expirado	F	1024x768	1	antes	captures/ux/antes/W10-expirado-1024x768@1.png	a9f8738842937cf80420d6de022355a26a1ca30e6318bcf358faa55c0c704862
+W10-expirado	W10	expirado	F	1280x800	1	antes	captures/ux/antes/W10-expirado-1280x800@1.png	85536f1f26d03b416a8cabb583501b77bc60f4c2a351e4aba23174f94ff9b299
+W10-expirado	W10	expirado	F	1440x900	1	antes	captures/ux/antes/W10-expirado-1440x900@1.png	1a64c42d65cd35a7ab9350ba9f36e87e91290109e3f0e4e40d44e47eabde0e5b
+W10-expirado	W10	expirado	F	1920x1080	1	antes	captures/ux/antes/W10-expirado-1920x1080@1.png	55cf51be1df03c747e0b44a6ebee9444fd21618a190c63816b676c430599276a
+W10-expirado	W10	expirado	F	320x640	1	antes	captures/ux/antes/W10-expirado-320x640@1.png	5a908ab2104246c9c00daea8723747813b7c9c276725cce8f9ca2ab6c554f790
+W10-expirado	W10	expirado	F	390x844	1	antes	captures/ux/antes/W10-expirado-390x844@1.png	e65f38088a26a87dd37e80f30b9a57bd018224ce8ac8a6042a583579de5aa219
+W10-expirado	W10	expirado	F	640x512	2	antes	captures/ux/antes/W10-expirado-640x512@2.png	f3c217e05657d3e39c5b201cad56c67e169c445928f68deba2c706f5aea557fa
+W10-expirado	W10	expirado	F	768x1024	1	antes	captures/ux/antes/W10-expirado-768x1024@1.png	62e8f615c5d5fb25502ff60603098ca6fd18348fe59d6107d5ee6b856f6da9fe
+W10-incorrecto	W10	incorrecto	F	1024x768	1	antes	captures/ux/antes/W10-incorrecto-1024x768@1.png	1a10882dbaa3984ad5b0e588c525985966dbebd8b309428cc57626b39247c81c
+W10-incorrecto	W10	incorrecto	F	1280x800	1	antes	captures/ux/antes/W10-incorrecto-1280x800@1.png	44d89c6154d6d35ea5f1aeae26545199a43c55d616f6dcd9db61f888d724e7f8
+W10-incorrecto	W10	incorrecto	F	1440x900	1	antes	captures/ux/antes/W10-incorrecto-1440x900@1.png	160a424bbf13f3e9b7926ce9705b5680d4e4c7cb0a27de253e3d6bd6a76f72a3
+W10-incorrecto	W10	incorrecto	F	1920x1080	1	antes	captures/ux/antes/W10-incorrecto-1920x1080@1.png	bd3f82d497252f245bd3f5a882145c62767e29034f9f27d2754234684db9d69f
+W10-incorrecto	W10	incorrecto	F	320x640	1	antes	captures/ux/antes/W10-incorrecto-320x640@1.png	94d52878b421750162bb4af444b1a0c8cdb59775d5ed03c6a10a4e13abcda66a
+W10-incorrecto	W10	incorrecto	F	390x844	1	antes	captures/ux/antes/W10-incorrecto-390x844@1.png	684f8e0be1afff95b52b8ed5dea2096c6c8ea421f694cd471ec4516887fd9bf7
+W10-incorrecto	W10	incorrecto	F	640x512	2	antes	captures/ux/antes/W10-incorrecto-640x512@2.png	1516cefee80d8994b81fad03d6ea97ba04e12f73a016f95344e6631dd80ad647
+W10-incorrecto	W10	incorrecto	F	768x1024	1	antes	captures/ux/antes/W10-incorrecto-768x1024@1.png	a0635c7d2df74881986ecfb62df8ea162a8e535363cb10a7242a815795b112cb
+W10-vacio	W10	vacío	F	1024x768	1	antes	captures/ux/antes/W10-vacio-1024x768@1.png	514c248d972706e7fd16c19ffe406c48305c7c552bfcc37b13a4be512a9def54
+W10-vacio	W10	vacío	F	1280x800	1	antes	captures/ux/antes/W10-vacio-1280x800@1.png	721338667ba9d7d5b1708ce4c60a831ccb1fbfff9b13c8b4d14348e2fbf4035a
+W10-vacio	W10	vacío	F	1440x900	1	antes	captures/ux/antes/W10-vacio-1440x900@1.png	fd308b99fe9596b03c8e71b3b2a0cd8611e8ca54df0473654c92e43c9c66cd7b
+W10-vacio	W10	vacío	F	1920x1080	1	antes	captures/ux/antes/W10-vacio-1920x1080@1.png	6e702044bce5e18fbb3df68675a4697b87acadf6ea23fc154d660831abc53c59
+W10-vacio	W10	vacío	F	320x640	1	antes	captures/ux/antes/W10-vacio-320x640@1.png	1c7a54e7aba2859fb6439b26e4945089d1a16c1510c47d9085b1843ecd1fe184
+W10-vacio	W10	vacío	F	390x844	1	antes	captures/ux/antes/W10-vacio-390x844@1.png	6ab4a7f7ed05682c236bb1564b421fd195e1a063855a024166b737982d58024f
+W10-vacio	W10	vacío	F	640x512	2	antes	captures/ux/antes/W10-vacio-640x512@2.png	0f0d1ef8a4b79c92999b6c0df6cddfe62ffb07a5de308448d043616ae1b7cf1e
+W10-vacio	W10	vacío	F	768x1024	1	antes	captures/ux/antes/W10-vacio-768x1024@1.png	4529f2e01cff130bd9d52c1e39391f1a37a61a53bb6dcbbec2cf43a26ef977c5
+W10-verificando	W10	verificando	F	1024x768	1	antes	captures/ux/antes/W10-verificando-1024x768@1.png	3e2247e9c637d68a4a72cb561ed080a4874bbe1e2987a736e7c0f419e1c50c0d
+W10-verificando	W10	verificando	F	1280x800	1	antes	captures/ux/antes/W10-verificando-1280x800@1.png	25428ed459768e6a58d5647773cc2830e45b04d91d93b38e7010a4a20e893f42
+W10-verificando	W10	verificando	F	1440x900	1	antes	captures/ux/antes/W10-verificando-1440x900@1.png	46757e63fa6cbbcd513eb3eed8f2f75f3033b31cb23465d42585ce9bb6482dca
+W10-verificando	W10	verificando	F	1920x1080	1	antes	captures/ux/antes/W10-verificando-1920x1080@1.png	00057f99d51d737899be4eabfc65bafe24a3519fc94118c05cb414327a658368
+W10-verificando	W10	verificando	F	320x640	1	antes	captures/ux/antes/W10-verificando-320x640@1.png	5d47c39bde9f5fc539379066eddf695c27d82223ae6ac5c53565f6d36b352fd7
+W10-verificando	W10	verificando	F	390x844	1	antes	captures/ux/antes/W10-verificando-390x844@1.png	c4c6aeb5887c00840851f8e003a5c00396bb642d5daa7ffec63dd58807f68174
+W10-verificando	W10	verificando	F	640x512	2	antes	captures/ux/antes/W10-verificando-640x512@2.png	3a8555f5102152ceb063f98e91d537de651cb6e43eec4fa12d8142eed615355b
+W10-verificando	W10	verificando	F	768x1024	1	antes	captures/ux/antes/W10-verificando-768x1024@1.png	987adfec94d3e0c13298227515c90d30102d6271c3c0731d766f4797043fc94c
+W11-desconocido	W11	desconocido	F	1024x768	1	antes	captures/ux/antes/W11-desconocido-1024x768@1.png	b711dca54c754dfd0637dda8627ca951cde1e887a4be1d12251869e544528394
+W11-desconocido	W11	desconocido	F	1280x800	1	antes	captures/ux/antes/W11-desconocido-1280x800@1.png	e39a2c6d857ceda94145cc939708b91f8df75d2941fe2c46feb25c5f75774cc6
+W11-desconocido	W11	desconocido	F	1440x900	1	antes	captures/ux/antes/W11-desconocido-1440x900@1.png	1046e60c8f2d29e1ffbbc19b7d7bfed3c9646e8dede8dfcceac30b8c93a692d2
+W11-desconocido	W11	desconocido	F	1920x1080	1	antes	captures/ux/antes/W11-desconocido-1920x1080@1.png	06b20d9f68f8c97981ef92cde977c8ef6acc66eb3c8aeb30704cb71ae4da42bf
+W11-desconocido	W11	desconocido	F	320x640	1	antes	captures/ux/antes/W11-desconocido-320x640@1.png	65215cfdfc677643e6c76d4c17522d96680e3c3cdf077c788bf09243b5918d23
+W11-desconocido	W11	desconocido	F	390x844	1	antes	captures/ux/antes/W11-desconocido-390x844@1.png	4d5454f5f8e6507c06b274f560c97a96bc2f344a05fb01036115c8ea54dd57ac
+W11-desconocido	W11	desconocido	F	640x512	2	antes	captures/ux/antes/W11-desconocido-640x512@2.png	53f7d1b212b8674f8a14ec27a3e37f059a676a710276acc32bdaffddf4ad0565
+W11-desconocido	W11	desconocido	F	768x1024	1	antes	captures/ux/antes/W11-desconocido-768x1024@1.png	c536cd266af8bb86f4a24aedd674e0a88be5b26cc7c7df41e908f81de2f2964e
+W11-enviando	W11	enviando	F	1024x768	1	antes	captures/ux/antes/W11-enviando-1024x768@1.png	40feebd5b5bff2ed073a85e70f0e932acac681b66f08331ecce08fac16e8a6f9
+W11-enviando	W11	enviando	F	1280x800	1	antes	captures/ux/antes/W11-enviando-1280x800@1.png	d25b501c1c81746acfbf476a8a10e75bb274dfcc7dcb44fd1c44089dba4cebb7
+W11-enviando	W11	enviando	F	1440x900	1	antes	captures/ux/antes/W11-enviando-1440x900@1.png	2ab2da2051bdf86c46561a3d7c91f7051940ec2a3248b48cd43197cfa70ec17d
+W11-enviando	W11	enviando	F	1920x1080	1	antes	captures/ux/antes/W11-enviando-1920x1080@1.png	de0940d12f94229d58e385e35147d09e1a52f5381037b86dc7389806e5c5fe8f
+W11-enviando	W11	enviando	F	320x640	1	antes	captures/ux/antes/W11-enviando-320x640@1.png	34ca55c18f596b47452202ab50271ea93ee6e79a1a1a570ca9595d3dd94b28a5
+W11-enviando	W11	enviando	F	390x844	1	antes	captures/ux/antes/W11-enviando-390x844@1.png	d91602bd47354b5484faac1af942dec3d8b68e315acc4e2bafb73e47e64598f7
+W11-enviando	W11	enviando	F	640x512	2	antes	captures/ux/antes/W11-enviando-640x512@2.png	edd1f21a034bda0a3c1d4a7a391166567d8c12881167ad4796c38775e5f9c712
+W11-enviando	W11	enviando	F	768x1024	1	antes	captures/ux/antes/W11-enviando-768x1024@1.png	045b56bba34e3280f14ad7aeaeed7d0c90055c36e951e4609ee7b6cc8a1d08ab
+W11-verificando	W11	verificando	F	1024x768	1	antes	captures/ux/antes/W11-verificando-1024x768@1.png	3bd457c762a6be861a5bd5524b343e91ea6d763a45d730ee9a1e253d0e9c7755
+W11-verificando	W11	verificando	F	1280x800	1	antes	captures/ux/antes/W11-verificando-1280x800@1.png	d3ed55a2c75c20b1bf97d00d461186459cedc0266d5bb43f11e39a5151e0ac90
+W11-verificando	W11	verificando	F	1440x900	1	antes	captures/ux/antes/W11-verificando-1440x900@1.png	c3580a9e930d3b0f3d56ab1b760ab398564681e447cb987f4a09b13d635dd7a9
+W11-verificando	W11	verificando	F	1920x1080	1	antes	captures/ux/antes/W11-verificando-1920x1080@1.png	57bf364a18a64219d12ed6e9642b8b8804922dd0ced24f121abe0586c6475acc
+W11-verificando	W11	verificando	F	320x640	1	antes	captures/ux/antes/W11-verificando-320x640@1.png	81686102f5070ace232a819df6ea87c99ad535a320adaa8663c6a7a45dffab69
+W11-verificando	W11	verificando	F	390x844	1	antes	captures/ux/antes/W11-verificando-390x844@1.png	8d1698b29b2bcacd21e8e9039a41d704b9a0213c523568d014cdce132478e21f
+W11-verificando	W11	verificando	F	640x512	2	antes	captures/ux/antes/W11-verificando-640x512@2.png	28bd94bba2b984d70188de566916812edf82ac2a2321a289befff8caa4e37674
+W11-verificando	W11	verificando	F	768x1024	1	antes	captures/ux/antes/W11-verificando-768x1024@1.png	17ab83eea51c766c62f0657404ffad4f8b352bb444cc11a215e2d69f3eacb616
+W12-beneficiario	W12	beneficiario	F	1024x768	1	antes	captures/ux/antes/W12-beneficiario-1024x768@1.png	32a050834aa6a9a750d57bd84c94450f6c35e2458d16f483a8fd456e009ef7cf
+W12-beneficiario	W12	beneficiario	F	1280x800	1	antes	captures/ux/antes/W12-beneficiario-1280x800@1.png	5f2dbe483cf15f3482f601ae140e2d3189fb78944acd47387c915e66771a96e1
+W12-beneficiario	W12	beneficiario	F	1440x900	1	antes	captures/ux/antes/W12-beneficiario-1440x900@1.png	5f63431086bb612e00e3e2cd2b86bfef721116a79513e1a2c8ff831a6c5cb83f
+W12-beneficiario	W12	beneficiario	F	1920x1080	1	antes	captures/ux/antes/W12-beneficiario-1920x1080@1.png	cc665259000dfabdac490ab7af6270770886fa4dc1101bca3786a89e2407033f
+W12-beneficiario	W12	beneficiario	F	320x640	1	antes	captures/ux/antes/W12-beneficiario-320x640@1.png	bbaf7f3a09c6c992bf15c8d3f7b06ff3d54bec4b1d7065ab297ac267e802b8de
+W12-beneficiario	W12	beneficiario	F	390x844	1	antes	captures/ux/antes/W12-beneficiario-390x844@1.png	90dbc848aa5e283e679a2191edd0eac425bfff46c4d4d8c003ed7be844588107
+W12-beneficiario	W12	beneficiario	F	640x512	2	antes	captures/ux/antes/W12-beneficiario-640x512@2.png	5b9a75cb34e73a3c3fb98d9a0c1f6533c365fb8ec0aca34158650e2de6b9084e
+W12-beneficiario	W12	beneficiario	F	768x1024	1	antes	captures/ux/antes/W12-beneficiario-768x1024@1.png	09145b8edf0ea3a0128789a8d96bacb4ad1015a234d6315e92d53ac8cd066e88
+W12-propias	W12	propias	F	1024x768	1	antes	captures/ux/antes/W12-propias-1024x768@1.png	f6545ae0a8e8dee1a83576b8585bdd884b795e226221eb4f1560f4723c96c1e3
+W12-propias	W12	propias	F	1280x800	1	antes	captures/ux/antes/W12-propias-1280x800@1.png	5ed73e78dd42c382e5176f23059df9594eac7e177749def17904163fb838ce49
+W12-propias	W12	propias	F	1440x900	1	antes	captures/ux/antes/W12-propias-1440x900@1.png	4abac2c728f173aeacc577b293abd07cfba392e806e958f37892fae9017f7cc1
+W12-propias	W12	propias	F	1920x1080	1	antes	captures/ux/antes/W12-propias-1920x1080@1.png	34bfa4c193a8151510aac5d96334000d0bf2aa47e8decce811da3a118dd886fc
+W12-propias	W12	propias	F	320x640	1	antes	captures/ux/antes/W12-propias-320x640@1.png	22949708e1fccf0e765f9582f525bfc41e9bf025c314d08cf109cd30fd781791
+W12-propias	W12	propias	F	390x844	1	antes	captures/ux/antes/W12-propias-390x844@1.png	13b387dfc3c22a05a1b5b7118122e2a3b7f2496e2bf1c5117e8bdec0cdd060dd
+W12-propias	W12	propias	F	640x512	2	antes	captures/ux/antes/W12-propias-640x512@2.png	331c981ea9ba7e27982b40ecd9f814bb08506eaa60ee4843ed09cfcea8547a89
+W12-propias	W12	propias	F	768x1024	1	antes	captures/ux/antes/W12-propias-768x1024@1.png	5dc872565e6a610d0a35b399593fd26cfa0516e6035ca5cae4224400b3876030
+W13-limite	W13	límite	F	1024x768	1	antes	captures/ux/antes/W13-limite-1024x768@1.png	0c52274afebf0146deb2180c0f2907022661ff9b83100be2bfaa2a994483d217
+W13-limite	W13	límite	F	1280x800	1	antes	captures/ux/antes/W13-limite-1280x800@1.png	f74fe1326b60d827155698a9730d55816f85970e87d8f0e196ef16e04e6058ec
+W13-limite	W13	límite	F	1440x900	1	antes	captures/ux/antes/W13-limite-1440x900@1.png	75fd1c7ec9da13678a746ecded3dbfd01c16baf178ae558a8ac52ff6eda58728
+W13-limite	W13	límite	F	1920x1080	1	antes	captures/ux/antes/W13-limite-1920x1080@1.png	46e807cfafd5ba1b81fc3cb7723a71a539561328568fb1da64477da9bb461a89
+W13-limite	W13	límite	F	320x640	1	antes	captures/ux/antes/W13-limite-320x640@1.png	dc556b315794b6b4e6b4d92c1b5709fb19b56a1e5b5e039501bc586fc0ed8a09
+W13-limite	W13	límite	F	390x844	1	antes	captures/ux/antes/W13-limite-390x844@1.png	e0ab3b4f6f6fcf4b5e613fe832015ff77b896a0fab859e6a60ed66e61538f14a
+W13-limite	W13	límite	F	640x512	2	antes	captures/ux/antes/W13-limite-640x512@2.png	a36bf423168b292bbdfd6ce6c9d3ef6db51f981fb00c24dfaf09e5c6537aa71f
+W13-limite	W13	límite	F	768x1024	1	antes	captures/ux/antes/W13-limite-768x1024@1.png	93b7174cb0136e39be037c74c7b3a52ea3d28ec25dbc43ee48c22cfaf44e6055
+W13-saldo	W13	saldo	F	1024x768	1	antes	captures/ux/antes/W13-saldo-1024x768@1.png	46904fbd780a4c20c05f2ea4841d7c1366cf94faaa8fc97e5fc371d33b567414
+W13-saldo	W13	saldo	F	1280x800	1	antes	captures/ux/antes/W13-saldo-1280x800@1.png	454f6487ddc0ec0dfaa3df8ad04852d875fd100e7ecc8f6d59a9fec7800099a4
+W13-saldo	W13	saldo	F	1440x900	1	antes	captures/ux/antes/W13-saldo-1440x900@1.png	5da5e73a9f1ae3d097b8a0909309d1ea3e87fe73c4f3a3d810b9e6a663499cb3
+W13-saldo	W13	saldo	F	1920x1080	1	antes	captures/ux/antes/W13-saldo-1920x1080@1.png	47b2cfb6b98d306678cf9534a4e3feae540e7cb406d97501c48d7fa10b26f9cd
+W13-saldo	W13	saldo	F	320x640	1	antes	captures/ux/antes/W13-saldo-320x640@1.png	472d0d24f0d05b086e5db9b691527de0c6c2f87fd4d2c0b34076fe9943d627a7
+W13-saldo	W13	saldo	F	390x844	1	antes	captures/ux/antes/W13-saldo-390x844@1.png	7e093d6f42da9b9a07084418c32b2fbc3cf97e9e7309bd9a8feaeda048154176
+W13-saldo	W13	saldo	F	640x512	2	antes	captures/ux/antes/W13-saldo-640x512@2.png	73ff242a4220ebe59379155bfa9f618cee27c41ccf486993c2f8e6157c445069
+W13-saldo	W13	saldo	F	768x1024	1	antes	captures/ux/antes/W13-saldo-768x1024@1.png	56b96cc5993ade399495ad787885ec3a1eaa9719113f025c2ea4216531d58846
+W14-acceso-no-disponible	W14	acceso no disponible	F	1024x768	1	antes	captures/ux/antes/W14-acceso-no-disponible-1024x768@1.png	08d9ac98541691c52ec922b610a6f774f3fb4e8ab12be1cb0a7770bd0c866502
+W14-acceso-no-disponible	W14	acceso no disponible	F	1280x800	1	antes	captures/ux/antes/W14-acceso-no-disponible-1280x800@1.png	8ecf3225ea7b33023b4f51b4f969b094f36c9278e7f7b4bd57e1dde2f1439ee1
+W14-acceso-no-disponible	W14	acceso no disponible	F	1440x900	1	antes	captures/ux/antes/W14-acceso-no-disponible-1440x900@1.png	0a88a1a7d29b91785b60bb6a61278ce017d0f6c5ddef16490042054c3db096fc
+W14-acceso-no-disponible	W14	acceso no disponible	F	1920x1080	1	antes	captures/ux/antes/W14-acceso-no-disponible-1920x1080@1.png	d0a8129d10318882275e8fa06bd4b3eeefca308deb3b370d9c6a8dd008345b65
+W14-acceso-no-disponible	W14	acceso no disponible	F	320x640	1	antes	captures/ux/antes/W14-acceso-no-disponible-320x640@1.png	871389414ca82489f408148f1a69aa268338c7cbc35930deed7afd2ca4b4f427
+W14-acceso-no-disponible	W14	acceso no disponible	F	390x844	1	antes	captures/ux/antes/W14-acceso-no-disponible-390x844@1.png	671174b2a94bba499c5106517c56e426876448c48250378e6589a9344a847f1c
+W14-acceso-no-disponible	W14	acceso no disponible	F	640x512	2	antes	captures/ux/antes/W14-acceso-no-disponible-640x512@2.png	920bee07908c3e3c905b166d5220ef1a088c70fa0d2afa30ba4b6d3e8a07deb0
+W14-acceso-no-disponible	W14	acceso no disponible	F	768x1024	1	antes	captures/ux/antes/W14-acceso-no-disponible-768x1024@1.png	0fbfcbd9e8e7b78947bcc6d2736589fc87dbd9c8ca9ee643e6cd0e09f63fecf0
+W14-no-encontrada	W14	página no encontrada	F	1024x768	1	antes	captures/ux/antes/W14-no-encontrada-1024x768@1.png	d102c1ec8c31efee716b1c70d276ec8ec66dbc117421ddb56ba5e46c8b5b0426
+W14-no-encontrada	W14	página no encontrada	F	1280x800	1	antes	captures/ux/antes/W14-no-encontrada-1280x800@1.png	1c744d4b29db92dba13dcbdc43cd466ed08d499ed8a0b1df2f4bda93d1a2b69f
+W14-no-encontrada	W14	página no encontrada	F	1440x900	1	antes	captures/ux/antes/W14-no-encontrada-1440x900@1.png	78564e590c969e9e808430eda6800a0664fb82be4ce235b89d05219a4df247fd
+W14-no-encontrada	W14	página no encontrada	F	1920x1080	1	antes	captures/ux/antes/W14-no-encontrada-1920x1080@1.png	0746d9d62dc7f1d4ad73e3ef409c2b77e4750c10d5bb5a9f8758a171b6ebaa82
+W14-no-encontrada	W14	página no encontrada	F	320x640	1	antes	captures/ux/antes/W14-no-encontrada-320x640@1.png	05a4260bd4f083812493bac97b6b8128abbab70e1a3e6f3fa1d9f9e9e10108cd
+W14-no-encontrada	W14	página no encontrada	F	390x844	1	antes	captures/ux/antes/W14-no-encontrada-390x844@1.png	24185d95a3c78d59281c3315b82daf30158024f2c6320c8ae5662880280cbcfe
+W14-no-encontrada	W14	página no encontrada	F	640x512	2	antes	captures/ux/antes/W14-no-encontrada-640x512@2.png	6c16b1ca0da4ea18c624c62f253dde3487c0ff4f225857863ef8d3ae0001bce3
+W14-no-encontrada	W14	página no encontrada	F	768x1024	1	antes	captures/ux/antes/W14-no-encontrada-768x1024@1.png	758aa48d1df769f17ba549fae1f7f205c1a6047fd48658cadf5716eef2f5b264
+W14-vencida	W14	vencida	F	1024x768	1	antes	captures/ux/antes/W14-vencida-1024x768@1.png	87b7acd7a90f651552be63479ac9fc94113d29938f57eb2aa62da7673fc3f16b
+W14-vencida	W14	vencida	F	1280x800	1	antes	captures/ux/antes/W14-vencida-1280x800@1.png	b49e710e23f77956a50ef40fff0dffc506194df10388d03c793f33df83a07550
+W14-vencida	W14	vencida	F	1440x900	1	antes	captures/ux/antes/W14-vencida-1440x900@1.png	bd140686b54b70e4b9d97cbe4a59a50b720ae339a26da4868e00d8ed92f92995
+W14-vencida	W14	vencida	F	1920x1080	1	antes	captures/ux/antes/W14-vencida-1920x1080@1.png	bfc6fa7fa73bd8b2dfed1a4b6cd715ec303ac6071df6482ac4728e631e1dd9cf
+W14-vencida	W14	vencida	F	320x640	1	antes	captures/ux/antes/W14-vencida-320x640@1.png	741bfb177c93c4720d0e5f81817459d659e5065eb0dba28f94d0a102849ad1b7
+W14-vencida	W14	vencida	F	390x844	1	antes	captures/ux/antes/W14-vencida-390x844@1.png	6da6f43ed4fe4afcfc9fb9f31ae6c9d22bb7378df3819d43f284190e50976e1f
+W14-vencida	W14	vencida	F	640x512	2	antes	captures/ux/antes/W14-vencida-640x512@2.png	9ed3c4b3e446bdb228a857a22cf2abe91c08403c7583c9b601868739a5d7e322
+W14-vencida	W14	vencida	F	768x1024	1	antes	captures/ux/antes/W14-vencida-768x1024@1.png	a4889ad19426a2fb20a42a638c52a2aae8a8547d5b8791c197abcf0e82b575ee
+W14-vencida-pendiente	W14	vencida con pendiente	F	1024x768	1	antes	captures/ux/antes/W14-vencida-pendiente-1024x768@1.png	dfd1eafa7275184f09290dfb86e45028b61fe65a18acb1af33d481e436b0719a
+W14-vencida-pendiente	W14	vencida con pendiente	F	1280x800	1	antes	captures/ux/antes/W14-vencida-pendiente-1280x800@1.png	8cfcb489734dbd0b763878708c34dcb1e43f884c87730bd196693aa266965162
+W14-vencida-pendiente	W14	vencida con pendiente	F	1440x900	1	antes	captures/ux/antes/W14-vencida-pendiente-1440x900@1.png	3ffa4f9f87422d83e39cc70d1ccda3e771e8bc91511f7b6f325aef7a284eda8e
+W14-vencida-pendiente	W14	vencida con pendiente	F	1920x1080	1	antes	captures/ux/antes/W14-vencida-pendiente-1920x1080@1.png	c1ab31f85c1aa48d860cad5afb4f8cdd004a474e2fdec491650bba2e5050fc04
+W14-vencida-pendiente	W14	vencida con pendiente	F	320x640	1	antes	captures/ux/antes/W14-vencida-pendiente-320x640@1.png	d5e734349bb0673e9e3dfa3f481def0a837c7febbd8fe8809e18b4eaf648e0f9
+W14-vencida-pendiente	W14	vencida con pendiente	F	390x844	1	antes	captures/ux/antes/W14-vencida-pendiente-390x844@1.png	0ac5a90e73fbd2af081ad17d5593e483082776ac14c0b61f880310b3d5b6b8f9
+W14-vencida-pendiente	W14	vencida con pendiente	F	640x512	2	antes	captures/ux/antes/W14-vencida-pendiente-640x512@2.png	fd1a008bcea179866ff25aee6be9b873dc6f8a75375544d7eed44f1dd2d3c13f
+W14-vencida-pendiente	W14	vencida con pendiente	F	768x1024	1	antes	captures/ux/antes/W14-vencida-pendiente-768x1024@1.png	a39ab1261bf876f516058db364a7c0c8f77f2472dadc09651098d977ff7c45b0

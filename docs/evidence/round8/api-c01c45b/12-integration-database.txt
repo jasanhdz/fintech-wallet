@@ -1,0 +1,14 @@
+$ (cd api && npx tsx --import dotenv/config --test tests/database.integration.ts)
+started 2026-11-17T07:33:39Z
+◇ injected env (22) from ../.env
+✔ isolated test database connects as runtime role and never targets development (25.576375ms)
+✔ test migrator must match the local wallet_test target and exact role (0.322208ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.956417
+exit=0

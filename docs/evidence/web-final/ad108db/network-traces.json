@@ -1,0 +1,195 @@
+{
+  "codeSha": "ad108db",
+  "method": "Playwright [F] page.route over **/v1/**; non-GET only; keyClass = Idempotency-Key equality class; bodySha256 = SHA-256 of the request body",
+  "scenarios": [
+    {
+      "scenario": "S1-create-201",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S2-create-202-confirm",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers/:id/confirm",
+          "keyClass": "K2",
+          "bodySha256": "e2a53d56cf61eed52c590d0bb8f98d06676184b611764c15dd1682fbfe346ba5",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S3-abort-retry",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": true
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S4-reload-record-without-id",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": true
+        },
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S5-login-resume-transfer",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/auth/login",
+          "keyClass": "none",
+          "bodySha256": "a45e50d0f4f0e12fa932efc3045c25d64d0e73f5f04194910a11b010c093e069",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S6-create-422-then-429",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K2",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    },
+    {
+      "scenario": "S7-logout-with-record",
+      "steps": [
+        {
+          "method": "POST",
+          "path": "/v1/auth/refresh",
+          "keyClass": "none",
+          "bodySha256": "6369d7df548a376e4dd90f0b200f2eee09c8ea598e1621f8fe6e06eb0e1b8a87",
+          "aborted": false
+        },
+        {
+          "method": "POST",
+          "path": "/v1/transfers",
+          "keyClass": "K1",
+          "bodySha256": "385b11cc5e0ae8183f294f49768674423215a7e5df44d525b87dc8116bfa0bc4",
+          "aborted": true
+        },
+        {
+          "method": "POST",
+          "path": "/v1/auth/logout",
+          "keyClass": "none",
+          "bodySha256": null,
+          "aborted": false
+        }
+      ],
+      "draftAfter": "none"
+    }
+  ]
+}

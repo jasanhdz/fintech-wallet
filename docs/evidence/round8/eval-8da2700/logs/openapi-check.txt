@@ -1,0 +1,6 @@
+
+> fintech-wallet@0.1.0 openapi:check
+> tsx scripts/qa/openapi.ts check
+
+Both OpenAPI contracts validate and generated types are reproducible.
+exit 0

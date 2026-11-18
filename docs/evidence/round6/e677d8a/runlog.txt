@@ -1,0 +1,25 @@
+M04 sent has Para/Enviada/-$850.00: true | received has De/Recibida/+$1,000.00/Carlos: true
+M04 reqs (no GET for received): GET /transfers/81c0 key=-
+M05 Ahorro: own beneficiary aria-disabled= true | explained: true
+M06 same-account: blocked= true | message: true | estimate shown: false
+M06 after Principal: blocked= 
+M06 POSTs to /transfers so far: 0
+E2E Principal->Ahorro 1500: before Cuenta principal=865000 Ahorro=650000 | after Cuenta principal=715000 Ahorro=800000 | total 1515000 -> 1515000 | ledger sum/count 0/2 | transfers completed:150000
+History shows Traspaso a Cuenta de ahorro demo -$1,500.00: true | receipt shows -$1,500.00: true
+M09 sending neutral: true
+M09 DB after lost response: completed:12000
+Reentry after reload resumed to: verifying
+M09 POST /transfers keys used: 323d52a8 | DB rows: completed:12000
+M08 expired banner: true
+M08 new code reqs: POST /transfers key=3a622454 | POST /transfers/9b0e/cancel key=- | POST /transfers key=99ffbb15
+M08 DB after new code (first must be expired/cancelled, second pending): expired | completed:85000 completed:85000 expired:600000 awaiting_confirmation:600000
+G leave OTP -> DB: completed:85000 completed:85000 expired:600000 cancelled:600000 | cancel reqs: 2
+Closed after relaunch: true | DB: expired
+Out-of-band spend (another session, same user): 400000:201 118000:201 | balances now Cuenta principal=100000 Ahorro=1318000
+M11 real 422:  | Transferir | AL |  | No se pudo completar la transferencia | El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en tu cuenta. |  | Tu dinero está intacto
+M11 -> edit keeps data: true | on details: true
+M12 curtain hides balances: true
+I 130% M06 Continuar visible in viewport: true
+I reduced viewport M06 Continuar visible: true
+console/page errors: 7 console: Failed to load resource: the server responded with a status of 401 (Unauthorized) || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity) || console: Failed to load resource: the server responded with a status of 401 (Unauthorized) || console: Failed to load resource: the server responded with a status of 401 (Unauthorized)
+final balances Cuenta principal=100000 Ahorro=1318000

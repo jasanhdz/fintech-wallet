@@ -1,0 +1,6 @@
+## wallet_dev: never queried, migrated nor seeded by this batch (every API/psql command used wallet_test; the read-only wallet_dev check of R8-01 is G-A's and was not repeated)
+## listeners on demo ports (not started/stopped by this batch)
+3200: node pid 38651
+5174: node pid 2689
+8083: node pid 59937
+## ports used by this batch: API 3971 (and 3972 for the no-retention probe, stopped), static web 8971

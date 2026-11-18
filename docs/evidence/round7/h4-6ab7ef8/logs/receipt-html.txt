@@ -1,0 +1,6 @@
+awaiting_confirmation -> null
+processing -> null
+rejected -> null
+expired -> null
+cancelled -> null
+doc keys: amount,date,status,originName,originEnding,recipientName,recipientAlias,destinationEnding,concept,reference,folio,operationType

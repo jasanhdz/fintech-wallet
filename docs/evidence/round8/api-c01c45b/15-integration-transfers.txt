@@ -1,0 +1,15 @@
+$ (cd api && npx tsx --import dotenv/config --test tests/transfers.integration.ts)
+started 2026-11-17T07:33:43Z
+◇ injected env (22) from ../.env
+{"event":"request.failed","requestId":"450818c8-c890-45ba-88eb-b977a5340efe","code":"QueryFailedError"}
+✔ internal transfers enforce owner, idempotency, OTP, ledger, balance and concurrent daily controls in wallet_test (2131.476416ms)
+✔ daily limit usage isolates consumption across the business-midnight boundary of BUSINESS_TIME_ZONE in wallet_test (20.361625ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2437.032958
+exit=0

@@ -1,0 +1,62 @@
+
+===== otp-normal: $6,000.00 (>= threshold) -> 202 -> M08 -> code -> completed =====
+PASS otp-normal: M08 shown
+DB: awaiting_confirmation:600000 debits 0
+PASS otp-normal: pending attempt has 0 debits/ledger
+PASS otp-normal: demo code present in the 202 response (not printed)
+PASS otp-normal: consent.otp=required and the record does not contain the code
+PASS otp-normal: receipt
+DB final: transfers=1 [completed:600000] debits=1 ledger=2 rows sum 0 idem=1 balances principal=400000 ahorro=1100000
+PASS otp-normal: 1 transfer, 1 debit
+PASS otp-normal: record released after the server confirmed completed
+
+===== otp-lost: first send (202, awaiting_confirmation) response lost -> M09 -> explicit resend -> must ask for the code (M08) =====
+PASS otp-lost: M09
+DB: awaiting_confirmation:600000 debits 0
+PASS otp-lost: foreground/reload sent 0 new POST (creates 0); still pending and 0 debits
+PASS otp-lost: the review tells that the code is required
+PASS otp-lost: resend answered 202 -> M08 asks for the code (the resend cannot skip it)
+PASS otp-lost: still 0 debits before the code
+PASS otp-lost: resend = 1 POST, same key as the stored record and the first send, byte-identical body
+PASS otp-lost: code recovered by the idempotent replay
+PASS otp-lost: receipt after authorizing
+DB final: transfers=1 [completed:600000] debits=1 ledger=2 rows sum 0 idem=1 balances principal=400000 ahorro=1100000
+PASS otp-lost: 1 transfer, 1 debit
+
+===== otp-reload-newcode: M08 -> reload (start-up reads, opens M08 without the code) -> "Solicitar un código nuevo" =====
+PASS otp-reload: start-up reopens M08 for the pending attempt
+PASS otp-reload: start-up sent 0 POST and the code is not stored (not shown)
+PASS otp-reload: "Solicitar un código nuevo" with cancel+read failing creates nothing
+SHOT ev10-3-newcode-uncertain minFont=12 scrollW=390 offscreen=0 errs=2
+PASS otp-reload: record unchanged (old key)
+PASS otp-reload: with the old attempt confirmed cancelled, exactly 1 new create with a NEW key (explicit user action)
+DB: cancelled:600000 | awaiting_confirmation:600000
+DB final: transfers=2 [cancelled:600000 | completed:600000] debits=1 ledger=2 rows sum 0 idem=2 balances principal=400000 ahorro=1100000
+PASS otp-reload: cancelled + completed, 1 debit
+PASS otp-reload: record released once completed
+
+===== otp-cancel-fails: M08 -> "Cancelar y volver a revisar" with cancel and read failing =====
+AUDIT after cancel failure: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3230","Ahorro •• 4940","\nContinuar con la transferencia p","Última actualización de saldo, Act"]
+PASS otp-cancel-fails: Home pending notice, no entry to another attempt
+PASS otp-cancel-fails: record intact, 0 extra POST
+DB: awaiting_confirmation:600000
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3230","Ahorro •• 4940","\nContinuar con la transferencia p","Última actualización de saldo, Act"]
+PASS otp-cancel-fails: still no entry after reload/foreground
+PASS otp-cancel-fails: 1 awaiting_confirmation, 0 debits
+PASS otp-cancel-fails: Home "Continuar" is a read: M08 without the code, 0 POST
+PASS otp-cancel-fails: with the server reachable the cancel is confirmed -> cancelled, no debit
+PASS otp-cancel-fails: record released only after the confirmed cancel
+
+===== f22: A leaves an uncertain attempt; B signs in on the same device, transfers; A returns =====
+PASS f22: logout kept A record byte-identical
+PASS f22: B sees no notice and is not blocked
+PASS f22: B sent 1 create with its own key (not A key)
+B requests touching /transfers: ["POST /transfers key=a3158383","GET /transfers/86c6 key=-"]
+PASS f22: A record byte-identical after B session
+PASS f22: A record byte-identical after B logout
+DB B final: transfers=1 [completed:15000] debits=1 ledger=2 rows sum 0 idem=1 balances principal=985000 ahorro=515000
+PASS f22: B 1 transfer / 1 debit
+PASS f22: A sees their notice again
+PASS f22: A resend = original key and bytes
+DB A final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS f22: A 1 transfer / 1 debit

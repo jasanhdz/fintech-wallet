@@ -4,27 +4,24 @@
  */
 
 export interface paths {
-    "/v1/auth/register": {
+    "/auth/csrf": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Obtener token CSRF para sesión web */
+        get: operations["getCsrfToken"];
         put?: never;
-        /**
-         * [PENDIENTE] Registrar usuario
-         * @description No implementado. Campos/política de identidad requieren aprobación.
-         */
-        post: operations["registerUser"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/auth/login": {
+    "/auth/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -34,8 +31,28 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Iniciar sesión
-         * @description Access JWT corto y refresh rotativo son requisitos del reto; transporte web y duraciones pendientes.
+         * Registrar usuario desde web y abrir cuenta MXN
+         * @description Crea una cuenta MXN al registrar. En desarrollo local puede crear el fixture configurado de dos cuentas propias con contra-asientos de apertura; nunca reutiliza esas cantidades como saldo o política de producción.
+         */
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar sesión web o móvil
+         * @description Access JWT de corta vida permanece en memoria web; móvil recibe refresh token para SecureStore. No guardar credenciales/tokens en web localStorage ni mobile AsyncStorage.
          */
         post: operations["login"];
         delete?: never;
@@ -44,7 +61,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/auth/refresh": {
+    "/auth/refresh": {
         parameters: {
             query?: never;
             header?: never;
@@ -54,8 +71,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Rotar refresh token
-         * @description No implementado; rotación/reutilización revocada propuestas, detalles pendientes.
+         * Rotar refresh y renovar access token
+         * @description Web envía cookie HttpOnly y CSRF; móvil envía refresh token almacenado en SecureStore. Una rotación invalida el token previo y detecta reutilización.
          */
         post: operations["refreshSession"];
         delete?: never;
@@ -64,14 +81,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/accounts": {
+    "/auth/logout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** [PENDIENTE] Listar cuentas propias */
+        get?: never;
+        put?: never;
+        /** Revocar sesión actual */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener identidad de sesión actual */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar cuentas propias y saldo disponible */
         get: operations["listAccounts"];
         put?: never;
         post?: never;
@@ -81,17 +132,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/beneficiaries": {
+    "/accounts/{accountId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** [PENDIENTE] Listar beneficiarios propios */
+        /** Consultar una cuenta propia */
+        get: operations["getAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/beneficiaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar beneficiarios registrados por el usuario */
         get: operations["listBeneficiaries"];
         put?: never;
-        /** [PENDIENTE] Registrar beneficiario */
+        /**
+         * Registrar beneficiario interno por CLABE
+         * @description CLABE de 18 dígitos, checksum válido y destino existente en la misma plataforma. No se conecta a SPEI ni bancos externos.
+         */
         post: operations["createBeneficiary"];
         delete?: never;
         options?: never;
@@ -99,22 +170,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/transfers": {
+    "/beneficiaries/{beneficiaryId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * [PENDIENTE] Consultar historial con cursor
-         * @description Cursor keyset opaco; filtros de fecha/tipo y orden estable pendientes de decisión.
-         */
-        get: operations["listTransfers"];
+        /** Consultar beneficiario propio */
+        get: operations["getBeneficiary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Crear transferencia
-         * @description Requiere Idempotency-Key único por intento. La serialización amountMinor evita precisión JSON insegura; moneda, límites y máximo siguen pendientes.
+         * Crear intento de transferencia interna
+         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409. Si el intento original quedó awaiting_confirmation, la repetición informa su estado actual: 202 mientras siga pendiente, 200 si ya es completed, expired o cancelled (demoOnlyCode solo mientras siga pendiente). Ronda 8 (aditivo): Transfer-Attempt-Id y Transfer-Send-Epoch son opcionales pero van juntas (sólo una → 400). Con ellas la identidad del intento queda persistida (TransferAttemptSummary.attemptId); un intento anulado o de una época vieja responde 409 con type urn:billetera:problem:transfer-attempt-voided (terminal, sin cargo); un rechazo de negocio 404/422/429 queda cerrado para esa identidad y responde el mismo status con type urn:billetera:problem:transfer-attempt-rejected (terminal, sin cargo; repetirlo devuelve el mismo rechazo); una identidad ligada a otra llave responde 409 urn:billetera:problem:transfer-attempt-conflict. Una época mayor que la vigente o cabeceras malformadas → 400. Un envío ya ejecutado nunca se oculta: la repetición con su llave devuelve su resultado cualquiera que sea la época, y una llave anulada se rechaza (409 transfer-attempt-voided) también sin cabeceras. Los envíos de la misma llave se serializan: el segundo siempre ve el resultado del primero.
          */
         post: operations["createTransfer"];
         delete?: never;
@@ -123,7 +207,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/transfers/{transferId}": {
+    "/transfers/{transferId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consultar estado/comprobante del intento propio */
+        get: operations["getTransfer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/{transferId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancelar un intento propio pendiente de OTP
+         * @description Cierra un intento awaiting_confirmation como cancelled (o expired si su código ya venció) sin mover dinero ni borrar filas; queda auditado. Es idempotente por estado: repetirlo sobre un intento cancelled/expired devuelve 200 con ese estado y no requiere Idempotency-Key. Un intento completed no se puede cancelar (409).
+         */
+        post: operations["cancelTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-policy": {
         parameters: {
             query?: never;
             header?: never;
@@ -131,10 +252,110 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [PENDIENTE] Consultar resultado por ID
-         * @description Necesario para estado incierto/reintento móvil; ownership y política de visibilidad pendientes.
+         * Controles de transferencia configurados en el servidor
+         * @description Límite diario, consumo del día de negocio del usuario autenticado, umbral y vigencia del OTP tal como están configurados en este servidor. Fuera de producción son valores de ejemplo demo (demoOnly=true), no política aprobada. El cliente no debe fijar estas cifras en código.
          */
-        get: operations["getTransfer"];
+        get: operations["getTransferPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/{transferId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar intento con OTP simulado
+         * @description El challenge pertenece a un único transferId y expira según configuración; no genera SPEI/banco externo. Cada envío de código OTP usa una key de confirm-transfer; ante pérdida de respuesta se reintenta misma key+payload, y un nuevo código usa una nueva key.
+         */
+        post: operations["confirmTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listado autoritativo de intentos de transferencia propios
+         * @description Une las transferencias del usuario autenticado (con o sin attemptId) y los cierres de intentos que nunca crearon transferencia (rejected, voided). Antes de leer se cierran como expired los intentos cuyo OTP ya venció. Orden total createdAt DESC, luego transferencias antes que cierres, luego id DESC; cursor keyset opaco (sin OFFSET). Nunca incluye CLABE completa, demoOnlyCode, código OTP, llave de idempotencia, su hash ni requestId. Un attemptId de otro usuario se comporta como inexistente (items vacíos).
+         */
+        get: operations["listTransferAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un intento de transferencia por su identidad
+         * @description Espera a los envíos en curso del usuario y resuelve el intento identificado por su llave de idempotencia (y attemptId opcional) a un resultado terminal: transfer_found si el servidor ya lo había recibido (se devuelve su estado; si estaba awaiting_confirmation se cierra cancelled, o expired si su código ya venció; un cargo aplicado nunca se revierte), rejected si ya estaba rechazado, o voided si nunca se recibió (desde ese momento jamás podrá ejecutarse, aunque llegue después). Es idempotente por estado: repetirlo devuelve la misma resolución, por eso no usa Idempotency-Key de cabecera. Una llave desconocida no es 404. Llave y attemptId ligados a intentos distintos → 409 transfer-attempt-conflict.
+         */
+        post: operations["voidTransferAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts/void-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular todo lo no terminal del usuario (identidad desconocida)
+         * @description Espera a los envíos en curso del usuario. Si fromEpoch es la época vigente, la avanza en uno: todo envío con cabeceras de una época anterior que aún no haya llegado queda vetado (409 transfer-attempt-voided), y todo intento awaiting_confirmation del usuario (de cualquier cliente, también web) se cierra cancelled o expired. Lo ya ejecutado no cambia y aparece en el listado. Repetir con el mismo fromEpoch es un no-op (advanced=false). fromEpoch mayor que la vigente → 400.
+         */
+        post: operations["voidAllTransferAttempts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts/{accountId}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial propio paginado por cursor
+         * @description Cursor keyset estable; no usar OFFSET. Los últimos 20 son el tamaño por defecto en móvil.
+         */
+        get: operations["listMovements"];
         put?: never;
         post?: never;
         delete?: never;
@@ -148,12 +369,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         RegisterRequest: {
+            fullName: string;
             /** Format: email */
             email: string;
-            /**
-             * Format: password
-             * @description Requisito propuesto, longitud final pendiente.
-             */
+            /** Format: password */
             password: string;
         };
         LoginRequest: {
@@ -161,92 +380,293 @@ export interface components {
             email: string;
             /** Format: password */
             password: string;
+            /** @enum {string} */
+            client: "web" | "mobile";
         };
-        RefreshRequest: {
-            refreshToken: string;
+        MobileRefreshRequest: {
+            /** @description Required for mobile; web sends HttpOnly cookie. */
+            refreshToken?: string;
+            /** @enum {string} */
+            client?: "web" | "mobile";
         };
-        SessionResponse: {
-            /** @description JWT corto propuesto; transporte web pendiente. */
+        AuthResponse: {
+            /** @description Short-lived JWT held in memory on web. */
             accessToken: string;
-            /** @description En móvil solo almacenamiento seguro; en web evaluar cookie HttpOnly. */
+            /** @description Returned only for mobile and stored in SecureStore; web uses HttpOnly cookie. */
             refreshToken?: string;
             /** @constant */
             tokenType: "Bearer";
-            /** @description Segundos, valor pendiente. */
             expiresIn: number;
+            user: components["schemas"]["User"];
+        };
+        User: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            /** Format: email */
+            email: string;
         };
         Account: {
             /** Format: uuid */
             id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "checking" | "savings";
             /** @constant */
             currency: "MXN";
-            /** @description Centavos como entero serializado; rango pendiente. */
             availableBalanceMinor: string;
+            /** @description CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. */
+            readonly clabe: string;
+            clabeMasked: string;
+            /**
+             * @deprecated
+             * @description No se devuelve; el límite es por usuario, no por cuenta. Usar GET /transfer-policy.
+             */
+            dailyLimitMinor?: string;
+            /**
+             * @deprecated
+             * @description No se devuelve; usar GET /transfer-policy.
+             */
+            dailyUsedMinor?: string;
         };
         BeneficiaryInput: {
             name: string;
             alias: string;
-            /** @description Dígito verificador CLABE requerido por el reto. */
+            /** @description Checksum válido y vinculado a cuenta interna de Billetera MXN. */
             clabe: string;
         };
-        Beneficiary: components["schemas"]["BeneficiaryInput"] & {
+        Beneficiary: {
             /** Format: uuid */
             id: string;
-            /** @description Valor completo no se devolvería; representación de salida pendiente. */
-            clabe?: string;
-            readonly clabeMasked?: string;
+            name: string;
+            alias: string;
+            clabeMasked: string;
+            /**
+             * Format: uuid
+             * @description Cuenta interna a la que resuelve la CLABE (identidad que usa el servidor para validar origen distinto de destino).
+             */
+            readonly destinationAccountId: string;
+            /**
+             * Format: uuid
+             * @description Presente solo cuando el beneficiario resuelve a una cuenta del mismo usuario (igual a destinationAccountId); nunca aparece para cuentas de terceros. El cliente lo compara con la cuenta origen para impedir origen = destino antes de enviar; el servidor sigue rechazando con 422.
+             */
+            readonly ownAccountId?: string;
+            isFrequent?: boolean;
         };
-        TransferRequest: {
+        TransferCreateRequest: {
             /** Format: uuid */
             sourceAccountId: string;
-            /**
-             * Format: uuid
-             * @description Cuenta propia de destino; mutually exclusive with beneficiaryId pendiente.
-             */
-            destinationAccountId?: string;
-            /**
-             * Format: uuid
-             * @description Beneficiario propio; mutually exclusive with destinationAccountId pendiente.
-             */
-            beneficiaryId?: string;
-            /** @description Centavos MXN serializados como string para evitar float; techo pendiente. */
+            /** @constant */
+            destinationType: "beneficiary";
+            /** Format: uuid */
+            beneficiaryId: string;
+            /** @description MXN cents as decimal string. */
             amountMinor: string;
             concept: string;
-            /** @description Longitud exacta pendiente de aprobar. */
             reference: string;
-            /** @description Necesario sobre umbral solo cuando política futura lo indique. */
-            otp?: string;
+        } | {
+            /** Format: uuid */
+            sourceAccountId: string;
+            /** @constant */
+            destinationType: "own_account";
+            /** Format: uuid */
+            destinationAccountId: string;
+            /** @description MXN cents as decimal string. */
+            amountMinor: string;
+            concept: string;
+            reference: string;
+        };
+        TransferConfirmRequest: {
+            code: string;
         };
         Transfer: {
             /** Format: uuid */
             id: string;
             /**
-             * @description Estados propuestos; máquina de estados pendiente.
+             * @description awaiting_confirmation (sin asientos) pasa a completed (OTP correcto), expired (venció el código) o cancelled (POST /cancel). completed, expired, cancelled y rejected son terminales; expired/cancelled nunca tienen asientos.
              * @enum {string}
              */
-            status: "pending" | "completed" | "rejected";
+            status: "awaiting_confirmation" | "processing" | "completed" | "rejected" | "expired" | "cancelled";
+            /** Format: uuid */
+            sourceAccountId: string;
+            destination: components["schemas"]["Beneficiary"] | components["schemas"]["Account"];
             amountMinor: string;
             /** @constant */
             currency: "MXN";
-            /** Format: date-time */
-            createdAt: string;
-            readonly receiptReference?: string;
+            concept: string;
+            reference: string;
+            createdAt: components["schemas"]["Timestamp"];
+            completedAt?: components["schemas"]["Timestamp"] | null;
+            /** @description Vencimiento del código OTP de este intento (createdAt + OTP_EXPIRY_SECONDS); null si no requirió OTP. Pasado este instante el intento pasa a expired. */
+            expiresAt?: components["schemas"]["Timestamp"] | null;
+            receiptReference?: string | null;
+            requestId?: string;
+            /** @description Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. */
+            readonly demoOnlyCode?: string;
         };
-        TransferPage: {
-            items: components["schemas"]["Transfer"][];
-            /** @description Cursor opaco de keyset. */
+        Movement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            transferId?: string;
+            /** @enum {string} */
+            type: "debit" | "credit";
+            amountMinor: string;
+            /** @constant */
+            currency: "MXN";
+            concept: string;
+            reference: string;
+            /**
+             * @description Hoy solo se listan movimientos completed; intentos pendientes, expirados o cancelados no generan movimientos.
+             * @enum {string}
+             */
+            status: "processing" | "completed" | "rejected";
+            occurredAt: components["schemas"]["Timestamp"];
+            counterparty?: components["schemas"]["MovementCounterparty"];
+        };
+        /** @description La otra parte vista por el dueño de la cuenta. Enviado (debit): el beneficiario tal como lo registró el emisor, o la cuenta propia destino. Recibido (credit): la cuenta propia origen, o el nombre del usuario emisor con su CLABE enmascarada. */
+        MovementCounterparty: {
+            name: string;
+            /** @description Primeros 3 y últimos 4 dígitos; nunca la CLABE completa. */
+            clabeMasked: string;
+            /**
+             * Format: uuid
+             * @description Solo cuando la otra parte es una cuenta del mismo usuario.
+             */
+            ownAccountId?: string;
+        };
+        TransferPolicy: {
+            /** @constant */
+            currency: "MXN";
+            /**
+             * Format: date
+             * @description Día de negocio actual en businessTimeZone.
+             */
+            businessDate: string;
+            /** @description Zona IANA configurada para el día de negocio. */
+            businessTimeZone: string;
+            dailyLimitMinor: string;
+            /** @description Salidas completadas del usuario en businessDate. Los intentos pendientes de OTP no reservan límite; se valida al confirmar. */
+            dailyUsedMinor: string;
+            dailyRemainingMinor: string;
+            /** @description Se exige OTP cuando amountMinor >= otpThresholdMinor. */
+            otpThresholdMinor: string;
+            otpExpirySeconds: number;
+            otpMaxAttempts: number;
+            /** @description true fuera de producción; las cifras son ejemplos demo, no política aprobada. */
+            demoOnly: boolean;
+            sendEpoch: components["schemas"]["SendEpoch"];
+        };
+        /**
+         * Format: date-time
+         * @description Instante UTC en el formato de fecha-hora de ECMAScript (YYYY-MM-DDTHH:mm:ss.sssZ, siempre con milisegundos y Z); parseable con Date.parse en cualquier motor conforme.
+         * @example 2026-11-16T05:59:00.000Z
+         */
+        Timestamp: string;
+        MovementPage: {
+            items: components["schemas"]["Movement"][];
             nextCursor?: string | null;
         };
+        /**
+         * @description Época de envío del usuario (entero no negativo monotónico como cadena decimal). Sólo avanza con POST /transfer-attempts/void-all; los envíos con Transfer-Send-Epoch menor quedan vetados.
+         * @example 0
+         */
+        SendEpoch: string;
+        /**
+         * @description awaiting_confirmation es el único no terminal. completed tiene asientos; expired, cancelled, rejected y voided nunca tienen asientos. rejected y voided son cierres de intentos que no crearon transferencia (transferId null).
+         * @enum {string}
+         */
+        TransferAttemptStatus: "awaiting_confirmation" | "completed" | "expired" | "cancelled" | "rejected" | "voided";
+        /** @description Resumen de un intento propio. Nunca contiene CLABE completa, demoOnlyCode, código OTP, llave de idempotencia, su hash ni requestId. */
+        TransferAttemptSummary: {
+            /**
+             * Format: uuid
+             * @description Transfer-Attempt-Id con que se envió; null si se envió sin cabeceras.
+             */
+            attemptId: string | null;
+            /**
+             * Format: uuid
+             * @description Id de la transferencia (GET /transfers/{transferId}); null para rejected/voided.
+             */
+            transferId: string | null;
+            status: components["schemas"]["TransferAttemptStatus"];
+            /** @description Importe en centavos; null para voided (nunca se recibió el cuerpo). */
+            amountMinor: string | null;
+            /** @constant */
+            currency: "MXN";
+            concept: string | null;
+            reference: string | null;
+            /** Format: uuid */
+            sourceAccountId: string | null;
+            destination: components["schemas"]["TransferAttemptDestination"] | null;
+            createdAt: components["schemas"]["Timestamp"];
+            completedAt: components["schemas"]["Timestamp"] | null;
+            /** @description Instante de cierre para expired, cancelled, rejected y voided; null en otro caso. */
+            closedAt: components["schemas"]["Timestamp"] | null;
+            /** @description Vencimiento del OTP si el intento lo requirió; null en otro caso. */
+            expiresAt: components["schemas"]["Timestamp"] | null;
+            /** @description Rechazo de negocio registrado (sólo status rejected). */
+            problem: components["schemas"]["TransferAttemptProblem"] | null;
+        };
+        TransferAttemptDestination: {
+            name: string;
+            /** @description Primeros 3 y últimos 4 dígitos; nunca la CLABE completa. */
+            clabeMasked: string;
+            /**
+             * Format: uuid
+             * @description Sólo cuando el destino es una cuenta del mismo usuario.
+             */
+            ownAccountId?: string;
+        };
+        TransferAttemptProblem: {
+            /** @enum {integer} */
+            status: 404 | 422 | 429;
+            detail: string;
+        };
+        TransferAttemptPage: {
+            items: components["schemas"]["TransferAttemptSummary"][];
+            nextCursor: string | null;
+            sendEpoch: components["schemas"]["SendEpoch"];
+        };
+        VoidAttemptRequest: {
+            /** @description La misma Idempotency-Key del envío; viaja sólo en el cuerpo y nunca se devuelve ni se registra. */
+            idempotencyKey: string;
+            /** Format: uuid */
+            attemptId?: string;
+        };
+        VoidAttemptResult: {
+            /**
+             * @description transfer_found: el servidor ya lo había recibido (attempt trae su estado). rejected: ya estaba rechazado. voided: nunca se recibió y ya no podrá ejecutarse. Las tres son terminales.
+             * @enum {string}
+             */
+            resolution: "transfer_found" | "rejected" | "voided";
+            attempt: components["schemas"]["TransferAttemptSummary"];
+        };
+        VoidAllRequest: {
+            fromEpoch: components["schemas"]["SendEpoch"];
+        };
+        VoidAllResult: {
+            sendEpoch: components["schemas"]["SendEpoch"];
+            /** @description true sólo si esta llamada avanzó la época (fromEpoch era la vigente). */
+            advanced: boolean;
+            /** @description Intentos awaiting_confirmation cerrados por esta llamada. */
+            closedTransferIds: string[];
+        };
+        /**
+         * @description Valores de Problem.type para intentos de transferencia (ronda 8). voided: identidad anulada o época vieja (409, terminal, sin cargo). rejected: rechazo de negocio 404/422/429 cerrado para esa identidad (terminal, sin cargo). conflict: identidad ligada a otra llave o intento (409, no terminal). El resto de problemas usa about:blank.
+         * @enum {string}
+         */
+        TransferAttemptProblemType: "urn:billetera:problem:transfer-attempt-voided" | "urn:billetera:problem:transfer-attempt-rejected" | "urn:billetera:problem:transfer-attempt-conflict";
         Problem: {
             /** Format: uri-reference */
             type: string;
             title: string;
             status: number;
-            /** @description Detalle no sensible y sin información interna. */
+            /** @description Safe user-facing message only. */
             detail?: string;
             /** Format: uri-reference */
-            instance?: string;
-            requestId?: string;
+            instance: string;
+            requestId: string;
             errors?: {
                 pointer: string;
                 detail: string;
@@ -254,7 +674,7 @@ export interface components {
         };
     };
     responses: {
-        /** @description Error compatible RFC 7807/9457. */
+        /** @description RFC 7807 `application/problem+json` con requestId; no filtra detalles internos. */
         Problem: {
             headers: {
                 [name: string]: unknown;
@@ -263,10 +683,27 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description RFC 7807 `application/problem+json` con requestId y type de TransferAttemptProblemType. */
+        TransferAttemptProblem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"] & {
+                    type?: components["schemas"]["TransferAttemptProblemType"];
+                };
+            };
+        };
     };
     parameters: {
-        /** @description Clave aleatoria por intento; reutilizarla solo para retries exactos. */
+        /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+        CsrfToken: string;
+        /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
         IdempotencyKey: string;
+        /** @description Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional, pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y aparece en GET /transfer-attempts. */
+        TransferAttemptId: string;
+        /** @description Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional, pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409 transfer-attempt-voided; mayor → 400. */
+        TransferSendEpoch: components["schemas"]["SendEpoch"];
     };
     requestBodies: never;
     headers: never;
@@ -274,10 +711,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    registerUser: {
+    getCsrfToken: {
         parameters: {
             query?: never;
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token para enviar en X-CSRF-Token; API también coloca cookie no HttpOnly de comprobación. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        csrfToken: string;
+                    };
+                };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -287,23 +749,30 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Cuenta creada (propuesto). */
+            /** @description Usuario y cuenta MXN creados; refresh web por cookie HttpOnly. */
             201: {
                 headers: {
+                    /** @description Cookie rotativa HttpOnly para cliente web. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             400: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     login: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -313,43 +782,108 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Sesión creada (propuesto). */
+            /** @description Sesión creada; web usa Set-Cookie, móvil indica client=mobile y guarda refresh en SecureStore. */
             200: {
                 headers: {
+                    /** @description Solo cliente web. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
-            400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     refreshSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Refresh rotado y access renovado. */
+            200: {
+                headers: {
+                    /** @description Cookie rotativa solo para web. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            /** @description Cliente web sin cookie de refresh; no hay sesión que restaurar. Cliente móvil sin token no usa este resultado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Sesión revocada y cookie web expirada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    getCurrentUser: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Credenciales rotadas (propuesto). */
+            /** @description Usuario autenticado. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["User"];
                 };
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     listAccounts: {
@@ -361,7 +895,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Cuentas propias (propuesto). */
+            /** @description Solo cuentas del usuario autenticado. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -373,6 +907,32 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    getAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cuenta del usuario actual. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     listBeneficiaries: {
@@ -384,7 +944,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Beneficiarios propios (propuesto). */
+            /** @description Solo beneficiarios propios, con CLABE enmascarada. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -411,7 +971,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Beneficiario creado (propuesto). */
+            /** @description Beneficiario interno guardado. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -422,55 +982,77 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
-    listTransfers: {
+    getBeneficiary: {
         parameters: {
-            query: {
-                accountId: string;
-                from?: string;
-                to?: string;
-                type?: "debit" | "credit";
-                cursor?: string;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                beneficiaryId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Página de historial propia (propuesto). */
+            /** @description Beneficiario propio; CLABE enmascarada. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TransferPage"];
+                    "application/json": components["schemas"]["Beneficiary"];
                 };
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     createTransfer: {
         parameters: {
             query?: never;
             header: {
-                /** @description Clave aleatoria por intento; reutilizarla solo para retries exactos. */
+                /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional, pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y aparece en GET /transfer-attempts. */
+                "Transfer-Attempt-Id"?: components["parameters"]["TransferAttemptId"];
+                /** @description Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional, pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409 transfer-attempt-voided; mayor → 400. */
+                "Transfer-Send-Epoch"?: components["parameters"]["TransferSendEpoch"];
             };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TransferRequest"];
+                "application/json": components["schemas"]["TransferCreateRequest"];
             };
         };
         responses: {
-            /** @description Transferencia creada (propuesto). */
+            /** @description Repetición idempotente de un intento OTP que ya alcanzó estado completed, expired o cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            /** @description Transferencia inmediata completada en transacción. */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            /** @description Requiere OTP simulado; no se ha debitado ni acreditado. */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -480,9 +1062,11 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
     getTransfer: {
@@ -496,7 +1080,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Resultado (propuesto). */
+            /** @description Estado actual del mismo intento; sólo actor/propietario autorizado. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -507,6 +1091,210 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    cancelTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transferId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Intento en estado terminal cancelled o expired. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    getTransferPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Configuración vigente y consumo diario. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferPolicy"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    confirmTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transferId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Resultado del intento confirmado; repetición idempotente devuelve el mismo resultado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    listTransferAttempts: {
+        parameters: {
+            query?: {
+                /** @description Lista separada por comas de awaiting_confirmation, completed, expired, cancelled, rejected, voided. Por defecto todos. */
+                status?: string;
+                /** @description Incluye intentos con createdAt >= from. */
+                from?: string;
+                /** @description Incluye intentos con createdAt <= to; from <= to. */
+                to?: string;
+                attemptId?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de intentos propios y época de envío vigente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferAttemptPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    voidTransferAttempt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidAttemptRequest"];
+            };
+        };
+        responses: {
+            /** @description Resolución terminal del intento. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoidAttemptResult"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            409: components["responses"]["TransferAttemptProblem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    voidAllTransferAttempts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidAllRequest"];
+            };
+        };
+        responses: {
+            /** @description Época resultante y pendientes cerrados por esta llamada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoidAllResult"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    listMovements: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                type?: "debit" | "credit";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Movimientos de la cuenta propia. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovementPage"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
         };
     };
 }

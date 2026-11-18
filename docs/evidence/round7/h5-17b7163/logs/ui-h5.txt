@@ -1,0 +1,109 @@
+
+===== A: respuesta perdida tras aplicarse; Verificar no crea ni resuelve; reenvío con la misma llave -> mismo folio =====
+SHOT A-M09-respuesta-perdida minFont=12 scrollW=390 offscreen=0 errs=1
+PASS M09 without any claim
+DB right after the lost response: completed:30025 | applied id 1cf96434
+SHOT A-M09-verificar-sin-id minFont=12 scrollW=390 offscreen=0 errs=1
+PASS M09 "Verificar": 0 POST, no receipt, caveat about Movimientos
+AUDIT A Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0752","Ahorro •• 0733"," Verificar estado de la transferencia"," Ver movimientos"," Reenviar la misma transferencia","Última actualización de saldo, Actualiza","Traspaso a Cuenta de ahorro demo, •• 073","Ver los últimos 20 movimientos "]
+SHOT A-inicio-aviso minFont=12 scrollW=390 offscreen=0 errs=1
+PASS Home: notice only (no new transfer, no discard) and the Movimientos caveat
+SHOT A-movimientos-informativo minFont=12 scrollW=390 offscreen=0 errs=1
+Movimientos shows the -$300.25 charge: true
+PASS after Verificar (M09+Home), foreground and Movimientos: record byte-identical, still 0 new POST, not resolved by the matching charge
+SHOT A-reenvio-mismo-folio minFont=12 scrollW=390 offscreen=0 errs=1
+resend: keys ["fca2b9bb","fca2b9bb"] | same body true | receipt true | same folio as applied true
+PASS same-key resend returned the SAME transfer (folio) already applied
+DB A: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS A: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025
+PASS record released only by the server result of the same key
+page errors (simulated network drops): ["console Failed to load resource: net::ERR_CONNECTION_RESET"]
+
+===== B: respuesta perdida antes de aplicarse; consultar no crea; reenvío explícito =====
+SHOT B-M09-verificar-sin-id minFont=12 scrollW=390 offscreen=0 errs=1
+FAIL verify: 0 POST, DB 0 rows, says it cannot confirm
+PASS F-27: 2 foreground returns + Home shown again with the network back: 0 POST, DB 0 rows
+PASS Home "Verificar": 0 POST
+SHOT B-reenvio-datos-originales minFont=12 scrollW=390 offscreen=0 errs=1
+PASS resend review shows the original data and consent; opening it sends nothing
+PASS "Volver sin reenviar": record identical, 0 POST
+SHOT B-reenviado-comprobante minFont=12 scrollW=390 offscreen=0 errs=1
+resend: keys ["21659578","21659578"] | same body true | receipt true
+PASS the confirmed resend sent exactly the original key and body
+DB B: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS B: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025
+
+===== C: 409 "en curso" en el reenvío =====
+SHOT C-409-sigue-en-M09 minFont=12 scrollW=390 offscreen=0 errs=2
+PASS 409 keeps M09 (never M11)
+PASS record byte-identical
+AUDIT C Home tras 409: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 1080","Ahorro •• 5836"," Verificar estado de la transferencia"," Ver movimientos"," Reenviar la misma transferencia","Última actualización de saldo, Actualiza","Traspaso a Cuenta de ahorro demo, •• 583","Ver los últimos 20 movimientos "]
+SHOT C-inicio-tras-409 minFont=12 scrollW=390 offscreen=0 errs=2
+PASS Home: notice only, no path to a second attempt, record identical
+SHOT C-resuelto minFont=12 scrollW=390 offscreen=0 errs=2
+keys ["2f0a77f8","2f0a77f8","2f0a77f8"] | receipt true
+PASS only the original key was ever sent
+DB C: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS C: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025
+
+===== C2: 409 "en curso" en el primer envío =====
+SHOT C2-primer-envio-409 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS first send 409: M09, record kept
+AUDIT C2 Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0974","Ahorro •• 5007"," Verificar estado de la transferencia"," Ver movimientos"," Reenviar la misma transferencia","Última actualización de saldo, Actualiza"]
+PASS Home blocked, record identical
+PASS resend with the same key completes
+DB C2: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS C2: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025
+
+===== D: GET 404 real; se conserva; reenvío idempotente =====
+AUDIT D Home 404: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0742","Ahorro •• 7098"," Verificar de nuevo"," Ver movimientos"," Reenviar la misma transferencia","Última actualización de saldo, Actualiza"]
+SHOT D-404-conservado minFont=12 scrollW=390 offscreen=0 errs=3
+requests: ["GET /transfers/10af key=-","GET /transfers/10af key=-","GET /transfers/10af key=-"]
+PASS GET 404: explained without claiming anything
+PASS record byte-identical, still blocked, 0 POST
+PASS actions: Verificar de nuevo, Ver movimientos, Reenviar la misma transferencia
+PASS "Verificar de nuevo" only reads
+PASS resend sent the stored key -> completed
+DB D: rows=completed:33333 | ledger 2 rows sum 0 | 1 debit(s) total 33333 | principal debit 33333
+PASS D: 1 transfer, 2 ledger rows summing 0, exactly one debit of 33333
+
+===== D2: GET 404 con la llave ya aplicada: el reenvío devuelve la misma transferencia =====
+applied directly through the API with the stored key: 201 completed | DB completed:44444
+PASS GET 404 shown
+SHOT D2-reenvio-devuelve-la-misma minFont=12 scrollW=390 offscreen=0 errs=2
+PASS resend returned the transfer already applied with that key (same folio)
+DB D2: rows=completed:44444 | ledger 2 rows sum 0 | 1 debit(s) total 44444 | principal debit 44444
+PASS D2: 1 transfer, 2 ledger rows summing 0, exactly one debit of 44444
+
+===== E: registro corrupto =====
+AUDIT E Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 2182","Ahorro •• 8958"," Reintentar lectura"," Ver movimientos","Última actualización de saldo, Actualiza"]
+SHOT E-registro-danado minFont=12 scrollW=390 offscreen=0 errs=0
+PASS plain-language explanation, no technical text
+PASS no new transfer, no resend, no discard; Reintentar lectura + Ver movimientos
+PASS record never deleted, 0 POST, DB 0 rows
+
+===== E2: SecureStore ilegible =====
+SHOT E2-confirmar-ilegible minFont=12 scrollW=390 offscreen=0 errs=0
+PASS guard fails closed: message and 0 POST
+AUDIT E2 Home ilegible: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 5423","Ahorro •• 3658"," Reintentar lectura"," Ver movimientos","Última actualización de saldo, Actualiza"]
+SHOT E2-inicio-ilegible minFont=12 scrollW=390 offscreen=0 errs=0
+PASS Home explains it and blocks; no discard
+PASS still unreadable -> still blocked
+PASS readable again (no record): flow available
+PASS 0 POST, DB 0 rows
+
+===== F: F-22, cerrar sesión conserva, B no toca el registro de A =====
+PASS A logout keeps A record byte-identical
+AUDIT F B Home: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 3142","Ahorro •• 3570","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+PASS B does not see A notice
+B requests on /transfers during login: 0
+PASS A record unchanged after B transferred
+PASS B logout did not delete/replace A record
+AUDIT F A vuelve: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 6075","Ahorro •• 6931"," Verificar estado de la transferencia"," Ver movimientos"," Reenviar la misma transferencia","Última actualización de saldo, Actualiza"]
+PASS A sees the notice; 0 POST on sign-in
+A resend: receipt true | keys ["ec1c4538"] same as stored true
+PASS A resumed with the same key
+DB F/A: rows=completed:30025 | ledger 2 rows sum 0 | 1 debit(s) total 30025 | principal debit 30025
+PASS F/A: 1 transfer, 2 ledger rows summing 0, exactly one debit of 30025
+DB F/B: rows=completed:15000 | ledger 2 rows sum 0 | 1 debit(s) total 15000 | principal debit 15000
+PASS F/B: 1 transfer, 2 ledger rows summing 0, exactly one debit of 15000

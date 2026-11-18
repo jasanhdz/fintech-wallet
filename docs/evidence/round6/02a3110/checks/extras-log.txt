@@ -1,0 +1,11 @@
+FONTS loaded faces: Inter_400Regular,Inter_500Medium,Inter_600SemiBold | title family: Inter_600SemiBold | document.fonts.check(Inter_600SemiBold): true
+F-11 text 100%: logout x=338..382 (viewport 390) visible=true | greeting right=330 lines=2 | horizontal overflow=false
+F-11 text 100%: logout works -> true
+F-11 text 130%: logout x=338..382 (viewport 390) visible=true | greeting right=330 lines=2 | horizontal overflow=false
+F-11 text 130%: logout works -> true
+F-11 text 200%: logout x=338..382 (viewport 390) visible=true | greeting right=330 lines=2 | horizontal overflow=false
+F-11 text 200%: logout works -> true
+F-13 M07 390x884: Confirmar bottom=769 Modificar bottom=821 both visible=true
+F-13 M07 390x844: Confirmar bottom=768 Modificar bottom=820 both visible=true
+F-13 M07 130% text: actions reachable by scrolling, Modificar within viewport after scroll=true
+FOLIO M04: "35f52f7f-6354-4aec-85a8-e87ff0e904b0" uuid=true right=358 lines=2 labelLines=1 overflowX=false userSelect=text

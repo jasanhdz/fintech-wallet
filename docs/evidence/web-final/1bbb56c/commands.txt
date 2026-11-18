@@ -1,0 +1,24 @@
+# WF-T3 commands (worktree root /Users/jasanhernandez/Develop/fintech-wallet-web-final). No npm ci/install; no root test:e2e/test:visual.
+# The demo (API/web/Metro of the main checkout, wallet_dev) and the g1 round (wallet_test of the shared container, APIs 3951-3969)
+# were not touched; only the own container fintech-wallet-web-pg and the round ports 3301-3304/5301-5304.
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH
+node -v                                                    # v26.13.1
+node web/e2e-final/scripts/make-env.mjs                    # .env.web-final kept (already present, 0600, never printed)
+node web/e2e-final/scripts/db-up.mjs --evidence <scratch>/db-up.txt   # -> env-01-disk.txt (3.25 GiB free >= 2.5)
+# development iterations (evidence folder "wip", deleted, never versioned):
+#   WF_EVIDENCE_SHA=wip WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t3-beneficiaries.spec.ts t3-integration.spec.ts
+npm --workspace @fintech-wallet/web run lint
+npm --workspace @fintech-wallet/web run typecheck
+npm --workspace @fintech-wallet/web run test
+WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+npx eslint web/e2e-final web/e2e
+npx tsc -p web/e2e-final/tsconfig.json
+node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/1bbb56c
+WF_EVIDENCE_SHA=1bbb56c WF_PROFILES=P1,P2 npx playwright test -c web/e2e-final/playwright.config.ts --project=final   # T0 + golden + T1 + T2 + T3 ([F] + [I] P1/P2)
+WF_NO_BUILD=1 WF_EVIDENCE_SHA=1bbb56c WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy own-account-transfer.spec.ts product.spec.ts
+WF_NO_BUILD=1 WF_EVIDENCE_SHA=1bbb56c WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy w13-rejections.spec.ts
+python3 golden.py f0ed4bc/network-golden.json 1bbb56c/network-traces.json   # -> golden-comparison.txt (scratchpad script)
+rg (SC-01/02/03/04, parseFloat|toFixed|Number(, FN-16, REC-04, EV-03) web/src web/dist/p1   # -> scope-sweeps.txt (informative)
+python3 crop.py <reference screen.png> <R capture> x y w h out.png   # native-resolution crops for the side-by-side review (scratchpad, not versioned)
+node web/e2e-final/scripts/db-down.mjs                     # cleanup: own container and volume only -> env-06-cleanup.txt
+rm -rf web/dist docs/evidence/web-final/wip docs/evidence/web-final/1bbb56c/captures/test-results

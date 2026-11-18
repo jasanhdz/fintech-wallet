@@ -1,0 +1,9 @@
+F17-antes-2ab42b4 normal run1: login usable after 882 ms | rendered fonts {"Inter SemiBold":118,"Ionicons":14,"Inter Medium":154,"Inter":304}
+F17-antes-2ab42b4 normal run2: login usable after 876 ms
+F17-antes-2ab42b4 normal run3: login usable after 882 ms
+F17-antes-2ab42b4 abort run1: login usable after 880 ms | rendered fonts {".SF NS":576}
+F17-antes-2ab42b4 abort run2: login usable after 879 ms
+F17-antes-2ab42b4 abort run3: login usable after 883 ms
+F17-antes-2ab42b4 hang run1: login usable after 6434 ms | rendered fonts {".SF NS":576}
+F17-antes-2ab42b4 hang run2: login usable after 6433 ms
+F17-antes-2ab42b4 hang run3: login usable after 6431 ms

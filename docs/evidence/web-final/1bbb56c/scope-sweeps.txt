@@ -1,0 +1,19 @@
+# Informative scope sweeps at code 1bbb56c (formal SC-01…05 sweep is WF-T6)
+$ rg -i -c "<SC-01 pattern>" web/src web/dist/p1
+web/src/transfers.tsx:1
+web/dist/p1/assets/index-CYosEoy8.js:1
+(remaining: «No es un comprobante CEP» in the W12 disclaimer of transfers.tsx, present at f0ed4bc, WF-T5 scope; W06/W07 add no match)
+$ rg -c "IVA|INE" web/src web/dist/p1
+(rg exit 1 = no matches)
+$ rg -c "<SC-02 pattern>" web/src web/dist/p1
+(rg exit 1 = no matches)
+$ rg -i -c "material-symbols|tailwind|googleusercontent|cdn\." web/src web/index.html
+(rg exit 1 = no matches)
+$ rg -i -c "simulat|mock|fixture" web/src
+(rg exit 1 = no matches)
+$ rg -n "parseFloat|toFixed|Number\(" web/src
+(rg exit 1 = no matches)
+$ rg -n "500000|2000000|5000|20000|6,000|850" web/src
+(rg exit 1 = no matches)
+$ rg -n "movements" web/src/transfers.tsx (REC-04)
+280:URIComponent(transfer.sourceAccountId)}/movements`}>Ver movimientos</

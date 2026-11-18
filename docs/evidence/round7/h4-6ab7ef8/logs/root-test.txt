@@ -1,0 +1,82 @@
+
+> fintech-wallet@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @fintech-wallet/api@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ production configuration accepts explicit operational values without imposing example policy (33.547833ms)
+✔ production requires every operational setting and rejects malformed, fractional, zero, and out-of-range values (0.934958ms)
+✔ production requires a valid IANA time zone and disallows the development fixture (0.19775ms)
+✔ test and development environments retain existing harness configuration behavior (0.07725ms)
+✔ health returns status and propagates request ID (230.279792ms)
+✔ invalid request ID is replaced; not found uses RFC 7807 (79.382292ms)
+✔ generated CLABEs pass checksum and are encrypted with separate lookup fingerprints (1.678333ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 988.518291
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+✔ movement query uses contract filters, limit and cursor without offset (2.774958ms)
+✔ movement history renders rows, applies filters, pages by cursor, and preserves rows on retry error (421.060292ms)
+✔ recent activity requests three real movements for the first account and renders their details (393.033417ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.158625ms)
+✔ hydrates a web session through CSRF and cookie refresh (22.423125ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (179.515667ms)
+✔ provider hydrates a cookie session into in-memory context (8.490416ms)
+✔ revoked refresh rejects and network failure remains recoverable (0.8965ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.706667ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.390583ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (7.484167ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.229625ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (1.656208ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (1.874125ms)
+✔ create retries forward identical payload and idempotency key (22.513792ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (35.094875ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (304.176667ms)
+✔ login and registration use the shared contract validation (19.864042ms)
+✔ account balance formatting preserves integer minor units (23.355292ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (1.228708ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1522.516333
+
+> @fintech-wallet/mobile@0.1.0 test
+> jest --runInBand
+
+
+Test Suites: 8 passed, 8 total
+Tests:       185 passed, 185 total
+Snapshots:   0 total
+Time:        33.288 s, estimated 35 s
+Ran all test suites.
+
+> @fintech-wallet/shared@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ CLABE validation checks length, digits and verification digit (0.823209ms)
+✔ MXN decimal input converts exactly to bigint minor-unit string (0.319917ms)
+✔ minor-unit formatting and addition do not use binary floating point (15.28775ms)
+✔ shared request schemas reject invalid CLABE and transfer payload (1.988083ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 205.423667
+test exit=0

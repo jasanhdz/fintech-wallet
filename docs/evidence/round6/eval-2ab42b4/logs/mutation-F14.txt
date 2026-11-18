@@ -1,0 +1,40 @@
+      1711 |     }
+      1712 |     await flow.finish();
+
+      at doesNotMatch (tests/app.test.tsx:1709:14)
+      at asyncGeneratorStep (../../fintech-wallet/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (../../fintech-wallet/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● F-14: the OTP threshold of M07 comes from the server policy, never from a constant › threshold 1000000 minor, amount 10000.00 -> requires code: true
+
+    assert(received)
+
+    Expected value to be equal to:
+      true
+    Received:
+      false
+
+    Message:
+      M07 names the server threshold $10,000.00 MXN
+
+      1703 |     const label = formatMoney(threshold, { currency: true });
+      1704 |     if (otp) {
+    > 1705 |       assert.ok(review.includes(`Operación mayor o igual a ${label} requiere código de autorización`), `M07 names the server threshold ${label}`);
+           |              ^
+      1706 |       assert.ok(flow.button('Continuar a verificación'));
+      1707 |       assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.findAll((child) => child.props.children === 'Confirmar transferencia').length > 0).length, 0);
+      1708 |     } else {
+
+      at ok (tests/app.test.tsx:1705:14)
+      at asyncGeneratorStep (../../fintech-wallet/node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (../../fintech-wallet/node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+
+Test Suites: 1 failed, 3 passed, 4 total
+Tests:       4 failed, 86 passed, 90 total
+Snapshots:   0 total
+Time:        12.776 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

@@ -1,0 +1,18 @@
+## mutation: import { isValidClabe } from '@fintech-wallet/shared';
+      ["App.tsx: import { isValidClabe } from '@fintech-wallet/shared'"]
+    +   "App.tsx: import { isValidClabe } from '@fintech-wallet/shared'"
+    +   "App.tsx: import { isValidClabe } from '@fintech-wallet/shared'",
+    > 36 |     assert.deepEqual(offenders, [], 'value imports of shared break the Metro bundle (see docs/round6-contract-notes.md §7)');
+Tests:       1 failed, 2 passed, 3 total
+## mutation: import { type ProductComponents as PC } from '@fintech-wallet/shared';
+      ["App.tsx: import { type ProductComponents as PC } from '@fintech-wallet/shared'"]
+    +   "App.tsx: import { type ProductComponents as PC } from '@fintech-wallet/shared'"
+    +   "App.tsx: import { type ProductComponents as PC } from '@fintech-wallet/shared'",
+    > 36 |     assert.deepEqual(offenders, [], 'value imports of shared break the Metro bundle (see docs/round6-contract-notes.md §7)');
+Tests:       1 failed, 2 passed, 3 total
+## mutation: const lazyShared = require('@fintech-wallet/shared');
+      ["App.tsx: require('@fintech-wallet/shared')"]
+    +   "App.tsx: require('@fintech-wallet/shared')"
+    +   "App.tsx: require('@fintech-wallet/shared')",
+    > 36 |     assert.deepEqual(offenders, [], 'value imports of shared break the Metro bundle (see docs/round6-contract-notes.md §7)');
+Tests:       1 failed, 2 passed, 3 total

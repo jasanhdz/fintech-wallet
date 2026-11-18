@@ -1,0 +1,13 @@
+# ENV-06 cleanup · 2026-11-17T12:52:43Z
+$ node web/e2e-final/scripts/db-down.mjs
+docker stop fintech-wallet-web-pg -> ok
+docker rm fintech-wallet-web-pg -> ok
+docker volume rm fintech-wallet-web-pg-data -> ok
+exit 0
+$ docker ps -a --filter name=fintech-wallet-web-pg
+(empty = removed)
+$ docker volume ls --filter name=fintech-wallet-web-pg-data
+(empty = removed)
+$ df -h /System/Volumes/Data
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1   228Gi   196Gi   3.3Gi    99%    1.9M   34M    5%   /System/Volumes/Data

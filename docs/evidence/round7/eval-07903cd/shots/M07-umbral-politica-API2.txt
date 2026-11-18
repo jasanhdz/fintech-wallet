@@ -1,0 +1,37 @@
+
+Transferir
+AL
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$1,234.56
+MXN
+
+Operación mayor o igual a $1,234.56 MXN requiere código de autorización (umbral de demostración)
+
+CUENTA DE ORIGEN
+Cuenta principal •• 2960
+Saldo disponible: $10,000.00 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Cuenta de ahorro demo (Ahorro demo) •• 2569
+Billetera MXN
+Concepto
+Comida
+Referencia numérica
+••••••
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$8,765.44 MXN
+Cálculo:
+$10,000.00 - $1,234.56 = $8,765.44 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+Continuar a verificación
+
+Modificar datos

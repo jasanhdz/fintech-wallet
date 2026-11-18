@@ -1,0 +1,12 @@
+
+===== S1: F-21 original, respuesta perdida tras aplicarse; F-27 primer plano =====
+AUDIT S1 Home (sin red): notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0696","Ahorro •• 7038"," Verificar estado de la transferencia"," Descartar este intento","Última actualización de saldo, Actualiza","Traspaso a Cuenta de ahorro demo, •• 703","Ver los últimos 20 movimientos "]
+SHOT S1-inicio-aviso minFont=12 scrollW=390 offscreen=0 errs=1
+PASS Home: only the notice, no new-transfer entry
+PASS discard offered for an attempt that could not be verified
+creates sent by 2 foreground returns (network back): 0 | DB completed:30025
+PASS F-27: 0 POST /transfers without a tap
+SHOT S1-verificado minFont=12 scrollW=390 offscreen=0 errs=1
+after the tap: receipt true | keys ["756f21b0","756f21b0"] | DB completed:30025 | 2 rows sum 0 | principal debit 30025
+PASS 1 transfer, 1 key, 1 debit of 30025
+PASS record cleared once resolved
