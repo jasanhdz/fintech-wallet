@@ -168,3 +168,60 @@ describe('mobile beneficiary selection', () => {
     delete (global as { fetch?: typeof fetch }).fetch;
   });
 });
+
+describe('mobile transfer attempt', () => {
+  it('blocks invalid amounts and retries an uncertain create with the identical key and payload', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    let sends = 0;
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'source-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '125000', clabe: '000000000000000000', clabeMasked: '••••0000' }] });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [{ id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }] });
+      if (url.endsWith('/transfers')) {
+        sends += 1;
+        if (sends === 1) throw new Error('offline');
+        return Response.json({ id: 'transfer-1', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }, amountMinor: '1234', currency: 'MXN', concept: 'Comida', reference: '123', createdAt: new Date().toISOString(), demoOnlyCode: '654321' }, { status: 202 });
+      }
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => {
+      renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com');
+      renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
+    });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
+    assert.ok(beneficiaryButton);
+    await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
+    await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
+    const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Importe' });
+    await TestRenderer.act(async () => { amountInput.props.onChangeText('12.345'); });
+    assert.equal(renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').some((node) => node.findAll((child) => child.props.children === 'Revisar transferencia').length > 0), false);
+    await TestRenderer.act(async () => { amountInput.props.onChangeText('12.34'); renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('123'); });
+    await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
+    const createCalls = () => fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/transfers')) as [RequestInfo | URL, RequestInit?][];
+    assert.equal(createCalls().length, 1);
+    const first = createCalls()[0];
+    assert.ok(first);
+    const firstPayload = JSON.parse(String(first[1]?.body));
+    assert.equal(firstPayload.amountMinor, '1234');
+    await TestRenderer.act(async () => { button('Reintentar el mismo envío').props.onPress(); });
+    const second = createCalls()[1];
+    assert.ok(second);
+    assert.equal((second[1]?.headers as Record<string, string>)['Idempotency-Key'], (first[1]?.headers as Record<string, string>)['Idempotency-Key']);
+    assert.deepEqual(JSON.parse(String(second[1]?.body)), firstPayload);
+    assert.match(JSON.stringify(renderer!.toJSON()), /654321/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});

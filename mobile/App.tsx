@@ -10,6 +10,8 @@ type User = ProductComponents['schemas']['User'];
 type Account = ProductComponents['schemas']['Account'];
 type AuthResponse = ProductComponents['schemas']['AuthResponse'];
 type Beneficiary = ProductComponents['schemas']['Beneficiary'];
+type Transfer = ProductComponents['schemas']['Transfer'];
+type TransferRequest = ProductComponents['schemas']['TransferCreateRequest'];
 const REFRESH_KEY = 'wallet.refresh-token';
 const apiBase = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 0 } } });
@@ -61,6 +63,16 @@ function Wallet() {
   const [choosingBeneficiary, setChoosingBeneficiary] = useState(false);
   const [beneficiarySearch, setBeneficiarySearch] = useState('');
   const [destination, setDestination] = useState<Beneficiary | null>(null);
+  const [transferScreen, setTransferScreen] = useState<'details' | 'review' | 'otp' | 'status' | 'receipt' | 'rejected' | null>(null);
+  const [amount, setAmount] = useState('');
+  const [concept, setConcept] = useState('');
+  const [reference, setReference] = useState('');
+  const [transferError, setTransferError] = useState('');
+  const [transferBusy, setTransferBusy] = useState(false);
+  const [transfer, setTransfer] = useState<Transfer | null>(null);
+  const [createAttempt, setCreateAttempt] = useState<{ key: string; payload: TransferRequest } | null>(null);
+  const [otp, setOtp] = useState('');
+  const [confirmAttempt, setConfirmAttempt] = useState<{ key: string; payload: { code: string } } | null>(null);
   const client = useQueryClient();
 
   const refreshSession = useCallback(async (refreshToken: string) => {
@@ -103,6 +115,11 @@ function Wallet() {
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
       setSession(null);
       setDestination(null);
+      setTransfer(null);
+      setCreateAttempt(null);
+      setConfirmAttempt(null);
+      setOtp('');
+      setTransferScreen(null);
       setChoosingBeneficiary(false);
       setBeneficiarySearch('');
       client.clear();
@@ -170,6 +187,56 @@ function Wallet() {
   });
   const accounts = accountsQuery.data ?? [];
   const selected = accounts.find((account) => account.id === selectedId) ?? accounts[0];
+  const amountMinor = amountToMinor(amount);
+  const transferPayload: TransferRequest | null = destination && selected && amountMinor && concept.trim() && reference
+    ? { sourceAccountId: selected.id, destinationType: 'beneficiary', beneficiaryId: destination.id, amountMinor, concept: concept.trim(), reference }
+    : null;
+
+  async function submitCreate(retry = false) {
+    if (!session || !transferPayload || transferBusy) return;
+    const attempt = retry && createAttempt ? createAttempt : { key: newIdempotencyKey(), payload: transferPayload };
+    if (!retry) setCreateAttempt(attempt);
+    setTransferBusy(true); setTransferError(''); setTransferScreen('status');
+    try {
+      const result = await request<Transfer>('/transfers', session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
+      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
+      setTransfer(finalResult);
+      setTransferScreen(finalResult.status === 'awaiting_confirmation' ? 'otp' : finalResult.status === 'rejected' ? 'rejected' : 'receipt');
+    } catch (error) {
+      setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
+      setTransferScreen(error instanceof ApiError && error.status >= 400 && error.status < 500 ? 'rejected' : 'status');
+    } finally { setTransferBusy(false); }
+  }
+
+  async function confirmOtp(retry = false) {
+    if (!session || !transfer || transferBusy) return;
+    const attempt = retry && confirmAttempt ? confirmAttempt : { key: newIdempotencyKey(), payload: { code: otp } };
+    if (!retry) setConfirmAttempt(attempt);
+    setTransferBusy(true); setTransferError('');
+    try {
+      const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
+      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
+      setTransfer(finalResult); setConfirmAttempt(null); setOtp('');
+      setTransferScreen(finalResult.status === 'rejected' ? 'rejected' : finalResult.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
+    } catch (error) {
+      setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
+    } finally { setTransferBusy(false); }
+  }
+
+  async function checkTransferStatus() {
+    if (!session || !transfer) return;
+    setTransferBusy(true); setTransferError('');
+    try {
+      const result = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
+      setTransfer(result);
+      setTransferScreen(result.status === 'completed' ? 'receipt' : result.status === 'rejected' ? 'rejected' : 'otp');
+    } catch (error) { setTransferError(error instanceof Error ? error.message : 'No se pudo consultar el estado.'); }
+    finally { setTransferBusy(false); }
+  }
+
+  function resetTransfer() {
+    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setTransferError('');
+  }
   const beneficiariesQuery = useQuery({
     queryKey: ['beneficiaries', session?.user.id],
     queryFn: async () => {
@@ -219,12 +286,15 @@ function Wallet() {
   if (hidden) return <PrivacyScreen />;
   if (!session) return <LoginScreen email={email} password={password} setEmail={setEmail} setPassword={setPassword} passwordVisible={passwordVisible} setPasswordVisible={setPasswordVisible} error={formError} submitting={submitting} onSubmit={() => void login()} />;
 
+  if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} error={transferError} busy={transferBusy} demoOnlyCode={transfer?.demoOnlyCode} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} onBack={() => setTransferScreen(transferScreen === 'review' ? 'details' : 'review')} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
+
   return <View style={styles.page}>
     <StatusBar barStyle="dark-content" />
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.topbar}><View><Text style={styles.brand}>Billetera MXN</Text><Text style={styles.eyebrow}>INICIO</Text></View><View style={styles.avatar}><Text style={styles.avatarText}>{initials(session.user.fullName)}</Text></View></View>
       <View style={styles.greeting}><View><Text style={styles.title}>Hola, {session.user.fullName.split(' ')[0]}</Text><Text style={styles.muted}>Tus cuentas y saldos</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar sesión" style={styles.iconButton} onPress={() => void endSession()}><Ionicons name="log-out-outline" size={25} color={colors.text} /></Pressable></View>
-      {destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO PROVISIONAL</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Elegir beneficiario" style={styles.transferEntry} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><View style={styles.accountIcon}><Ionicons name="send-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Elegir beneficiario</Text><Text style={styles.muted}>Selecciona un destino registrado en web</Text></View><Ionicons name="chevron-forward" size={22} color={colors.primary} /></Pressable>}
+       {destination ? <View style={styles.destinationCard}><View style={styles.destinationIcon}><Ionicons name="person-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.tag}>DESTINO SELECCIONADO</Text><Text style={styles.rowTitle}>{destination.name}</Text><Text style={styles.muted}>{destination.alias} · {destination.clabeMasked}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cambiar beneficiario" onPress={() => setChoosingBeneficiary(true)}><Text style={styles.link}>Cambiar</Text></Pressable></View> : <Pressable accessibilityRole="button" accessibilityLabel="Elegir beneficiario" style={styles.transferEntry} onPress={() => { setChoosingBeneficiary(true); setBeneficiarySearch(''); }}><View style={styles.accountIcon}><Ionicons name="send-outline" size={22} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={styles.rowTitle}>Elegir beneficiario</Text><Text style={styles.muted}>Selecciona un destino registrado en web</Text></View><Ionicons name="chevron-forward" size={22} color={colors.primary} /></Pressable>}
+       {destination && !choosingBeneficiary && <Button title="Continuar con transferencia" disabled={!selected} onPress={() => { setTransferScreen('details'); setTransferError(''); }} />}
       {choosingBeneficiary && <View style={styles.beneficiarySection}>
         <View style={styles.beneficiaryHeader}><View><Text style={styles.sectionTitle}>Elige a quién enviar</Text><Text style={styles.muted}>Beneficiarios guardados desde la web</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Cerrar selección" onPress={() => setChoosingBeneficiary(false)}><Ionicons name="close" size={24} color={colors.muted} /></Pressable></View>
         <View style={styles.searchWrap}><Ionicons name="search" size={20} color={colors.muted} /><TextInput accessibilityLabel="Buscar beneficiario" value={beneficiarySearch} onChangeText={setBeneficiarySearch} placeholder="Nombre, alias o CLABE" placeholderTextColor={colors.placeholder} autoCapitalize="none" style={styles.input} /></View>
@@ -251,6 +321,48 @@ function LoginScreen(props: { email: string; password: string; setEmail: (value:
   </ScrollView></KeyboardAvoidingView>;
 }
 
+function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' | 'receipt' | 'rejected'; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; error: string; busy: boolean; demoOnlyCode?: string; createRetry: boolean; confirmRetry: boolean; onBack: () => void; onReview: () => void; onCreate: () => void; onRetryCreate: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
+  const minor = amountToMinor(props.amount);
+  const insufficient = Boolean(minor && props.source && BigInt(minor) > BigInt(props.source.availableBalanceMinor));
+  const formValid = Boolean(minor && props.concept.trim().length >= 1 && props.concept.trim().length <= 40 && /^\d{1,7}$/.test(props.reference));
+  let title = 'Datos de transferencia';
+  if (props.screen === 'review') title = 'Revisa tu transferencia';
+  if (props.screen === 'otp') title = 'Confirma tu identidad';
+  if (props.screen === 'status') title = props.busy ? 'Consultando operación…' : 'Estamos verificando';
+  if (props.screen === 'receipt') title = 'Transferencia completada';
+  if (props.screen === 'rejected') title = 'Transferencia no completada';
+  return <View style={styles.page}><StatusBar barStyle="dark-content"/><ScrollView contentContainerStyle={styles.flowContent} keyboardShouldPersistTaps="handled">
+    <Pressable accessibilityRole="button" accessibilityLabel="Volver" style={styles.backButton} onPress={props.screen === 'details' ? props.onDone : props.onBack}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Volver</Text></Pressable>
+    <Text style={styles.eyebrow}>TRANSFERENCIA INTERNA</Text><Text style={styles.flowTitle}>{title}</Text>
+    {props.destination && <View style={styles.flowCard}><Text style={styles.label}>Para</Text><Text style={styles.rowTitle}>{props.destination.name}</Text><Text style={styles.muted}>{props.destination.alias} · {props.destination.clabeMasked}</Text></View>}
+    {props.screen === 'details' && <>
+      <View style={styles.flowCard}><Text style={styles.label}>Cuenta de origen</Text><Text style={styles.rowTitle}>{props.source?.name ?? 'Selecciona una cuenta'}</Text><Text style={styles.muted}>Disponible {props.source ? formatBalance(props.source.availableBalanceMinor) : '—'} MXN</Text></View>
+      <View style={styles.flowCard}><Text style={styles.label}>Importe (MXN)</Text><TextInput accessibilityLabel="Importe" keyboardType="decimal-pad" value={props.amount} onChangeText={props.setAmount} placeholder="0.00" placeholderTextColor={colors.placeholder} style={styles.flowInput}/><Text style={styles.label}>Concepto</Text><TextInput accessibilityLabel="Concepto" value={props.concept} onChangeText={props.setConcept} maxLength={40} placeholder="¿Para qué es?" placeholderTextColor={colors.placeholder} style={styles.flowInput}/><Text style={styles.label}>Referencia numérica</Text><TextInput accessibilityLabel="Referencia" keyboardType="number-pad" value={props.reference} onChangeText={(value) => props.setReference(value.replace(/\D/g, '').slice(0, 7))} maxLength={7} placeholder="1 a 7 dígitos" placeholderTextColor={colors.placeholder} style={styles.flowInput}/></View>
+      {insufficient && <Text accessibilityRole="alert" style={styles.errorText}>Saldo insuficiente para este importe.</Text>}
+      {!insufficient && props.amount && !minor && <Text accessibilityRole="alert" style={styles.errorText}>Escribe un importe positivo con máximo dos decimales.</Text>}
+      <Button title="Revisar transferencia" disabled={!formValid || insufficient || !props.source} onPress={props.onReview}/>
+    </>}
+    {props.screen === 'review' && <><View style={styles.flowCard}><Text style={styles.label}>Desde</Text><Text style={styles.rowTitle}>{props.source?.name}</Text><Text style={styles.label}>Importe</Text><Text style={styles.flowAmount}>{minor ? formatBalance(minor) : '—'} MXN</Text><Text style={styles.label}>Concepto</Text><Text style={styles.rowTitle}>{props.concept.trim()}</Text><Text style={styles.label}>Referencia</Text><Text style={styles.rowTitle}>{props.reference}</Text></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title={props.busy ? 'Enviando…' : 'Confirmar transferencia'} disabled={props.busy} onPress={props.onCreate}/></>}
+    {props.screen === 'otp' && <><View style={styles.flowCard}><Text style={styles.muted}>Ingresa el código de confirmación asociado a esta operación.</Text>{props.demoOnlyCode ? <Text style={styles.demoCode}>Código de prueba local: {props.demoOnlyCode}</Text> : null}<TextInput accessibilityLabel="Código de confirmación" keyboardType="number-pad" maxLength={6} value={props.otp} onChangeText={(value) => props.setOtp(value.replace(/\D/g, '').slice(0, 6))} placeholder="6 dígitos" placeholderTextColor={colors.placeholder} style={styles.flowInput}/></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title={props.busy ? 'Confirmando…' : 'Confirmar código'} disabled={props.busy || !/^\d{6}$/.test(props.otp)} onPress={props.onConfirm}/>{props.confirmRetry && <Button title="Reintentar envío del mismo código" disabled={props.busy} onPress={props.onRetryConfirm}/>}</>}
+    {props.screen === 'status' && <><View style={styles.flowCard}><Text style={styles.muted}>{props.error || 'El resultado puede tardar. Consulta el estado o reintenta de forma segura.'}</Text>{props.transfer && <Text style={styles.rowTitle}>Estado: {props.transfer.status}</Text>}</View><Button title="Consultar estado" disabled={props.busy || !props.transfer} onPress={props.onCheck}/>{props.createRetry && <Button title="Reintentar el mismo envío" disabled={props.busy} onPress={props.onRetryCreate}/>}</>}
+    {props.screen === 'receipt' && <><View style={styles.flowCard}><Text style={styles.flowAmount}>{formatBalance(props.transfer?.amountMinor ?? '0')} MXN</Text><Text style={styles.muted}>Enviada a {props.destination?.name}</Text><Text style={styles.label}>Concepto</Text><Text style={styles.rowTitle}>{props.transfer?.concept}</Text><Text style={styles.label}>Folio interno</Text><Text style={styles.rowTitle}>{props.transfer?.receiptReference ?? props.transfer?.id}</Text></View><Button title="Listo" onPress={props.onDone}/></>}
+    {props.screen === 'rejected' && <><View style={styles.flowCard}><Text style={styles.muted}>{props.error || 'La transferencia fue rechazada. No se completó el movimiento.'}</Text></View><Button title="Volver a mis cuentas" onPress={props.onDone}/></>}
+  </ScrollView></View>;
+}
+
+function amountToMinor(value: string): string | null {
+  const normalized = value.trim();
+  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(normalized)) return null;
+  const [whole, fraction = ''] = normalized.split('.');
+  const minor = `${whole}${fraction.padEnd(2, '0')}`.replace(/^0+/, '');
+  return minor && /[1-9]/.test(minor) ? minor : null;
+}
+
+function newIdempotencyKey(): string {
+  if (!globalThis.crypto?.randomUUID) throw new Error('No se pudo crear una clave segura para el intento.');
+  return globalThis.crypto.randomUUID();
+}
+
 function PrivacyScreen() { return <View style={styles.privacy}><View style={styles.privacyIcon}><Ionicons name="shield-checkmark-outline" size={34} color={colors.primary} /></View><Text style={styles.sectionTitle}>Información protegida</Text><Text style={[styles.muted, styles.center]}>Tu información se oculta mientras la app está en segundo plano.</Text><Text style={styles.privacyFooter}>Billetera MXN</Text></View>; }
 function Centered({ children }: { children: React.ReactNode }) { return <View style={styles.centered}>{children}</View>; }
 function Button({ title, onPress, disabled }: { title: string; onPress: () => void; disabled?: boolean }) { return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button, (pressed || disabled) && styles.buttonPressed]}><Text style={styles.buttonText}>{disabled ? <ActivityIndicator color="#fff" /> : title}</Text></Pressable>; }
@@ -258,6 +370,7 @@ function initials(name: string) { return name.split(/\s+/).slice(0, 2).map((part
 
 const colors = { bg: '#f9f9ff', white: '#ffffff', text: '#141b2c', muted: '#434655', placeholder: '#747686', primary: '#0037b0', pale: '#e9edff', border: '#e0e8ff', error: '#ba1a1a' };
 const styles = StyleSheet.create({
+  flowContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 48, maxWidth: 720, width: '100%', alignSelf: 'center' }, backButton: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 24 }, flowTitle: { color: colors.text, fontSize: 28, lineHeight: 36, fontWeight: '700', marginTop: 8, marginBottom: 20 }, flowCard: { backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 18, marginBottom: 14, gap: 8 }, flowInput: { minHeight: 50, borderRadius: 10, paddingHorizontal: 12, backgroundColor: '#f1f3ff', borderWidth: 1, borderColor: colors.border, color: colors.text, fontSize: 17, marginBottom: 8 }, flowAmount: { color: colors.text, fontSize: 30, fontWeight: '700', marginBottom: 12 }, demoCode: { color: colors.primary, fontWeight: '700', fontSize: 17, marginVertical: 8 },
   page: { flex: 1, backgroundColor: colors.bg }, content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 36, maxWidth: 720, width: '100%', alignSelf: 'center' },
   topbar: { minHeight: 56, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, brand: { color: colors.text, fontSize: 20, fontWeight: '700' }, eyebrow: { color: colors.muted, fontSize: 12, fontWeight: '600', letterSpacing: 1 }, avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.pale, alignItems: 'center', justifyContent: 'center' }, avatarText: { color: colors.primary, fontWeight: '700' },
   greeting: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 22, marginBottom: 24 }, title: { fontSize: 26, lineHeight: 34, fontWeight: '700', color: colors.text }, muted: { color: colors.muted, fontSize: 15, lineHeight: 22 }, iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
