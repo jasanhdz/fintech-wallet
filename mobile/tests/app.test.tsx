@@ -801,3 +801,53 @@ describe('mobile uncertain result (M09)', () => {
     await flow.finish();
   });
 });
+
+describe('mobile completed receipt (M10)', () => {
+  const completedTransfer = flowTransfer({ id: 'transfer-done', status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'DEMO-0001' });
+
+  it('shows the signed receipt and the new balance re-read from the API after completion', async () => {
+    let completed = false;
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) { completed = true; return Response.json(completedTransfer, { status: 201 }); }
+      if (url.endsWith('/transfers/transfer-done')) return Response.json(completedTransfer);
+      return undefined;
+    }, { amount: '850.00', accounts: () => [{ ...flowAccount, availableBalanceMinor: completed ? '1160000' : '1245000' }] });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const receipt = flow.visible();
+    assert.match(receipt, /"Detalle"/);
+    assert.match(receipt, /"Transferencia completada"/);
+    assert.match(receipt, /"-","\$850.00"/);
+    assert.match(receipt, /13 de noviembre de 2026, 14:32 hrs/);
+    assert.match(receipt, /DETALLE DE OPERACIÓN/);
+    assert.match(receipt, /Confirmada y aplicada/);
+    assert.match(receipt, /"Carlos Ruiz"/);
+    assert.match(receipt, /"•• 0028"/);
+    assert.match(receipt, /"•• 8412"/);
+    assert.match(receipt, /DEMO-0001/);
+    assert.match(receipt, /"Nuevo saldo disponible en ","Cuenta Principal",":"/);
+    assert.match(receipt, /"\$11,600.00"/);
+    assert.doesNotMatch(receipt, /\$12,450.00/, 'the pre-transfer balance must never be presented as the new balance');
+    assert.doesNotMatch(receipt, /Compartir|Descargar PDF|cifrad|auditada/);
+    await TestRenderer.act(async () => { flow.button('Ver últimos movimientos').props.onPress(); });
+    assert.match(flow.visible(), /Últimos movimientos/);
+    await flow.finish();
+  });
+
+  it('hides the new balance when the post-transfer account read fails', async () => {
+    let completed = false;
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) { completed = true; return Response.json(completedTransfer, { status: 201 }); }
+      if (url.endsWith('/transfers/transfer-done')) return Response.json(completedTransfer);
+      if (url.endsWith('/accounts') && completed) return Response.json({ title: 'Service Unavailable' }, { status: 503 });
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait(60);
+    const receipt = flow.visible();
+    assert.match(receipt, /"Transferencia completada"/);
+    assert.doesNotMatch(receipt, /Nuevo saldo disponible/);
+    assert.doesNotMatch(receipt, /\$12,450.00/);
+    await flow.finish();
+  });
+});
