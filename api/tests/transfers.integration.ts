@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
 import { jwtVerify } from 'jose';
+import { Client } from 'pg';
 import { dataSource } from '../src/db/data-source.js';
 import { assertSafeTestDatabase } from '../src/db/test-database-guard.js';
 import { createApp } from '../src/http/app.js';
@@ -114,4 +115,42 @@ test('internal transfers enforce owner, idempotency, OTP, ledger, balance and co
    const newIds=allAfter.map((row:{id:string})=>row.id).filter((id:string)=>!beforeIds.has(id));
    assert.equal(newIds.length,100,'no extra transfer rows');assert.deepEqual(new Set(newIds),new Set(acceptedIds));
    process.env.OTP_THRESHOLD_MINOR='500000';process.env.DAILY_TRANSFER_LIMIT_MINOR='2000000';
+
+  // F-01: a real PostgreSQL outage (not an API process restart) must surface as a recoverable HTTP error with
+  // no financial side effects, and a retry with the identical Idempotency-Key + payload must then complete the
+  // same attempt exactly once once the connection is restored, without duplicating postings.
+  const outageSibling=new Client({connectionString:testUrl.toString()});await outageSibling.connect();
+  try {
+    const idleBefore=await outageSibling.query("SELECT pid FROM pg_stat_activity WHERE usename=current_user AND datname=current_database() AND pid<>pg_backend_pid() AND state='idle'");
+    assert.ok(idleBefore.rows.length>=1,'test setup requires at least one idle runtime connection in the API pool to target');
+    const outageKey=key();const outageBody=request('2');
+    const outageFinancialBefore=await financialSnapshot();
+    const outagePromise=post(outageBody,outageKey);
+    let terminatedCount=0;
+    for(let attempt=0;attempt<200&&terminatedCount===0;attempt++){
+      const active=await outageSibling.query("SELECT pid FROM pg_stat_activity WHERE usename=current_user AND datname=current_database() AND pid<>pg_backend_pid() AND state<>'idle'");
+      if(active.rows.length>0){const terminated=await outageSibling.query('SELECT pg_terminate_backend(pid) AS ok FROM pg_stat_activity WHERE pid=ANY($1::int[])',[active.rows.map((row:{pid:number})=>row.pid)]);terminatedCount=terminated.rows.length;}
+    }
+    assert.ok(terminatedCount>=1,'outage simulation must terminate the backend serving the in-flight transfer request');
+    const outageResponse=await outagePromise;
+    assert.ok(outageResponse.status>=500&&outageResponse.status<600,`DB outage must surface as a recoverable server error, got ${outageResponse.status}`);
+    assert.equal(outageResponse.headers.get('content-type')?.split(';')[0],'application/problem+json');
+    const outageProblem=await outageResponse.json() as {status:number;title:string};
+    assert.equal(outageProblem.status,outageResponse.status);
+    assert.deepEqual(await financialSnapshot(),outageFinancialBefore,'a DB outage mid-request must not change owner balances, completed transfers, or ledger postings');
+    const retryResponse=await post(outageBody,outageKey);
+    assert.equal(retryResponse.status,201,'retry with identical Idempotency-Key and payload must complete after the connection is restored');
+    const retryDto=await retryResponse.json() as {id:string;status:string};
+    assert.equal(retryDto.status,'completed');
+    const retryRows=await source.query('SELECT id FROM transfers WHERE id=$1 AND owner_id=$2',[retryDto.id,ownerId]);
+    assert.equal(retryRows.length,1,'retry after outage must have exactly one committed transfer row');
+    const retryIdempotencyRecords=await source.query("SELECT count(*)::int AS count FROM idempotency_records WHERE user_id=$1 AND operation='create-transfer' AND transfer_id=$2",[ownerId,retryDto.id]);
+    assert.equal(retryIdempotencyRecords[0].count,1,'retry after outage must preserve exactly one idempotency result for this attempt');
+    const retryPostings=await source.query("SELECT le.account_id,le.signed_amount_minor::text AS amount FROM transfers t JOIN ledger_transactions lt ON lt.reference_type='transfer' AND lt.reference_id=t.id JOIN ledger_entries le ON le.ledger_transaction_id=lt.id WHERE t.id=$1",[retryDto.id]);
+    assert.equal(retryPostings.length,2,'retry after outage must post exactly two ledger entries for the recovered attempt, not duplicated');
+    assert.equal(retryPostings.reduce((sum:bigint,row:{amount:string})=>sum+BigInt(row.amount),0n),0n,'retry after outage postings must balance to zero');
+    const secondRetryResponse=await post(outageBody,outageKey);
+    assert.equal(secondRetryResponse.status,201);
+    assert.equal((await secondRetryResponse.json() as {id:string}).id,retryDto.id,'a further replay of the same key must keep returning the single recovered transfer');
+  } finally { await outageSibling.end(); }
 });
