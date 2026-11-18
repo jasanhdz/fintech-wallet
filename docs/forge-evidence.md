@@ -39,3 +39,5 @@ El instalador global colocó los documentos Planner/Generator/Evaluator directam
 - Los exports se encontraron en el árbol local como trabajo de usuario no versionado; se preservan y se versionan en la rama de implementación después de inspeccionarlos. No se ejecutó su HTML ni se copió a la UI.
 - La aprobación visual es del usuario; no hay aprobación humana de policy de producción. El usuario aprobó únicamente account-on-signup y una fixture local balanceada con cuentas propias y contra-asientos; montos de fixture y límites/OTP siguen ilustrativos.
 - El ciclo anterior BOOT-00 sigue registrado 3/3 en `docs/forge/BOOT-00-FINDINGS.md` y no se reutiliza como evaluación del producto.
+- Planner de Forge de producto concluyó en un contexto independiente con 20 criterios, commit `b7cfa69`; el contrato/producto se congeló antes de cualquier pantalla/API financiera. Generator/Evaluator del nuevo ciclo no se han ejecutado todavía.
+- Worktrees backend/web/mobile son ramas separadas (`product/backend`, `product/web`, `product/mobile`) y parten de `9675b79`, con `npm ci` en cada worktree. Aún no hay commits de producto en esas ramas.

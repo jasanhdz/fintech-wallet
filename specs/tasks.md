@@ -4,7 +4,7 @@ Estado 2026-11-14: diseño Stitch aprobado como referencia visual; tareas funcio
 
 | ID | Estado / etiqueta | Requisitos | Diseño | Criterios verificables / prueba esperada |
 |---|---|---|---|---|
-| PLATFORM-01 | IN PROGRESS · infra/api/web/mobile/shared | BOOT-00 workspace; REQ-QUAL-01/03/06 | Node/Expo compatibility, local crypto config, unit/integration/E2E harness | New exact dependencies and lockfile install; Expo check; shared schemas/money tests; isolated Postgres migration/E2E and Playwright visual config. Coordinator-owned; no app behavior until contracts/types land. |
+| PLATFORM-01 | COMPLETE · infra/api/web/mobile/shared | BOOT-00 workspace; REQ-QUAL-01/03/06 | Node/Expo compatibility, local crypto config, unit/integration/E2E harness | Exact dependencies and lockfile; Expo check; shared schema/money tests; isolated Postgres migration/E2E and Playwright visual configs. Coordinator-owned; no app behavior included. |
 | DESIGN-01 | COMPLETE · infra/docs | W01–W14, M01–M12, todos REQ-* | `docs/design-mapping.md`, `docs/design/README.md` | Fuentes HTML/capturas inspeccionadas; assets faltantes/contradicciones/out-of-scope registrados; estado visual aprobado sin convertir claims demo en política. |
 | API-CONTRACT-01 | COMPLETE · api/shared | REQ-AUTH, ACCT, BEN, XFER, LIMIT, HIST, QUAL | `specs/openapi.yaml`, `specs/design.md` | Contrato OpenAPI 3.1 válido, tipos shared reproducibles; auth/cookie/CSRF, idempotencia, `amountMinor`, cursor y Problem Details definidos antes de worktrees. |
 | BOOT-00 | COMPLETADA · infra/api/web/mobile | BOOT-00-01..06 | SPEC BOOT-00, diseño inicial | Monorepo, health, DB aislada, scaffold, CI; no contaba como producto. |
@@ -32,6 +32,10 @@ BOOT-00-00 (specs previas al scaffold) y tareas de implementación deben usar co
 
 | Tarea | Commit(s) | Evidencia asociada |
 |---|---|---|
+| DESIGN-01 · inspección y mapa de diseño | `f4c520a`, `63ad4ba` | `docs/design-mapping.md`; 81 HTML y 69 capturas disponibles inspeccionadas; faltantes/out-of-scope mapeados. |
+| API-CONTRACT-01 · OpenAPI y tipos compartidos | `bb73c3c` | `specs/openapi.yaml` OpenAPI 3.1; `openapi:validate`, `openapi:check` y generación type-safe shared. |
+| PRODUCT-SPEC-01 · Forge Planner | `b7cfa69` | `SPEC.md` producto con 20 criterios, después de contrato/docs y antes de código. |
+| PLATFORM-01 · herramientas y contratos compartidos | `9675b79` | `npm ci`, 4 shared tests, typecheck, OpenAPI y Expo compatibility; tres `npm ci` worktrees independientes. |
 | BOOT-00-00 · especificaciones previas al scaffold | `839bb38` `docs(BOOT-00): add challenge specs and forge plan` | Archivos fuente/specs/Forge; OpenAPI parseado YAML antes de scaffold. |
 | BOOT-00 · scaffold workspace, clientes mínimos, versiones y documentación | `4c5be10` `build(BOOT-00): add reproducible workspace scaffold`; `61280ce` `build(BOOT-00): expose planned OpenAPI reference` | `npm ci`, lint/typecheck/test/build; Redoc de contrato planeado y health-only. |
 | BOOT-00 · API base, Compose aislado y QA/CI | `aa5b769` `build(BOOT-00): add API health and isolated database QA` | `npm run qa:bootstrap`; health/Problem Details; guard DB; PostgreSQL integration; workflow CI. |

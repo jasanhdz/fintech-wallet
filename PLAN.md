@@ -35,9 +35,9 @@ Do not deploy AWS, connect SPEI/banks, publish Expo/EAS, or implement optional b
 
 | Owner | Exclusive paths / responsibility |
 |---|---|
-| Coordinator | `specs/openapi.yaml`, generated `packages/shared/**`, root `package.json`/`package-lock.json`, CI, product docs, final integration and merged branch |
-| Backend agent | `api/src/**`, `api/tests/**`, `api/src/db/migrations/**`; consumes generated shared contract, requests dependency changes from Coordinator |
-| Web agent | `web/src/**`, `web/tests/**`, `web/e2e/**`; consumes generated shared contract, requests dependency changes from Coordinator |
-| Mobile agent | `mobile/App.tsx`, `mobile/app/**`, `mobile/src/**`, `mobile/tests/**`, Expo config excluding `mobile/package.json`; consumes generated shared contract, requests dependency changes from Coordinator |
+| Coordinator | `specs/openapi.yaml`, generated/validation `packages/shared/**`, every `package.json`/`package-lock.json`, CI, root QA scripts, product docs, final integration and branch |
+| Backend agent | `api/**` except `api/package.json`; API services, routes, configuration, TypeORM migrations and tests. Requests dependencies/scripts from Coordinator. |
+| Web agent | `web/**` except `web/package.json`; React routes/components/styles/tests/Playwright E2E. Requests dependencies/scripts from Coordinator. |
+| Mobile agent | `mobile/**` except `mobile/package.json`; Expo Router routes, native components, app config, session, tests. Requests dependencies/scripts from Coordinator. |
 
 OpenAPI is the source of request/response types. The Coordinator generates TypeScript declarations and lands them before the worktrees branch. No workstream edits OpenAPI, shared generated types, root manifests/lockfile, task plan, or another workstream's files. Each independent task is assigned its own worktree and branch.

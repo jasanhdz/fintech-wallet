@@ -25,7 +25,7 @@ Este registro separa el trabajo histórico BOOT-00 del ciclo de producto. No es 
 - OpenAPI es el contrato de request/response; `packages/shared` genera tipos. Coordinator es propietario exclusivo del contrato/shared/root manifests/lockfile/CI/documentación. Backend, Web y Mobile implementan rutas disjuntas en worktrees.
 - Product SPEC de Forge y su commit documental preceden a los worktrees/cambios de aplicación.
 
-## Base común de implementación — en preparación
+## Base común de implementación — lista (sin flujos de producto)
 
 - OpenAPI 0.2.0 se validó con Redocly y sus tipos shared se generan/verifican desde OpenAPI.
 - Se fijaron dependencias para auth/seguridad/validación, React Query/router y pruebas web con Testing Library sobre el runner `tsx` existente; Expo Router/SecureStore/Vector Icons/React Native Web pasan Expo SDK 58 checks.
@@ -34,6 +34,8 @@ Este registro separa el trabajo histórico BOOT-00 del ciclo de producto. No es 
 - `npm run env:local` genera llaves locales en `.env` con modo restrictivo sin mostrar valores. No se iniciaron Docker/Compose ni se accedió a Lucem.
 - En Node 26.13.1: `npm ci`, OpenAPI validate/generate/check, typecheck, npm test (API/web/mobile/shared) y Expo install check pasan; los flujos producto requieren rutas/app/migraciones de los worktrees.
 - Se detectó que la peer opcional de Expo Router `@testing-library/react-native` instalaba el árbol Jest en un perfil audit `--omit=dev`; se retiró esa biblioteca, manteniendo renderer Expo/Jest para mobile. El lockfile conserva avisos de dependencias que están registrados para la revisión final.
+- Commit coordinador `9675b79` deja el lockfile preparado y genera shared validation/types antes de delegar UI/API. Node 26.13.1 y Expo SDK 58 CLI checks pasan; React 19.3.0 queda deduplicado en ambos clientes. Cuatro pruebas shared de dinero/CLABE pasaron.
+- `PLATFORM-01` no implementa registro, sesiones, cuentas ni pantallas de producto. `npm ci` se ejecutó en los tres worktrees de agente; no se operó Docker ni PostgreSQL local durante esta preparación.
 
 ## Entregas verticales
 
