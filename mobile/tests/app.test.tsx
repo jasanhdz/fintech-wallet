@@ -8,11 +8,19 @@ jest.mock('../App', () => {
   return jest.requireActual('../App');
 });
 
+const mockSecureValues = new Map<string, string>();
 jest.mock('expo-secure-store', () => ({
-  getItemAsync: jest.fn().mockResolvedValue(null),
-  setItemAsync: jest.fn().mockResolvedValue(undefined),
-  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+  getItemAsync: jest.fn((key: string) => Promise.resolve(mockSecureValues.get(key) ?? null)),
+  setItemAsync: jest.fn((key: string, value: string) => { mockSecureValues.set(key, value); return Promise.resolve(); }),
+  deleteItemAsync: jest.fn((key: string) => { mockSecureValues.delete(key); return Promise.resolve(); }),
 }));
+beforeEach(() => {
+  mockSecureValues.clear();
+  const store = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock; setItemAsync: jest.Mock; deleteItemAsync: jest.Mock };
+  store.getItemAsync.mockReset().mockImplementation((key: string) => Promise.resolve(mockSecureValues.get(key) ?? null));
+  store.setItemAsync.mockReset().mockImplementation((key: string, value: string) => { mockSecureValues.set(key, value); return Promise.resolve(); });
+  store.deleteItemAsync.mockReset().mockImplementation((key: string) => { mockSecureValues.delete(key); return Promise.resolve(); });
+});
 jest.mock('react-native-safe-area-context', () => {
   const ReactNative = jest.requireActual('react-native') as typeof import('react-native');
   return { SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children, SafeAreaView: ReactNative.View };
@@ -48,7 +56,6 @@ describe('mobile logout', () => {
       setItemAsync: jest.Mock;
       deleteItemAsync: jest.Mock;
     };
-    secureStore.getItemAsync.mockResolvedValueOnce(null).mockResolvedValue('refresh-secret');
     const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       void init;
       const url = String(input);
@@ -79,7 +86,7 @@ describe('mobile logout', () => {
     assert.ok(logout);
     assert.deepEqual(JSON.parse(String(logout[1]?.body)), { client: 'mobile', refreshToken: 'refresh-secret' });
     assert.equal((logout[1]?.headers as Record<string, string>).Authorization, 'Bearer access-secret');
-    assert.equal(secureStore.deleteItemAsync.mock.calls.length, 1);
+    assert.equal(secureStore.deleteItemAsync.mock.calls.length, 2);
     assert.match(JSON.stringify(renderer!.toJSON()), /Inicia sesión/);
     assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Ada Lovelace|access-secret|refresh-secret/);
 
@@ -93,7 +100,6 @@ describe('mobile logout', () => {
       setItemAsync: jest.Mock;
       deleteItemAsync: jest.Mock;
     };
-    secureStore.getItemAsync.mockResolvedValueOnce(null).mockResolvedValue('refresh-secret');
     const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       void init;
       if (String(input).endsWith('/auth/login')) return Response.json({
@@ -117,7 +123,7 @@ describe('mobile logout', () => {
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cerrar sesión' }).props.onPress(); });
 
     assert.equal(fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/auth/logout')).length, 1);
-    assert.equal(secureStore.deleteItemAsync.mock.calls.length, 1);
+    assert.equal(secureStore.deleteItemAsync.mock.calls.length, 2);
     assert.match(JSON.stringify(renderer!.toJSON()), /Inicia sesión/);
     assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Ada Lovelace|access-secret|refresh-secret/);
 
@@ -170,19 +176,30 @@ describe('mobile beneficiary selection', () => {
 });
 
 describe('mobile transfer attempt', () => {
-  it('blocks invalid amounts and retries an uncertain create with the identical key and payload', async () => {
+  it('recovers an uncertain create after a true unmount/remount', async () => {
+    mockSecureValues.clear();
     const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
     secureStore.getItemAsync.mockResolvedValueOnce(null);
     let sends = 0;
-    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+    const logicalRows = new Set<string>();
+    let serverTransfer: Record<string, unknown> | null = null;
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/auth/refresh')) return Response.json({ accessToken: 'access-2', refreshToken: 'refresh-2', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
       if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'source-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '125000', clabe: '000000000000000000', clabeMasked: '••••0000' }] });
       if (url.endsWith('/beneficiaries')) return Response.json({ items: [{ id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }] });
       if (url.endsWith('/transfers')) {
         sends += 1;
-        if (sends === 1) throw new Error('offline');
-        return Response.json({ id: 'transfer-1', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }, amountMinor: '1234', currency: 'MXN', concept: 'Comida', reference: '123', createdAt: new Date().toISOString(), demoOnlyCode: '654321' }, { status: 202 });
+        logicalRows.add((init?.headers as Record<string, string>)['Idempotency-Key'] ?? '');
+        serverTransfer ??= { id: 'transfer-1', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' }, amountMinor: '1234', currency: 'MXN', concept: 'Comida', reference: '123', createdAt: new Date().toISOString() };
+        if (sends === 1) throw new Error('response lost after server commit');
+        return Response.json({ ...serverTransfer, demoOnlyCode: '654321' }, { status: 202 });
+      }
+      if (url.endsWith('/transfers/transfer-1')) return Response.json(serverTransfer);
+      if (url.endsWith('/transfers/transfer-1/confirm')) {
+        serverTransfer = { ...serverTransfer, status: 'completed', receiptReference: 'folio-1' };
+        return Response.json(serverTransfer);
       }
       throw new Error(`Unexpected API request: ${url}`);
     });
@@ -213,14 +230,32 @@ describe('mobile transfer attempt', () => {
     assert.equal(createCalls().length, 1);
     const first = createCalls()[0];
     assert.ok(first);
-    const firstPayload = JSON.parse(String(first[1]?.body));
+    const firstBody = String(first[1]?.body);
+    const firstPayload = JSON.parse(firstBody);
+    const firstKey = (first[1]?.headers as Record<string, string>)['Idempotency-Key'];
+    const persisted = JSON.parse(mockSecureValues.get('wallet.transfer-recovery')!);
+    assert.equal(persisted.key, firstKey);
+    assert.equal(JSON.stringify(persisted.payload), firstBody);
     assert.equal(firstPayload.amountMinor, '1234');
-    await TestRenderer.act(async () => { button('Reintentar el mismo envío').props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
     const second = createCalls()[1];
     assert.ok(second);
-    assert.equal((second[1]?.headers as Record<string, string>)['Idempotency-Key'], (first[1]?.headers as Record<string, string>)['Idempotency-Key']);
-    assert.deepEqual(JSON.parse(String(second[1]?.body)), firstPayload);
-    assert.match(JSON.stringify(renderer!.toJSON()), /654321/);
+    assert.equal((second[1]?.headers as Record<string, string>)['Idempotency-Key'], firstKey);
+    assert.equal(String(second[1]?.body), firstBody);
+    assert.ok(JSON.stringify(renderer!.toJSON()).includes('654321'));
+    assert.equal(sends, 2);
+    assert.equal(logicalRows.size, 1);
+    assert.equal(JSON.parse(mockSecureValues.get('wallet.transfer-recovery')!).transferId, 'transfer-1');
+    assert.equal(renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.value, '');
+    assert.doesNotMatch([...mockSecureValues.values()].join('|'), /654321|demoOnlyCode/);
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('654321'); });
+    await TestRenderer.act(async () => { button('Confirmar código').props.onPress(); });
+    assert.ok(JSON.stringify(renderer!.toJSON()).includes('Grace Hopper'));
+    assert.ok(JSON.stringify(renderer!.toJSON()).includes('folio-1'));
+    assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
+    assert.doesNotMatch([...mockSecureValues.values()].join('|'), /654321|demoOnlyCode/);
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
@@ -235,7 +270,7 @@ describe('mobile movement history', () => {
     const transfer = { id: 'transfer-1', status: 'completed', sourceAccountId: 'own-1', destination: { id: 'beneficiary', name: 'Grace', alias: 'Grace', clabeMasked: '••1234', destinationAccountId: 'other' }, amountMinor: '90071992547409931234', currency: 'MXN', concept: 'Pago', reference: '4', createdAt: '2026-11-14T12:00:00.000Z', receiptReference: 'folio-1' };
     const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
       const url = String(input); calls.push(url);
-      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'movement-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
       if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'own-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '10000', clabe: '000000000000000000', clabeMasked: '••0000' }] });
       if (url.includes('/accounts/own-1/movements?limit=20')) {
         if (!url.includes('cursor=')) {

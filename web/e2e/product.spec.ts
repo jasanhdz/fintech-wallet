@@ -1,5 +1,20 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 
+async function capture(page: import('@playwright/test').Page, name: string) {
+  await page.screenshot({
+    path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
+    fullPage: true,
+    mask: [
+      page.locator('input'),
+      page.locator('select'),
+      page.locator('[data-sensitive]'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+    ],
+    maskColor: '#172b4d',
+  });
+}
+
 test('login and registration screens render responsively without browser errors @visual', async ({ page }) => {
   await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
   const consoleErrors: string[] = [];
@@ -46,6 +61,10 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('heading', { name: /Hola, Web/ })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W03-cuentas');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W03-cuentas');
 
   await page.getByRole('button', { name: 'Salir' }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -105,8 +124,16 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await expect(page).toHaveURL(/\/accounts$/);
   await page.getByRole('link', { name: 'Beneficiarios' }).click();
   await expect(page.getByRole('heading', { name: 'Beneficiarios', exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W06-beneficiarios-vacio');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W06-beneficiarios-vacio');
   await page.locator('a.primary-button[href="/beneficiaries/new"]').click();
   await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W07-alta');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W07-alta');
 
   await page.getByLabel('Nombre del beneficiario').fill('Beneficiary Destination');
   await page.getByLabel('Alias').fill('Cuenta de prueba');
@@ -125,6 +152,10 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await expect(beneficiaryCard.getByText(`CLABE · ${maskedClabe}`)).toBeVisible();
   await expect(beneficiaryCard.getByText(destinationClabe, { exact: true })).toHaveCount(0);
   await expect(page.getByText(destinationClabe, { exact: true })).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W06-beneficiarios-listado');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W06-beneficiarios-listado');
 });
 
 test('retries an uncertain real transfer with identical idempotency key and shows one receipt', async ({ page }) => {
@@ -210,6 +241,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.getByRole('link', { name: 'Transferir' }).click();
   await expect(page.getByLabel('Cuenta de origen')).toBeVisible();
   await expectNoHorizontalOverflow();
+  await capture(page, 'W08-formulario');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W08-formulario');
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
   await page.getByLabel('Beneficiario').selectOption({ index: 1 });
   await page.getByLabel('Importe en MXN').fill('0.01');
@@ -217,9 +252,23 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.getByLabel('Referencia numérica').fill('804201');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await capture(page, 'W09-review');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W09-review');
+  await page.setViewportSize({ width: 390, height: 844 });
   await expectNoHorizontalOverflow();
 
   const observed: Array<{ key: string | undefined; body: string; status: number; transferId: string; transfer: Record<string, unknown> }> = [];
+  let confirmationResponseStatus: number | undefined;
+  let confirmedStatus: string | undefined;
+  page.on('response', async (response) => {
+    if (new URL(response.url()).pathname.endsWith('/confirm') && response.request().method() === 'POST') {
+      confirmationResponseStatus = response.status();
+      if (response.ok()) {
+        try { confirmedStatus = (await response.json() as { status: string }).status; } catch { /* Ignore unrelated/non-JSON responses. */ }
+      }
+    }
+  });
   await page.route('**/v1/transfers', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
     const response = await route.fetch();
@@ -230,6 +279,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   });
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
   await expect(page.getByText(/No conocemos el resultado del envío/)).toBeVisible();
+  await capture(page, 'W11-resultado-incierto');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W11-resultado-incierto');
+  await page.setViewportSize({ width: 390, height: 844 });
   // The reviewed form remains available after an uncertain response; resubmitting its unchanged fields retries the cached draft.
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
   await expect.poll(() => observed.length).toBe(2);
@@ -244,23 +297,37 @@ test('retries an uncertain real transfer with identical idempotency key and show
   if (transfer.status === 'awaiting_confirmation') {
     expect(transfer.demoOnlyCode).toBeTruthy();
     await page.getByLabel('Código de confirmación de 6 dígitos').fill(transfer.demoOnlyCode!);
+    await capture(page, 'W10-otp');
+    await page.setViewportSize({ width: 1440, height: 960 });
+    await capture(page, 'W10-otp');
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    await expect.poll(() => confirmationResponseStatus).toBe(200);
+    await expect.poll(() => confirmedStatus).toBe('completed');
   }
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   const receipt = page.getByRole('heading', { name: 'Comprobante interno' }).locator('..');
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');
   await expect(page.getByText('Completada', { exact: true })).toBeVisible();
+  await capture(page, 'W12-recibo');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W12-recibo');
+  await page.setViewportSize({ width: 390, height: 844 });
   await expectNoHorizontalOverflow();
 
   const transferId = observed[1].transferId;
   expect(sourceAccountId).toBeTruthy();
   await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
   await expect(page).toHaveURL(/\/accounts$/);
-  await page.locator(`a[href="/accounts/${sourceAccountId}/movements"]`).click();
+  await page.locator(`.account-history-link[href="/accounts/${sourceAccountId}/movements"]`).click();
   await expect(page).toHaveURL(`/accounts/${sourceAccountId}/movements`);
   await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
   await expectNoHorizontalOverflow();
+  await capture(page, 'W04-historial');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W04-historial');
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByLabel('Tipo').selectOption('debit');
   const transferRow = page.getByRole('row').filter({ hasText: 'Prueba idempotente' });
   await expect(transferRow).toContainText('Cargo');
@@ -273,6 +340,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(movementReceipt).toContainText('804201');
   await expect(movementReceipt).toContainText('completed');
   await expectNoHorizontalOverflow();
+  await capture(page, 'W04-detalle');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W04-detalle');
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.setViewportSize({ width: 1440, height: 960 });
   await expectNoHorizontalOverflow();

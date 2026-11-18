@@ -14,6 +14,7 @@ type Transfer = ProductComponents['schemas']['Transfer'];
 type TransferRequest = ProductComponents['schemas']['TransferCreateRequest'];
 type Movement = ProductComponents['schemas']['Movement'];
 const REFRESH_KEY = 'wallet.refresh-token';
+const TRANSFER_RECOVERY_KEY = 'wallet.transfer-recovery';
 const apiBase = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 0 } } });
 
@@ -71,7 +72,9 @@ function Wallet() {
   const [transferError, setTransferError] = useState('');
   const [transferBusy, setTransferBusy] = useState(false);
   const [transfer, setTransfer] = useState<Transfer | null>(null);
+  const [demoOnlyCode, setDemoOnlyCode] = useState('');
   const [createAttempt, setCreateAttempt] = useState<{ key: string; payload: TransferRequest } | null>(null);
+  const [recoveryReady, setRecoveryReady] = useState(false);
   const [otp, setOtp] = useState('');
   const [confirmAttempt, setConfirmAttempt] = useState<{ key: string; payload: { code: string } } | null>(null);
   const [movementDetail, setMovementDetail] = useState<Transfer | null>(null);
@@ -118,6 +121,7 @@ function Wallet() {
     } catch { /* SecureStore/network failures must not prevent local logout. */ }
     finally {
       try { await SecureStore.deleteItemAsync(REFRESH_KEY); } catch { /* clear in-memory state regardless */ }
+      try { await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY); } catch { /* local logout must complete */ }
       setSession(null);
       setDestination(null);
       setTransfer(null);
@@ -146,6 +150,47 @@ function Wallet() {
     })();
     return () => { active = false; };
   }, [refreshSession]);
+
+  useEffect(() => {
+    if (!session || !ready || recoveryReady) return;
+    let active = true;
+    void (async () => {
+      try {
+        const stored = await SecureStore.getItemAsync(TRANSFER_RECOVERY_KEY);
+        if (!stored || !active) return;
+        const attempt = JSON.parse(stored) as { key: string; payload: TransferRequest; transferId?: string };
+        setCreateAttempt({ key: attempt.key, payload: attempt.payload });
+        setTransferScreen('status');
+        if (attempt.transferId) {
+          const result = await request<Transfer>(`/transfers/${encodeURIComponent(attempt.transferId)}`, session.accessToken);
+          if (!active) return;
+          setTransfer(result);
+          if (result.status === 'completed' || result.status === 'rejected') {
+            setTransferScreen(result.status === 'completed' ? 'receipt' : 'rejected');
+            await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          } else {
+            setTransferScreen('otp');
+            setTransferBusy(true);
+            // The demo OTP is intentionally recovered only in memory via the idempotent replay.
+            try {
+              const replay = await request<Transfer & { demoOnlyCode?: string }>('/transfers', session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
+              if (!active) return;
+              setDemoOnlyCode(replay.demoOnlyCode ?? '');
+            } finally { if (active) setTransferBusy(false); }
+          }
+        } else {
+          await submitRecoveredCreate(attempt, session.accessToken);
+        }
+      } catch (error) {
+        if (active) {
+          setTransferError(error instanceof Error ? error.message : 'No se pudo recuperar la transferencia.');
+          setTransferScreen('status');
+        }
+      }
+      finally { if (active) setRecoveryReady(true); }
+    })();
+    return () => { active = false; };
+  }, [session, ready, recoveryReady]);
 
   useEffect(() => {
     let previous = AppState.currentState;
@@ -225,19 +270,42 @@ function Wallet() {
     : null;
 
   async function submitCreate(retry = false) {
-    if (!session || !transferPayload || transferBusy) return;
-    const attempt = retry && createAttempt ? createAttempt : { key: newIdempotencyKey(), payload: transferPayload };
-    if (!retry) setCreateAttempt(attempt);
+    if (!session || transferBusy) return;
+    const attempt = retry && createAttempt ? createAttempt : transferPayload ? { key: newIdempotencyKey(), payload: transferPayload } : null;
+    if (!attempt) return;
+    if (!retry) {
+      setCreateAttempt(attempt);
+      await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify(attempt));
+    }
     setTransferBusy(true); setTransferError(''); setTransferScreen('status');
     try {
       const result = await request<Transfer>('/transfers', session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
+      setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
       setTransfer(finalResult);
+      if (finalResult.id) await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify({ ...attempt, transferId: finalResult.id }));
+      if (finalResult.status === 'completed' || finalResult.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
       setTransferScreen(finalResult.status === 'awaiting_confirmation' ? 'otp' : finalResult.status === 'rejected' ? 'rejected' : 'receipt');
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
       setTransferScreen(error instanceof ApiError && error.status >= 400 && error.status < 500 ? 'rejected' : 'status');
     } finally { setTransferBusy(false); }
+  }
+
+  async function submitRecoveredCreate(attempt: { key: string; payload: TransferRequest }, accessToken: string) {
+    setTransferScreen('status');
+    setTransferBusy(true);
+    try {
+      const result = await request<Transfer>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
+      if (!result.id) return;
+      setDemoOnlyCode((result as Transfer & { demoOnlyCode?: string }).demoOnlyCode ?? '');
+      await SecureStore.setItemAsync(TRANSFER_RECOVERY_KEY, JSON.stringify({ ...attempt, transferId: result.id }));
+      const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, accessToken) : result;
+      setTransfer(finalResult);
+      if (finalResult.status === 'completed' || finalResult.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+      setTransferScreen(finalResult.status === 'awaiting_confirmation' ? 'otp' : finalResult.status === 'rejected' ? 'rejected' : 'receipt');
+    } catch (error) { setTransferError(error instanceof Error ? error.message : 'No se pudo recuperar la transferencia.'); setTransferScreen('status'); }
+    finally { setTransferBusy(false); }
   }
 
   async function confirmOtp(retry = false) {
@@ -249,6 +317,7 @@ function Wallet() {
       const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
       setTransfer(finalResult); setConfirmAttempt(null); setOtp('');
+      if (finalResult.status === 'completed' || finalResult.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
       setTransferScreen(finalResult.status === 'rejected' ? 'rejected' : finalResult.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
     } catch (error) {
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
@@ -267,7 +336,8 @@ function Wallet() {
   }
 
   function resetTransfer() {
-    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setTransferError('');
+    void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setTransferError(''); setDemoOnlyCode('');
   }
   const beneficiariesQuery = useQuery({
     queryKey: ['beneficiaries', session?.user.id],
@@ -318,7 +388,7 @@ function Wallet() {
   if (hidden) return <PrivacyScreen />;
   if (!session) return <LoginScreen email={email} password={password} setEmail={setEmail} setPassword={setPassword} passwordVisible={passwordVisible} setPasswordVisible={setPasswordVisible} error={formError} submitting={submitting} onSubmit={() => void login()} />;
 
-  if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} error={transferError} busy={transferBusy} demoOnlyCode={transfer?.demoOnlyCode} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} onBack={() => setTransferScreen(transferScreen === 'review' ? 'details' : 'review')} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
+  if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} onBack={() => setTransferScreen(transferScreen === 'review' ? 'details' : 'review')} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
 
   if (movementDetailBusy || movementDetailError) return <View style={styles.page}><View style={styles.flowContent}><Pressable accessibilityRole="button" accessibilityLabel="Volver a movimientos" style={styles.backButton} onPress={() => { setMovementDetailError(''); setMovementDetailBusy(false); setMovementDetailId(''); }}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Movimientos</Text></Pressable>{movementDetailBusy ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando comprobante…</Text></Centered> : <View style={styles.notice}><Text accessibilityRole="alert" style={styles.errorText}>{movementDetailError}</Text><Button title="Reintentar" onPress={() => { const item = movementsQuery.data?.items.find((movement) => movement.transferId === movementDetailId); if (item) void openMovement(item); }}/></View>}</View></View>;
   if (movementDetail) return <MovementReceipt transfer={movementDetail} onBack={() => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); }} />;
@@ -358,7 +428,7 @@ function LoginScreen(props: { email: string; password: string; setEmail: (value:
   </ScrollView></KeyboardAvoidingView>;
 }
 
-function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' | 'receipt' | 'rejected'; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; error: string; busy: boolean; demoOnlyCode?: string; createRetry: boolean; confirmRetry: boolean; onBack: () => void; onReview: () => void; onCreate: () => void; onRetryCreate: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
+function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' | 'receipt' | 'rejected'; amount: string; setAmount: (value: string) => void; concept: string; setConcept: (value: string) => void; reference: string; setReference: (value: string) => void; otp: string; setOtp: (value: string) => void; destination: Beneficiary | null; source: Account | undefined; transfer: Transfer | null; demoOnlyCode: string; error: string; busy: boolean; createRetry: boolean; confirmRetry: boolean; onBack: () => void; onReview: () => void; onCreate: () => void; onRetryCreate: () => void; onConfirm: () => void; onRetryConfirm: () => void; onCheck: () => void; onDone: () => void }) {
   const minor = amountToMinor(props.amount);
   const insufficient = Boolean(minor && props.source && BigInt(minor) > BigInt(props.source.availableBalanceMinor));
   const formValid = Boolean(minor && props.concept.trim().length >= 1 && props.concept.trim().length <= 40 && /^\d{1,7}$/.test(props.reference));
@@ -380,9 +450,9 @@ function TransferFlow(props: { screen: 'details' | 'review' | 'otp' | 'status' |
       <Button title="Revisar transferencia" disabled={!formValid || insufficient || !props.source} onPress={props.onReview}/>
     </>}
     {props.screen === 'review' && <><View style={styles.flowCard}><Text style={styles.label}>Desde</Text><Text style={styles.rowTitle}>{props.source?.name}</Text><Text style={styles.label}>Importe</Text><Text style={styles.flowAmount}>{minor ? formatBalance(minor) : '—'} MXN</Text><Text style={styles.label}>Concepto</Text><Text style={styles.rowTitle}>{props.concept.trim()}</Text><Text style={styles.label}>Referencia</Text><Text style={styles.rowTitle}>{props.reference}</Text></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title={props.busy ? 'Enviando…' : 'Confirmar transferencia'} disabled={props.busy} onPress={props.onCreate}/></>}
-    {props.screen === 'otp' && <><View style={styles.flowCard}><Text style={styles.muted}>Ingresa el código de confirmación asociado a esta operación.</Text>{props.demoOnlyCode ? <Text style={styles.demoCode}>Código de prueba local: {props.demoOnlyCode}</Text> : null}<TextInput accessibilityLabel="Código de confirmación" keyboardType="number-pad" maxLength={6} value={props.otp} onChangeText={(value) => props.setOtp(value.replace(/\D/g, '').slice(0, 6))} placeholder="6 dígitos" placeholderTextColor={colors.placeholder} style={styles.flowInput}/></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title={props.busy ? 'Confirmando…' : 'Confirmar código'} disabled={props.busy || !/^\d{6}$/.test(props.otp)} onPress={props.onConfirm}/>{props.confirmRetry && <Button title="Reintentar envío del mismo código" disabled={props.busy} onPress={props.onRetryConfirm}/>}</>}
+    {props.screen === 'otp' && <><View style={styles.flowCard}><Text style={styles.muted}>Ingresa el código de confirmación asociado a esta operación.</Text>{props.demoOnlyCode ? <Text style={styles.demoCode}>Código demo: {props.demoOnlyCode}</Text> : null}<TextInput accessibilityLabel="Código de confirmación" keyboardType="number-pad" maxLength={6} value={props.otp} onChangeText={(value) => props.setOtp(value.replace(/\D/g, '').slice(0, 6))} placeholder="6 dígitos" placeholderTextColor={colors.placeholder} style={styles.flowInput}/></View>{props.error ? <Text accessibilityRole="alert" style={styles.errorText}>{props.error}</Text> : null}<Button title={props.busy ? 'Confirmando…' : 'Confirmar código'} disabled={props.busy || !/^\d{6}$/.test(props.otp)} onPress={props.onConfirm}/>{props.confirmRetry && <Button title="Reintentar envío del mismo código" disabled={props.busy} onPress={props.onRetryConfirm}/>}</>}
     {props.screen === 'status' && <><View style={styles.flowCard}><Text style={styles.muted}>{props.error || 'El resultado puede tardar. Consulta el estado o reintenta de forma segura.'}</Text>{props.transfer && <Text style={styles.rowTitle}>Estado: {props.transfer.status}</Text>}</View><Button title="Consultar estado" disabled={props.busy || !props.transfer} onPress={props.onCheck}/>{props.createRetry && <Button title="Reintentar el mismo envío" disabled={props.busy} onPress={props.onRetryCreate}/>}</>}
-    {props.screen === 'receipt' && <><View style={styles.flowCard}><Text style={styles.flowAmount}>{formatBalance(props.transfer?.amountMinor ?? '0')} MXN</Text><Text style={styles.muted}>Enviada a {props.destination?.name}</Text><Text style={styles.label}>Concepto</Text><Text style={styles.rowTitle}>{props.transfer?.concept}</Text><Text style={styles.label}>Folio interno</Text><Text style={styles.rowTitle}>{props.transfer?.receiptReference ?? props.transfer?.id}</Text></View><Button title="Listo" onPress={props.onDone}/></>}
+    {props.screen === 'receipt' && <><View style={styles.flowCard}><Text style={styles.flowAmount}>{formatBalance(props.transfer?.amountMinor ?? '0')} MXN</Text><Text style={styles.muted}>Enviada a {props.destination?.name ?? props.transfer?.destination.name}</Text><Text style={styles.label}>Concepto</Text><Text style={styles.rowTitle}>{props.transfer?.concept}</Text><Text style={styles.label}>Folio interno</Text><Text style={styles.rowTitle}>{props.transfer?.receiptReference ?? props.transfer?.id}</Text></View><Button title="Listo" onPress={props.onDone}/></>}
     {props.screen === 'rejected' && <><View style={styles.flowCard}><Text style={styles.muted}>{props.error || 'La transferencia fue rechazada. No se completó el movimiento.'}</Text></View><Button title="Volver a mis cuentas" onPress={props.onDone}/></>}
   </ScrollView></View>;
 }

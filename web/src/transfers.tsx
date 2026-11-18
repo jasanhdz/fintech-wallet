@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatMxnFromMinor, mxnInputSchema, parseMxnToMinor, transferConfirmRequestSchema, transferCreateRequestSchema } from '@fintech-wallet/shared';
 import { ApiError, request, requestTransfer, type Account } from './api.js';
 import { AppShell, Notice, StatePanel } from './components.js';
@@ -91,6 +91,7 @@ export function NewTransferPage() {
 
 export function TransferStatusPage() {
   const { session, hydrated } = useSession(); const { transferId = '' } = useParams(); const location = useLocation(); const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const initial = (location.state as { transfer?: Transfer } | null)?.transfer;
   const status = useQuery({ queryKey: ['transfer', transferId], queryFn: () => request<Transfer>(`/transfers/${transferId}`), enabled: Boolean(transferId), initialData: initial, refetchInterval: (query) => query.state.data?.status === 'processing' ? 1500 : false });
   const [code, setCode] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
@@ -111,7 +112,7 @@ export function TransferStatusPage() {
     catch (cause) { setError(`No se confirmó la respuesta. Puedes reintentar el mismo código con la misma clave. ${errorText(cause)}`); }
     finally { submitLock.current = false; setBusy(false); }
   }
-  function statusClientUpdate(next: Transfer) { navigate(`/transfers/${next.id}/status`, { replace: true, state: { transfer: next } }); }
+  function statusClientUpdate(next: Transfer) { queryClient.setQueryData(['transfer', next.id], next); navigate(`/transfers/${next.id}/status`, { replace: true, state: { transfer: next } }); }
   const retry = attempts.get(transferId) ?? attempts.get('uncertain');
   async function retryCreate() {
     if (!retry) { void status.refetch(); return; }

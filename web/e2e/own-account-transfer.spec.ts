@@ -1,5 +1,19 @@
 import { expect, test } from '@playwright/test';
 
+async function capture(page: import('@playwright/test').Page, name: string) {
+  await page.screenshot({
+    path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
+    fullPage: true,
+    mask: [
+      page.locator('input, select'),
+      page.locator('[data-sensitive]'),
+      page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+    ],
+    maskColor: '#172b4d',
+  });
+}
+
 test('registers with the development fixture and transfers between own accounts', async ({ page }) => {
   const email = `own-transfer-${crypto.randomUUID()}@example.test`;
   const password = `Local-test-${crypto.randomUUID()}-Aa1`;
@@ -7,7 +21,10 @@ test('registers with the development fixture and transfers between own accounts'
   let fundedAccounts: string[] = [];
   let beneficiaryCount = -1;
   let demoOnlyCode: string | undefined;
+  let transferStatus: string | undefined;
   let transferId = '';
+  let confirmationResponseStatus: number | undefined;
+  let confirmedStatus: string | undefined;
 
   page.on('response', async (response) => {
     const pathname = new URL(response.url()).pathname;
@@ -23,10 +40,19 @@ test('registers with the development fixture and transfers between own accounts'
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
   page.on('response', async (response) => {
-    if (new URL(response.url()).pathname !== '/v1/transfers' || response.request().method() !== 'POST' || !response.ok()) return;
+    const pathname = new URL(response.url()).pathname;
+    if (pathname.endsWith('/confirm') && response.request().method() === 'POST') {
+      confirmationResponseStatus = response.status();
+      if (response.ok()) {
+        try { confirmedStatus = (await response.json() as { status: string }).status; } catch { /* Ignore unrelated/non-JSON responses. */ }
+      }
+      return;
+    }
+    if (pathname !== '/v1/transfers' || response.request().method() !== 'POST' || !response.ok()) return;
     try {
-      const transfer = await response.json() as { id: string; demoOnlyCode?: string };
+      const transfer = await response.json() as { id: string; status: string; demoOnlyCode?: string };
       transferId = transfer.id;
+      transferStatus = transfer.status;
       demoOnlyCode = transfer.demoOnlyCode;
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
@@ -40,6 +66,17 @@ test('registers with the development fixture and transfers between own accounts'
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('region', { name: 'Actividad reciente' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Inicio' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await capture(page, 'W03-cuentas-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await expect(page.locator('.app-rail')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
+  await capture(page, 'W03-cuentas-own');
+  await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(() => accountIds.length).toBeGreaterThanOrEqual(2);
   expect(accountIds.length, 'La fixture local debe devolver dos cuentas propias').toBe(2);
   expect(fundedAccounts.length, 'La fixture local debe financiar al menos una cuenta propia con 1 minor unit').toBeGreaterThan(0);
@@ -47,6 +84,10 @@ test('registers with the development fixture and transfers between own accounts'
   await page.getByRole('link', { name: 'Transferir', exact: true }).first().click();
   await expect.poll(() => beneficiaryCount).toBe(0);
   await expect(page.getByRole('heading', { name: 'Aún no tienes beneficiarios' })).toBeVisible();
+  await capture(page, 'W06-beneficiarios-vacio-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W06-beneficiarios-vacio-own');
+  await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('button', { name: 'Entre mis cuentas' })).toBeVisible();
   await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
   const sourceId = fundedAccounts[0];
@@ -57,28 +98,57 @@ test('registers with the development fixture and transfers between own accounts'
   await page.getByLabel('Importe en MXN').fill('0.01');
   await page.getByLabel('Concepto').fill('Transferencia propia E2E');
   await page.getByLabel('Referencia numérica').fill('204201');
+  await capture(page, 'W08-formulario-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W08-formulario-own');
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await capture(page, 'W09-review-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W09-review-own');
+  await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('Transferencia propia E2E');
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('204201');
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  await expect.poll(() => transferStatus).toBeTruthy();
 
   const confirmation = page.getByLabel('Código de confirmación de 6 dígitos');
-  if (await confirmation.isVisible({ timeout: 5_000 }).catch(() => false)) {
+  if (transferStatus === 'awaiting_confirmation') {
+    await expect(confirmation).toBeVisible();
     await expect.poll(() => demoOnlyCode).toMatch(/^\d{6}$/);
     await confirmation.fill(demoOnlyCode!);
+    await capture(page, 'W10-otp-own');
+    await page.setViewportSize({ width: 1440, height: 960 });
+    await capture(page, 'W10-otp-own');
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    await expect.poll(() => confirmationResponseStatus).toBe(200);
+    await expect.poll(() => confirmedStatus).toBe('completed');
+    transferStatus = confirmedStatus;
   }
+  expect(transferStatus, 'La transferencia debe quedar completada tras confirmación o creación directa').toBe('completed');
 
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   expect(transferId).toBeTruthy();
   const receipt = page.getByRole('heading', { name: 'Comprobante interno' }).locator('..');
   await expect(receipt).toContainText('Transferencia propia E2E');
   await expect(receipt).toContainText('204201');
+  await capture(page, 'W12-recibo-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W12-recibo-own');
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
   await expect(page).toHaveURL(/\/accounts$/);
-  await page.locator(`a[href="/accounts/${sourceId}/movements"]`).click();
+  const recentSuccessfulTransfer = page.getByRole('region', { name: 'Actividad reciente' }).getByRole('row').filter({ hasText: 'Transferencia propia E2E' });
+  await expect(recentSuccessfulTransfer).toContainText('Cargo');
+  await expect(recentSuccessfulTransfer).toContainText('Completado');
+  await capture(page, 'W03-cuentas-transfer-completada-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W03-cuentas-transfer-completada-own');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(`.account-history-link[href="/accounts/${sourceId}/movements"]`).click();
   await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
   const transferRow = page.getByRole('row').filter({ hasText: 'Transferencia propia E2E' });
   await expect(transferRow).toContainText('Cargo');
@@ -87,4 +157,7 @@ test('registers with the development fixture and transfers between own accounts'
   await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
   await expect(page.getByRole('heading', { name: 'Comprobante interno' })).toBeVisible();
   await expect(page.locator('.receipt-card')).toContainText('Transferencia propia E2E');
+  await capture(page, 'W04-detalle-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W04-detalle-own');
 });
