@@ -28,6 +28,7 @@ export default defineConfig({
         ...process.env,
         API_PORT: '3100',
         DATABASE_URL: isolatedDatabaseUrl,
+        WEB_ORIGIN: 'http://127.0.0.1:5174',
       },
     },
     {

@@ -27,7 +27,7 @@
     "lint:shared": "eslint packages/shared/src",
     "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tsconfig.shared.json --noEmit",
     "test": "npm run test --workspaces --if-present",
-    "test:integration": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && npm --workspace @fintech-wallet/api run test:integration",
+    "test:integration": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && tsx --import dotenv/config --test api/tests/*.integration.ts",
     "test:visual": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && playwright test --grep @visual",
     "test:e2e": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && playwright test --grep-invert @visual",
     "build": "npm run build --workspaces --if-present",
