@@ -1,0 +1,67 @@
+escenario	pantalla	estado	nivel	viewport	dpr	archivo	sha256	referencia_aprobada
+F-W10-agotados	W10	agotados	F	1280x1024	2	captures/W10-agotados-1280x1024@2.png	11a2f823966e96261b87e25157b324e0ec157d4e7e4f2425b710ef06bb1f7e30	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	1440x960	1	captures/W10-agotados-1440x960@1.png	2a94d5a0d2ef637e7b29c5ba5af50d89af97a9f13b3751de0a6c59f5dad1e064	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	390x844	1	captures/W10-agotados-390x844@1.png	4661ea74bc4a882e86bfee809fe3ac715682522add7558ae4e84a3c34193fa15	w10_intentos_agotados
+F-W10-agotados	W10	agotados	F	768x1024	1	captures/W10-agotados-768x1024@1.png	7f0be2bd1c6267b6275dbf52644e1032c225846af4b9260f340e103efda0f873	w10_intentos_agotados
+F-W10-agotados	W10	agotados · lado a lado	F	1280x1024	2	captures/W10-agotados-sbs.png	ebf0b38d39e90b2ef88be7c2ab671e933dc44f23501623997b8d88f7e8a27f0c	w10_intentos_agotados
+F-W10-completo	W10	completo	F	1280x1024	1.25	captures/W10-completo-1280x1024@1.25.png	ac62ff56cbe40757470bf2a7f0a672feca7a23ec8ed0ba711b280f2ffe8aed54	w10_c_digo_completo
+F-W10-completo	W10	completo	F	1440x960	1	captures/W10-completo-1440x960@1.png	462b9f9acc165fc6695bfce0667ada849d23615bd7e1a532353a73d01f12f9a7	w10_c_digo_completo
+F-W10-completo	W10	completo	F	390x844	1	captures/W10-completo-390x844@1.png	3f6d8a6ae84ad1c3f09b57190c927d889ee4f2e55bcab9e6f5d6acde068b5747	w10_c_digo_completo
+F-W10-completo	W10	completo	F	768x1024	1	captures/W10-completo-768x1024@1.png	516263fcce0af641e3cf53e03e186fa711e14d81744b3fb4d884e881af408657	w10_c_digo_completo
+F-W10-completo	W10	completo · lado a lado	F	1280x1024	1.25	captures/W10-completo-sbs.png	04aa8f37379e0656f8f59e274d5651422a11a20526d3cc87b1f4ad7c23f9f079	w10_c_digo_completo
+F-W10-expirado	W10	expirado	F	1280x1024	1.25	captures/W10-expirado-1280x1024@1.25.png	5ae077b821e3742c657b9e491d878bc4dbf9fe387d3a155052e3fc0c73f625ae	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	1440x960	1	captures/W10-expirado-1440x960@1.png	b6dc28ce37fd0c83c4294c803d4fc14b4a8a41aa25439bf731f1b394866cbe08	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	390x844	1	captures/W10-expirado-390x844@1.png	e65f38088a26a87dd37e80f30b9a57bd018224ce8ac8a6042a583579de5aa219	w10_c_digo_expirado
+F-W10-expirado	W10	expirado	F	768x1024	1	captures/W10-expirado-768x1024@1.png	62e8f615c5d5fb25502ff60603098ca6fd18348fe59d6107d5ee6b856f6da9fe	w10_c_digo_expirado
+F-W10-expirado	W10	expirado · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-expirado-sbs.png	02b8fe134618884ec0b4eb04a98b7645b72b34b3e26ff5c4dd69d80fb539da84	w10_c_digo_expirado
+F-W10-incompleto	W10	incompleto	F	1280x1024	1.25	captures/W10-incompleto-1280x1024@1.25.png	0aa4bbfd535898e8d71148372588cd2647f5f1ffaaaaa5362a7534ed9bb983a3	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	1440x960	1	captures/W10-incompleto-1440x960@1.png	ab11fe20d786d6f03764f63eb15361cb571ebd9b94017f8459ef1c7d18b61441	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	390x844	1	captures/W10-incompleto-390x844@1.png	91b87de2f3380eea2bdb1634a81415b497b2087e4b22462850ae33894e955175	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto	F	768x1024	1	captures/W10-incompleto-768x1024@1.png	562073be1134605a7f86c2a49dc0aed5a8ea0d3bc0f8f65c60ff591bd57965d4	w10_c_digo_incompleto
+F-W10-incompleto	W10	incompleto · lado a lado	F	1280x1024	1.25	captures/W10-incompleto-sbs.png	5147ea46ff335aee800ed133f2d4123781af309f813d27dc883ff2c2c5e1b20a	w10_c_digo_incompleto
+F-W10-incorrecto	W10	incorrecto	F	1280x1024	1.25	captures/W10-incorrecto-1280x1024@1.25.png	4e99dfac813de5333c9bae193cea23e3a483d2053eadb9b023510b05debc72e9	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	1440x960	1	captures/W10-incorrecto-1440x960@1.png	0646b265888e3bdc123b6965e1115a16d85d658b1b8f2d8d3ffccead97f8a7f2	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	390x844	1	captures/W10-incorrecto-390x844@1.png	4df5252d1e0226c077dd0660fb06e1ede91c5cf1ab12f19a91e8a581eba228dc	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto	F	768x1024	1	captures/W10-incorrecto-768x1024@1.png	6a0c7f3629f818688c852a6ddce2f69216417892d6d4801fe29c8bba67c4b035	w10_c_digo_incorrecto
+F-W10-incorrecto	W10	incorrecto · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-incorrecto-sbs.png	1847b73280a0208737ee19844032caeeba284857cbd1427f6058961015cb2ffc	w10_c_digo_incorrecto
+F-W10-vacio	W10	vacio	F	1280x1024	1.25	captures/W10-vacio-1280x1024@1.25.png	ec17d1cc1f056ecceda81db6cabb0626d4a311b29f13b978659615f89ee230f3	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	1440x960	1	captures/W10-vacio-1440x960@1.png	cff51f0b148c9e0b8c7450078551242afdfe2892169f387ea5201a8aae4a158b	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	390x844	1	captures/W10-vacio-390x844@1.png	6ab4a7f7ed05682c236bb1564b421fd195e1a063855a024166b737982d58024f	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio	F	768x1024	1	captures/W10-vacio-768x1024@1.png	4529f2e01cff130bd9d52c1e39391f1a37a61a53bb6dcbbec2cf43a26ef977c5	w10_c_digo_de_confirmaci_n
+F-W10-vacio	W10	vacio · lado a lado	F	1280x1024	1.25	captures/W10-vacio-sbs.png	ed1b3799439357d8a4eb1995225c39432942e2aa69d3e81d531b41536cb34895	w10_c_digo_de_confirmaci_n
+F-W10-verificando	W10	verificando	F	1280x1024	1.25	captures/W10-verificando-1280x1024@1.25.png	dbdb910ff6535e5bd57fb3f259b8aae8b5fd04934f23d4e7ef3c6ca8b08474ab	w10_verificando
+F-W10-verificando	W10	verificando	F	1440x960	1	captures/W10-verificando-1440x960@1.png	6abd7ca6c190556ba1b35abacf06326fc151c1c4ce4474484e22fa0a348eb3d3	w10_verificando
+F-W10-verificando	W10	verificando	F	390x844	1	captures/W10-verificando-390x844@1.png	c4c6aeb5887c00840851f8e003a5c00396bb642d5daa7ffec63dd58807f68174	w10_verificando
+F-W10-verificando	W10	verificando	F	768x1024	1	captures/W10-verificando-768x1024@1.png	987adfec94d3e0c13298227515c90d30102d6271c3c0731d766f4797043fc94c	w10_verificando
+F-W10-verificando	W10	verificando · lado a lado (HTML)	F	1280x1024	1.25	captures/W10-verificando-sbs.png	16c487aee7ad383cfb274a9ae1cc782f485b5abeb01249629fbad16d44995868	w10_verificando
+F-W11-1	W11	enviando	F	1280x1024	1.25	captures/W11-enviando-1280x1024@1.25.png	6b2c91d190d0466c5682135c96506cbfe7c52f716a71ac0a969fc06702e0a13c	w11_enviando
+F-W11-1	W11	enviando	F	1440x960	1	captures/W11-enviando-1440x960@1.png	59ae85cb1349f6a8e98d7e64009eb8bdbc731c20dee26a5e73b2912d6f78128a	w11_enviando
+F-W11-1	W11	enviando	F	390x844	1	captures/W11-enviando-390x844@1.png	9228d75de47b3e4c69994b9a7a37cc87201f92c894b08d2f964d314bfb94795c	w11_enviando
+F-W11-1	W11	enviando	F	768x1024	1	captures/W11-enviando-768x1024@1.png	a21e58fac864813970564a7e0ff4651988bb1fb9d31709b9ed3475512496ebce	w11_enviando
+F-W11-1	W11	enviando · lado a lado	F	1280x1024	1.25	captures/W11-enviando-sbs.png	2be326f67f49cfe0c9f8c72d9ab1d46d1f35cb644c0ac09e4c607da8768128a0	w11_enviando
+F-W11-2	W11	verificando resultado	F	1280x1024	1.25	captures/W11-verificando-1280x1024@1.25.png	a9a26f6707d36b41e8928cd1e25f138fd69ab1cf325d8d754f3170322ce88701	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	1440x960	1	captures/W11-verificando-1440x960@1.png	a473e7c349a60dbb55aae48d404cd8281dc2d595f2646190093312d1f4c34e65	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	390x844	1	captures/W11-verificando-390x844@1.png	952e0027ce661f180920b18747dc80cdefdc551bae56c29fa48bfa44b15017ed	w11_verificando_resultado
+F-W11-2	W11	verificando resultado	F	768x1024	1	captures/W11-verificando-768x1024@1.png	cd0dc3d8b1f06fc65c53c3125e244792f054ddd7108e492e3a9f75cbbc1df8d4	w11_verificando_resultado
+F-W11-2	W11	verificando resultado · lado a lado	F	1280x1024	1.25	captures/W11-verificando-sbs.png	a5047d8ea305f91183c13d9bbb7267fa7da7b24369dd9e2fb4086de9658f4532	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	1280x1024	1.25	captures/W11-desconocido-1280x1024@1.25.png	89fb4a58f6bd60cb735e8c5b92b9f90401c4d9c9181c1dbb556f442100ea883f	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	1440x960	1	captures/W11-desconocido-1440x960@1.png	34daf0b1934401f4f09554ac22e7ef7dafa41d8886fb1501d5493cb8ca05d31a	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	390x844	1	captures/W11-desconocido-390x844@1.png	4d5454f5f8e6507c06b274f560c97a96bc2f344a05fb01036115c8ea54dd57ac	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido	F	768x1024	1	captures/W11-desconocido-768x1024@1.png	65c6f99437858d25a735d6dd0d8d038211ed9ba46af34bd00567f069ccca9284	w11_verificando_resultado
+F-W11-4	W11	resultado desconocido · lado a lado	F	1280x1024	1.25	captures/W11-desconocido-sbs.png	e3ae94245060bea81df59f6e73b08ee8f82f5ba2adaefcf39b38a851157b1611	w11_verificando_resultado
+F-W12-1	W12	beneficiario	F	1280x1024	1.25	captures/W12-beneficiario-1280x1024@1.25.png	35c75d5134c5d9a871909cd57a00d6d26cf88a6b57d5385b484ae751f88e8616	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	1440x960	1	captures/W12-beneficiario-1440x960@1.png	4645ee2f6f2ba48f5e5489228f624fa8119c6513ee29bd275d537d7eae35aa43	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	390x844	1	captures/W12-beneficiario-390x844@1.png	90dbc848aa5e283e679a2191edd0eac425bfff46c4d4d8c003ed7be844588107	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario	F	768x1024	1	captures/W12-beneficiario-768x1024@1.png	0db4676c08b47562170695d5956955cc045f02196335264169f766d93d60395f	w12_comprobante_850_mxn
+F-W12-1	W12	beneficiario · lado a lado	F	1280x1024	1.25	captures/W12-beneficiario-sbs.png	fe858779daecd6dc18671082dcaee78343397923b47d5f681bc6861f86f1d3f9	w12_comprobante_850_mxn
+F-W12-2	W12	propias	F	1280x1080	2	captures/W12-propias-1280x1080@2.png	ce4baa5f9a6c9e4ec4fe1b6595fb90e3d80dd3fa067c20dbf0edb7857c264bd4	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	1440x960	1	captures/W12-propias-1440x960@1.png	2d914cdc337a7d94352acea07fbc46a3007ebfb5262b0c032dc2720121a002d8	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	390x844	1	captures/W12-propias-390x844@1.png	13b387dfc3c22a05a1b5b7118122e2a3b7f2496e2bf1c5117e8bdec0cdd060dd	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias	F	768x1024	1	captures/W12-propias-768x1024@1.png	5dc872565e6a610d0a35b399593fd26cfa0516e6035ca5cae4224400b3876030	w12_comprobante_entre_cuentas_propias
+F-W12-2	W12	propias · lado a lado	F	1280x1080	2	captures/W12-propias-sbs.png	ab10520a14a9d28498ce46971c9d463de2f7a9b115186f4def5274eaeb737e25	w12_comprobante_entre_cuentas_propias
+F-W12-3	W12	folio largo	F	390x844	1	captures/W12-folio-largo-390x844@1.png	0d5602c1cadf2da4dcd39d10249592d78085681b2dc5bd93963d560bed2138f8	w12_comprobante_850_mxn
+I-W10-10	W10	P1 código incorrecto real	I	1440x960	1	captures/I-W10-incorrecto-1440x960@1.png	78bf342ffea4906171f464cc310ed53cdd5526d1520a97e9619c65e7f11ffe5a	w10_c_digo_incorrecto
+I-W10-11	W10	P3 expiración real	I	1440x960	1	captures/I-W10-expirado-1440x960@1.png	61116ad693bd12fbd1f5f1b4e6678111224023e66c174d18f8b736d47571057d	w10_c_digo_expirado
+I-W10-12	W10	P3 intentos agotados real	I	1440x960	1	captures/I-W10-agotados-1440x960@1.png	973ff736feeecbc151a77e1dc351ed5a3d404184452acd454ed7ea089f7f7d7a	w10_intentos_agotados
+I-W11-6	W11	P1 respuesta perdida real	I	1440x960	1	captures/I-W11-desconocido-1440x960@1.png	3941745f3805eee3c5c3b9eceae59dd1ca5c7d0874d2c301bc4e4ceac05e31e3	w11_verificando_resultado
+I-W12-5	W12	P1 propias tras código	I	1440x960	1	captures/I-W12-propias-1440x960@1.png	5e4e6ee16df6819ad2ebe5dfdda3b2ebeb47045bbdd27da9ce54ae28cb5784d4	w12_comprobante_entre_cuentas_propias

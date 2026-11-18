@@ -31,9 +31,9 @@ test('recent activity requests three real movements for the first account and re
     render(createElement(QueryClientProvider, { client }, createElement(SessionProvider, null,
       createElement(MemoryRouter, null, createElement(AccountsPage)))));
     const row = await screen.findByRole('row', { name: /Comida/ });
-    assert.match(row.textContent || '', /13 nov 2026/i);
+    assert.match(row.textContent || '', /13 de noviembre de 2026, \d{2}:\d{2}/i);
     assert.match(row.textContent || '', /Cargo/);
-    assert.match(row.textContent || '', /850\.00/);
+    assert.match(row.textContent || '', /−\$850\.00 MXN/);
     assert.equal(movementRequests.length, 1);
     assert.equal(new URL(`https://wallet.test${movementRequests[0]}`).searchParams.get('limit'), '3');
     assert.ok(screen.getByRole('link', { name: /Ver historial completo/ }));

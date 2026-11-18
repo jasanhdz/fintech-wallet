@@ -1,0 +1,90 @@
+
+> fintech-wallet@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @fintech-wallet/api@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ production configuration accepts explicit operational values without imposing example policy (26.916917ms)
+✔ production requires every operational setting and rejects malformed, fractional, zero, and out-of-range values (2.579542ms)
+✔ production requires a valid IANA time zone and disallows the development fixture (0.421792ms)
+✔ test and development environments retain existing harness configuration behavior (0.070792ms)
+✔ R8-12: idempotency retention days come only from IDEMPOTENCY_RECORD_RETENTION_DAYS (no default, positive integer) (1.815167ms)
+✔ R8-12: the transfer module has no hard-coded idempotency retention interval (0.860208ms)
+✔ F-32: startup validates IDEMPOTENCY_RECORD_RETENTION_DAYS in every environment, not only per request (1.464583ms)
+✔ health returns status and propagates request ID (293.349708ms)
+✔ invalid request ID is replaced; not found uses RFC 7807 (206.716ms)
+✔ generated CLABEs pass checksum and are encrypted with separate lookup fingerprints (2.731208ms)
+✔ F-32: server.ts refuses to start without a valid IDEMPOTENCY_RECORD_RETENTION_DAYS (no listener, no database connection) (1011.709458ms)
+✔ F-32 control: with a valid value the same entry point passes configuration and only then reaches the database (320.3135ms)
+✔ attempt cursor round-trips canonically and rejects any alteration (2.708125ms)
+✔ attempt query validates status list, dates, attemptId and limit 1..50 (0.388042ms)
+✔ Transfer-Attempt-Id and Transfer-Send-Epoch are both-or-none, UUID and bigint decimal (0.197583ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1479.036083
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+✔ movement query uses contract filters, limit and cursor without offset (2.373542ms)
+✔ movement history renders rows, applies filters, pages by cursor, and preserves rows on retry error (446.372958ms)
+✔ recent activity requests three real movements for the first account and renders their details (395.586416ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.196334ms)
+✔ hydrates a web session through CSRF and cookie refresh (10.492167ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (239.894291ms)
+✔ provider hydrates a cookie session into in-memory context (23.57475ms)
+✔ revoked refresh rejects and network failure remains recoverable (0.796917ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.688333ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.427667ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (6.63225ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.261167ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (1.052041ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (1.969667ms)
+✔ create retries forward identical payload and idempotency key (11.051834ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (52.966334ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (320.315334ms)
+✔ login and registration use the shared contract validation (5.419709ms)
+✔ account balance formatting preserves integer minor units (16.110834ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (1.145708ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1345.802084
+
+> @fintech-wallet/mobile@0.1.0 test
+> jest --runInBand
+
+
+Test Suites: 10 passed, 10 total
+Tests:       281 passed, 281 total
+Snapshots:   0 total
+Time:        56.399 s, estimated 59 s
+Ran all test suites.
+
+> @fintech-wallet/shared@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ CLABE validation checks length, digits and verification digit (0.519917ms)
+✔ MXN decimal input converts exactly to bigint minor-unit string (0.331542ms)
+✔ minor-unit formatting and addition do not use binary floating point (12.144041ms)
+✔ shared request schemas reject invalid CLABE and transfer payload (2.457041ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 163.553708
+exit 0

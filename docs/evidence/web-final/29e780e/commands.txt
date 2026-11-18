@@ -1,0 +1,25 @@
+# WF-T5 commands (worktree root /Users/jasanhernandez/Develop/fintech-wallet-web-final). No npm ci/install; no root test:e2e/test:visual.
+# The live demo (main checkout API/web/Metro, wallet_dev), the user's review stack (its API/web, fintech-wallet-review-pg) and Lucem
+# were not touched. Own resources only: container fintech-wallet-web-pg and ports 3301-3304/5301-5304 (none started: see BLOCKED).
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH
+node -v                                                    # v26.13.1
+npx tsc -p web/e2e-final/tsconfig.json                     # DEP-7 fixture fix (sendEpoch '0'); exit 0
+df -k /System/Volumes/Data                                 # 2.04 GiB free at start (< 2.5 GiB)
+rm -rf docs/evidence/web-final/{1bbb56c,31f7b30,8ab4b86,a3bde6e,ad108db}/captures   # unversioned PNGs of earlier tandas (~82 MB) -> 2.12 GiB
+df -h /System/Volumes/Data; docker system df               # -> env-01-disk.txt: 2.11 GiB free -> BLOCKED (SPEC §5.10: no volume, no build)
+npm --workspace @fintech-wallet/web run lint
+npm --workspace @fintech-wallet/web run typecheck
+npm --workspace @fintech-wallet/web run test               # 44/44 (5 new in tests/transfer-outcome.test.ts)
+npx eslint web/e2e-final web/e2e
+node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/29e780e   # -> checks-output.txt
+rg (SC-01/02/04, FN-09, FN-16, REC-04, D-12/DEP-7) web/src                      # -> scope-sweeps.txt
+git show 8ab4b86:web/src/transfers.tsx | grep write-path calls ; diff against 29e780e   # -> network-static.txt
+# NOT RUN (BLOCKED by disk, to be run when >= 2.5 GiB free):
+#   node web/e2e-final/scripts/make-env.mjs
+#   node web/e2e-final/scripts/db-up.mjs --evidence docs/evidence/web-final/29e780e/env-01-disk.txt
+#   WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+#   WF_EVIDENCE_SHA=29e780e WF_PROFILES=P1,P2,P3,P4 npx playwright test -c web/e2e-final/playwright.config.ts --project=final
+#   WF_NO_BUILD=1 WF_EVIDENCE_SHA=29e780e WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy own-account-transfer.spec.ts product.spec.ts
+#   WF_NO_BUILD=1 WF_EVIDENCE_SHA=29e780e WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy w13-rejections.spec.ts
+#   golden comparison: docs/evidence/web-final/29e780e/network-traces.json vs ../f0ed4bc/network-golden.json (S1..S7)
+#   node web/e2e-final/scripts/db-down.mjs

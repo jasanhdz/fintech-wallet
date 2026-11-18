@@ -47,19 +47,19 @@ test('login and registration screens render responsively without browser errors 
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/login');
-  await expect(page).toHaveTitle('Billetera — Tus cuentas');
-  await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
+  await expect(page).toHaveTitle('Iniciar sesión · Billetera MXN');
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByLabel('Correo electrónico')).toBeVisible();
   await page.screenshot({ path: 'test-results/visual/web-login-mobile-390.png', fullPage: false });
-  await page.getByRole('link', { name: 'Regístrate' }).click();
-  await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
+  await page.getByRole('link', { name: 'Regístrate aquí' }).click();
+  await expect(page.getByRole('heading', { name: 'Crea tu cuenta' })).toBeVisible();
   await page.screenshot({ path: 'test-results/visual/web-register-mobile-390.png', fullPage: false });
   await page.setViewportSize({ width: 1440, height: 960 });
-  await expect(page.locator('.auth-page-centered')).toBeVisible();
+  await expect(page.locator('.auth-screen .auth-card')).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
   await capture(page, 'W02-registro');
   await page.getByRole('link', { name: 'Inicia sesión' }).click();
-  await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await capture(page, 'W01-login');
   expect(consoleErrors).toEqual([]);
 });
@@ -70,10 +70,10 @@ test('a browser without a refresh cookie sees the real login and registration sc
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByLabel('Correo electrónico')).toBeVisible();
-  await page.getByRole('link', { name: 'Regístrate' }).click();
-  await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
+  await page.getByRole('link', { name: 'Regístrate aquí' }).click();
+  await expect(page.getByRole('heading', { name: 'Crea tu cuenta' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
@@ -84,7 +84,8 @@ test('W10 OTP screen captures six separately masked cells at responsive widths @
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('OTP Visual QA');
   await page.getByLabel('Correo electrónico').fill(`otp-visual-${unique}@example.test`);
-  await page.getByLabel('Crea una contraseña').fill(`Local-test-${unique}-Aa1`);
+  await page.getByLabel('Contraseña', { exact: true }).fill(`Local-test-${unique}-Aa1`);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(`Local-test-${unique}-Aa1`);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
 
@@ -101,26 +102,28 @@ test('W10 OTP screen captures six separately masked cells at responsive widths @
     }) })
     : route.continue());
 
-  await page.locator('.welcome-row').getByRole('link', { name: /Transferir/ }).click();
+  await page.getByRole('region', { name: 'Tus cuentas' }).getByRole('link', { name: 'Transferir' }).click();
   await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
-  await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
-  await page.getByLabel('Cuenta de destino').selectOption({ index: 2 });
-  await page.getByLabel('Importe en MXN').fill('0.01');
+  // WF-T4 (W08 D-8): origin = first account by default and, with two accounts, the other one is the destination.
+  await expect(page.getByRole('radiogroup', { name: 'Cuenta de destino' }).locator('[role="radio"][aria-checked="true"]')).toHaveCount(1);
+  await page.getByLabel('Importe a transferir').fill('0.01');
   await page.getByLabel('Concepto').fill('Captura OTP');
   await page.getByLabel('Referencia numérica').fill('104201');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
-  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
 
   const otpInput = page.getByLabel('Código de confirmación de 6 dígitos');
   await expect(otpInput).toBeVisible();
-  const confirmButton = page.getByRole('button', { name: 'Confirmar transferencia' });
+  // WF-T5: W10 CTA «Autorizar transferencia…» (label grows to «… de {importe}» with six digits); same assertions.
+  const confirmButton = page.getByRole('button', { name: /^Autorizar transferencia/ });
   await expect(confirmButton).toBeDisabled();
   await otpInput.fill('419');
   await expect(confirmButton).toBeDisabled();
   await otpInput.fill('419682');
   await expect(confirmButton).toBeEnabled();
-  await expect(page.locator('.otp-box')).toHaveCount(6);
-  await expect(page.locator('.otp-box.filled')).toHaveCount(6);
+  // WF-T5: the six W10 boxes are `.cf-box` (`.is-filled`), still aria-hidden next to the single input.
+  await expect(page.locator('.cf-box')).toHaveCount(6);
+  await expect(page.locator('.cf-box.is-filled')).toHaveCount(6);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W10-otp');
   await page.setViewportSize({ width: 1440, height: 960 });
@@ -136,7 +139,8 @@ test('an expired authenticated session shows the real session-expired screen res
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Session Recovery QA');
   await page.getByLabel('Correo electrónico').fill(userEmail);
-  await page.getByLabel('Crea una contraseña').fill(userPassword);
+  await page.getByLabel('Contraseña', { exact: true }).fill(userPassword);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(userPassword);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   const recoveryUserId = await page.evaluate(() => sessionStorage.getItem('wallet:web:active-user'));
@@ -159,14 +163,14 @@ test('an expired authenticated session shows the real session-expired screen res
     sessionStorage.setItem(`wallet:web:transfer-attempt:${userId}`, JSON.stringify({ key, body }));
   }, { userId: recoveryUserId!, key: recoveryKey, body: recoveryBody });
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Transferencia pendiente' })).toBeVisible();
-  await expect(page.getByText('No se muestran datos de autenticación ni identificadores del intento.')).toBeVisible();
+  await expect(page.locator('.status-pending')).toContainText('Tienes una transferencia pendiente de verificación por $1,234.56 MXN (a un beneficiario).');
+  await expect(page.locator('.status-pending')).toContainText('Contexto visual');
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W14-session-expired-pending');
-  await captureAfterScrollIfOutsideViewport(page, page.locator('.session-pending-card'), 'W14-session-expired-pending-context');
+  await captureAfterScrollIfOutsideViewport(page, page.locator('.status-pending'), 'W14-session-expired-pending-context');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W14-session-expired-pending');
-  await page.getByRole('link', { name: 'Iniciar sesión y recuperar intento' }).click();
+  await page.getByRole('link', { name: 'Iniciar sesión y retomar la verificación' }).click();
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(({ userId, key }) => sessionStorage.getItem(`wallet:web:transfer-attempt:${userId}`)?.includes(key), { userId: recoveryUserId, key: recoveryKey })).toBeTruthy();
   let recoveredKey = '';
@@ -182,7 +186,7 @@ test('an expired authenticated session shows the real session-expired screen res
     }) });
   });
   await page.getByLabel('Correo electrónico').fill(userEmail);
-  await page.getByLabel('Contraseña').fill(userPassword);
+  await page.getByLabel('Contraseña', { exact: true }).fill(userPassword);
   await page.getByRole('button', { name: /Iniciar sesión/ }).click();
   await expect(page).toHaveURL(new RegExp(`/transfers/${recoveryTransferId}/status$`), { timeout: 15_000 });
   expect(recoveredKey === recoveryKey).toBeTruthy();
@@ -190,13 +194,13 @@ test('an expired authenticated session shows the real session-expired screen res
   await expect(page.getByLabel('Código de confirmación de 6 dígitos')).toBeVisible();
   await page.goto('/access-denied');
   await expect(page.getByRole('heading', { name: 'Acceso no disponible' })).toBeVisible();
-  await expect(page.getByText('No tienes permiso para consultar esta sección o el enlace no es válido.')).toBeVisible();
+  await expect(page.getByText('No tienes permisos para consultar esta sección o el enlace no es válido.')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W14-access-denied');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.getByRole('link', { name: /Volver al inicio/ })).toBeVisible();
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('link', { name: 'Billetera, inicio' })).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Saltar al contenido' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: /Volver al inicio/ })).toBeFocused();
   await page.setViewportSize({ width: 1440, height: 960 });
@@ -209,16 +213,18 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Web QA User');
   await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Crea una contraseña').fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('heading', { name: /Hola, Web/ })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('heading', { name: 'Saldo consolidado' })).toBeVisible();
   const consolidatedBalance = page.getByRole('region', { name: 'Saldo consolidado' });
-  await expect(page.getByLabel(/pesos mexicanos$/)).toBeVisible();
-  await expect(consolidatedBalance.locator('strong')).toHaveText(/MXN$/);
-  const consolidatedBalanceText = await consolidatedBalance.locator('strong').innerText();
+  // WF-T2: the amount is plain text with its single «MXN» suffix (an aria-label on a generic <strong> is not
+  // exposed reliably; the visible text is the accessible value).
+  await expect(consolidatedBalance.locator('[data-amount]')).toHaveText(/^\$[0-9,]+\.[0-9]{2} MXN$/);
+  const consolidatedBalanceText = await consolidatedBalance.locator('[data-amount]').innerText();
   expect(consolidatedBalanceText.match(/MXN/g) ?? []).toHaveLength(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W03-cuentas');
@@ -231,11 +237,11 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
     if (!userId) throw new Error('Authenticated user scope missing');
     sessionStorage.setItem(`wallet:web:transfer-attempt:${userId}`, JSON.stringify({ key: 'logout-pending-key', body: { destinationType: 'own_account' } }));
   });
-  await page.getByRole('button', { name: 'Salir' }).click();
+  await page.getByRole('button', { name: /^(Salir|Cerrar sesión)$/ }).first().click();
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
   await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Contraseña').fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Iniciar sesión/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('heading', { name: /Hola, Web/ })).toBeVisible();
@@ -252,7 +258,9 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   });
   await page.reload();
   await expect(page).toHaveURL(/\/accounts$/);
-  expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
+  // Session hydration (refresh → activateTransferUser) is asynchronous after load; wait for it instead of racing it.
+  await expect.poll(() => page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
+  expect(await page.evaluate(() => sessionStorage.getItem('wallet:web:active-user'))).not.toBe('different-user-scope');
 });
 
 test('registers a real internal beneficiary and displays only a masked CLABE', async ({ page }) => {
@@ -261,7 +269,7 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   const destinationPassword = `Local-test-${unique}-Aa1`;
   const ownerEmail = `owner-${unique}@example.test`;
   const ownerPassword = `Local-test-${unique}-Aa1`;
-  const apiBase = 'http://127.0.0.1:3100';
+  const apiBase = process.env.PLAYWRIGHT_API_BASE ?? 'http://127.0.0.1:3100';
   const origin = process.env.PLAYWRIGHT_WEB_ORIGIN ?? 'http://127.0.0.1:5175';
   const destinationApi = await playwrightRequest.newContext({ baseURL: apiBase, extraHTTPHeaders: { Origin: origin } });
   let destinationClabe = '';
@@ -292,41 +300,46 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Beneficiary Owner');
   await page.getByLabel('Correo electrónico').fill(ownerEmail);
-  await page.getByLabel('Crea una contraseña').fill(ownerPassword);
+  await page.getByLabel('Contraseña', { exact: true }).fill(ownerPassword);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(ownerPassword);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await page.getByRole('link', { name: 'Beneficiarios' }).click();
-  await expect(page.getByRole('heading', { name: 'Beneficiarios', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mis beneficiarios', exact: true })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W06-beneficiarios-vacio');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W06-beneficiarios-vacio');
-  await page.locator('a.primary-button[href="/beneficiaries/new"]').click();
-  await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
+  // WF-T3: W06 has two «Agregar beneficiario» links when empty (top bar and empty card); both go to /beneficiaries/new.
+  await page.locator('main a[href="/beneficiaries/new"]').first().click();
+  await expect(page.getByRole('heading', { name: 'Agregar nuevo beneficiario' })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W07-alta');
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('button', { name: /Guardar beneficiario/ }), 'W07-acciones');
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Vista previa del beneficiario' }), 'W07-preview');
+  // WF-T3 (SPEC W07 (a)): the round-4 preview column is retired; the approved side column is the CLABE help card.
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: '¿Dónde obtener la CLABE interna?' }), 'W07-ayuda');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W07-alta');
-  const beneficiaryFormBox = await page.locator('.beneficiary-form').boundingBox();
-  const beneficiaryPreviewBox = await page.getByRole('complementary', { name: 'Vista previa del beneficiario' }).boundingBox();
+  const beneficiaryFormBox = await page.locator('.bn-form-card').boundingBox();
+  const beneficiaryPreviewBox = await page.getByRole('complementary', { name: '¿Dónde obtener la CLABE interna?' }).boundingBox();
   expect(beneficiaryFormBox && beneficiaryPreviewBox && beneficiaryPreviewBox.x).toBeGreaterThan(beneficiaryFormBox.x);
   const beneficiaryActionsBox = await page.getByRole('button', { name: /Guardar beneficiario/ }).boundingBox();
-  const footerBox = await page.locator('.app-footer').boundingBox();
-  expect(beneficiaryActionsBox && footerBox && beneficiaryActionsBox.y + beneficiaryActionsBox.height).toBeLessThan(footerBox.y);
+  // The approved shell (WF-T0) has no footer: the actions must stay inside the main content area.
+  const mainBox = await page.locator('main#contenido').boundingBox();
+  expect(beneficiaryActionsBox && mainBox && beneficiaryActionsBox.y + beneficiaryActionsBox.height).toBeLessThanOrEqual(mainBox!.y + mainBox!.height);
 
-  await page.getByLabel('Nombre del beneficiario').fill('Beneficiary Destination');
+  await page.getByLabel('Nombre completo o razón social').fill('Beneficiary Destination');
   // F-04: keyboard tab order across the beneficiary creation form, in addition to the existing /access-denied coverage.
-  await page.getByLabel('Nombre del beneficiario').focus();
+  await page.getByLabel('Nombre completo o razón social').focus();
   await page.keyboard.press('Tab');
-  await expect(page.getByLabel('Alias')).toBeFocused();
+  await expect(page.getByLabel('Alias o nombre corto')).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(page.getByLabel('CLABE interbancaria')).toBeFocused();
-  await page.getByLabel('Alias').fill('Cuenta de prueba');
-  await page.getByLabel('CLABE interbancaria').fill('002010077777777770');
+  await expect(page.getByLabel('CLABE de 18 dígitos')).toBeFocused();
+  await page.getByLabel('Alias o nombre corto').fill('Cuenta de prueba');
+  await page.getByLabel('CLABE de 18 dígitos').fill('002010077777777770');
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();
-  await expect(page.getByText('CLABE inválida.')).toBeVisible();
+  // WF-T3 (W07-V5): the checksum error uses the approved copy instead of the schema message «CLABE inválida.».
+  await expect(page.getByText('La CLABE debe contener exactamente 18 dígitos y un dígito verificador válido. Revisa los números ingresados.')).toBeVisible();
   await expect(page).toHaveURL(/\/beneficiaries\/new$/);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W07-error');
@@ -334,17 +347,20 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await capture(page, 'W07-error');
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.getByLabel('CLABE interbancaria').fill(destinationClabe);
+  await page.getByLabel('CLABE de 18 dígitos').fill(destinationClabe);
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();
   await expect(page).toHaveURL(/\/beneficiaries$/);
-  await expect(page.getByText(/agregado correctamente/i)).toBeVisible();
+  // WF-T3 (W06-F3): notice copy «Beneficiario “{alias}” agregado.».
+  await expect(page.getByText('Beneficiario “Cuenta de prueba” agregado.')).toBeVisible();
   const beneficiaryCard = page.getByRole('region', { name: 'Tus beneficiarios' });
   await expect(beneficiaryCard.getByRole('heading', { name: 'Beneficiary Destination' })).toBeVisible();
   const directoryBox = await beneficiaryCard.boundingBox();
-  const directoryContentBox = await page.locator('.beneficiary-page').boundingBox();
+  const directoryContentBox = await page.locator('.bn-page').boundingBox();
   expect(directoryBox && directoryContentBox && directoryBox.width).toBeGreaterThan(directoryContentBox.width * 0.85);
+  // WF-T3 (W06-V2, (e)): only the last four digits are shown (`•••• NNNN`), never the API 3+4 mask nor the full CLABE.
   const maskedClabe = destinationClabe.replace(/^(\d{3})\d{11}(\d{4})$/, '$1•••••••••••$2');
-  await expect(beneficiaryCard.getByText(`CLABE · ${maskedClabe}`)).toBeVisible();
+  await expect(beneficiaryCard.getByText(`•••• ${destinationClabe.slice(-4)}`, { exact: true })).toBeVisible();
+  await expect(page.getByText(maskedClabe)).toHaveCount(0);
   await expect(beneficiaryCard.getByText(destinationClabe, { exact: true })).toHaveCount(0);
   await expect(page.getByText(destinationClabe, { exact: true })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -377,7 +393,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   };
 
   const unique = crypto.randomUUID();
-  const apiBase = 'http://127.0.0.1:3100';
+  const apiBase = process.env.PLAYWRIGHT_API_BASE ?? 'http://127.0.0.1:3100';
   const origin = process.env.PLAYWRIGHT_WEB_ORIGIN ?? 'http://127.0.0.1:5175';
   const api = await playwrightRequest.newContext({ baseURL: apiBase, extraHTTPHeaders: { Origin: origin } });
   const destinationEmail = `destination-${unique}@example.test`;
@@ -389,10 +405,12 @@ test('retries an uncertain real transfer with identical idempotency key and show
   page.on('response', async (response) => {
     if (new URL(response.url()).pathname !== '/v1/accounts' || !response.ok()) return;
     try {
-      const data = await response.json() as { items: Array<{ id: string; availableBalanceMinor: string }> };
-      if (data.items[0]) {
-        sourceBalance = BigInt(data.items[0].availableBalanceMinor);
-        sourceAccountId = data.items[0].id;
+      const data = await response.json() as { items: Array<{ id: string; kind?: string; availableBalanceMinor: string }> };
+      // UX-T2 (ORD, B-6): W08's default source is the principal (checking) account, not the API's first item.
+      const principal = data.items.find((item) => item.kind === 'checking') ?? data.items[0];
+      if (principal) {
+        sourceBalance = BigInt(principal.availableBalanceMinor);
+        sourceAccountId = principal.id;
       }
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
@@ -416,7 +434,8 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Transfer Owner');
   await page.getByLabel('Correo electrónico').fill(ownerEmail);
-  await page.getByLabel('Crea una contraseña').fill(ownerPassword);
+  await page.getByLabel('Contraseña', { exact: true }).fill(ownerPassword);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(ownerPassword);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
 
@@ -424,35 +443,36 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect.poll(() => sourceBalance > 1n).toBeTruthy();
 
   await page.getByRole('link', { name: 'Beneficiarios' }).click();
-  await expect(page.getByRole('heading', { name: 'Beneficiarios', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mis beneficiarios', exact: true })).toBeVisible();
   await expectNoHorizontalOverflow();
-  await page.locator('a.primary-button[href="/beneficiaries/new"]').click();
-  await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
+  await page.locator('main a[href="/beneficiaries/new"]').first().click();
+  await expect(page.getByRole('heading', { name: 'Agregar nuevo beneficiario' })).toBeVisible();
   await expectNoHorizontalOverflow();
-  await page.getByLabel('Nombre del beneficiario').fill('Transfer Destination');
-  await page.getByLabel('Alias').fill('Transfer test');
-  await page.getByLabel('CLABE interbancaria').fill(destinationClabe);
+  await page.getByLabel('Nombre completo o razón social').fill('Transfer Destination');
+  await page.getByLabel('Alias o nombre corto').fill('Transfer test');
+  await page.getByLabel('CLABE de 18 dígitos').fill(destinationClabe);
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();
   await expect(page).toHaveURL(/\/beneficiaries$/);
 
-  await page.getByRole('link', { name: 'Transferir' }).click();
-  await expect(page.getByLabel('Cuenta de origen')).toBeVisible();
+  // WF-T3: W06 cards add «Transferir a {nombre}» links; this step uses the navigation destination «Transferir».
+  await page.getByRole('link', { name: 'Transferir', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Cuenta de origen' })).toBeVisible();
   await expectNoHorizontalOverflow();
   await capture(page, 'W08-formulario');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W08-formulario');
   const transferFormBox = await page.locator('.transfer-form').boundingBox();
-  const transferSummaryBox = await page.getByRole('complementary', { name: 'Resumen de transferencia' }).boundingBox();
+  const transferSummaryBox = await page.getByRole('complementary', { name: 'Resumen previo' }).boundingBox();
   expect(transferFormBox && transferSummaryBox && transferSummaryBox.x).toBeGreaterThan(transferFormBox.x);
   await page.setViewportSize({ width: 390, height: 844 });
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen');
-  await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
-  await page.getByLabel('Beneficiario').selectOption({ index: 1 });
-  await page.getByLabel('Importe en MXN').fill('0.01');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen previo' }), 'W08-resumen');
+  // WF-T4 (W08 D-8): origin = first account by default; the beneficiary is the first «Destinatario» radio.
+  await page.getByRole('radiogroup', { name: 'Destinatario' }).getByRole('radio').first().click();
+  await page.getByLabel('Importe a transferir').fill('0.01');
   await page.getByLabel('Concepto').fill('Prueba idempotente');
   await page.getByLabel('Referencia numérica').fill('804201');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
-  await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Revisa y confirma tu transferencia' })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review');
   await page.setViewportSize({ width: 1440, height: 960 });
@@ -460,7 +480,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await capture(page, 'W09-review');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => window.scrollTo(0, 0));
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W09-resumen');
+  await captureAfterScrollIfOutsideViewport(page, page.locator('.tr-main-card'), 'W09-resumen');
   await expectNoHorizontalOverflow();
 
   const observed: Array<{ key: string | undefined; body: string; status: number; transferId: string; transfer: Record<string, unknown> }> = [];
@@ -487,22 +507,23 @@ test('retries an uncertain real transfer with identical idempotency key and show
     }
     else await route.fulfill({ response });
   });
-  await page.getByRole('button', { name: /Enviar transferencia/ }).dblclick();
+  await page.getByRole('button', { name: 'Confirmar transferencia' }).dblclick();
   try {
     await expect.poll(() => observed.length).toBe(1);
     expect(observed.length).toBe(1);
   } finally {
     releaseFirstResponse();
   }
-  await expect(page.getByRole('heading', { name: 'Estamos verificando el resultado' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tu envío sigue en verificación' })).toBeVisible();
+  // WF-T5: W11-V3 «Resultado desconocido» replaces the old two-heading panel; same state, same record.
+  await expect(page.getByRole('heading', { level: 1, name: 'No pudimos confirmar el resultado' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reintentar el mismo envío' })).toBeEnabled();
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 390, height: 844 });
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Datos del mismo intento pendiente' }), 'W11-datos-intento');
+  await captureAfterScrollIfOutsideViewport(page, page.locator('.vr-panel'), 'W11-datos-intento');
   // A full reload must recover the exact persisted attempt; the first POST was committed server-side.
   expect((await page.context().cookies()).some((cookie) => cookie.name === 'wallet_refresh')).toBeTruthy();
   await page.unroute('**/auth/refresh', emptyRefreshProbe);
@@ -510,7 +531,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(page).toHaveURL(/\/(?:login|transfers\/new)$/);
   if (new URL(page.url()).pathname === '/login') {
     await page.getByLabel('Correo electrónico').fill(ownerEmail);
-    await page.getByLabel('Contraseña').fill(ownerPassword);
+    await page.getByLabel('Contraseña', { exact: true }).fill(ownerPassword);
     await page.getByRole('button', { name: /Iniciar sesión/ }).click();
     await expect(page).toHaveURL(/\/accounts$/);
     await page.goto('/transfers/new');
@@ -539,16 +560,17 @@ test('retries an uncertain real transfer with identical idempotency key and show
     await page.setViewportSize({ width: 1440, height: 960 });
     await capture(page, 'W10-otp');
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    await page.getByRole('button', { name: /^Autorizar transferencia de / }).click();
     await expect.poll(() => confirmationResponseStatus).toBe(200);
     await expect.poll(() => confirmedStatus).toBe('completed');
   }
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
-  const receipt = page.locator('.receipt-card');
+  // WF-T5: W12 receipt card `.rc-card`; the «Completada» badge became the «Operación exitosa» chip of the header.
+  const receipt = page.locator('.rc-card');
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');
-  await expect(receipt.locator('.receipt-status')).toHaveText('Completada');
+  await expect(page.locator('.rc-chip')).toHaveText('Operación exitosa');
   await capture(page, 'W12-recibo');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W12-recibo');
@@ -570,24 +592,27 @@ test('retries an uncertain real transfer with identical idempotency key and show
     );
     expect(ledger.rows[0]).toMatchObject({ transfer_count: '1', posting_count: '2', net: '0', amount: '1', statuses: 'completed' });
   } finally { await database.end(); }
-  await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
+  await page.getByRole('link', { name: 'Volver al inicio', exact: true }).click();
   await expect(page).toHaveURL(/\/accounts$/);
-  await page.locator(`.account-history-link[href="/accounts/${sourceAccountId}/movements"]`).click();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Movimientos' }).click();
+  // WF-T2: W04 opens from the navigation and the «Cuenta activa» selector (the W03 per-card history links were replaced by the approved CTAs).
+  await page.getByLabel('Cuenta', { exact: true }).selectOption(sourceAccountId);
+  await expect(page).toHaveURL(new RegExp(`/accounts/${sourceAccountId}/movements$`));
   await expect(page).toHaveURL(`/accounts/${sourceAccountId}/movements`);
-  await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Historial de movimientos' })).toBeVisible();
   await expectNoHorizontalOverflow();
   await capture(page, 'W04-historial');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W04-historial');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByLabel('Tipo').selectOption('debit');
+  await page.getByRole('group', { name: 'Tipo de movimiento' }).getByRole('button', { name: 'Salidas' }).click();
   const transferRow = page.getByRole('row').filter({ hasText: 'Prueba idempotente' });
   await expect(transferRow).toContainText('Cargo');
-  await expect(transferRow).toContainText('Completado');
+  await expect(transferRow).toContainText('Completada');
   await transferRow.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
-  await expect(page.locator('.movement-page > h1', { hasText: 'Comprobante interno' })).toBeVisible();
-  const movementReceipt = page.locator('.receipt-card');
+  await expect(page.getByRole('heading', { level: 1, name: 'Comprobante de transferencia' })).toBeVisible();
+  const movementReceipt = page.locator('article.mr-card');
   await expect(movementReceipt).toContainText('Prueba idempotente');
   await expect(movementReceipt).toContainText('804201');
   await expect(movementReceipt).toContainText('Completada');

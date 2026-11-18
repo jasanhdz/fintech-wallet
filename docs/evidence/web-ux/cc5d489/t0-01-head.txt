@@ -1,0 +1,9 @@
+# UX-T0 start 2026-11-17T19:46:26Z
+$ git rev-parse --short HEAD
+cc5d489
+$ git status --porcelain
+?? docs/evidence/web-ux/
+(empty)
+$ git diff --stat 0cf8257 HEAD
+ docs/web-ux-polish/SPEC.md | 426 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 426 insertions(+)

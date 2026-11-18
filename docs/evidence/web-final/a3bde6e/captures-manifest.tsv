@@ -1,0 +1,7 @@
+escenario	pantalla	estado	nivel	viewport	dpr	archivo	sha256	referencia_aprobada
+F-SH-1	Shell	demoOnly true	F	1440x960	1	captures/SH-shell-1440x960-demo.png	7f9db6643416fdda1a663e037e81f8d67e7788e669ecfd78855f2044af2a6bce	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	1280x1030	1.25	captures/W03-accounts-1280x1030@1.25.png	7cfb1ff8ecce6225fdcf9ce742dde5cbbbe06eb14fae3fa2ca9a0faa434f9870	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	1440x960	1	captures/W03-accounts-1440x960@1.png	500b924eb4cf1eb0f936853fddd16a65ad2e86d76bfdadcb9a0cfdb9a2c7248b	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	390x844	1	captures/W03-accounts-390x844@1.png	2981c9252dbc194b609b39ba1b7f89ad1075d33c348d14cc2854714edb9a7d37	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	768x1024	1	captures/W03-accounts-768x1024@1.png	3eec3c32a55eceebe37ae16a5686308a6861b1d4484401821501a37f3864622b	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	lado a lado (informativo; W03 se rediseña en WF-T2)	F	1280x1030	1.25	captures/W03-con-saldo-sbs.png	ec101a55b84f56aa3f50052b976abfff1a56a41cda5097969ee3e0b62a89fc1c	w03_inicio_y_cuentas_corregido

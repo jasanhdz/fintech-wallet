@@ -1,0 +1,5 @@
+node v26.13.1 (~/.nvm/versions/node/v26.13.1); Playwright 1.65.1, chromium-1248 (on disk)
+container fintech-wallet-web-pg (postgres:16.10-alpine) 127.0.0.1:55433, volume fintech-wallet-web-pg-data, database wallet_test
+APIs P1..P4 on 3301..3304, web previews 5301..5304 (started and stopped by Playwright webServer)
+disk before volume: 3.42 GiB free (env-01-disk.txt); after baseline captures: 3.3 GiB
+not touched: live demo (its API/web/Metro, wallet_dev, its shared container), the user's manual-review stack (its API/web and container), Lucem

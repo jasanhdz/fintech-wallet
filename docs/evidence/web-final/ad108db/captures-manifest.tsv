@@ -1,0 +1,56 @@
+escenario	pantalla	estado	nivel	viewport	dpr	archivo	sha256	referencia_aprobada
+F-SH-1	Shell	demoOnly true	F	1440x960	1	captures/SH-shell-1440x960-demo.png	7f9db6643416fdda1a663e037e81f8d67e7788e669ecfd78855f2044af2a6bce	w03_inicio_y_cuentas_corregido
+F-W01-1	W01	listo	F	1280x1024	1.25	captures/W01-listo-1280x1024@1.25.png	022aa143493f5fcbed7c434902c239917ffccd73be22b5ffc4c58275d8d99b0a	w01_login_demostraci_n
+F-W01-1	W01	listo	F	1440x960	1	captures/W01-listo-1440x960@1.png	75502ec43e195611a8b41fedce28980cc5624aa1b4562f606f70acc127956226	w01_login_demostraci_n
+F-W01-1	W01	listo	F	390x844	1	captures/W01-listo-390x844@1.png	0739b7301db7bd806bba1568e4e06e048e11033c202b84ee3afff25331906671	w01_login_demostraci_n
+F-W01-1	W01	listo	F	768x1024	1	captures/W01-listo-768x1024@1.png	547ccc4ba581bcb5008e8af97f5d8eef5c821fda26bf84379d4836afa97e076e	w01_login_demostraci_n
+F-W01-1	W01	listo (viewport 1280×970, altura de captura de la referencia) · lado a lado	F	1280x970	1.25	captures/W01-listo-sbs-970.png	9b268dc4413ebe647ca5192b553bde314c85a3a2012a739ace7e32b0062018c3	w01_login_demostraci_n
+F-W01-1	W01	listo · lado a lado	F	1280x1024	1.25	captures/W01-listo-sbs.png	4dfb3b8e92b091933af915582a0eb4fda5e63316ebff7fdacc482f811ebd1562	w01_login_demostraci_n
+F-W01-2	W01	errores de campo	F	1280x1024	1.25	captures/W01-errores-campo-1280x1024@1.25.png	71f1d4c26b7426c12a018e3562dd931c4927e32af5ba7f76d52832e9af0c3487	w01_login_demostraci_n
+F-W01-2	W01	errores de campo	F	390x844	1	captures/W01-errores-campo-390x844@1.png	4bde3bf4d584edc8071f62bb99cee445c61e44f6801812c4de981d98f8cff5c6	w01_login_demostraci_n
+F-W01-3	W01	enviando	F	1280x1024	1.25	captures/W01-enviando-1280x1024@1.25.png	a43ea19f97ead8e4bce3e12e5fdef11e04b7dd69c90728fe4ff23179f65386f0	w01_login_demostraci_n
+F-W01-3	W01	enviando	F	390x844	1	captures/W01-enviando-390x844@1.png	1e7a592e9183d6ff3b4d0ec02a859ddbacd3cbd9a7f54a7f4c0f2c1928f8310e	w01_login_demostraci_n
+F-W01-4	W01	401 credenciales	F	1280x1024	1.25	captures/W01-401-1280x1024@1.25.png	de43b43eae431ab38b96f66cff4548bfe0da3b16dfc6a18300e867773396c142	w01_login_demostraci_n
+F-W01-4	W01	401 credenciales	F	390x844	1	captures/W01-401-390x844@1.png	20844733d1f6e1dc00b90c160b5cd0172a177ae2cf435ed32783298a8e3628a8	w01_login_demostraci_n
+F-W01-5	W01	429 demasiados intentos	F	1280x1024	1.25	captures/W01-429-1280x1024@1.25.png	6ecbb666a83cbd2af30b35d6f0af2dbda9f02933e959b5c8877f5f7334477963	w01_login_demostraci_n
+F-W01-5	W01	429 demasiados intentos	F	390x844	1	captures/W01-429-390x844@1.png	b833365b8ee1f74a309754c101d35c26a7318eb4a32d0cf0c8d3228145f10c7a	w01_login_demostraci_n
+F-W01-6	W01	sin conexión	F	1280x1024	1.25	captures/W01-sin-conexion-1280x1024@1.25.png	628cc748874d6bde6ea07636e6c5500791f0ae135584f46b144a0dff12604d8b	w01_login_demostraci_n
+F-W01-6	W01	sin conexión	F	390x844	1	captures/W01-sin-conexion-390x844@1.png	040bcd9c6a3e891e16f50aa32a9cf2dd981a36099eac7ab2ec7dce0b64ec8820	w01_login_demostraci_n
+F-W02-1	W02	errores de campo	F	1280x1024	1.25	captures/W02-errores-campo-1280x1024@1.25.png	8d79c275443a51fc8e443a27aebffb485cc820218e6d30c87df02e8547fffd5c	w02_registro
+F-W02-1	W02	listo	F	1280x1024	1.25	captures/W02-listo-1280x1024@1.25.png	fac18aea7fe86adec7b04cd03ed89b8aaa07977da58907b5de5fd93784d0f666	w02_registro
+F-W02-1	W02	listo	F	1440x960	1	captures/W02-listo-1440x960@1.png	d84160f1f9e868d2e0a34e37ab92697859f68d9d93f4bba3e18f8a34367ec217	w02_registro
+F-W02-1	W02	listo	F	390x844	1	captures/W02-listo-390x844@1.png	5c882602f1b9bfff041d2ac2785d1a142ecc99eeadf28bbfaf51a2630284ca12	w02_registro
+F-W02-1	W02	listo	F	768x1024	1	captures/W02-listo-768x1024@1.png	8137251a7f7f9db42a86431b7a3fe3a7f291810b78c879ce8fa9c7dfcad4b456	w02_registro
+F-W02-1	W02	listo · lado a lado	F	1280x1024	1.25	captures/W02-listo-sbs.png	7da84e4169235ffcf0de62d11458ed20f6e829bc3aaae2f314d520e3d5ed9b7f	w02_registro
+F-W02-2	W02	contraseñas distintas	F	1280x1024	1.25	captures/W02-contrasenas-distintas-1280x1024@1.25.png	17cdcefaa59c54ccbd31b6b7f261ba5f43f1e93c8bbfa2419c7f746bd2498f6f	w02_registro
+F-W02-3	W02	409 correo no disponible	F	1280x1024	1.25	captures/W02-409-1280x1024@1.25.png	762148c336a49b7d6e71ea4838b11f2ee43a2d3118f3ac5fdc5c065a5ef2d452	w02_registro
+F-W02-3	W02	409 correo no disponible	F	390x844	1	captures/W02-409-390x844@1.png	ce81b61887e638a21cf9f25e73b27644d5fac27d449aef578427427bd66833e4	w02_registro
+F-W02-4	W02	creando	F	1280x1024	1.25	captures/W02-creando-1280x1024@1.25.png	66977e66244c1ceef4588b50a9e35be43b553be309aa47d891953e4bae059010	w02_registro
+F-W02-4	W02	creando	F	390x844	1	captures/W02-creando-390x844@1.png	697a21feb25128078537525da07bae24d5c9949f0be33f7a0753460ddcfd692b	w02_registro
+F-W03-1	W03	con saldo (shell WF-T0)	F	1280x1030	1.25	captures/W03-accounts-1280x1030@1.25.png	7cfb1ff8ecce6225fdcf9ce742dde5cbbbe06eb14fae3fa2ca9a0faa434f9870	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	1440x960	1	captures/W03-accounts-1440x960@1.png	500b924eb4cf1eb0f936853fddd16a65ad2e86d76bfdadcb9a0cfdb9a2c7248b	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	390x844	1	captures/W03-accounts-390x844@1.png	2981c9252dbc194b609b39ba1b7f89ad1075d33c348d14cc2854714edb9a7d37	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	con saldo (shell WF-T0)	F	768x1024	1	captures/W03-accounts-768x1024@1.png	5dcd3d12797894f96677421f0b7b024eeb96198960452a08bf6f33d126feeb34	w03_inicio_y_cuentas_corregido
+F-W03-1	W03	lado a lado (informativo; W03 se rediseña en WF-T2)	F	1280x1030	1.25	captures/W03-con-saldo-sbs.png	ec101a55b84f56aa3f50052b976abfff1a56a41cda5097969ee3e0b62a89fc1c	w03_inicio_y_cuentas_corregido
+F-W14-1	W14	sesión vencida	F	1280x1024	1.25	captures/W14-vencida-1280x1024@1.25.png	5239a167a0d736cbc56f08e922423f980a2f303171578e6101e973465bd76f70	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	1440x960	1	captures/W14-vencida-1440x960@1.png	e754a101bc7770dcc249845923280656cae19a548a609b3dce62038a9dc403e1	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	390x844	1	captures/W14-vencida-390x844@1.png	6da6f43ed4fe4afcfc9fb9f31ae6c9d22bb7378df3819d43f284190e50976e1f	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida	F	768x1024	1	captures/W14-vencida-768x1024@1.png	a4889ad19426a2fb20a42a638c52a2aae8a8547d5b8791c197abcf0e82b575ee	w14_sesi_n_vencida
+F-W14-1	W14	sesión vencida · lado a lado	F	1280x1024	1.25	captures/W14-vencida-sbs.png	d775ebbec11583692ff94e05ba188343da8f0495492ad8ea5126929e621fa280	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento (contexto permitido) · lado a lado	F	1280x1024	1.25	captures/W14-vencida-con-intento-sbs.png	f446865f2ddcd1416993bb8a5dd53eebadb738d71d9d6699fa5494686cc0e606	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	1280x1024	1.25	captures/W14-vencida-con-intento-1280x1024@1.25.png	30cd4ca032a06b24c12ca336ac57b0f01ba29c79f5c9037b3362218e03652443	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	1440x960	1	captures/W14-vencida-con-intento-1440x960@1.png	d5bf595690967a8b41dd6b7f6aa81b6830b929187e2753c7711140efe5aa452b	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	390x844	1	captures/W14-vencida-con-intento-390x844@1.png	7179f4b0283ea8051ca1a97c983b79b1e25bc75b3a4f5bebb41525f6f2c6436e	w14_sesi_n_vencida
+F-W14-2	W14	sesión vencida con intento pendiente (V3, sin referencia propia)	F	768x1024	1	captures/W14-vencida-con-intento-768x1024@1.png	f567b205d9b35d65e92e4cef6159941cf0ec475282979269566574607e3705cd	w14_sesi_n_vencida
+F-W14-3	W14	403 en /accounts	F	1280x1024	1.25	captures/W14-acceso-403-cuentas-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	1280x1024	1.25	captures/W14-acceso-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	1440x960	1	captures/W14-acceso-1440x960@1.png	2706bf3cf92f3be8ed5b1ff4d3af9c533991de6587be2bf464a452deefa42b30	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	390x844	1	captures/W14-acceso-390x844@1.png	671174b2a94bba499c5106517c56e426876448c48250378e6589a9344a847f1c	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible	F	768x1024	1	captures/W14-acceso-768x1024@1.png	0fbfcbd9e8e7b78947bcc6d2736589fc87dbd9c8ca9ee643e6cd0e09f63fecf0	w14_acceso_no_autorizado
+F-W14-3	W14	acceso no disponible · lado a lado	F	1280x1024	1.25	captures/W14-acceso-sbs.png	a7f2a2ea2496508f005970d55cecfcbace2be229c4dbe29dedc5dc181733b66b	w14_acceso_no_autorizado
+F-W14-4	W14	404 en /transfers/{id}/status	F	1280x1024	1.25	captures/W14-acceso-404-transferencia-1280x1024@1.25.png	d54d4cf0a63de1b238f7d10168470970c94ce1a2f6c553c680e9a6e74d0563dc	w14_acceso_no_autorizado
+F-W14-6	W14	401 sin refresh → vencida con intento	F	1280x1024	1.25	captures/W14-vencida-por-401-1280x1024@1.25.png	30cd4ca032a06b24c12ca336ac57b0f01ba29c79f5c9037b3362218e03652443	w14_sesi_n_vencida
+F-W14-NF	W14	página no encontrada (estilo V4)	F	1280x1024	1.25	captures/W14-no-encontrada-1280x1024@1.25.png	fd7e60fbc7479c4b957123585aa9e2221c527395a303c0f90ba9647584682bda	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	1440x960	1	captures/W14-no-encontrada-1440x960@1.png	b5d41812a22f6e31194a5520faf3902bad7b52f33eb87043fb92789697342282	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	390x844	1	captures/W14-no-encontrada-390x844@1.png	24185d95a3c78d59281c3315b82daf30158024f2c6320c8ae5662880280cbcfe	w14_acceso_no_autorizado
+F-W14-NF	W14	página no encontrada (estilo V4)	F	768x1024	1	captures/W14-no-encontrada-768x1024@1.png	758aa48d1df769f17ba549fae1f7f205c1a6047fd48658cadf5716eef2f5b264	w14_acceso_no_autorizado

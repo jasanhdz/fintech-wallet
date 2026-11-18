@@ -1,17 +1,19 @@
 import React from 'react';
 import assert from 'node:assert/strict';
-import { Platform, Share, Text } from 'react-native';
+import { Platform, Text } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
 import TestRenderer from 'react-test-renderer';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { deleteAsync } from 'expo-file-system/legacy';
 import type { ProductComponents } from '@fintech-wallet/shared';
 import { RECEIPT_DISCLAIMER, escapeHtml, receiptFromTransfer, receiptHtml, receiptText, type ReceiptDocument } from '../src/receipt';
-import { RECEIPT_ACTION_LABELS, RECEIPT_MESSAGES, shareReceiptPdf, shareReceiptText, useReceiptShare } from '../src/receiptShare';
+import { RECEIPT_ACTION_LABELS, RECEIPT_MESSAGES, shareReceiptImage, shareReceiptPdf, useReceiptShare } from '../src/receiptShare';
 
 jest.mock('expo-print', () => ({ printToFileAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({ deleteAsync: jest.fn() }));
+jest.mock('react-native-view-shot', () => ({ captureRef: jest.fn() }));
 
 type Transfer = ProductComponents['schemas']['Transfer'];
 type Account = ProductComponents['schemas']['Account'];
@@ -147,24 +149,31 @@ describe('H2: PDF share (expo-print + expo-sharing)', () => {
     } finally { restore.restore(); }
   });
 
-  it('labels: "Guardar PDF" on iOS (the sheet offers Save to Files), the text action keeps the reference label', () => {
+  it('labels the PDF share as the primary receipt action and the screenshot as the second one', () => {
     assert.equal(Platform.OS, 'ios');
-    assert.equal(RECEIPT_ACTION_LABELS.pdf, 'Guardar PDF');
-    assert.equal(RECEIPT_ACTION_LABELS.text, 'Compartir comprobante');
+    assert.equal(RECEIPT_ACTION_LABELS.pdf, 'Compartir comprobante');
+    assert.equal(RECEIPT_ACTION_LABELS.image, 'Compartir captura');
   });
 });
 
-describe('H2: text share (React Native Share)', () => {
-  it('opens the native sheet with the text summary; dismissing is not an error; failures are retryable', async () => {
-    const share = jest.spyOn(Share, 'share').mockResolvedValueOnce({ action: Share.dismissedAction, activityType: undefined });
-    try {
-      assert.equal(await shareReceiptText(doc()), null);
-      const [content] = share.mock.calls[0]!;
-      assert.ok('message' in content && content.message!.includes(FOLIO) && content.message!.includes(RECEIPT_DISCLAIMER));
-      assert.ok(!content.message!.includes(SECRET_CODE));
-      share.mockRejectedValueOnce(new Error('boom /private/var'));
-      assert.equal(await shareReceiptText(doc()), RECEIPT_MESSAGES.shareFailed);
-    } finally { share.mockRestore(); }
+describe('H2: screenshot share (react-native-view-shot + expo-sharing)', () => {
+  it('captures the receipt card to a PNG and shares it as image/png; dismissing is not an error; the file is deleted', async () => {
+    (isAvailable as jest.Mock).mockResolvedValue(true);
+    (captureRef as jest.Mock).mockResolvedValueOnce('file:///cache/receipt.png');
+    (shareFile as jest.Mock).mockResolvedValueOnce(undefined);
+    assert.equal(await shareReceiptImage({ node: 1 }), null);
+    assert.equal((captureRef as jest.Mock).mock.calls[0]![1].format, 'png');
+    assert.equal((shareFile as jest.Mock).mock.calls.at(-1)![1].mimeType, 'image/png');
+    assert.equal(JSON.stringify((removeFile as jest.Mock).mock.calls.at(-1)), JSON.stringify(['file:///cache/receipt.png', { idempotent: true }]));
+  });
+
+  it('a failed capture is a retryable message and nothing is shared; no target means unavailable', async () => {
+    (isAvailable as jest.Mock).mockResolvedValue(true);
+    const shares = (shareFile as jest.Mock).mock.calls.length;
+    (captureRef as jest.Mock).mockRejectedValueOnce(new Error('boom /private/var'));
+    assert.equal(await shareReceiptImage({ node: 1 }), RECEIPT_MESSAGES.imageFailed);
+    assert.equal(await shareReceiptImage(null), RECEIPT_MESSAGES.unavailable);
+    assert.equal((shareFile as jest.Mock).mock.calls.length, shares);
   });
 });
 
@@ -182,7 +191,7 @@ describe('H2: useReceiptShare state', () => {
     shareFile.mockImplementation(() => new Promise<void>((resolve) => { release = resolve; }));
     const probe = harness(doc());
     let first!: Promise<void>;
-    await TestRenderer.act(async () => { first = probe.api.run('pdf'); void probe.api.run('pdf'); void probe.api.run('text'); });
+    await TestRenderer.act(async () => { first = probe.api.run('pdf'); void probe.api.run('pdf'); void probe.api.run('image'); });
     assert.equal(probe.text(), 'pdf|');
     assert.equal(printToFile.mock.calls.length, 1);
     await TestRenderer.act(async () => { release(); await first; });
@@ -211,7 +220,7 @@ describe('H2: useReceiptShare state', () => {
 
   it('without a completed-transfer document nothing runs', async () => {
     const probe = harness(null);
-    await TestRenderer.act(async () => { await probe.api.run('pdf'); await probe.api.run('text'); });
+    await TestRenderer.act(async () => { await probe.api.run('pdf'); await probe.api.run('image'); });
     assert.equal(printToFile.mock.calls.length + isAvailable.mock.calls.length, 0);
   });
 });

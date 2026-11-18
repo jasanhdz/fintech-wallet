@@ -1,0 +1,17 @@
+# REC-02 static substitute (runtime BLOCKED by disk): write-path call sites of web/src/transfers.tsx at 8ab4b86 (golden IDENTICAL in WF-T4) vs 29e780e.
+$ diff <(write-path calls @8ab4b86) <(write-path calls @29e780e)
+diff-exit=0
+
+$ write-path call counts @29e780e
+   4 clearTransferDraft
+   2 confirmationAttempts.delete
+   1 confirmationAttempts.get
+   1 confirmationAttempts.set
+   3 createKey
+   5 method: 'POST
+   2 recoverTransferDraft(
+   6 requestTransfer
+   6 saveTransferDraft
+
+$ git diff 8ab4b86 29e780e --stat -- web/src/api.ts web/src/session.tsx web/src/transfer-attempt.ts
+(empty = unchanged in WF-T5)

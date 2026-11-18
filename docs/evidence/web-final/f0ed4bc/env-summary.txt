@@ -1,0 +1,9 @@
+node v26.13.1 (~/.nvm/versions/node/v26.13.1; el node por defecto del PATH es v26.3.0)
+npm 11.20.0
+@playwright/test 1.65.1 · chromium_headless_shell-1255 (ya en disco)
+vite 8.3.8
+PostgreSQL: contenedor fintech-wallet-web-pg (postgres:16.10-alpine), 127.0.0.1:55433, base wallet_test (migrada con db:migrate:test)
+API P1: 127.0.0.1:3301 (APP_ENV=development, DEMO_FIXTURE_ENABLED=true, valores demo de .env.example)
+Web P1: 127.0.0.1:5301 (vite preview de web/dist/p1, VITE_API_URL=http://127.0.0.1:3301/v1, cacheDir node_modules/.vite-web-final)
+Contexto Playwright: Chromium headless, locale es-MX, timezone America/Mexico_City, workers 1
+Secretos: .env.web-final (0600, aleatorios, no impresos)

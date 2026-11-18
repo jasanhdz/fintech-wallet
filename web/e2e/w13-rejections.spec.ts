@@ -20,7 +20,8 @@ async function registerSyntheticUser(page: Page, label: string): Promise<Browser
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Visual Rejection QA');
   await page.getByLabel('Correo electrónico').fill(userEmail);
-  await page.getByLabel('Crea una contraseña').fill(userPassword);
+  await page.getByLabel('Contraseña', { exact: true }).fill(userPassword);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(userPassword);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect.poll(() => fixture.accounts.length).toBeGreaterThanOrEqual(2);
@@ -47,15 +48,19 @@ async function setSyntheticUserDailyUsage(userId: string, dailyLimitMinor: strin
 }
 
 async function openOwnTransfer(page: Page, accounts: BrowserFixture['accounts'], amount: string, reference: string) {
-  await page.locator('.welcome-row').getByRole('link', { name: /Transferir/ }).click();
+  await page.getByRole('region', { name: 'Tus cuentas' }).getByRole('link', { name: 'Transferir' }).click();
   await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
-  await page.getByLabel('Cuenta de origen').selectOption(accounts[0]!.id);
-  await page.getByLabel('Cuenta de destino').selectOption(accounts[1]!.id);
-  await page.getByLabel('Importe en MXN').fill(amount);
+  // UX-T2 (D-UX-6): the origin is an inline radio group (default = principal); this test's origin is the first account
+  // the API listed (its balance is asserted below), so it is selected explicitly by id. The destination is a radio card.
+  await page.getByRole('radiogroup', { name: 'Cuenta de origen' }).locator(`[data-radio-id="${accounts[0]!.id}"]`).click();
+  await expect(page.getByRole('radiogroup', { name: 'Cuenta de origen' }).locator(`[data-radio-id="${accounts[0]!.id}"]`)).toHaveAttribute('aria-checked', 'true');
+  await page.getByRole('radiogroup', { name: 'Cuenta de destino' }).locator(`[data-radio-id="${accounts[1]!.id}"]`).click();
+  await page.getByLabel('Importe a transferir').fill(amount);
   await page.getByLabel('Concepto').fill('Prueba visual de rechazo');
   await page.getByLabel('Referencia numérica').fill(reference);
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
-  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  // WF-T4: W09 CTA depends on the server threshold (D-6).
+  await page.getByRole('button', { name: /^(Confirmar transferencia|Continuar a verificación)$/ }).click();
 }
 
 function rejectionMasks(page: Page): Locator[] {
@@ -85,7 +90,7 @@ async function captureResponsiveRejection(page: Page, name: string) {
 async function captureRejectionBreakdown(page: Page, name: string) {
   const viewport = { width: 390, height: 844 };
   await page.setViewportSize(viewport);
-  await page.locator('.rejection-breakdown').scrollIntoViewIfNeeded();
+  await page.locator('.rj-breakdown, .rj-limits-panel').first().scrollIntoViewIfNeeded();
   await page.screenshot({ path: `test-results/visual/${name}-390-breakdown.png`, fullPage: true, mask: rejectionMasks(page), maskColor: '#172b4d' });
   await page.evaluate(() => window.scrollTo(0, 0));
 }
@@ -117,11 +122,12 @@ test('W13 insufficient-balance rejection is captured responsively for a syntheti
   await expect.poll(() => createStatus).toBe(202);
   await expect.poll(() => demoOnlyCode).toMatch(/^\d{6}$/);
   await confirmation.fill(demoOnlyCode!);
-  await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
-  await expect(page.getByRole('heading', { name: 'Transferencia no realizada' })).toBeVisible();
-  await expect(rejection).toContainText(/saldo insuficiente|no se realizó ningún débito/i);
-  await expect(rejection.locator('.rejection-breakdown')).toContainText('Importe solicitado');
-  await expect(rejection.locator('.rejection-breakdown')).toContainText('Saldo disponible sin débito');
+  await page.getByRole('button', { name: /^Autorizar transferencia de / }).click(); // WF-T5: W10 CTA «Autorizar transferencia de {importe}»
+  // WF-T4: W13-V1/V2 copy; the breakdown sits next to the alert, not inside it.
+  await expect(page.getByRole('heading', { level: 1, name: 'Transferencia rechazada: Saldo insuficiente' })).toBeVisible();
+  await expect(rejection).toContainText(/saldo insuficiente|no se realizó ningún (débito|cargo)/i);
+  await expect(page.locator('.rj-breakdown')).toContainText('Monto solicitado');
+  await expect(page.locator('.rj-breakdown')).toContainText('Saldo disponible en cuenta');
   await expect.poll(() => confirmationStatus).toBe(422);
   await captureResponsiveRejection(page, 'W13-saldo-insuficiente');
   await captureRejectionBreakdown(page, 'W13-saldo-insuficiente');
@@ -138,11 +144,16 @@ test('W13 configured demo daily-limit rejection is captured responsively for a s
     if (new URL(response.url()).pathname === '/v1/transfers' && response.request().method() === 'POST') createStatus = response.status();
   });
   await openOwnTransfer(page, fixture.accounts, '0.01', '913402');
-  await expect(page.getByRole('heading', { name: 'Transferencia no realizada' })).toBeVisible();
-  await expect(page.getByRole('alert')).toContainText(/límite diario configurado|no se realizó ningún débito/i);
-  await expect(page.getByRole('alert').locator('.rejection-breakdown')).toContainText('Importe solicitado');
-  await expect(page.getByRole('alert').locator('.rejection-breakdown')).toContainText('Límite diario de demostración alcanzado');
-  await expect(page.getByRole('alert').locator('.rejection-breakdown')).not.toContainText(/uso acumulado|disponible del límite/i);
+  await expect(page.getByRole('heading', { level: 1, name: 'Transferencia rechazada: Límite diario alcanzado' })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText(/límite diario configurado|no se realizó ningún (débito|cargo)/i);
+  const limits = page.locator('.rj-limits-panel');
+  await expect(limits).toContainText('Monto solicitado en esta operación');
+  await expect(limits).toContainText('Límite diario configurado (demostración)');
+  // WF-T4 (W13-V4): usage and remaining now come from GET /v1/transfer-policy (real server figures, no client math).
+  const limitText = `$${(BigInt(limit!) / 100n).toLocaleString('en-US')}.${(BigInt(limit!) % 100n).toString().padStart(2, '0')} MXN`;
+  await expect(limits.locator('div', { hasText: 'Límite diario configurado' }).locator('dd')).toHaveText(limitText);
+  await expect(limits.locator('div', { hasText: 'Monto acumulado enviado hoy' }).locator('dd')).toHaveText(limitText);
+  await expect(limits.locator('div', { hasText: 'Disponible restante hoy' }).locator('dd')).toHaveText('$0.00 MXN');
   await expect.poll(() => createStatus).toBe(429);
   await captureResponsiveRejection(page, 'W13-limite-diario-demo');
   await captureRejectionBreakdown(page, 'W13-limite-diario-demo');

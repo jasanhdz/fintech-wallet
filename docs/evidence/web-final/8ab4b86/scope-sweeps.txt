@@ -1,0 +1,34 @@
+# Scope sweeps at code 8ab4b86 (web/dist = FN-18 build of this SHA)
+$ rg -i -c "<SC-01 pattern>" web/src web/dist
+web/src/transfers.tsx:1
+web/dist/assets/index-D7u2ENY4.js:1
+  match: web/src/transfers.tsx:CEP
+(remaining: «No es un comprobante CEP» in the W12 disclaimer, present at f0ed4bc, WF-T5 scope; W08/W09/W13 add no match)
+$ rg -c "IVA|INE" web/src web/dist
+(no matches)
+$ rg -c "<SC-02 pattern>" web/src web/dist
+(no matches)
+$ rg -i -c "material-symbols|tailwind|googleusercontent|cdn\." web/src web/index.html
+(no matches)
+$ rg -i -c "simulat|mock|fixture" web/src
+(no matches)
+$ rg -n "parseFloat|toFixed|Number\(" web/src (FN-09)
+(no matches)
+$ rg -n "MXN MXN|\} MXN`" web/src (FN-09)
+(no matches)
+$ rg -n "500000|2000000|5000|20000|6,000|850" web/src (FN-16)
+(no matches)
+$ policy fields read in web/src (no hard-coded figure)
+   1 web/src/transfer-form.ts:118:policy.otpThresholdMinor
+   1 web/src/transfer-form.ts:119:policy.otpThresholdMinor
+   1 web/src/transfers.tsx:330:policyData?.dailyRemainingMinor
+   1 web/src/transfers.tsx:506:policy.otpThresholdMinor
+   1 web/src/transfers.tsx:681:policy.dailyLimitMinor
+   2 web/src/transfers.tsx:682:policy.dailyLimitMinor
+   1 web/src/transfers.tsx:682:policy.dailyRemainingMinor
+   1 web/src/transfers.tsx:682:policy.dailyUsedMinor
+   1 web/src/transfers.tsx:683:policy.dailyUsedMinor
+   1 web/src/transfers.tsx:684:policy.dailyRemainingMinor
+   1 web/src/transfers.tsx:691:policy.dailyRemainingMinor
+$ rg -n "movements" web/src/transfers.tsx (REC-04: navigation link only)
+762:nt(transfer.sourceAccountId)}/movements`}>Ver movimientos

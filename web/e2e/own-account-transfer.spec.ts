@@ -56,10 +56,12 @@ test('registers with the development fixture and transfers between own accounts'
     }
     if (pathname !== '/v1/accounts' || !response.ok()) return;
     try {
-      const data = await response.json() as { items: Array<{ id: string; clabe: string; availableBalanceMinor: string }> };
+      const data = await response.json() as { items: Array<{ id: string; kind?: string; clabe: string; availableBalanceMinor: string }> };
       accountIds = data.items.map((account) => account.id);
       for (const account of data.items) balancesByAccount.set(account.id, account.availableBalanceMinor);
-      fundedAccounts = data.items.filter((account) => BigInt(account.availableBalanceMinor) >= 1n).map((account) => account.id);
+      // UX-T2 (ORD, B-6): the principal (checking) goes first, as in the UI; W03 shows the principal's recent activity.
+      fundedAccounts = data.items.filter((account) => BigInt(account.availableBalanceMinor) >= 1n)
+        .sort((a, b) => Number(b.kind === 'checking') - Number(a.kind === 'checking')).map((account) => account.id);
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
   page.on('response', async (response) => {
@@ -85,7 +87,8 @@ test('registers with the development fixture and transfers between own accounts'
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Own Account QA');
   await page.getByLabel('Correo electrónico').fill(email);
-  await page.getByLabel('Crea una contraseña').fill(password);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
+  await page.getByLabel('Confirmar contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Crear cuenta/ }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
@@ -102,7 +105,7 @@ test('registers with the development fixture and transfers between own accounts'
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
   await capture(page, 'W03-cuentas-own');
   await page.setViewportSize({ width: 1440, height: 960 });
-  await expect(page.locator('.app-rail')).toBeVisible();
+  await expect(page.locator('aside.shell-sidebar')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
   await capture(page, 'W03-cuentas-own');
   await page.setViewportSize({ width: 390, height: 844 });
@@ -111,9 +114,12 @@ test('registers with the development fixture and transfers between own accounts'
   expect(fundedAccounts.length, 'La fixture local debe financiar al menos una cuenta propia con 1 minor unit').toBeGreaterThan(0);
 
   const sourceId = fundedAccounts[0];
-  await page.locator(`.account-history-link[href="/accounts/${sourceId}/movements"]`).click();
-  await expect(page.getByRole('heading', { name: 'Movimientos', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Sin movimientos' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Movimientos' }).click();
+  // WF-T2: W04 opens from the navigation and the «Cuenta activa» selector (the W03 per-card history links were replaced by the approved CTAs).
+  await page.getByLabel('Cuenta', { exact: true }).selectOption(sourceId!);
+  await expect(page).toHaveURL(new RegExp(`/accounts/${sourceId!}/movements$`));
+  await expect(page.getByRole('heading', { name: 'Historial de movimientos', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Aún no tienes movimientos' })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W04-historial-vacio-own');
   await page.setViewportSize({ width: 768, height: 1024 });
@@ -122,12 +128,13 @@ test('registers with the development fixture and transfers between own accounts'
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W04-historial-vacio-own');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('link', { name: /Volver a mis cuentas/ }).click();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Inicio' }).click();
   await expect(page).toHaveURL(/\/accounts$/);
 
   await page.getByRole('link', { name: 'Transferir', exact: true }).first().click();
   await expect.poll(() => beneficiaryCount).toBe(0);
-  await expect(page.getByRole('heading', { name: 'Aún no tienes beneficiarios' })).toBeVisible();
+  // WF-T4: W08-V7 «sin beneficiarios» panel (approved copy).
+  await expect(page.getByRole('heading', { name: 'No tienes beneficiarios registrados en tu cuenta' })).toBeVisible();
   await capture(page, 'W06-beneficiarios-vacio-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W06-beneficiarios-vacio-own');
@@ -136,39 +143,48 @@ test('registers with the development fixture and transfers between own accounts'
   await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
   const destinationId = accountIds.find((id) => id !== sourceId);
   expect(destinationId).toBeTruthy();
-  await page.getByLabel('Cuenta de origen').selectOption(sourceId);
-  await page.getByLabel('Cuenta de destino').selectOption(destinationId!);
+  // WF-T4 (W08 D-8): origin/destination are radio cards; pick them by account id (same choices as the old selects).
+  // UX-T2 (D-UX-6): with two accounts the source radio group is always visible; select the source explicitly.
+  await page.locator(`#tf-source-options [data-radio-id="${sourceId}"]`).click();
+  await page.getByRole('radiogroup', { name: 'Cuenta de destino' }).locator(`[data-radio-id="${destinationId!}"]`).click();
+  await expect(page.getByRole('radiogroup', { name: 'Cuenta de destino' }).locator(`[data-radio-id="${destinationId!}"]`)).toHaveAttribute('aria-checked', 'true');
   const rejectedAmountMinor = BigInt(balancesByAccount.get(sourceId) ?? '0') + 1n;
   const rejectedAmountInput = `${rejectedAmountMinor / 100n}.${(rejectedAmountMinor % 100n).toString().padStart(2, '0')}`;
   if (BigInt(process.env.OTP_THRESHOLD_MINOR ?? '0') > rejectedAmountMinor) {
-    await page.getByLabel('Importe en MXN').fill(rejectedAmountInput);
+    await page.getByLabel('Importe a transferir').fill(rejectedAmountInput);
     await page.getByLabel('Concepto').fill('Rechazo sin débito E2E');
     await page.getByLabel('Referencia numérica').fill('204200');
     await page.getByRole('button', { name: /Continuar a revisión/ }).click();
-    await page.getByRole('button', { name: /Enviar transferencia/ }).click();
-    await expect(page.getByRole('alert')).toContainText(/no se realizó ningún débito/i);
+    await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    // WF-T4: W13 copy «No se realizó ningún cargo por este intento» (server-confirmed 422).
+    await expect(page.getByRole('heading', { level: 1, name: 'Transferencia rechazada: Saldo insuficiente' })).toBeVisible();
+    await expect(page.getByRole('alert')).toContainText(/no se realizó ningún (débito|cargo)/i);
     await page.evaluate(() => window.scrollTo(0, 0));
     await capture(page, 'W13-rechazo-sin-debito-own');
     await page.setViewportSize({ width: 1440, height: 960 });
     await page.evaluate(() => window.scrollTo(0, 0));
     await capture(page, 'W13-rechazo-sin-debito-own');
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Editar' }).click();
+    await page.getByRole('button', { name: 'Modificar monto' }).click();
+    await expect(page.getByLabel('Importe a transferir')).toBeFocused();
   }
-  await page.getByLabel('Importe en MXN').fill('0.01');
+  await page.getByLabel('Importe a transferir').fill('0.01');
   await page.getByLabel('Concepto').fill('Transferencia propia E2E');
   await page.getByLabel('Referencia numérica').fill('204201');
   await capture(page, 'W08-formulario-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W08-formulario-own');
   await page.setViewportSize({ width: 390, height: 844 });
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen-own');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen proyectado' }), 'W08-resumen-own');
   // F-04: keyboard tab order for the transfer data form, in addition to the existing /access-denied coverage.
   await page.getByLabel('Referencia numérica').focus();
+  // UX-T2 (SPEC §5.5): the footer reads «Cancelar» (secondary) then the primary.
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Cancelar' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: /Continuar a revisión/ })).toBeFocused();
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
-  await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Revisa y confirma tu transferencia' })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review-own');
   await page.setViewportSize({ width: 1440, height: 960 });
@@ -176,10 +192,10 @@ test('registers with the development fixture and transfers between own accounts'
   await capture(page, 'W09-review-own');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => window.scrollTo(0, 0));
-  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W09-resumen-own');
-  await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('Transferencia propia E2E');
-  await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('204201');
-  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen' }), 'W09-resumen-own');
+  await expect(page.locator('main')).toContainText('Transferencia propia E2E');
+  await expect(page.locator('main')).toContainText('204201');
+  await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
   await expect.poll(() => transferStatus).toBeTruthy();
 
   const confirmation = page.getByLabel('Código de confirmación de 6 dígitos');
@@ -191,14 +207,15 @@ test('registers with the development fixture and transfers between own accounts'
     await capture(page, 'W10-otp-own');
     await page.setViewportSize({ width: 390, height: 844 });
     await confirmation.fill(`${(Number(demoOnlyCode![0]) + 1) % 10}${demoOnlyCode!.slice(1)}`);
-    await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
-    await expect(page.getByText(/No se confirmó la respuesta/)).toBeVisible();
+    await page.getByRole('button', { name: /^Autorizar transferencia de / }).click();
+    // WF-T5 (W10-V8): a wrong code is now its own state, «Código incorrecto» (was the generic «No se confirmó…»).
+    await expect(page.getByRole('alert').filter({ hasText: 'Código incorrecto' })).toBeVisible();
     await capture(page, 'W10-otp-error-own');
     await page.setViewportSize({ width: 1440, height: 960 });
     await capture(page, 'W10-otp-error-own');
     await page.setViewportSize({ width: 390, height: 844 });
     await confirmation.fill(demoOnlyCode!);
-    await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    await page.getByRole('button', { name: /^Autorizar transferencia de / }).click();
     await expect.poll(() => confirmationResponseStatus).toBe(200);
     await expect.poll(() => confirmedStatus).toBe('completed');
     transferStatus = confirmedStatus;
@@ -207,7 +224,7 @@ test('registers with the development fixture and transfers between own accounts'
 
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   expect(transferId).toBeTruthy();
-  const receipt = page.locator('.receipt-card');
+  const receipt = page.locator('.rc-card'); // WF-T5: W12 receipt card
   await expect(receipt).toContainText('Transferencia propia E2E');
   await expect(receipt).toContainText('204201');
   await capture(page, 'W12-recibo-own');
@@ -215,25 +232,28 @@ test('registers with the development fixture and transfers between own accounts'
   await capture(page, 'W12-recibo-own');
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
+  await page.getByRole('link', { name: 'Volver al inicio', exact: true }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   const recentSuccessfulTransfer = page.getByRole('region', { name: 'Actividad reciente' }).getByRole('row').filter({ hasText: 'Transferencia propia E2E' });
   await expect(recentSuccessfulTransfer).toContainText('Cargo');
-  await expect(recentSuccessfulTransfer).toContainText('Completado');
+  await expect(recentSuccessfulTransfer).toContainText('Completada');
   await capture(page, 'W03-cuentas-transfer-completada-own');
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente-transfer-completada-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W03-cuentas-transfer-completada-own');
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator(`.account-history-link[href="/accounts/${sourceId}/movements"]`).click();
-  await expect(page.getByRole('heading', { name: 'Movimientos', exact: true })).toBeVisible();
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Movimientos' }).click();
+  // WF-T2: W04 opens from the navigation and the «Cuenta activa» selector (the W03 per-card history links were replaced by the approved CTAs).
+  await page.getByLabel('Cuenta', { exact: true }).selectOption(sourceId!);
+  await expect(page).toHaveURL(new RegExp(`/accounts/${sourceId!}/movements$`));
+  await expect(page.getByRole('heading', { name: 'Historial de movimientos', exact: true })).toBeVisible();
   const transferRow = page.getByRole('row').filter({ hasText: 'Transferencia propia E2E' });
   await expect(transferRow).toContainText('Cargo');
-  await expect(transferRow).toContainText('Completado');
+  await expect(transferRow).toContainText('Completada');
   await transferRow.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
-  await expect(page.locator('.movement-page > h1', { hasText: 'Comprobante interno' })).toBeVisible();
-  await expect(page.locator('.receipt-card')).toContainText('Transferencia propia E2E');
+  await expect(page.getByRole('heading', { level: 1, name: 'Comprobante de transferencia' })).toBeVisible();
+  await expect(page.locator('article.mr-card')).toContainText('Transferencia propia E2E');
   await capture(page, 'W04-detalle-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W04-detalle-own');

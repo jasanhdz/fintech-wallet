@@ -1,0 +1,2796 @@
+{
+  "UX-T1 shell 390x844": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 shell 768x1024": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 A11Y-08": {
+    "W03 390": [],
+    "W04 390": [],
+    "W06 390": [],
+    "W08 390": [],
+    "W03 1440": [],
+    "W04 1440": [],
+    "W06 1440": [],
+    "W08 1440": []
+  },
+  "UX-T1 SP-07 1280": {
+    ".home": {
+      "width": 960,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 960,
+      "gutter": 32
+    },
+    ".hist": {
+      "width": 960,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 960,
+      "gutter": 32
+    },
+    ".bn-page": {
+      "width": 960,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 960,
+      "gutter": 32
+    },
+    ".bn-form-page": {
+      "width": 960,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 960,
+      "gutter": 32
+    },
+    ".tf-page": {
+      "width": 960,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 960,
+      "gutter": 32
+    }
+  },
+  "UX-T1 SP-07 1440": {
+    ".home": {
+      "width": 1120,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 1120,
+      "gutter": 32
+    },
+    ".hist": {
+      "width": 1120,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 1120,
+      "gutter": 32
+    },
+    ".bn-page": {
+      "width": 1120,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 1120,
+      "gutter": 32
+    },
+    ".bn-form-page": {
+      "width": 1024,
+      "gapLeft": 48,
+      "gapRight": 48,
+      "available": 1120,
+      "gutter": 32
+    },
+    ".tf-page": {
+      "width": 1024,
+      "gapLeft": 48,
+      "gapRight": 48,
+      "available": 1120,
+      "gutter": 32
+    }
+  },
+  "UX-T1 SP-07 1920": {
+    ".home": {
+      "width": 1200,
+      "gapLeft": 200,
+      "gapRight": 200,
+      "available": 1600,
+      "gutter": 32
+    },
+    ".hist": {
+      "width": 1200,
+      "gapLeft": 200,
+      "gapRight": 200,
+      "available": 1600,
+      "gutter": 32
+    },
+    ".bn-page": {
+      "width": 1200,
+      "gapLeft": 200,
+      "gapRight": 200,
+      "available": 1600,
+      "gutter": 32
+    },
+    ".bn-form-page": {
+      "width": 1024,
+      "gapLeft": 288,
+      "gapRight": 288,
+      "available": 1600,
+      "gutter": 32
+    },
+    ".tf-page": {
+      "width": 1024,
+      "gapLeft": 288,
+      "gapRight": 288,
+      "available": 1600,
+      "gutter": 32
+    }
+  },
+  "UX-T1 SP-07 1024": {
+    ".home": {
+      "width": 720,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 720,
+      "gutter": 24
+    },
+    ".hist": {
+      "width": 720,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 720,
+      "gutter": 24
+    },
+    ".bn-page": {
+      "width": 720,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 720,
+      "gutter": 24
+    },
+    ".bn-form-page": {
+      "width": 720,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 720,
+      "gutter": 24
+    },
+    ".tf-page": {
+      "width": 720,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 720,
+      "gutter": 24
+    }
+  },
+  "UX-T1 SP-07 390": {
+    ".home": {
+      "width": 358,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 358,
+      "gutter": 16
+    },
+    ".hist": {
+      "width": 358,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 358,
+      "gutter": 16
+    },
+    ".bn-page": {
+      "width": 358,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 358,
+      "gutter": 16
+    },
+    ".bn-form-page": {
+      "width": 358,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 358,
+      "gutter": 16
+    },
+    ".tf-page": {
+      "width": 358,
+      "gapLeft": 0,
+      "gapRight": 0,
+      "available": 358,
+      "gutter": 16
+    }
+  },
+  "UX-T1 shell 320x640": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 0,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 0,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 0,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 0,
+        "logout": 1,
+        "user": 0
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 shell 1024x768": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 shell 1280x800": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 shell 1440x900": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "UX-T1 shell 1920x1080": {
+    "W03": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W04": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W06": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    },
+    "W08": {
+      "chrome": {
+        "brand": 1,
+        "demo": 1,
+        "logout": 1,
+        "user": 1
+      },
+      "bleed": {
+        "translucent": [],
+        "leaks": [],
+        "h1Hits": []
+      }
+    }
+  },
+  "FONT-03-04-05 /login": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif",
+      "input": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-03-04-05 /accounts": {
+    "faces": [
+      {
+        "weight": "400",
+        "status": "loaded"
+      },
+      {
+        "weight": "500",
+        "status": "loaded"
+      },
+      {
+        "weight": "600",
+        "status": "loaded"
+      },
+      {
+        "weight": "700",
+        "status": "loaded"
+      }
+    ],
+    "fontResponses": [
+      {
+        "path": "/fonts/inter/Inter-400.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-600.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-500.ttf",
+        "status": 200
+      },
+      {
+        "path": "/fonts/inter/Inter-700.ttf",
+        "status": 200
+      }
+    ],
+    "families": {
+      "body": "Inter, Arial, sans-serif",
+      "h1": "Inter, Arial, sans-serif",
+      "button": "Inter, Arial, sans-serif"
+    },
+    "foreignRequests": []
+  },
+  "FONT-06": {
+    "check": true,
+    "inter": 197.5634765625,
+    "arial": 193.388671875
+  },
+  "FONT-07": {
+    "checked": 8,
+    "items": [
+      {
+        "text": "Cuenta •• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "•••• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "•••• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "$#,###.## MXN",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "•••• ####",
+        "numeric": "tabular-nums"
+      },
+      {
+        "text": "−$###.## MXN",
+        "numeric": "tabular-nums"
+      }
+    ]
+  },
+  "SH-02-05 demoOnly=false": {
+    "demoWordCount": 0
+  },
+  "SH-04": {
+    "initials": "PP",
+    "account": "Cuenta •• ####",
+    "logout": "POST /v1/auth/logout → /login"
+  },
+  "SH-07": {
+    "firstFocusable": "Saltar al contenido",
+    "box": {
+      "x": 8,
+      "y": 8,
+      "width": 156.75,
+      "height": 44
+    },
+    "focusAfterEnter": "main#contenido"
+  },
+  "SH-08": {
+    "/login": "Iniciar sesión · Billetera MXN",
+    "/register": "Crear cuenta · Billetera MXN",
+    "/session-expired": "Sesión vencida · Billetera MXN",
+    "/access-denied": "Acceso no disponible · Billetera MXN",
+    "/ruta-inexistente": "Página no encontrada · Billetera MXN",
+    "/accounts": "Inicio · Billetera MXN",
+    "/accounts/:id/movements": "Movimientos · Billetera MXN",
+    "/transfers/:id/movement-receipt": "Comprobante · Billetera MXN",
+    "/beneficiaries": "Beneficiarios · Billetera MXN",
+    "/beneficiaries/new": "Nuevo beneficiario · Billetera MXN",
+    "/transfers/new": "Transferir · Billetera MXN"
+  },
+  "RESP-01 /accounts 1440": {
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "offenders": []
+  },
+  "RESP-01 /accounts R": {
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "offenders": [],
+    "referencePng": "1600x1288",
+    "informativePixelDiff": 0.1643531976744186
+  },
+  "RESP-01 /accounts 768": {
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "offenders": []
+  },
+  "RESP-01 /accounts 390": {
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "offenders": []
+  },
+  "W01-V1-V4 R": {
+    "screen": {
+      "background-color": "rgb(246, 248, 251)"
+    },
+    "tile": {
+      "box": {
+        "x": 616,
+        "y": 48,
+        "width": 48,
+        "height": 48
+      },
+      "border-radius": "14px",
+      "background-color": "rgb(29, 78, 216)"
+    },
+    "card": {
+      "box": {
+        "x": 420,
+        "y": 356.5,
+        "width": 440,
+        "height": 431
+      },
+      "border-top-left-radius": "16px",
+      "padding-top": "32px",
+      "padding-left": "32px",
+      "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+      "background-color": "rgb(255, 255, 255)"
+    },
+    "h1": {
+      "font-size": "24px",
+      "font-weight": "700",
+      "line-height": "32px",
+      "color": "rgb(20, 27, 44)"
+    },
+    "fields": [
+      {
+        "label": "Correo electrónico",
+        "labelStyle": {
+          "font-size": "12px",
+          "font-weight": "600",
+          "line-height": "16px",
+          "color": "rgb(67, 70, 85)"
+        },
+        "inputBox": {
+          "x": 453,
+          "y": 493.5,
+          "width": 374,
+          "height": 44
+        },
+        "inputStyle": {
+          "border-top-left-radius": "10px",
+          "border-top-width": "1px",
+          "border-top-color": "rgb(226, 232, 240)",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "iconBox": {
+          "x": 467,
+          "y": 505.5,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "label": "Contraseña",
+        "labelStyle": {
+          "font-size": "12px",
+          "font-weight": "600",
+          "line-height": "16px",
+          "color": "rgb(67, 70, 85)"
+        },
+        "inputBox": {
+          "x": 453,
+          "y": 577.5,
+          "width": 374,
+          "height": 44
+        },
+        "inputStyle": {
+          "border-top-left-radius": "10px",
+          "border-top-width": "1px",
+          "border-top-color": "rgb(226, 232, 240)",
+          "background-color": "rgb(255, 255, 255)"
+        },
+        "iconBox": {
+          "x": 467,
+          "y": 589.5,
+          "width": 20,
+          "height": 20
+        }
+      }
+    ],
+    "eye": {
+      "x": 785,
+      "y": 583.5,
+      "width": 32,
+      "height": 32
+    },
+    "submit": {
+      "box": {
+        "x": 453,
+        "y": 645.5,
+        "width": 374,
+        "height": 44
+      },
+      "background-color": "rgb(29, 78, 216)",
+      "color": "rgb(255, 255, 255)",
+      "border-top-left-radius": "10px",
+      "font-size": "14px",
+      "font-weight": "500"
+    },
+    "informativePixelDiff": 0.04290771484375,
+    "at970": {
+      "cardTop": 329.5,
+      "informativePixelDiff": 0.06546630859375
+    }
+  },
+  "W01 listo 1440": {
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo R": {
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo 768": {
+    "overflow": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01 listo 390": {
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 9,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Iniciar sesión",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Regístrate aquí",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W01-F1": {
+    "toggle": "type oculto→visible→oculto",
+    "ariaPressed": [
+      "false",
+      "true",
+      "false"
+    ],
+    "labels": [
+      "Mostrar contraseña",
+      "Ocultar contraseña"
+    ]
+  },
+  "W01-F2": {
+    "emptySubmit": "aria-invalid + describedby + icon, focus on first invalid, 0 POST /auth/login",
+    "busy": "disabled, «Iniciando sesión…», spinner, role=status, aria-describedby"
+  },
+  "W01-F3": {
+    "messages": [
+      {
+        "scenario": "F-W01-4",
+        "text": "Correo o contraseña incorrectos."
+      },
+      {
+        "scenario": "F-W01-5",
+        "text": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
+      },
+      {
+        "scenario": "F-W01-6",
+        "text": "No fue posible conectar. Revisa tu conexión e inténtalo de nuevo."
+      }
+    ],
+    "provokedConsoleMessages": {
+      "F-W01-4 R": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "F-W01-4 390": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "F-W01-5 R": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ],
+      "F-W01-5 390": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ],
+      "F-W01-6 R": [
+        "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      ],
+      "F-W01-6 390": [
+        "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+      ]
+    }
+  },
+  "W01 A11Y-05": {
+    "zoom200": {
+      "scrollWidth": 640,
+      "innerWidth": 640,
+      "clipped": []
+    },
+    "reflow320": {
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "clipped": []
+    }
+  },
+  "W02-V1-V3 R": {
+    "card": {
+      "box": {
+        "x": 420,
+        "y": 249,
+        "width": 440,
+        "height": 646
+      },
+      "border-top-left-radius": "16px",
+      "padding-top": "32px",
+      "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px"
+    },
+    "h1": {
+      "font-size": "20px",
+      "line-height": "28px",
+      "font-weight": "600",
+      "text-align": "center"
+    },
+    "labels": [
+      "Nombre completo",
+      "Correo electrónico",
+      "Contraseña",
+      "Confirmar contraseña"
+    ],
+    "submit": {
+      "x": 452,
+      "y": 763,
+      "width": 376,
+      "height": 44
+    },
+    "informativePixelDiff": 0.0561279296875
+  },
+  "W02 listo 1440": {
+    "overflow": {
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo R": {
+    "overflow": {
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo 768": {
+    "overflow": {
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02 listo 390": {
+    "overflow": {
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "offenders": []
+    },
+    "outline": {
+      "lang": "es",
+      "h1": 1,
+      "levels": [
+        1
+      ],
+      "skips": 0
+    },
+    "contrastChecked": 12,
+    "tabOrder": [
+      {
+        "name": "Saltar al contenido",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(249, 249, 255)",
+        "ratio": 6.39
+      },
+      {
+        "name": "Nombre completo",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Correo electrónico",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar contraseña",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Confirmar contraseña",
+        "tag": "input",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Mostrar confirmación",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Crear cuenta",
+        "tag": "button",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      },
+      {
+        "name": "Inicia sesión",
+        "tag": "a",
+        "outlineStyle": "solid",
+        "outlineWidth": 2,
+        "outlineColor": "rgb(29, 78, 216)",
+        "background": "rgb(255, 255, 255)",
+        "ratio": 6.7
+      }
+    ]
+  },
+  "W02-F1": {
+    "clientOnly": "confirmación distinta → error, 0 POST",
+    "sentFields": "fullName, email y la contraseña (3 campos del contrato; la confirmación nunca se envía)"
+  },
+  "W02-F2": {
+    "detail": "No fue posible crear la cuenta con esos datos.",
+    "kept": [
+      "Nombre completo",
+      "Correo electrónico"
+    ],
+    "cleared": [
+      "Contraseña",
+      "Confirmar contraseña"
+    ]
+  },
+  "W02 A11Y-05": {
+    "zoom200": {
+      "scrollWidth": 640,
+      "innerWidth": 640,
+      "clipped": []
+    },
+    "reflow320": {
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "clipped": []
+    }
+  },
+  "W14-V1-V2-V4 R": {
+    "expired": {
+      "main": {
+        "x": 416,
+        "y": 322,
+        "width": 448,
+        "height": 380
+      },
+      "card": {
+        "box": {
+          "x": 440,
+          "y": 402,
+          "width": 400,
+          "height": 276
+        },
+        "border-top-left-radius": "12px",
+        "padding-top": "24px",
+        "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "text-align": "center"
+      },
+      "tile": {
+        "x": 570.5625,
+        "y": 346,
+        "width": 32,
+        "height": 32
+      },
+      "icon": {
+        "x": 608,
+        "y": 426,
+        "width": 64,
+        "height": 64
+      },
+      "button": {
+        "x": 464,
+        "y": 610,
+        "width": 352,
+        "height": 44
+      },
+      "informativePixelDiff": 0.02291259765625
+    },
+    "access": {
+      "main": {
+        "x": 416,
+        "y": 326,
+        "width": 448,
+        "height": 372
+      },
+      "card": {
+        "box": {
+          "x": 440,
+          "y": 406,
+          "width": 400,
+          "height": 268
+        },
+        "border-top-left-radius": "12px",
+        "padding-top": "24px",
+        "box-shadow": "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px",
+        "text-align": "center"
+      },
+      "tile": {
+        "x": 570.5625,
+        "y": 350,
+        "width": 32,
+        "height": 32
+      },
+      "icon": {
+        "x": 612,
+        "y": 430,
+        "width": 56,
+        "height": 56
+      },
+      "button": {
+        "x": 464,
+        "y": 606,
+        "width": 352,
+        "height": 44
+      },
+      "informativePixelDiff": 0.01456298828125
+    }
+  },
+  "W14-V3 1440": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 R": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 768": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14-V3 390": {
+    "a11y": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 14,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión y retomar la verificación",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "recordUnchanged": true,
+    "resumeState": {
+      "from": "/transfers/new",
+      "resumeTransfer": true
+    }
+  },
+  "W14 1440": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 R": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 768": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14 390": {
+    "expired": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Iniciar sesión",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "access": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    },
+    "notFound": {
+      "outline": {
+        "lang": "es",
+        "h1": 1,
+        "levels": [
+          1
+        ],
+        "skips": 0
+      },
+      "contrastChecked": 5,
+      "tabOrder": [
+        {
+          "name": "Saltar al contenido",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(249, 249, 255)",
+          "ratio": 6.39
+        },
+        {
+          "name": "Volver al inicio",
+          "tag": "a",
+          "outlineStyle": "solid",
+          "outlineWidth": 2,
+          "outlineColor": "rgb(29, 78, 216)",
+          "background": "rgb(255, 255, 255)",
+          "ratio": 6.7
+        }
+      ]
+    }
+  },
+  "W14-F1 [F]": {
+    "F-W14-3": {
+      "path": "/accounts",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+        "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+      ]
+    },
+    "F-W14-4": {
+      "path": "/transfers/:id/status",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "F-W14-5": {
+      "path": "/accounts/:id/movements",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "F-W14-5b": {
+      "path": "/transfers/:id/movement-receipt",
+      "recordByteIdentical": true,
+      "writes": 0,
+      "provoked": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  },
+  "W14-F2": {
+    "route": "/beneficiaries → 401 → refresh 204 → /session-expired",
+    "recordByteIdentical": true,
+    "nonGet": [
+      "POST /v1/auth/refresh",
+      "POST /v1/auth/refresh"
+    ],
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ]
+  },
+  "W01-F4 + I-W14-6 [I]": {
+    "login": "P1 real → /accounts",
+    "visits": {
+      "/transfers/:id/status": "Acceso no disponible",
+      "/accounts/:id/movements": "Acceso no disponible",
+      "/transfers/:id/movement-receipt": "Acceso no disponible"
+    },
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  "W02-F3 P1 [I]": {
+    "accounts": 2
+  },
+  "W02-F3 P2 [I]": {
+    "accounts": 1,
+    "balance": "$0.00 MXN"
+  },
+  "W03-F2 R": {
+    "loading": "aria-busy=true, skeletons, no animation",
+    "accountsError": "alert + Intentar de nuevo → GET /v1/accounts",
+    "activityError": "cuentas conservadas + reintento",
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    ]
+  },
+  "W03-F2 390": {
+    "loading": "aria-busy=true, skeletons, no animation",
+    "accountsError": "alert + Intentar de nuevo → GET /v1/accounts",
+    "activityError": "cuentas conservadas + reintento",
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    ]
+  },
+  "W03 A11Y-05/06": {
+    "390": "sin desbordes; truncados con title",
+    "1440": "sin desbordes; truncados con title",
+    "reflow": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "reflowEmpty": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "W04-F2": {
+    "credit": "type=credit",
+    "debit": "type=debit",
+    "dates": {
+      "from": "2026-11-16T06:00:00.000Z",
+      "to": "2026-11-17T05:59:59.999Z"
+    },
+    "cleared": "sin from/to/type/cursor",
+    "restartsAccumulation": true
+  },
+  "W04-F3 [F]": {
+    "day": "2026-11-16",
+    "included": "23:30 (05:30Z of 17/11)",
+    "excluded": "00:30 of 17/11 (06:30Z)"
+  },
+  "W04-F4-F5 [F]": {
+    "options": 2,
+    "inline": "aria-expanded + panel, sin GET /transfers",
+    "own": "GET /v1/transfers/:id → W05",
+    "back": "Volver a Movimientos → cuenta de origen",
+    "switch": "/accounts/{savings}/movements"
+  },
+  "W04 A11Y-05/06": {
+    "390": "sin desbordes; contraparte truncada con title",
+    "1440": "sin desbordes; contraparte truncada con title",
+    "R": "sin desbordes; contraparte truncada con title",
+    "reflow": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "REC-04": {
+    "notFound": "registro conservado byte a byte",
+    "movements": "una coincidencia en Movimientos no oculta el aviso"
+  },
+  "W03-V5 [I] P2": {
+    "accounts": 1,
+    "balance": "$0.00 MXN",
+    "transferDisabledWithReason": true
+  },
+  "W06-F1 transferir": {
+    "url": "/transfers/new?beneficiaryId=8b3f0000-0000-4000-8000-000000000202",
+    "preselected": "8b3f0000-0000-4000-8000-000000000202"
+  },
+  "W06 A11Y-05/06": {
+    "390": "sin desborde; nombre completo visible (ajuste de línea); alias truncado con title",
+    "768": "sin desborde; nombre completo visible (ajuste de línea); alias truncado con title",
+    "1440": "sin desborde; nombre completo visible (ajuste de línea); alias truncado con title",
+    "R": "sin desborde; nombre completo visible (ajuste de línea); alias truncado con title",
+    "reflow": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "reflowEmpty": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "W07-F1": {
+    "retryBodies": "idénticos (503 → red abortada → 409)",
+    "modify": "foco en CLABE, editable",
+    "created": "W06 con aviso «Beneficiario “Seis” agregado.» y •••• NNNN",
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: net::ERR_CONNECTION_RESET",
+      "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "Failed to load resource: the server responded with a status of 409 (Conflict)"
+    ]
+  },
+  "W07 A11Y-05": {
+    "base": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "invalid": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "WF-T3 [I] FN-02": {
+    "created": {
+      "status": 201,
+      "notice": "Beneficiario “Destino” agregado.",
+      "masked": "•••• NNNN (últimos 4)",
+      "fullClabeInDom": false
+    },
+    "sequence": [
+      201,
+      409,
+      404
+    ],
+    "checksumWithoutRequest": true,
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ]
+  },
+  "WF-T4 [I] P1": {
+    "FN-03/FN-08/FN-15": {
+      "posts": 1,
+      "bodyEqualsReview": true,
+      "receipt": "id/folio, importe, concepto y referencia = respuesta",
+      "balanceDelta": "-123"
+    },
+    "FN-05": {
+      "fromChecking": "deshabilitado con razón",
+      "fromSavings": 201
+    },
+    "FN-04": {
+      "checking": "-67",
+      "savings": "+67"
+    },
+    "FN-10": {
+      "threshold": "otpThresholdMinor de GET /v1/transfer-policy",
+      "create": 202,
+      "wrongCode": "W10 conserva el intento (copia de W10 en WF-T5)",
+      "confirmed": "W12"
+    },
+    "provoked": 9
+  },
+  "WF-T4 [I] P2": {
+    "I-W08-9": "panel + Continuar deshabilitado",
+    "FN-11 saldo": {
+      "create": 422,
+      "balanceAfter": "0"
+    },
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+    ]
+  },
+  "WF-T4 [I] P4": {
+    "FN-11 límite": {
+      "create": 429,
+      "figures": "GET /v1/transfer-policy",
+      "balances": "sin cambio"
+    },
+    "provoked": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+      "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+    ]
+  },
+  "W08-V7 una cuenta": {
+    "ownAccountButton": false,
+    "changeAccount": false
+  },
+  "W08-F1-F3": {
+    "identity": "savings → own-checking beneficiary allowed; checking → blocked with reason; arrows skip disabled"
+  },
+  "W08-F2 FN-06 FN-07": {
+    "rejected": {
+      "0": "Ingresa un monto válido mayor a $0.00 MXN",
+      "''": "Ingresa un monto válido mayor a $0.00 MXN",
+      "-1": "Ingresa un monto válido mayor a $0.00 MXN",
+      "abc": "Ingresa un monto válido mayor a $0.00 MXN",
+      "10.999": "Usa como máximo dos decimales y sin comas",
+      "1,000": "Usa como máximo dos decimales y sin comas"
+    },
+    "accepted": {
+      "10": "1000",
+      "10.5": "1050",
+      "10.50": "1050"
+    }
+  },
+  "W08-F4": {
+    "amount": "8000 > 7345",
+    "review": "W09 con «El importe supera el saldo disponible actual»"
+  },
+  "W08/W09 A11Y-05/06": {
+    "390": "sin desborde; nombres truncados con title o con ajuste de línea",
+    "768": "sin desborde; nombres truncados con title o con ajuste de línea",
+    "1440": "sin desborde; nombres truncados con title o con ajuste de línea",
+    "R": "sin desborde; nombres truncados con title o con ajuste de línea",
+    "reflowW08": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "reflowW08Own": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "reflowW09": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "reflowW09Own": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "W09-F2": {
+    "belowThreshold202": "W09 normal → 202 → W10",
+    "predicted201": "W09 código → 201 → W12; sin «demostración» con demoOnly=false",
+    "noPolicy": {
+      "provoked": 1,
+      "copy": "Puede requerir un código de confirmación.",
+      "response": "202 → W10"
+    }
+  },
+  "W09 F-W09-4": {
+    "cta": "Continuar a verificación",
+    "note": "umbral de la política (demostración)"
+  },
+  "W09-F1 FN-15 [F]": {
+    "posts": 1,
+    "body": "igual a la revisión (concepto recortado)"
+  },
+  "W13 F-W13-4 y no-rechazos": {
+    "noPolicy": "filas de límite ocultas; sólo mensaje",
+    "sc05": "demoOnly=false → sin «(demostración)»",
+    "other422": "aviso genérico existente; sin W13",
+    "network": "error de conexión → W11 (no W13)"
+  },
+  "W13 F-W13-3": {
+    "422": "Transferencia rechazada: Saldo insuficiente → Modificar monto → W08 con importe 7000.00, concepto y referencia",
+    "429": "Transferencia rechazada: Límite diario alcanzado → Modificar monto → W08 con importe 7000.00, concepto y referencia"
+  },
+  "W10 A11Y-05/A11Y-11": {
+    "completo": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "agotados": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    },
+    "paste": "pegar «13-57 92» → 135792 en el único input"
+  },
+  "W10-F1": {
+    "conflict409": "GET → completed → W12",
+    "expired422": "GET → expired → V9",
+    "network": "aviso; mismo código = misma clave",
+    "provoked": 3
+  },
+  "W10-F2": {
+    "atZero": "un GET; V9 sólo con status expired",
+    "urgentChip": "rgb(255, 218, 214) / rgb(147, 0, 10)"
+  },
+  "W11-F1": {
+    "F-W11-3": "GET retenido → V2 «No reenviamos…»; sin POST",
+    "F-W11-5 (estado)": "GET 503 → V3 «Consultar estado» → GET → W12; sin POST",
+    "F-W11-5 (montaje)": "GET 503 → V3 «Reintentar el mismo envío» (acción real: POST con la misma clave)"
+  },
+  "W11-F4": {
+    "recordKept": true,
+    "w03Notice": true
+  },
+  "W12-F1": {
+    "clipboard": "folio completo",
+    "status": "Folio copiado",
+    "overflow390": false,
+    "reflow": {
+      "zoom200": {
+        "scrollWidth": 640,
+        "innerWidth": 640,
+        "clipped": []
+      },
+      "reflow320": {
+        "scrollWidth": 320,
+        "innerWidth": 320,
+        "clipped": []
+      }
+    }
+  },
+  "WF-T5 [I] P1 FN-10/W12-F2/FN-12": {
+    "create": 202,
+    "confirms": [
+      422,
+      200
+    ],
+    "receipt": "id/folio, importe, concepto, referencia = respuesta de confirm",
+    "balances": "origen −importe, destino +importe",
+    "history": "primera fila = operación"
+  },
+  "WF-T5 [I] P1 I-W11-6": {
+    "posts": 2,
+    "sameKey": true,
+    "sameBodySha256": true,
+    "sameTransferId": true,
+    "movements": 1,
+    "balanceDelta": "-61",
+    "bodySha256": "f4576b7655004940981c162f2e06136368302f46889ea6b3fea3c536d91e0c71"
+  },
+  "WF-T5 [I] P3 W10-F4": {
+    "expiry": "espera > expiresAt → GET → expired → V9",
+    "exhausted": "confirm 422 → 429 → V10",
+    "balancesUnchanged": true,
+    "cancelRequests": 0
+  }
+}

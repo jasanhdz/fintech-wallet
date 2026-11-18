@@ -1,0 +1,345 @@
+{
+ "W01-listo": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ],
+ "W08-errores": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W10-verificando": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers/:id/confirm"
+ ],
+ "W01-error": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/login",
+  "POST /v1/auth/refresh"
+ ],
+ "W02-errores": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ],
+ "W03-con-saldo": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W03-sin-saldo": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W03-aviso-pendiente": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W03-cargando": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-con-movimientos": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-vacio": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-sin-resultados": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/accounts/:id/movements?limit&type",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-cargando": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-error": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W04-error-mas": [
+  "GET /v1/accounts",
+  "GET /v1/accounts/:id/movements?cursor&limit",
+  "GET /v1/accounts/:id/movements?limit",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W05": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W06-lista-1": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W06-lista-2": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W06-lista-5": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W06-vacio": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W06-sin-resultados": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W07-inicial": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W07-invalidos": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W07-clabe-incorrecta": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W07-duplicado": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/beneficiaries"
+ ],
+ "W07-destino-no-disponible": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/beneficiaries"
+ ],
+ "W07-guardando": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/beneficiaries"
+ ],
+ "W07-error-recuperable": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/beneficiaries"
+ ],
+ "W08-beneficiario": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W08-propias": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W08-sin-beneficiarios": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W08-sin-segunda-cuenta": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W09-normal": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W09-codigo": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W09-propias": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh"
+ ],
+ "W10-vacio": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W10-completo": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W10-incorrecto": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers/:id/confirm"
+ ],
+ "W10-expirado": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W10-agotados": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers/:id/confirm"
+ ],
+ "W11-enviando": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers"
+ ],
+ "W11-verificando": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W11-desconocido": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers"
+ ],
+ "W12-beneficiario": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W12-propias": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/transfer-policy",
+  "GET /v1/transfers/:id",
+  "POST /v1/auth/refresh"
+ ],
+ "W13-saldo": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers"
+ ],
+ "W13-limite": [
+  "GET /v1/accounts",
+  "GET /v1/auth/csrf",
+  "GET /v1/beneficiaries",
+  "GET /v1/transfer-policy",
+  "POST /v1/auth/refresh",
+  "POST /v1/transfers"
+ ],
+ "W14-vencida": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ],
+ "W14-vencida-pendiente": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ],
+ "W14-acceso-no-disponible": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ],
+ "W14-no-encontrada": [
+  "GET /v1/auth/csrf",
+  "POST /v1/auth/refresh"
+ ]
+}

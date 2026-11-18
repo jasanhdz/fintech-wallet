@@ -1,0 +1,12 @@
+# 2026-11-17T13:32:20Z cleanup
+docker stop fintech-wallet-web-pg -> ok
+docker rm fintech-wallet-web-pg -> ok
+docker volume rm fintech-wallet-web-pg-data -> ok
+$ rm -rf web/dist (build outputs, ignored)
+$ rm -rf docs/evidence/web-final/wip (temporary development captures, never versioned)
+docker ps -a --filter name=fintech-wallet-web-pg:
+(empty = removed)
+docker volume ls --filter name=fintech-wallet-web-pg-data:
+(empty = removed)
+disk after:
+/dev/disk3s1   228Gi   196Gi   3.1Gi    99%    1.9M   33M    5%   /System/Volumes/Data

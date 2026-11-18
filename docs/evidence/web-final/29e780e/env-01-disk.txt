@@ -1,0 +1,11 @@
+# WF-T5 disk check 2026-11-17T19:12:01Z (threshold 2.5 GiB, SPEC §5.10 / ENV-01)
+$ df -h /System/Volumes/Data
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1   228Gi   196Gi   2.1Gi    99%    1.9M   22M    8%   /System/Volumes/Data
+$ docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          3         2         1.457GB   663.4MB (45%)
+Containers      4         3         90.11kB   20.48kB (22%)
+Local Volumes   4         4         523.7MB   0B (0%)
+Build Cache     0         0         0B        0B
+RESULT BLOCKED: 2.11 GiB free < 2.5 GiB -> no volume created, no build, no Playwright run

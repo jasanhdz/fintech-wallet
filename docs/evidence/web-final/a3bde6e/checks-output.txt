@@ -1,0 +1,45 @@
+# FN-18 (web workspace) and static checks on a3bde6e
+## npm --workspace @fintech-wallet/web run lint
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+exit 0
+## npm --workspace @fintech-wallet/web run typecheck
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+exit 0
+## npm --workspace @fintech-wallet/web run test
+✔ transfer UI renders contract-backed destination choices with accessible labels (339.238958ms)
+✔ login and registration use the shared contract validation (3.532125ms)
+✔ account balance formatting preserves integer minor units (23.887291ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.705625ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1326.148458
+exit 0
+## WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+computing gzip size...
+dist/index.html                   0.58 kB │ gzip:   0.32 kB
+dist/assets/index-DyiOte9x.css   60.33 kB │ gzip:  10.62 kB
+dist/assets/index-CAoNbOKc.js   452.89 kB │ gzip: 134.28 kB
+
+✓ built in 143ms
+exit 0
+## npx eslint web/e2e-final web/e2e
+exit 0
+## npx tsc -p web/e2e-final/tsconfig.json
+exit 0
+## node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/a3bde6e
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: empty (the read-only accessor readActiveTransferSummary already exists at base)
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (22 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit 0

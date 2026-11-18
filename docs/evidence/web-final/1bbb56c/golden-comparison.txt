@@ -1,0 +1,9 @@
+# REC-02 golden comparison: golden codeSha=f0ed4bc vs actual codeSha=1bbb56c (method, path, Idempotency-Key class, body SHA-256, aborted, draftAfter)
+IDENTICAL S1-create-201: 2 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1
+IDENTICAL S2-create-202-confirm: 3 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1 | POST /v1/transfers/:id/confirm K2
+IDENTICAL S3-abort-retry: 3 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1 aborted | POST /v1/transfers K1
+IDENTICAL S4-reload-record-without-id: 4 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1 aborted | POST /v1/auth/refresh none | POST /v1/transfers K1
+IDENTICAL S5-login-resume-transfer: 3 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/auth/login none | POST /v1/transfers K1
+IDENTICAL S6-create-422-then-429: 3 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1 | POST /v1/transfers K2
+IDENTICAL S7-logout-with-record: 3 non-GET steps, draftAfter=none; POST /v1/auth/refresh none | POST /v1/transfers K1 aborted | POST /v1/auth/logout none
+RESULT IDENTICAL (no D-12 delta)

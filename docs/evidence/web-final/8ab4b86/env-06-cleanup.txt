@@ -1,0 +1,10 @@
+$ node web/e2e-final/scripts/db-down.mjs
+docker stop fintech-wallet-web-pg -> ok
+docker rm fintech-wallet-web-pg -> ok
+docker volume rm fintech-wallet-web-pg-data -> ok
+$ rm -rf web/dist test-results docs/evidence/web-final/wip docs/evidence/web-final/8ab4b86/captures/test-results
+$ docker ps -a --filter name=fintech-wallet-web-pg; docker volume ls --filter name=fintech-wallet-web-pg-data
+(empty = removed)
+$ df -h /System/Volumes/Data
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s1   228Gi   196Gi   3.0Gi    99%    1.9M   32M    6%   /System/Volumes/Data

@@ -1,0 +1,40 @@
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+
+Running 8 tests using 1 worker
+
+  ✓  1 [legacy] › web/e2e/own-account-transfer.spec.ts:38:1 › registers with the development fixture and transfers between own accounts (2.9s)
+  ✓  2 [legacy] › web/e2e/product.spec.ts:42:1 › login and registration screens render responsively without browser errors @visual (366ms)
+  ✓  3 [legacy] › web/e2e/product.spec.ts:67:1 › a browser without a refresh cookie sees the real login and registration screens @visual (155ms)
+  ✓  4 [legacy] › web/e2e/product.spec.ts:81:1 › W10 OTP screen captures six separately masked cells at responsive widths @visual (1.3s)
+  ✓  5 [legacy] › web/e2e/product.spec.ts:133:1 › an expired authenticated session shows the real session-expired screen responsively @visual (2.3s)
+  ✓  6 [legacy] › web/e2e/product.spec.ts:210:1 › registers, logs in and reads only accounts returned by the API (2.1s)
+  ✓  7 [legacy] › web/e2e/product.spec.ts:266:1 › registers a real internal beneficiary and displays only a masked CLABE (2.0s)
+  ✓  8 [legacy] › web/e2e/product.spec.ts:372:1 › retries an uncertain real transfer with identical idempotency key and shows one receipt (2.9s)
+
+  8 passed (18.5s)
+exit 0
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+
+Running 2 tests using 1 worker
+
+  ✓  1 [legacy] › web/e2e/w13-rejections.spec.ts:96:1 › W13 insufficient-balance rejection is captured responsively for a synthetic wallet_test user @visual (1.6s)
+  ✓  2 [legacy] › web/e2e/w13-rejections.spec.ts:134:1 › W13 configured demo daily-limit rejection is captured responsively for a synthetic wallet_test user @visual (1.5s)
+
+  2 passed (5.7s)
+exit 0

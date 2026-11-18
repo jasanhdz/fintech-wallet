@@ -1,0 +1,18 @@
+# Environment summary · code 1bbb56c · 2026-11-17T13:32:13Z (no secrets)
+node v26.13.1 (/Users/jasanhernandez/.nvm/versions/node/v26.13.1/bin/node)
+playwright Version 1.65.1
+worktree /Users/jasanhernandez/Develop/fintech-wallet-web-final branch feature/web-fidelity-final HEAD 1bbb56c base f0ed4bc
+docker ps (own container while the suites ran):
+fintech-wallet-web-pg postgres:16.10-alpine 127.0.0.1:55433->5432/tcp Up 24 minutes
+profiles used: P1 (API 3301 / Web 5301, DEMO_FIXTURE_ENABLED=true), P2 (API 3302 / Web 5302, DEMO_FIXTURE_ENABLED=false); builds web/dist/p1, web/dist/p2; Vite cacheDir node_modules/.vite-web-final
+database: wallet_test on 127.0.0.1:55433 (container fintech-wallet-web-pg); MIGRATOR_DATABASE_URL -> invalid target postgres://none@127.0.0.1:1/none
+listeners on round ports after the suites:
+  3301 free
+  3302 free
+  3303 free
+  3304 free
+  5301 free
+  5302 free
+  5303 free
+  5304 free
+not touched: fintech-wallet-postgres-1 (55432), lucem-retail-db-1 (5432), demo 3200/5174/8083, g1 round APIs 3951-3969

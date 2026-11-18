@@ -1,0 +1,6 @@
+# UX-T0 closing verification at code 3d04a16 (Node v26.13.1; own container fintech-wallet-web-pg on 127.0.0.1:55433; ports 3301/3303, 5301/5303)
+node web/e2e-final/scripts/preflight.mjs                                                       # PASS -> preflight.txt
+WF_EVIDENCE_SHA=3d04a16 WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t5-confirm-result.spec.ts golden.spec.ts   # 58 passed, 0 skipped
+WF_NO_BUILD=1 WF_EVIDENCE_SHA=3d04a16 WF_PROFILES=P1,P3 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t5-integration.spec.ts   # 3 passed, 0 skipped
+python3 diff network-traces.json vs docs/evidence/web-final/f0ed4bc/network-golden.json (S1..S7)                          # 7 scenarios, diff []
+git diff checks (NET-03/NET-05/T0-06)                                                           # -> net-static.txt (0 lines / 0 lines / empty)

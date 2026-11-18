@@ -1,0 +1,44 @@
+$ node -v
+v26.13.1
+$ npm --workspace @fintech-wallet/web run lint
+
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+
+exit=0
+$ npm --workspace @fintech-wallet/web run typecheck
+
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+
+exit=0
+$ npm --workspace @fintech-wallet/web run test
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+ℹ tests 44
+ℹ suites 0
+ℹ pass 44
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1883.859209
+exit=0
+$ npx eslint web/e2e-final web/e2e
+exit=0
+$ npx tsc -p web/e2e-final/tsconfig.json
+exit=0
+$ node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/29e780e
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: additions only (removed=0), new exports: export function readActiveTransferContext, storage writes in added code: none
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (32 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit=0
+$ npm --workspace @fintech-wallet/web run build
+NOT RUN: BLOCKED by disk (< 2.5 GiB free, SPEC §5.10)

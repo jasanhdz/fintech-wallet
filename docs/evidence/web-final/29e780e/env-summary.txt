@@ -1,0 +1,8 @@
+WF-T5 environment summary (no secrets)
+Node: v26.13.1 (~/.nvm/versions/node/v26.13.1); Homebrew node on PATH by default is v26.3.0 (not used)
+Branch: feature/web-fidelity-final; base f0ed4bc; start HEAD b267f51; code evaluated 29e780e
+Shared types: node_modules/@fintech-wallet/shared -> main checkout packages/shared (0.4.0 types; app uses only 0.3.0 fields)
+Disk: 2.04 GiB free at start, 2.12 GiB after removing old unversioned captures, 2.11 GiB at the end (< 2.5 GiB threshold) -> BLOCKED
+Container fintech-wallet-web-pg / volume fintech-wallet-web-pg-data: not created in WF-T5 (absent at start and end)
+Ports 3301-3304 / 5301-5304: never opened in WF-T5; free at the end (lsof)
+Other stacks (not touched): demo API 3200 / web 5174 / Metro 8083 (wallet_dev); review stack 3411/5411 + fintech-wallet-review-pg 55434; fintech-wallet-postgres-1; lucem-retail-db-1

@@ -82,11 +82,23 @@ test('transfer UI renders contract-backed destination choices with accessible la
   render(createElement(QueryClientProvider, { client }, createElement(SessionProvider, null,
     createElement(MemoryRouter, { initialEntries: ['/transfers/new'] }, createElement(Routes, null,
       createElement(Route, { path: '/transfers/new', element: createElement(NewTransferPage) }))))));
-  await screen.findByRole('heading', { name: 'Nueva transferencia' });
-  assert.ok(screen.getByLabelText('Cuenta de origen'));
-  assert.ok(screen.getByLabelText('Beneficiario'));
+  // WF-T4 (W08 redesign): the selects became labelled radio groups (D-8); the same choices stay accessible.
+  await screen.findByRole('heading', { name: 'Transferir dinero' });
+  assert.ok(screen.getByRole('group', { name: 'Cuenta de origen' }));
+  const recipients = screen.getByRole('radiogroup', { name: 'Destinatario' });
+  assert.ok(recipients);
+  // UX-T2 (D-UX-6): the two source accounts are an inline radio group; the recipient list has one beneficiary.
+  assert.equal(screen.getByRole('radiogroup', { name: 'Cuenta de origen' }).querySelectorAll('[role="radio"]').length, 2);
+  assert.equal(recipients.querySelectorAll('[role="radio"]').length, 1);
   fireEvent.click(screen.getByRole('button', { name: 'Entre mis cuentas' }));
-  assert.ok(screen.getByLabelText('Cuenta de destino'));
-  assert.ok(screen.getByRole('button', { name: 'Beneficiario' }));
+  const destinations = screen.getByRole('radiogroup', { name: 'Cuenta de destino' });
+  assert.ok(destinations);
+  // D-7: the source account is listed but cannot be chosen as destination; the other account is preselected.
+  const radios = [...destinations.querySelectorAll('[role="radio"]')];
+  assert.equal(radios.length, 2);
+  assert.equal(radios.filter((radio) => radio.getAttribute('aria-disabled') === 'true').length, 1);
+  assert.equal(radios.filter((radio) => radio.getAttribute('aria-checked') === 'true').length, 1);
+  assert.ok(screen.getByRole('button', { name: 'A un beneficiario' }));
+  assert.ok(screen.getByLabelText('Importe a transferir'));
   cleanup(); client.clear(); dom.window.close();
 });

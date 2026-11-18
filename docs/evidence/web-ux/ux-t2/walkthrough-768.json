@@ -1,0 +1,217 @@
+[
+  {
+    "viewport": "768x1024",
+    "sourceDefault": "Cuenta principal",
+    "demoCodeShown": true,
+    "consoleErrors": [],
+    "shots": [
+      {
+        "name": "01-w01-login",
+        "url": "/login",
+        "overflowX": false,
+        "h1": [
+          "Iniciar sesión"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "02-w01-login-errores",
+        "url": "/login",
+        "overflowX": false,
+        "h1": [
+          "Iniciar sesión"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "03-w03-inicio",
+        "url": "/accounts",
+        "overflowX": false,
+        "h1": [
+          "Hola, Ana Recorrido Pruebas"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "04-w06-vacio",
+        "url": "/beneficiaries",
+        "overflowX": false,
+        "h1": [
+          "Mis beneficiarios"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "05-w07-inicial",
+        "url": "/beneficiaries/new",
+        "overflowX": false,
+        "h1": [
+          "Agregar nuevo beneficiario"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "06-w07-errores",
+        "url": "/beneficiaries/new",
+        "overflowX": false,
+        "h1": [
+          "Agregar nuevo beneficiario"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "07-w07-no-encontrada",
+        "url": "/beneficiaries/new",
+        "overflowX": false,
+        "h1": [
+          "Agregar nuevo beneficiario"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "08-w06-lista",
+        "url": "/beneficiaries",
+        "overflowX": false,
+        "h1": [
+          "Mis beneficiarios"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "09-w08-inicial",
+        "url": "/transfers/new",
+        "overflowX": false,
+        "h1": [
+          "Transferir dinero"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "10-w08-errores",
+        "url": "/transfers/new",
+        "overflowX": false,
+        "h1": [
+          "Transferir dinero"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "11-w08-completo",
+        "url": "/transfers/new",
+        "overflowX": false,
+        "h1": [
+          "Transferir dinero"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "12-w09-normal",
+        "url": "/transfers/new",
+        "overflowX": false,
+        "h1": [
+          "Revisa y confirma tu transferencia"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "13-w12-comprobante",
+        "url": "/transfers/9e3ff7f4-a3f5-4a44-a6ed-ae71224a8e2b/status",
+        "overflowX": false,
+        "h1": [
+          "¡Transferencia completada con éxito!"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "14-w09-codigo",
+        "url": "/transfers/new",
+        "overflowX": false,
+        "h1": [
+          "Revisa y confirma tu transferencia"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "15-w10-vacio",
+        "url": "/transfers/99377aea-b9e7-4181-8569-ee6b9b5ede85/status",
+        "overflowX": false,
+        "h1": [
+          "Código de confirmación"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "16-w10-incorrecto",
+        "url": "/transfers/99377aea-b9e7-4181-8569-ee6b9b5ede85/status",
+        "overflowX": false,
+        "h1": [
+          "Código de confirmación"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "17-w10-completo",
+        "url": "/transfers/99377aea-b9e7-4181-8569-ee6b9b5ede85/status",
+        "overflowX": false,
+        "h1": [
+          "Código de confirmación"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "18-w12-comprobante-codigo",
+        "url": "/transfers/99377aea-b9e7-4181-8569-ee6b9b5ede85/status",
+        "overflowX": false,
+        "h1": [
+          "¡Transferencia completada con éxito!"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "19-w04-historial",
+        "url": "/accounts/278f2976-5674-4cf8-937b-00d3e1aae1a8/movements",
+        "overflowX": false,
+        "h1": [
+          "Historial de movimientos"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "20-w04-filtro",
+        "url": "/accounts/278f2976-5674-4cf8-937b-00d3e1aae1a8/movements",
+        "overflowX": false,
+        "h1": [
+          "Historial de movimientos"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "21-w03-inicio-con-movimientos",
+        "url": "/accounts",
+        "overflowX": false,
+        "h1": [
+          "Hola, Ana Recorrido Pruebas"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "22-w01-tras-salir",
+        "url": "/login",
+        "overflowX": false,
+        "h1": [
+          "Iniciar sesión"
+        ],
+        "smallTargets": []
+      },
+      {
+        "name": "23-w14-sesion-vencida",
+        "url": "/session-expired",
+        "overflowX": false,
+        "h1": [
+          "Tu sesión venció"
+        ],
+        "smallTargets": []
+      }
+    ]
+  }
+]

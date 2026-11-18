@@ -1,5 +1,7 @@
 # Diseño aprobado → pantallas → estados → entregas
 
+> Esta copia de entrega no contiene los assets visuales. Las referencias PNG sanitizadas correspondientes están en la rama `design-reference` (tag `design-reference-v1`). Los paths `../design/**` de las filas conservan los nombres de origen del proyecto original; el HTML crudo no se versiona en esta copia.
+
 ## Aprobación y límites
 
 El usuario aprobó los diseños web y móvil de `design/` como **referencia visual para desarrollo** el 2026-11-14. Las diferencias visuales menores se resolverán durante la implementación; responsive y comportamiento real se verificarán con la aplicación. La aprobación no convierte el HTML exportado en código ni aprueba las reglas/claims que contiene. Se implementan los requisitos de `docs/challenge.md` y `specs/requirements.md`; se excluyen SPEI/bancos externos, inversiones, garantías financieras/regulatorias, servicios Banxico/CEP, gestión de límites, biometría y demás bonus no autorizados.

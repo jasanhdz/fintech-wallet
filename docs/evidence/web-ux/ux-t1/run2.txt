@@ -1,0 +1,85 @@
+preflight PASS .env.web-final present
+preflight PASS no *DATABASE_URL* targets a forbidden host port or the development database
+preflight PASS TEST_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS TEST_MIGRATOR_DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS DATABASE_URL -> 127.0.0.1:55433/wallet_test
+preflight PASS fintech-wallet-web-pg running on 127.0.0.1:55433
+preflight PASS deny list not used by this round: ports 3200,5174,8083,3411,5411; containers fintech-wallet-postgres-1, lucem-retail-db-1, fintech-wallet-review-pg
+preflight PASS ports 3301,3302,3303,3304 / 5301,5302,5303,5304 free
+preflight RESULT PASS
+[WebServer] ◇ injected env (0) from ../.env
+
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+
+Running 23 tests using 1 worker
+
+[1/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 320x640
+[2/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 390x844
+[3/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 768x1024
+[4/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 1024x768
+[5/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 1280x800
+[6/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 1440x900
+[7/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:34:5 › UX-T1 · Shell › SH-01…SH-04, SH-07/08, SP-03 (chrome) 1920x1080
+[8/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:92:3 › UX-T1 · Shell › SH-01 without demoOnly: no «Demostración» in the chrome
+[9/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:101:3 › UX-T1 · Shell › SH-05 viewport-fit=cover and the safe-area inset is padding outside the 56 px row
+  1) [final] › web/e2e-final/ux-t1-shell.spec.ts:101:3 › UX-T1 · Shell › SH-05 viewport-fit=cover and the safe-area inset is padding outside the 56 px row 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 90
+    Received: 56
+
+      105 |     await page.addStyleTag({ content: '.shell-bottom-nav{padding-bottom:34px}' });
+      106 |     const nav = page.locator('nav.shell-bottom-nav');
+    > 107 |     expect((await nav.boundingBox())!.height).toBe(90);
+          |                                               ^
+      108 |     for (const item of await nav.getByRole('link').all()) expect((await item.boundingBox())!.height).toBe(56);
+      109 |     await context.close();
+      110 |   });
+        at /Users/jasanhernandez/Develop/fintech-wallet-web-final/web/e2e-final/ux-t1-shell.spec.ts:107:47
+
+    Error Context: docs/evidence/web-ux/ux-t1/captures/test-results/ux-t1-shell-UX-T1-·-Shell--ffa8b-dding-outside-the-56-px-row-final/error-context.md
+
+
+[10/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:112:3 › UX-T1 · Shell › SH-06 the last focusable of main stays above the bottom navigation
+[11/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:132:5 › UX-T1 · Shell › SH-09 one logout control → one POST /v1/auth/logout → /login; back shows no account data 1440
+[12/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:132:5 › UX-T1 · Shell › SH-09 one logout control → one POST /v1/auth/logout → /login; back shows no account data 390
+[13/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:146:3 › UX-T1 · Shell › SH-10 / ORD-02 with /accounts answering [savings, checking]: principal first everywhere
+[14/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:166:3 › UX-T1 · Shell › SH-11 in-app navigation moves focus to the new h1 and updates the title
+[15/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:186:3 › UX-T1 · Accesibilidad del shell › A11Y-06 skip link first, visible on focus, moves focus to main#contenido
+  2) [final] › web/e2e-final/ux-t1-shell.spec.ts:186:3 › UX-T1 · Accesibilidad del shell › A11Y-06 skip link first, visible on focus, moves focus to main#contenido 
+
+    Error: expect(received).toBeGreaterThanOrEqual(expected)
+
+    Expected: >= 0
+    Received:    -80
+
+      193 |       await expect(skip).toBeFocused();
+      194 |       const box = (await skip.boundingBox())!;
+    > 195 |       expect(box.y).toBeGreaterThanOrEqual(0);
+          |                     ^
+      196 |       await page.keyboard.press('Enter');
+      197 |       await expect(page.locator('main#contenido')).toBeFocused();
+      198 |       await context.close();
+        at /Users/jasanhernandez/Develop/fintech-wallet-web-final/web/e2e-final/ux-t1-shell.spec.ts:195:21
+
+    Error Context: docs/evidence/web-ux/ux-t1/captures/test-results/ux-t1-shell-UX-T1-·-Accesi-cc42e-ves-focus-to-main-contenido-final/error-context.md
+
+
+[16/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:202:3 › UX-T1 · Accesibilidad del shell › A11Y-07 one main, visible navs uniquely named, the hidden one display:none
+[17/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:220:3 › UX-T1 · Accesibilidad del shell › A11Y-08 focus is never obscured by the chrome (390 and 1440)
+[18/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:235:3 › UX-T1 · Accesibilidad del shell › A11Y-14 icon-only buttons are named and decorative SVGs are hidden
+[19/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:261:5 › UX-T1 · Contenedores › SP-07 page containers 1280
+[20/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:261:5 › UX-T1 · Contenedores › SP-07 page containers 1440
+[21/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:261:5 › UX-T1 · Contenedores › SP-07 page containers 1920
+[22/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:261:5 › UX-T1 · Contenedores › SP-07 page containers 1024
+[23/23] [final] › web/e2e-final/ux-t1-shell.spec.ts:261:5 › UX-T1 · Contenedores › SP-07 page containers 390
+  2 failed
+    [final] › web/e2e-final/ux-t1-shell.spec.ts:101:3 › UX-T1 · Shell › SH-05 viewport-fit=cover and the safe-area inset is padding outside the 56 px row 
+    [final] › web/e2e-final/ux-t1-shell.spec.ts:186:3 › UX-T1 · Accesibilidad del shell › A11Y-06 skip link first, visible on focus, moves focus to main#contenido 
+  21 passed (30.5s)

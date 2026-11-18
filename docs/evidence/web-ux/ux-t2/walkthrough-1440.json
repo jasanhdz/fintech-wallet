@@ -1,0 +1,6 @@
+[
+  {
+    "viewport": 1440,
+    "failed": "locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for locator('.home-activity-table') to be visible\u001b[22m"
+  }
+]

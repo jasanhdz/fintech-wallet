@@ -1,0 +1,75 @@
+# FN-18 web + e2e static checks · code ad108db · 2026-11-17T08:45:15Z
+$ node -v
+v26.13.1
+$ npm --workspace @fintech-wallet/web run lint
+
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+
+exit 0
+$ npm --workspace @fintech-wallet/web run typecheck
+
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+
+exit 0
+$ npm --workspace @fintech-wallet/web run test
+✔ W01 login validation reports each empty or malformed field and builds the contract body (5.834958ms)
+✔ W02 register validation enforces ≥12 characters and a matching confirmation that is never sent (1.235667ms)
+✔ W01-F3 maps 401, 429 and connectivity to distinct messages without echoing the server detail for 401 (2.114958ms)
+✔ W02-F2 shows the 409 detail verbatim (0.103084ms)
+✔ W14-F2 an unrecoverable 401 marks the session expired and keeps the same-tab transfer record (238.740167ms)
+✔ a browser that never had a session is not marked expired (21.089416ms)
+✔ movement query uses contract filters, limit and cursor without offset (1.682917ms)
+✔ movement history renders rows, applies filters, pages by cursor, and preserves rows on retry error (455.857959ms)
+✔ recent activity requests three real movements for the first account and renders their details (398.574417ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.217625ms)
+✔ hydrates a web session through CSRF and cookie refresh (17.934333ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (242.229041ms)
+✔ provider hydrates a cookie session into in-memory context (8.231375ms)
+✔ revoked refresh rejects and network failure remains recoverable (0.812875ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (0.720125ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.496542ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (14.643333ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (0.237ms)
+✔ SH-08 maps every route to its document title (0.622875ms)
+✔ SH-04 initials use two letters and the account tail never exposes the full CLABE (0.174917ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (2.586333ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (3.702542ms)
+✔ create retries forward identical payload and idempotency key (26.688625ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (48.269667ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (330.877708ms)
+✔ login and registration use the shared contract validation (2.599292ms)
+✔ account balance formatting preserves integer minor units (56.079ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.725166ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1774.344
+exit 0
+$ WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+computing gzip size...
+dist/index.html                   0.58 kB │ gzip:   0.32 kB
+dist/assets/index-Dn1--xEc.css   58.31 kB │ gzip:  10.19 kB
+dist/assets/index-COnIPbqb.js   457.71 kB │ gzip: 136.15 kB
+
+✓ built in 190ms
+exit 0
+$ npx eslint web/e2e-final web/e2e
+exit 0
+$ npx tsc -p web/e2e-final/tsconfig.json
+exit 0
+$ node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/ad108db
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: empty (the read-only accessor readActiveTransferSummary already exists at base)
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (23 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit 0

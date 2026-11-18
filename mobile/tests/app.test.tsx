@@ -49,6 +49,7 @@ beforeEach(() => { mockExpoCryptoUuidCalls = 0; });
 jest.mock('expo-print', () => ({ printToFileAsync: jest.fn() }));
 jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({ deleteAsync: jest.fn(() => Promise.resolve()) }));
+jest.mock('react-native-view-shot', () => ({ captureRef: jest.fn() }));
 
 jest.mock('react-native-safe-area-context', () => {
   const ReactNative = jest.requireActual('react-native') as typeof import('react-native');
@@ -56,6 +57,23 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 describe('mobile login', () => {
+  it('declares iOS credential autofill fields while keeping controlled values', async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const email = renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' });
+    const password = renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' });
+    assert.equal(email.props.textContentType, 'emailAddress');
+    assert.equal(email.props.autoComplete, 'email');
+    assert.equal(email.props.keyboardType, 'email-address');
+    assert.equal(email.props.autoCorrect, false);
+    assert.equal(password.props.textContentType, 'password');
+    assert.equal(password.props.autoComplete, 'current-password');
+    await TestRenderer.act(async () => { email.props.onChangeText('saved@example.com'); password.props.onChangeText('saved-password'); });
+    assert.equal(email.props.value, 'saved@example.com');
+    assert.equal(password.props.value, 'saved-password');
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+  });
+
   it('shows login only, explains web-only registration, and validates before API access', async () => {
     const fetchSpy = jest.spyOn(global, 'fetch');
     let renderer: TestRenderer.ReactTestRenderer;
@@ -267,17 +285,18 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
     const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' });
-    const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Continuar').length > 0);
+    const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Continuar' || child.props.children === 'Siguiente').length > 0);
     await TestRenderer.act(async () => { amountInput.props.onChangeText('12.345'); });
     const invalidAmountReviewButton = findReviewButton();
     assert.ok(invalidAmountReviewButton, 'the invalid amount should keep the review action visible');
-    assert.equal(invalidAmountReviewButton.props.accessibilityState?.disabled, true);
+    // An incomplete form no longer disables the action: it is "Siguiente" and moves the focus to the next empty field.
+    assert.notEqual(invalidAmountReviewButton.props.accessibilityState?.disabled, true);
     assert.equal(invalidAmountReviewButton.findAllByType(ActivityIndicator).length, 0, 'an invalid amount must not make the review action look busy');
     await TestRenderer.act(async () => { amountInput.props.onChangeText('12.34'); });
     const reviewButton = findReviewButton();
     assert.ok(reviewButton, 'the incomplete form should keep the review action visible');
-    assert.equal(reviewButton.props.accessibilityState?.disabled, true);
-    assert.equal(reviewButton.findAllByType(ActivityIndicator).length, 0, 'validation-disabled review action must not look busy');
+    assert.notEqual(reviewButton.props.accessibilityState?.disabled, true);
+    assert.equal(reviewButton.findAllByType(ActivityIndicator).length, 0, 'the incomplete-form action must not look busy');
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('123'); });
     await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
@@ -936,7 +955,7 @@ describe('mobile completed receipt (M10)', () => {
     // Round 7 H2: the optional receipt actions are real (native share sheet); no unsupported claims.
     assert.match(receipt, /Opciones de comprobante \(opcional\)/);
     assert.match(receipt, /"Compartir comprobante"/);
-    assert.match(receipt, /"Guardar PDF"/);
+    assert.match(receipt, /"Compartir captura"/);
     assert.doesNotMatch(receipt, /Descargar PDF|cifrad|auditada/);
     await TestRenderer.act(async () => { flow.button('Ver últimos movimientos').props.onPress(); });
     assert.match(flow.visible(), /Últimos movimientos/);
@@ -1402,19 +1421,14 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     await app.press('Cuenta Principal •• 8412');
     await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
     await app.press('Cambiar cuenta de origen');
+    // Picking the destination account as the origin no longer reverts: the destination is cleared and the picker opens,
+    // where "Mis cuentas" offers Principal (own_account) so Ahorro -> Principal works.
     await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
+    assert.match(app.visible(), /MIS CUENTAS/);
+    await app.press('Seleccionar Cuenta Principal, Mi cuenta');
     await app.fill('100');
-    assert.match(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
-    assert.equal(app.continueButton().props.disabled, true);
-    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
-    assert.doesNotMatch(app.visible(), /Revisar transferencia|Saldo posterior estimado/, 'D: no review or estimate for an invalid combination');
-    // M06 origin selector: choosing Principal makes it valid again (own accounts that differ are allowed).
-    await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
     assert.doesNotMatch(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
     assert.notEqual(app.continueButton().props.disabled, true);
-    // ...and back to Ahorro invalidates it again.
-    await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
-    assert.equal(app.continueButton().props.disabled, true);
     assert.equal(app.createBodies.length, 0);
     await app.finish();
   });
@@ -1489,15 +1503,62 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     await app.finish();
   });
 
-  it('M05: when every destination is the origin itself, an explanatory empty state offers changing the origin', async () => {
+  it('Ahorro -> Principal via "Mis cuentas" sends destinationType own_account with the account id (no beneficiaryId)', async () => {
     const app = await sameAccountApp({ beneficiaries: [ownSavingsBeneficiary] });
     await app.press('Ahorro •• 5719');
     await app.press('Transferir dinero, elegir beneficiario');
-    assert.match(app.visible(), /No hay destinos disponibles desde Ahorro •• 5719/);
-    await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
-    assert.doesNotMatch(app.visible(), /No hay destinos disponibles/);
+    await app.press('Seleccionar Cuenta Principal, Mi cuenta');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.fill('100');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    await TestRenderer.act(async () => { app.button('Confirmar transferencia').props.onPress(); });
+    await app.wait();
+    assert.equal(app.createBodies.length, 1);
+    assert.deepEqual(app.createBodies[0], { sourceAccountId: 'savings-1', destinationType: 'own_account', destinationAccountId: 'source-1', amountMinor: '10000', concept: 'Ahorro mensual', reference: '1546' });
+    await app.finish();
+  });
+
+  it('"Invertir origen y destino" swaps two own accounts and the sent payload follows (Principal -> Ahorro)', async () => {
+    const app = await sameAccountApp({ beneficiaries: [ownSavingsBeneficiary] });
+    await app.press('Ahorro •• 5719');
+    await app.press('Transferir dinero, elegir beneficiario');
+    await app.press('Seleccionar Cuenta Principal, Mi cuenta');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    assert.match(app.visible(), /Cuenta destino/);
+    assert.doesNotMatch(app.visible(), /Los beneficiarios se registran y administran únicamente desde la web/, 'the web-only note is for beneficiaries');
+    await app.press('Invertir origen y destino');
+    await app.fill('100');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    await TestRenderer.act(async () => { app.button('Confirmar transferencia').props.onPress(); });
+    await app.wait();
+    assert.deepEqual(app.createBodies[0], { sourceAccountId: 'source-1', destinationType: 'own_account', destinationAccountId: 'savings-1', amountMinor: '10000', concept: 'Ahorro mensual', reference: '1546' });
+    await app.finish();
+  });
+
+  it('incomplete form: the action reads "Siguiente", is enabled, and does not review until every field is valid', async () => {
+    const app = await sameAccountApp();
+    await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    assert.notEqual(app.button('Siguiente').props.disabled, true);
+    await TestRenderer.act(async () => { app.button('Siguiente').props.onPress(); });
+    assert.doesNotMatch(app.visible(), /Saldo posterior estimado|Confirmar transferencia/);
+    await app.fill('100');
+    assert.equal(app.button('Continuar').props.disabled === true, false);
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    assert.match(app.visible(), /Saldo posterior estimado/);
+    await app.finish();
+  });
+
+  it('M05: from Ahorro the only beneficiary is blocked, but "Mis cuentas" offers the principal account as an own_account destination', async () => {
+    const app = await sameAccountApp({ beneficiaries: [ownSavingsBeneficiary] });
+    await app.press('Ahorro •• 5719');
+    await app.press('Transferir dinero, elegir beneficiario');
+    assert.match(app.visible(), /MIS CUENTAS/);
+    assert.doesNotMatch(app.visible(), /No hay destinos disponibles/);
+    await app.press('Seleccionar Cuenta Principal, Mi cuenta');
     assert.match(app.visible(), /DESTINO SELECCIONADO/);
+    assert.match(app.visible(), /Cuenta Principal/);
     await app.finish();
   });
 });
@@ -2202,14 +2263,12 @@ describe('round 7 · 2: readable type scale (>= 12 pt secondary, >= 14 pt help, 
     await rejected.finish();
   });
 
-  it('the same-account warning on M06 is body size', async () => {
+  it('the same-account warning on Home is body size', async () => {
     const app = await sameAccountApp();
     await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
-    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
-    await app.press('Cambiar cuenta de origen');
-    await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
-    assert.ok(sizeOf(app.renderer, /^La cuenta de origen y el destino son la misma cuenta/) >= 14);
+    await app.press('Ahorro •• 5719');
+    assert.ok(sizeOf(app.renderer, /^Es la misma cuenta de origen seleccionada/) >= 14);
     await app.finish();
   });
 });
@@ -2922,7 +2981,7 @@ describe('F-20: composite controls name ALL their visible content (amount with s
     const app = await sameAccountApp();
     await app.press('Ahorro •• 5719');
     await app.press('Transferir dinero, elegir beneficiario');
-    assert.equal(assertAllInName(app.renderer, 'M05', (label) => label.startsWith('Seleccionar ')), 2);
+    assert.equal(assertAllInName(app.renderer, 'M05', (label) => label.startsWith('Seleccionar ')), 3); // 2 beneficiary cards + the own-account row (Mis cuentas)
     assert.ok(assertAllInName(app.renderer, 'M05 origin options', (label) => label.startsWith('Usar ')) >= 2);
     await app.choose('Carlos');
     await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
@@ -2955,12 +3014,12 @@ describe('round 7 H2: M10 receipt share and PDF actions', () => {
     m.remove.mockReset().mockResolvedValue(undefined);
   });
 
-  it('"Guardar PDF" generates from the confirmed transfer, shows the generating state, blocks double taps and cleans up', async () => {
+  it('"Compartir comprobante" generates a PDF from the confirmed transfer, shows the generating state, blocks double taps and cleans up', async () => {
     const m = mocks();
     let close!: () => void;
     m.share.mockImplementation(() => new Promise<void>((resolve) => { close = resolve; }));
     const flow = await completedFlow();
-    const pdf = flow.button('Guardar PDF');
+    const pdf = flow.button('Compartir comprobante');
     await TestRenderer.act(async () => { pdf.props.onPress(); pdf.props.onPress(); });
     await flow.wait();
     assert.match(flow.visible(), /Generando el PDF del comprobante…/);
@@ -2968,8 +3027,8 @@ describe('round 7 H2: M10 receipt share and PDF actions', () => {
     const html = String(m.print.mock.calls[0][0].html);
     assert.ok(html.includes(folio) && html.includes('Comprobante interno de demostración'));
     assert.ok(!html.includes('742890') && !html.includes('ana@example.com') && !html.includes('000000000000008412'));
-    assert.equal(flow.renderer.root.findAll((node) => node.type === ActivityIndicator && node.props.accessibilityLabel === 'Guardar PDF').length, 1, 'busy indicator named after the action');
-    assert.equal(flow.button('Compartir comprobante').props.disabled, true, 'the other action waits too');
+    assert.equal(flow.renderer.root.findAll((node) => node.type === ActivityIndicator && node.props.accessibilityLabel === 'Compartir comprobante').length, 1, 'busy indicator named after the action');
+    assert.equal(flow.button('Compartir captura').props.disabled, true, 'the other action waits too');
     await TestRenderer.act(async () => { close(); });
     await flow.wait();
     assert.doesNotMatch(flow.visible(), /Generando|No se pudo/, 'closing the sheet restores the UI without a failure message');
@@ -2981,11 +3040,11 @@ describe('round 7 H2: M10 receipt share and PDF actions', () => {
     const m = mocks();
     m.print.mockRejectedValueOnce(new Error('disk /var/x'));
     const flow = await completedFlow();
-    await TestRenderer.act(async () => { flow.button('Guardar PDF').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Compartir comprobante').props.onPress(); });
     await flow.wait();
     assert.match(flow.visible(), /No se pudo generar el PDF del comprobante. Inténtalo de nuevo./);
     assert.doesNotMatch(flow.visible(), /\/var\//);
-    await TestRenderer.act(async () => { flow.button('Guardar PDF').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Compartir comprobante').props.onPress(); });
     await flow.wait();
     assert.doesNotMatch(flow.visible(), /No se pudo generar/);
     assert.equal(m.share.mock.calls.length, 1);
@@ -2999,7 +3058,7 @@ describe('round 7 H2: M10 receipt share and PDF actions', () => {
     }, { amount: '6000.00' });
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
     await flow.wait();
-    assert.doesNotMatch(flow.visible(), /Compartir comprobante|Guardar PDF|Opciones de comprobante/);
+    assert.doesNotMatch(flow.visible(), /Compartir comprobante|Compartir captura|Opciones de comprobante/);
     await flow.finish();
   });
 });

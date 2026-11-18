@@ -1,0 +1,12 @@
+code SHA: a3bde6e (branch feature/web-fidelity-final, base f0ed4bc)
+node v26.13.1 (~/.nvm/versions/node/v26.13.1; default PATH node is v26.3.0)
+npm 11.20.0
+@playwright/test 1.65.1 · chromium_headless_shell-1255 (already on disk)
+vite 8.3.8 · react 19.3.0 · @tanstack/react-query 5.107.1
+docker ps (own container only): fintech-wallet-web-pg postgres:16.10-alpine 127.0.0.1:55433->5432/tcp
+database: wallet_test inside fintech-wallet-web-pg (127.0.0.1:55433), migrated with db:migrate:test
+API P1 127.0.0.1:3301 (APP_ENV=development, DEMO_FIXTURE_ENABLED=true, demo values of .env.example: limit 2000000, OTP threshold 500000, expiry 300, attempts 5)
+Web P1 127.0.0.1:5301 (vite preview --strictPort of web/dist/p1, VITE_API_URL=http://127.0.0.1:3301/v1, cacheDir node_modules/.vite-web-final)
+P2-P4 (3302-3304/5302-5304) not started in WF-T0
+Playwright context: Chromium headless, locale es-MX, timezone America/Mexico_City, workers 1, reducedMotion reduce (final)
+secrets: .env.web-final (0600, random, never printed)

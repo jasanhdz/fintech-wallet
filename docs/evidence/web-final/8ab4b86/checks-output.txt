@@ -1,0 +1,46 @@
+# FN-18 and e2e lint/type checks at code 8ab4b86 (node v26.13.1)
+$ npm --workspace @fintech-wallet/web run lint
+> @fintech-wallet/web@0.1.0 lint
+> eslint src tests e2e
+exit 0
+$ npm --workspace @fintech-wallet/web run typecheck
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+exit 0
+$ npm --workspace @fintech-wallet/web run test
+✔ account balance formatting preserves integer minor units (29.126292ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (0.652875ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1725.5505
+exit 0
+$ WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+✓ built in 172ms
+exit 0
+$ npx eslint web/e2e-final web/e2e
+exit 0
+$ npx tsc -p web/e2e-final/tsconfig.json
+web/e2e-final/fixtures/data.ts(62,3): error TS2322: 
+  Types of property 'sendEpoch' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+web/e2e-final/fixtures/data.ts(66,5): error TS1360: 
+  Types of property 'sendEpoch' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+exit (see README «Bloqueos»: only fixtures/data.ts vs the 0.4.0 shared types of the main checkout, fast-forwarded 2026-11-17 12:26)
+$ node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/8ab4b86
+PASS FONT-01 web/public/fonts/inter: Inter-400.ttf, Inter-500.ttf, Inter-600.ttf, Inter-700.ttf, OFL.txt; @font-face=4
+PASS FONT-02 preload links: 2
+PASS TOK-01 hex values=22, outside list=none, hex in component rules=0
+PASS REC-01 git diff f0ed4bc -- web/src/transfer-attempt.ts: additions only (removed=0), new exports: export function readActiveTransferContext, storage writes in added code: none
+PASS REC-08 git diff f0ed4bc --stat -- api mobile packages specs SPEC.md FINDINGS.md package*.json web/package.json .github: empty
+PASS ENV-02 forbidden targets outside preflight deny list: none (30 files scanned)
+PASS SC-03 material-symbols|tailwind|googleusercontent|cdn. in web/src + web/index.html: none
+RESULT PASS
+exit 0

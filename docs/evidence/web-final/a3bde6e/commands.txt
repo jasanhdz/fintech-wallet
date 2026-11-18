@@ -1,0 +1,19 @@
+# WF-T0 commands (worktree root /Users/jasanhernandez/Develop/fintech-wallet-web-final). No npm ci/install; no root test:e2e/test:visual.
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH
+node -v                                         # v26.13.1
+df -h /System/Volumes/Data; docker system df    # before the volume -> env-01-disk.txt
+node web/e2e-final/scripts/make-env.mjs
+node web/e2e-final/scripts/db-up.mjs --evidence <scratch>/db-up.txt
+node web/e2e-final/scripts/preflight.mjs        # also executed by playwright.config.ts before each run (see test-output.txt)
+WF_GOLDEN_RECORD=1 WF_EVIDENCE_SHA=f0ed4bc WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final golden.spec.ts   # before any web/src change
+npm --workspace @fintech-wallet/web run lint
+npm --workspace @fintech-wallet/web run typecheck
+npm --workspace @fintech-wallet/web run test
+WEB_VITE_CACHE_DIR=node_modules/.vite-web-final npm --workspace @fintech-wallet/web run build
+npx eslint web/e2e-final web/e2e
+npx tsc -p web/e2e-final/tsconfig.json
+node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-final/a3bde6e
+WF_EVIDENCE_SHA=a3bde6e WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final
+WF_EVIDENCE_SHA=a3bde6e WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy own-account-transfer.spec.ts product.spec.ts
+WF_EVIDENCE_SHA=a3bde6e WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy w13-rejections.spec.ts
+node web/e2e-final/scripts/db-down.mjs          # cleanup: own container and volume only

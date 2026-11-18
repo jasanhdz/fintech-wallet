@@ -1,0 +1,74 @@
+## start-api.sh (node --import tsx src/server.ts, APP_ENV=development, wallet_test)
+{
+ "port": 3975,
+ "retention": "UNSET",
+ "pid": 65834,
+ "exitedBeforeListening": true,
+ "exitCode": 1,
+ "listening": false,
+ "getTransferPolicy": "no response (ECONNREFUSED)",
+ "configLines": [
+  "{\"event\":\"api.config_invalid\",\"message\":\"IDEMPOTENCY_RECORD_RETENTION_DAYS is required (positive integer of days; see .env.example)\"}"
+ ]
+}
+{
+ "port": 3975,
+ "retention": "0",
+ "pid": 66026,
+ "exitedBeforeListening": true,
+ "exitCode": 1,
+ "listening": false,
+ "getTransferPolicy": "no response (ECONNREFUSED)",
+ "configLines": [
+  "{\"event\":\"api.config_invalid\",\"message\":\"IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer\"}"
+ ]
+}
+{
+ "port": 3975,
+ "retention": "-5",
+ "pid": 66227,
+ "exitedBeforeListening": true,
+ "exitCode": 1,
+ "listening": false,
+ "getTransferPolicy": "no response (ECONNREFUSED)",
+ "configLines": [
+  "{\"event\":\"api.config_invalid\",\"message\":\"IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer\"}"
+ ]
+}
+{
+ "port": 3975,
+ "retention": "treinta",
+ "pid": 66414,
+ "exitedBeforeListening": true,
+ "exitCode": 1,
+ "listening": false,
+ "getTransferPolicy": "no response (ECONNREFUSED)",
+ "configLines": [
+  "{\"event\":\"api.config_invalid\",\"message\":\"IDEMPOTENCY_RECORD_RETENTION_DAYS must be a positive integer\"}"
+ ]
+}
+{
+ "port": 3975,
+ "retention": "987654321987",
+ "pid": 66604,
+ "exitedBeforeListening": true,
+ "exitCode": 1,
+ "listening": false,
+ "getTransferPolicy": "no response (ECONNREFUSED)",
+ "configLines": [
+  "{\"event\":\"api.config_invalid\",\"message\":\"IDEMPOTENCY_RECORD_RETENTION_DAYS is out of range\"}"
+ ]
+}
+{
+ "port": 3976,
+ "retention": "30",
+ "pid": 66791,
+ "exitedBeforeListening": false,
+ "exitCode": null,
+ "listening": true,
+ "register": 201,
+ "getTransferPolicyAuthenticated": 200,
+ "configLines": [
+  "{\"event\":\"api.listening\",\"port\":3976}"
+ ]
+}

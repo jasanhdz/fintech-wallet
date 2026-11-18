@@ -1,0 +1,19 @@
+# UX-T0 baseline (worktree /Users/jasanhernandez/Develop/fintech-wallet-web-final, branch feature/web-fidelity-final).
+# No npm ci/install; no root test:e2e/test:visual. Own resources only: container fintech-wallet-web-pg (127.0.0.1:55433),
+# ports 3301-3304/5301-5304. The live demo, the user's manual-review stack and Lucem were not touched.
+export PATH=$HOME/.nvm/versions/node/v26.13.1/bin:$PATH        # node v26.13.1
+git rev-parse --short HEAD; git status --porcelain              # cc5d489 (= 0cf8257 + docs/web-ux-polish/SPEC.md only); clean -> t0-01-head.txt
+node web/e2e-final/scripts/db-up.mjs --evidence docs/evidence/web-ux/cc5d489/env-01-disk.txt   # 3.42 GiB free, docker system df, created volume, migrated wallet_test
+node web/e2e-final/scripts/preflight.mjs                       # PASS (deny list now includes the review stack) -> preflight.txt
+WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t5-confirm-result.spec.ts
+#   first run: 46 passed, 5 failed (W11-V1 x4: disabled button lost its accessible name to a role=status child; W10 paste: maxLength cut "13-57 92")
+#   presentation-only fixes in web/src/transfer-screens.tsx, rerun of the 5 -> 5 passed
+WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1,P3 npx playwright test -c web/e2e-final/playwright.config.ts --project=final t5-integration.spec.ts   # 3 passed
+WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1,P2,P3,P4 npx playwright test -c web/e2e-final/playwright.config.ts --project=final   # 255 passed, 1 failed -> test-output-final-baseline.txt
+#   failure: t5-integration P3 race (POST recorded after its JSON body resolved) -> test-code fix (expect.poll), see UX-T0 commit
+WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy own-account-transfer.spec.ts product.spec.ts   # 8 passed
+WF_NO_BUILD=1 WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=legacy w13-rejections.spec.ts   # 2 passed
+WF_NO_BUILD=1 WF_UX_PHASE=antes WF_EVIDENCE_SHA=cc5d489 WF_PROFILES=P1 npx playwright test -c web/e2e-final/playwright.config.ts --project=ux-capture   # 51 scenarios x 8 viewports, 51 passed
+npm --workspace @fintech-wallet/web run lint; npm --workspace @fintech-wallet/web run typecheck; npm --workspace @fintech-wallet/web run test   # 0 / 0 / 0
+npx tsc -p web/e2e-final/tsconfig.json; npx eslint web/e2e-final web/e2e                                   # 0 / 0
+node web/e2e-final/scripts/static-checks.mjs docs/evidence/web-ux/cc5d489                                  # RESULT PASS

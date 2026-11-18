@@ -1,0 +1,15 @@
+◇ injected env (22) from ../.env
+✔ isolated test database connects as runtime role and never targets development (22.0915ms)
+✔ test migrator must match the local wallet_test target and exact role (0.328709ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.290042
+real 0.41
+user 0.38
+sys 0.09
+exit 0

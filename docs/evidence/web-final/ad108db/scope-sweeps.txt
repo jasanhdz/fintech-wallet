@@ -1,0 +1,14 @@
+# Informative scope sweeps at code ad108db (formal SC-01…05 sweep is WF-T6)
+$ rg -i -c "<SC-01 pattern>" web/src web/dist/p1
+web/src/movements.tsx:1
+web/src/transfers.tsx:1
+web/dist/p1/assets/index-Ia5zgHpT.js:1
+(only CEP: the pre-existing «No es un comprobante CEP» disclaimers of W05/W12 in movements.tsx/transfers.tsx, present at f0ed4bc; WF-T2/T5/T6 scope. None in W01/W02/W14.)
+$ rg -c "<SC-02 pattern>" web/src web/dist/p1
+(rg exit 1 = no matches)
+$ rg -i -c "material-symbols|tailwind|googleusercontent|cdn\." web/src web/index.html
+(rg exit 1 = no matches)
+$ rg -i -c "simulat|mock|fixture" web/src
+(rg exit 1 = no matches)
+$ rg -n "parseFloat|toFixed" web/src
+(rg exit 1 = no matches)

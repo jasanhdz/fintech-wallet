@@ -1,0 +1,13 @@
+# WF-T5 scope sweeps on web/src (web/dist/p1 not built: BLOCKED by disk). No output under a command = 0 matches.
+$ rg -n -i SC-01 web/src
+$ rg -n (case-sensitive) "IVA|INE" web/src
+$ rg -n SC-02 web/src
+$ rg -n -i "simulat|mock|fixture" web/src (SC-04)
+$ rg -n "parseFloat|toFixed" web/src (FN-09)
+$ rg -n "Number\(" web/src/transfer-outcome.ts web/src/transfer-screens.tsx
+$ rg -n "MXN MXN" web/src
+$ rg -n "500000|2000000|5000|20000|6,000|850" web/src (FN-16)
+$ rg -n -i "Solicitar nuevo código|Volver a revisar|no se enviará de nuevo|no hubo cargo" web/src
+$ rg -n "movements" web/src/transfers.tsx (REC-04)
+$ rg -n "/cancel|transfer-attempts|Transfer-Attempt-Id|Transfer-Send-Epoch|sendEpoch" web/src (D-12 deferred, DEP-7)
+END
