@@ -169,6 +169,12 @@ describe('mobile beneficiary selection', () => {
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     assert.ok(fetchSpy.mock.calls.some(([url]) => String(url).endsWith('/beneficiaries')));
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const list = JSON.stringify(renderer!.toJSON());
+    assert.match(list, /"Todos \(","2","\)"/);
+    assert.match(list, /CONTACTOS DISPONIBLES/);
+    assert.match(list, /"Billetera MXN •• ","1234"/);
+    assert.doesNotMatch(list, /No tienes beneficiarios guardados|Frecuentes|anti-fraude|dos factores/);
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Buscar beneficiario' }).props.onChangeText('KJ'); });
     assert.match(JSON.stringify(renderer!.toJSON()), /Katherine Johnson/);
     assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Grace Hopper/);
@@ -516,6 +522,38 @@ describe('mobile movement history', () => {
     assert.doesNotMatch(detail, /"completed"/);
     await TestRenderer.act(async () => { button('Ir al inicio').props.onPress(); });
     assert.match(visible(), /Hola, /);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+describe('mobile beneficiary picker (M05)', () => {
+  it('shows the alternate empty state once, without the list chrome or unsupported security copy', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'empty-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [] });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [] });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await Promise.resolve(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const visible = JSON.stringify(renderer!.toJSON());
+    assert.match(visible, /No tienes beneficiarios guardados/);
+    assert.equal(visible.match(/se registran y administran únicamente/g)?.length, 1, 'the web-only management message must appear exactly once');
+    assert.doesNotMatch(visible, /Todos \(|CONTACTOS DISPONIBLES|Seguridad bancaria|anti-fraude|dos factores|banca web corporativa/);
+    assert.match(visible, /"Transferir"/);
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Volver a inicio' }).props.onPress(); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Hola, /);
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
