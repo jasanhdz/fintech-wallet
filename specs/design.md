@@ -19,8 +19,8 @@
 | Ledger inmutable y saldo materializado conciliable | Decisión de implementación de integridad | Cada posting balanceado y saldo se actualiza en la misma transacción; contra-cuenta clearing; conciliación de apertura; el saldo no sustituye el ledger |
 | Idempotencia, locks y límite concurrente | Decisión de implementación técnica | Misma key+payload devuelve mismo intento; payload distinto conflictúa; locks deterministas de cuentas y fila usuario/día; retry serialización acotado |
 | Límites exactos, zona productiva, máximo de cantidad, OTP expiry/retries/lockout y datos seed | Pendiente de aprobación para producción | Configurables; fixture de demo no cierra estas políticas |
-| Auditoría append-only y balance de asientos impuesto por BD | Requisito futuro explícito | Proponer rol escritor sin UPDATE/DELETE, FK, constraints diferibles o trigger; validar implicaciones operativas |
-| Idempotencia y locks | Requisito futuro explícito | Diseño propuesto abajo; aislamiento/transacción final pendiente de revisión |
+| Auditoría append-only y balance de asientos impuesto por BD | Implementado en el esquema del producto | Migraciones aplican privilegios/constraints/triggers; revisar detalles y ejecución en `docs/product-integration-report.md` y las pruebas PostgreSQL |
+| Idempotencia y locks | Implementado para las operaciones documentadas | Clave única, payload asociado, bloqueo determinista y serialización de intentos; la evidencia de concurrencia está en `docs/product-integration-report.md` |
 
 ## Arquitectura propuesta
 
@@ -85,7 +85,7 @@ Los tipos/constraints exactos se materializan en migraciones TypeORM. Cuenta `cl
 
 ## Errores y API
 
-Contrato OpenAPI: [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1.0 borrador). Respuestas de error `application/problem+json`, basadas en RFC 7807/9457 compatible: `type`, `title`, `status`, `detail` no sensible, `instance`, `requestId`, y `errors` opcional para campos. Propuesta de códigos: 400 validación, 401 no autenticado, 403 política, 404 recurso no visible, 409 idempotencia/estado/conflicto, 422 saldo/límite/regla financiera, 429 rate limit, 500 genérico. El contrato no es aprobación funcional ni evidencia de endpoints existentes.
+Contrato de producto OpenAPI: [`openapi.yaml`](openapi.yaml), OpenAPI 3.1, validado y usado para generar tipos compartidos. Las respuestas de error son `application/problem+json`, compatibles con RFC 7807/9457: `type`, `title`, `status`, `detail` no sensible, `instance`, `requestId` y `errors` opcional para campos. Códigos de dominio, según ruta: 400 validación, 401 no autenticado, 403 política, 404 recurso no visible, 409 idempotencia/estado/conflicto, 422 saldo/límite/regla financiera, 429 rate limit y 500 genérico. La referencia navegable se genera con `npm run docs:api`.
 
 ## Matriz de pantallas y estados aprobados
 
@@ -105,6 +105,6 @@ La revisión visual está **aprobada como referencia**. Correspondencia completa
 | Móvil | Privacidad background | foreground, obscured app-switcher/snapshot, resume, session expired/re-auth | Implementar Fase 4 |
 | Compartido | Sesión | access expired, refresh, revoked/reuse, re-auth | Implementar Fase 1/4 |
 
-## Evidencia de rendimiento pendiente
+## Evidencia de rendimiento
 
-No se inventa salida ni plan `EXPLAIN ANALYZE`. Durante Fase 4 generar seed reproducible de al menos 100,000 movimientos en `wallet_test`, ejecutar consulta representativa filtrada por usuario/tipo/fecha y cursor keyset con `EXPLAIN (ANALYZE, BUFFERS)`, guardar comando, versión/configuración, cardinalidad, índices y salida real sanitizada; revisar índices y latencia. Pendiente.
+La consulta de historial con fixture sintética de 100,000 movimientos y cursor keyset se ejecutó en PostgreSQL local aislado y la salida real de `EXPLAIN (ANALYZE, BUFFERS)` está en [`docs/history-performance.md`](../docs/history-performance.md). La fixture es idempotente y está limitada a `wallet_test`. El tiempo medido describe esa ejecución local; no es una garantía ni una meta de producción. Repetir la medición con distribución y capacidad acordadas antes de tomar decisiones de producción.

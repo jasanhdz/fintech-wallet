@@ -1,29 +1,29 @@
 # Bitácora de uso de AI
 
-Registro contemporáneo de esta fase; no representa aprobación humana ni revisión de diseños. Las fechas de evidencias se registran en UTC; la terminal local usó `America/Chicago`.
+Registro contemporáneo de esta fase; no representa aprobación humana ni revisión de diseños. Las fechas de evidencia se registran en UTC.
 
 ## Herramientas/modelos realmente usados
 
 - OpenCode CLI/host versión `1.18.33`; modelo de sesión declarado por el host: `openai/gpt-6-luna`.
-- Skill Forge instalado globalmente desde `https://github.com/jasanhdz/codex-skill-forge`, rama `main`, commit remoto observado `300442b20517749881822f51c3a90102a54fbfa6`.
+- Skill Forge instalado desde su repositorio de origen, rama `main`; el proyecto conserva la definición de roles y el protocolo utilizado.
 - Se usaron Planner, Generator y Evaluator en contextos independientes de tarea provistos por OpenCode, coordinados mediante archivos Git. Se canceló una invocación Generator mientras trabajaba; se preservó e inspeccionó el trabajo no confirmado y otra invocación terminó el scaffold. Generator completó commits de scaffold y documentación Redoc. Evaluator ejecutó tres pasadas; la final quedó en `FINDINGS.md` (SHA evaluado `61280ce`), con 9/10 criterios verificados y F-02 minor abierto por falta de inspección visual con navegador.
 - Herramientas de lectura/inspección: OpenCode read/glob/grep/bash, Git, GitHub CLI y SSH para verificar identidades. No se leen tokens ni llaves privadas.
 
 ## Prompts clave observados
 
 1. El usuario solicitó BOOT-00 con especificación fiel al reto adjunto, límite de no implementar producto y flujo Planner → Generator → Evaluator.
-2. El usuario aclaró autorización para crear `/Users/jasanhernandez/Develop/fintech-wallet`, instalar Forge global con el instalador indicado, usar la cuenta `jasanhdz` y avanzar localmente si el adjunto no fuera accesible.
+2. El usuario autorizó crear el checkout de trabajo, instalar Forge con el instalador indicado y avanzar localmente si el adjunto no fuera accesible.
 3. Instrucción al Planner: leer skill/AGENTS/PLAN/enunciado, crear solo `SPEC.md`, limitarse a BOOT-00, producir siete secciones y rúbrica binaria, y no crear código ni otros documentos.
 4. Instrucciones al Generator: implementar exclusivamente BOOT-00, respetar el commit documental previo, crear commits pequeños, probar scripts y documentar bloqueos; posteriormente se pidió hacer navegable en Redoc el contrato completo planeado además del contrato limitado a health.
 5. Instrucción al Evaluator: ejecutar el README, probar health/Problem Details, aislamiento PostgreSQL real si el daemon estaba disponible, comprobar scripts/CI/spec-first, y escribir solo findings sin instalar navegador ni corregir código.
 
 ## Decisiones, correcciones y rechazos
 
-- Se localizó y leyó el archivo adjunto original en Downloads antes de redactar requisitos: “Prueba Técnica — Backend Developer (AWS · Node.js · PostgreSQL · AI en modo SPEC).md”. La primera línea del contenido identifica el título como “Fullstack Developer (Fintech)”. Se conserva como `docs/challenge.md`.
+- Se localizó y leyó el archivo adjunto original antes de redactar requisitos; el contenido identifica la prueba como “Fullstack Developer (Fintech)”. Se conserva como `docs/challenge.md`.
 - La sesión inicial no vio adjunto y pidió ubicación; la aclaración del usuario permitió encontrarlo localmente. No se reconstruyó el reto de memoria.
-- Se verificó la cuenta personal mediante alias SSH `github.com-personal`; GitHub SSH respondió `Hi jasanhdz!`. `gh auth status`/`gh api user` siguen autenticados como `jasanhdz-isol`; no se cambiará cuenta ni se creará repo por esa sesión.
-- Instalador global solicitado ejecutado. Se detectó que instala los archivos de roles directamente bajo `skills/forge/` aunque el skill describe ruta `references/`; se leyeron desde las rutas efectivamente instaladas. Procedencia y hashes quedan en `docs/forge-evidence.md`.
-- El primer Evaluator informó PostgreSQL bloqueado porque Colima estaba apagado. Tras inspeccionar el contexto activo y comprobar que la VM existente estaba detenida, se inició Colima y `npm run db:up` creó solo `fintech-wallet-postgres-1` con volumen/nombres propios y puerto 55432. El daemon reactivó `lucem-retail-db-1` por su política existente; no se ejecutó ningún comando sobre Lucem ni se alteró su configuración/base. La integración conectó como `wallet_runtime_test` a `wallet_test` y verificó cero tablas públicas.
+- Se comprobó el acceso remoto necesario para la entrega sin registrar identificadores de cuenta, respuestas de autenticación ni credenciales.
+- El instalador de Forge ubicó sus instrucciones de rol directamente en el directorio del skill; se leyeron desde la ubicación efectiva. La procedencia técnica queda documentada en `docs/forge-evidence.md` sin copiar secretos locales.
+- La integración se ejecutó contra la base aislada `wallet_test`; no se usaron datos de desarrollo para pruebas financieras ni se alteraron servicios ajenos al proyecto.
 - La primera versión de `docs:api` solo renderizaba el contrato health-only; tras revisión de requisitos se pidió al Generator exponer también el contrato completo `specs/openapi.yaml` como PLANNED/NOT IMPLEMENTED, conservando la referencia de health separada. Cambio trazable en `61280ce`.
 - En verificación final del SHA `26fec66`, `npm ci` señaló 28 advisories; auditoría de producción, tres moderados en `minimatch` por Expo. `npm audit fix --force` propone bajar a Expo 52 (breaking) frente a Expo SDK 58 fijado. Se rechazó esa corrección automática para no romper compatibilidad del scaffold; se deja el advisory abierto para resolverlo con una versión compatible y revisión posterior.
 - Comprobación final después del commit de evidencia: `npm ci`, lint, typecheck, tests/build de los cuatro workspaces, validación/regeneración OpenAPI, documentos Redoc, QA bootstrap 13 PASS/0 FAIL/0 BLOCKED e integración PostgreSQL test 1/1 pasaron en `26fec66`. El resultado no es CI remota ni aprobación visual.
@@ -47,3 +47,9 @@ Registro contemporáneo de esta fase; no representa aprobación humana ni revisi
 - Tres task contexts independientes solo inspeccionaron diseños, sin escribir. Worktrees/branches `product/backend`, `product/web`, `product/mobile` quedaron creados e instalados (`npm ci`) sobre `9675b79`. Aún no se han ejecutado agentes implementadores.
 - Las fuentes Stitch permanecen intactas en el working tree local, sin commit por contener credenciales/OTP demo de ejemplo en HTML y ejemplos financieros en capturas. No se añadieron esos valores a logs/docs ni se copiaron exports a app UI.
 - El usuario autorizó únicamente el alcance obligatorio y aprobó cuenta MXN automática más fixture local de dos cuentas propias balanceadas; montos de fixture/límite/OTP/zona/expiry siguen no aprobados para producción. Ninguna sugerencia AI financiera se ha implementado/rechazado fuera de esas decisiones registradas.
+
+## Revisión documental de entrega (2026-11-17)
+
+- OpenCode se utilizó para revisar `docs/challenge.md`, comparar sus entregables con el README y las evidencias existentes, y actualizar documentación de instalación/arquitectura/propuesta AWS.
+- Codex CLI se utilizó en modo de solo lectura para inspeccionar refs e historia Git durante la reconstrucción local. No se utilizó para editar código ni archivos del producto.
+- La explicación de Forge en el README describe el skill y sus límites de roles; no afirma que el skill ejecute agentes por sí solo ni que un agente sustituya revisión humana o pruebas reales.

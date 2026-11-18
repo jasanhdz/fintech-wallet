@@ -2,6 +2,12 @@
 
 Aplicación local de billetera MXN con API Express/PostgreSQL, web React y cliente React Native nativo. La implementación integrada vive en `feature/product-mvp`. El alcance son transferencias internas entre cuentas propias y beneficiarios de la plataforma; no conecta con SPEI/bancos externos ni se despliega a AWS o Expo/EAS.
 
+Repositorio: <https://github.com/jasanhdz/fintech-wallet>.
+
+La solución está organizada como monorepo npm: `api/` (Express, TypeScript y TypeORM), `web/` (React/Vite), `mobile/` (React Native/Expo) y `packages/shared/` (tipos generados desde OpenAPI y utilidades portables). PostgreSQL es la fuente persistente; transferencias, ledger, límites e idempotencia se verifican en el backend y la base de datos. El diseño funcional y las decisiones de implementación están en [`specs/requirements.md`](specs/requirements.md) y [`specs/design.md`](specs/design.md).
+
+La entrega cubre registro e inicio de sesión, cuentas MXN, CLABE validada para beneficiarios internos, transferencias a beneficiarios o entre cuentas propias, confirmación OTP simulada, consulta de movimientos y comprobantes internos. El cliente web contiene el panel completo; el móvil implementa los flujos nativos de login, cuentas, movimientos y transferencias. Se excluyen SPEI/bancos externos, inversiones, biometría, transferencias programadas y estados de cuenta mensuales.
+
 ## Requisitos
 
 - Node.js `26.13.1` (usar `nvm use` con `.nvmrc`) y npm 11 o superior.
@@ -17,6 +23,21 @@ npm run env:local
 ```
 
 `.env.example` contiene URLs locales ficticias y valores de demo. Ejecuta `npm run env:local` para crear `.env` con llaves criptográficas aleatorias sin imprimirlas; no sobrescribe un `.env` existente. No subir `.env`. Desarrollo usa `wallet_dev`; todas las pruebas financieras usan exclusivamente `wallet_test` y abortan si el destino no es la base aislada. Los roles `wallet_runtime_*` son de aplicación y `wallet_migrator_*` para migraciones. Límites, umbral/expiración OTP, zona y saldos de fixture son valores configurables de demo, no política de producción aprobada.
+
+### Arranque local completo
+
+Desde la raíz, después de `nvm use`, `npm ci` y `npm run env:local`:
+
+```sh
+npm run db:up
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Abre <http://localhost:5173>. La API escucha en <http://localhost:3000>; comprueba `GET /health`. El seed idempotente crea/reutiliza un perfil demostrativo y dos cuentas propias con contra-asientos balanceados en `wallet_dev`; los montos son ejemplos locales, no fondos reales ni política aprobada. Para una revisión manual usa `wallet_dev`; no conectes el flujo de demostración a `wallet_test`.
+
+Genera la referencia navegable del contrato con `npm run docs:api`; el archivo generado es `docs/api-reference.html`. El contrato fuente es [`specs/openapi.yaml`](specs/openapi.yaml).
 
 ## Comandos desde raíz
 
@@ -62,53 +83,27 @@ Para las pruebas manuales usa `wallet_dev`, no `wallet_test`: las suites automá
 
 `npm run db:up` utiliza `docker-compose`; el daemon debe estar disponible. La aplicación API conecta a PostgreSQL. Expo usa LAN y no abre túneles públicos.
 
-## URLs API
+## Aplicación móvil y QR de Expo Go
+
+Metro genera un QR **dinámico** al iniciar Expo; no es un archivo de entrega que deba versionarse. El teléfono y el host deben compartir la misma red Wi-Fi. Inicia la API local y luego arranca Expo con la dirección LAN del host:
+
+```sh
+EXPO_PUBLIC_API_URL="http://<IP-LAN-DEL-HOST>:3000/v1" npm run dev:mobile
+```
+
+Escanea el QR que imprime Expo con Expo Go compatible con SDK 58. El cliente móvil es React Native nativo, no una WebView. Direcciones habituales:
+
+- Teléfono físico: `http://<IP-LAN-DEL-HOST>:3000/v1` (no uses `localhost` desde el teléfono).
+- Android Emulator: `http://10.0.2.2:3000/v1`.
+- iOS Simulator en el mismo host: `http://localhost:3000/v1`.
+
+Para usar el QR, Expo debe poder llegar por LAN al host; no se requiere ni se debe abrir un túnel público. Expo Go cubre la configuración actual; no se publica a EAS ni a tiendas.
+
+## Contrato y URLs API
 
 - Web local: el base URL incluye la versión `VITE_API_URL=http://localhost:3000/v1` (configurable por entorno).
-- Dispositivo físico en la misma LAN: antes de iniciar Expo, definir `EXPO_PUBLIC_API_URL=http://<IP-LAN-del-host>:3000/v1`.
-- Emulador Android: `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000/v1`.
-- iOS Simulator del host: `EXPO_PUBLIC_API_URL=http://localhost:3000/v1`.
-- No usar `localhost` como host API desde un teléfono físico: apuntaría al propio dispositivo.
-
-API: `GET http://localhost:3000/health`; las rutas de producto están bajo `/v1` y los errores usan Problem Details `application/problem+json` (RFC 7807) con request ID. `npm run docs:api` genera la referencia navegable local de OpenAPI.
-
-El proceso Expo debe recibir explícitamente `EXPO_PUBLIC_API_URL` al arrancar. Para móvil físico usa la IP LAN del host y `/v1`; para Android Emulator usa `10.0.2.2`; no uses un base URL sin `/v1`.
-
-Expo Go es suficiente con la configuración actual (Expo SDK 58, Expo Router y SecureStore disponibles en Expo Go; no hay `expo-dev-client` ni módulo nativo propio). Usa una versión de Expo Go compatible con SDK 58. En teléfono físico usa la IP LAN de la Mac, no `localhost`, y mantén ambos dispositivos en la misma Wi-Fi.
-
-### Sesión manual aislada en esta Mac
-
-La revisión manual debe conectarse a `wallet_dev` desde el checkout raíz `feature/product-mvp`, no desde los worktrees API/Web: sus `.env` apuntan a las mismas bases, pero tienen llaves criptográficas distintas. En esta Mac ya existe el perfil local reservado y PostgreSQL está saludable; no hace falta volver a sembrar, migrar ni restablecer saldos. Comprueba primero qué procesos escuchan antes de iniciar o detener servicios. La instancia de revisión preparada usa API `3200`, Web `5174` y Metro `8082`; no detengas servicios ajenos.
-
-**Terminal 1 — PostgreSQL** (solo si el servicio del proyecto no está activo):
-
-```sh
-npm run db:up
-```
-
-El comando reutiliza el volumen persistente del proyecto. No ejecutes `docker-compose down -v`. `db:migrate` y `db:seed` no forman parte del arranque de esta sesión existente.
-
-**Terminal 2 — API con `wallet_dev`:**
-
-```sh
-API_PORT=3200 APP_ENV=development DEMO_FIXTURE_ENABLED=true WEB_ORIGIN=http://localhost:5174 npm run dev:api
-```
-
-**Terminal 3 — Web conectada a esa API:**
-
-```sh
-WEB_ORIGIN=http://localhost:5174 VITE_API_URL=http://localhost:3200/v1 npm --workspace @fintech-wallet/web run dev -- --host 0.0.0.0 --port 5174
-```
-
-Abre <http://localhost:5174> e inicia sesión con las credenciales locales de demo indicadas arriba.
-
-**Terminal 4 — Expo Go para el teléfono** (si Metro no está ya activo):
-
-```sh
-EXPO_PUBLIC_API_URL="http://$(ipconfig getifaddr en0):3200/v1" npm --workspace @fintech-wallet/mobile run start -- --port 8082
-```
-
-La dirección LAN debe ser accesible desde el teléfono en la misma Wi-Fi. Escanea el QR o introduce la URL `exp://<IP-LAN-del-host>:8082` en Expo Go. Los datos permanecen en `wallet_dev`, aislados de las suites que usan `wallet_test`.
+- Health: `GET http://localhost:3000/health`; las rutas de producto están bajo `/v1` y los errores usan Problem Details `application/problem+json` (RFC 7807) con request ID.
+- `npm run docs:api` genera la referencia navegable local de OpenAPI. El archivo se genera en `docs/api-reference.html` y no necesita copiarse a la UI de la aplicación.
 
 ## Producto y evidencia
 
@@ -119,8 +114,50 @@ La dirección LAN debe ser accesible desde el teléfono en la misma Wi-Fi. Escan
 - `docs/design-mapping.md` conserva la trazabilidad textual de pantallas/estados; las imágenes correspondientes se consultan en `design-reference`. La validación visual nativa sigue pendiente hasta recibir capturas del teléfono del revisor.
 - `docs/qa-round5.md` mapea las capturas manuales nuevas a pantallas/referencias aprobadas y documenta correcciones/gaps. `npm run qa:report` ejecuta las suites existentes secuencialmente sobre `wallet_test` y genera `test-results/qa/qa-report.md` + `.json`, con estados por suite y requisito; las capturas Web quedan en `test-results/visual/`. `BLOCKED` impide declarar aceptación completa.
 - `docs/acceptance-handoff-round3.md` registra el SHA, el arranque no destructivo, la diferencia de llaves entre worktrees y el límite de atribución del request histórico; la aceptación sigue pendiente.
-- `docs/aws-deploy.md` es una propuesta documental; no se despliega AWS. No se publica Expo/EAS ni se abre un túnel público.
+- `docs/aws-deploy.md` contiene la propuesta de arquitectura solicitada por el challenge. Es una propuesta, no un despliegue ni una aprobación de presupuesto, SLA o política de producción.
+
+## Herramientas de desarrollo y flujo Forge
+
+### Stack y herramientas del proyecto
+
+- Node.js 26.13.1, npm workspaces y TypeScript estricto.
+- Express, TypeORM y PostgreSQL para API, persistencia y migraciones.
+- React/Vite para web; React Native y Expo SDK 58 para móvil nativo.
+- OpenAPI 3.1 como contrato; `openapi-typescript` genera tipos compartidos y Redoc produce documentación navegable.
+- Docker Compose para PostgreSQL local; Playwright/Chromium para flujos web y pruebas visuales; Jest para pruebas unitarias; GitHub Actions para CI; ESLint y `tsc` para lint/typecheck.
+- OpenCode se utilizó como host para coordinación de tareas y sesiones con roles independientes. Codex CLI se utilizó para inspección de solo lectura del repositorio y su historia; el registro de sesiones y decisiones está en [`specs/ai-log.md`](specs/ai-log.md).
+
+### Qué aporta Forge
+
+Forge es un skill reutilizable de planificación e implementación por tareas pequeñas. Define roles y límites de edición para que un host de agentes compatible pueda ejecutar trabajo en contextos independientes:
+
+1. **Planner:** convierte requisitos aprobados en una especificación verificable (`SPEC.md`); no implementa código.
+2. **Generator:** implementa tareas acotadas ligadas a criterios y pruebas; no modifica `SPEC.md` ni los findings de evaluación.
+3. **Evaluator:** inspecciona el resultado contra la especificación, ejecuta comprobaciones y registra hallazgos; no corrige el código evaluado.
+4. **Coordinator:** mantiene contrato OpenAPI, paquetes compartidos, integración, límites de propiedad y documentación transversal.
+
+El skill proporciona las instrucciones y el protocolo; el host (Codex, OpenCode o Claude Code) es quien instancia y coordina los agentes cuando ofrece esa capacidad. Separar contextos ayuda a reducir cambios fuera de alcance y a conservar trazabilidad requisito → tarea → implementación → prueba. No sustituye la revisión humana ni las pruebas contra PostgreSQL real. En este repositorio, el detalle verificable de las sesiones está en `specs/ai-log.md` y las decisiones funcionales en `SPEC.md`, `specs/` y `docs/`.
 
 ## Contrato y tipos compartidos
 
 `npm run openapi:validate` valida el contrato de producto OpenAPI 3.1 y el contrato health-only. `npm run openapi:generate` produce tipos compartidos desde ambos documentos; `npm run openapi:check` confirma que la generación es reproducible. `packages/shared` no depende de TypeORM, secretos ni internals de Node.
+
+## Qué haría con más tiempo
+
+- Completar y documentar el recorrido móvil en un teléfono físico con Expo Go: QR, login, actividad, transferencia aprobada y recuperación tras pérdida de conexión, guardando capturas sin datos sensibles.
+- Añadir una prueba visual automatizada de comparación contra las referencias sanitizadas y cerrar discrepancias que requieran revisión humana.
+- Profundizar la matriz de pruebas de concurrencia, recuperación ante fallos de PostgreSQL y operación de despliegues/migraciones antes de cualquier uso real.
+- Validar con responsables de producto/operación los valores de zona horaria, límites, umbral/expiración OTP, retención y objetivos RPO/RTO propuestos; hoy los valores de demo no son política productiva.
+- Ejecutar una revisión independiente del SHA final y adjuntar el resultado de CI correspondiente a ese SHA.
+
+## Estado de entrega del challenge
+
+- **Repositorio y ejecución local:** disponibles; este README documenta instalación, API, web, PostgreSQL y Expo Go.
+- **Specs y OpenAPI navegable:** incluidos; se genera localmente con `npm run docs:api`.
+- **CI:** GitHub Actions está configurado para push, pull request y ejecución manual; confirma que el run del SHA que entregues termine en verde. Un run de un SHA anterior no sustituye esa verificación.
+- **Propuesta AWS:** documentada en `docs/aws-deploy.md`; no hay despliegue.
+- **Demo:** es local, no pública. Se levanta siguiendo “Arranque local completo”; no se abre túnel.
+- **QR:** Expo lo imprime al ejecutar `npm run dev:mobile` con `EXPO_PUBLIC_API_URL`; falta escanearlo y verificar el recorrido en un dispositivo para cerrar esa evidencia.
+- **Video de hasta 5 minutos:** pendiente de grabar. Debe mostrar el flujo web y móvil, incluido un intento rechazado por saldo insuficiente.
+- **Revisión móvil física y revisión independiente final:** pendientes de evidencia; Jest/Expo export no equivalen a una prueba en dispositivo.
+- **Envío final:** queda compartir el enlace del repositorio, video y evidencia de la revisión con quien recibe el challenge, y preparar la sesión técnica de 60 minutos.
