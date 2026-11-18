@@ -782,3 +782,67 @@ describe('R8-20 (F-30): texts and spacing', () => {
     await app.finish();
   });
 });
+
+describe('F-31: M09 closure read and the void guard (mutants r12 and f2)', () => {
+  const listedAttempt = (url: string) => decodeURIComponent(/attemptId=([^&]+)/.exec(url)?.[1] ?? '');
+  for (const [label, status, detail] of [['voided', 'voided', null], ['rejected', 'rejected', 'Saldo insuficiente.']] as const) {
+    it(`M09 "Verificar" that reads a ${label} closure in the list does NOT release; only "Anular" (void 200) does`, async () => {
+      const app = await signIn({}, (url, init) => {
+        if (isCreate({ url, init })) throw new TypeError('Network request failed');
+        if (url.includes('/transfer-attempts?attemptId=')) return page([summary({ attemptId: listedAttempt(url), status, ...(detail ? { amountMinor: '30025', problem: { status: 422, detail } } : {}) })]);
+        if (isVoid({ url, init })) return Response.json({ resolution: label, attempt: summary({ attemptId: (JSON.parse(String(init?.body)) as { attemptId?: string }).attemptId ?? null, status }) });
+        return undefined;
+      });
+      await app.transferOnce();
+      assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
+      const record = mockSecureValues.get(ownKey());
+      assert.ok(record, 'the attempt record is stored before M09 verifies');
+      assert.equal((JSON.parse(record!) as { transferId?: string }).transferId, undefined, 'no transfer id: M09 reads the list');
+      const before = app.calls.length;
+      await app.press('Verificar estado de la transferencia');
+      await app.wait(60);
+      assert.ok(app.calls.slice(before).some((call) => call.url.includes('/transfer-attempts?attemptId=')), 'M09 read the authoritative list');
+      assert.match(app.visible(), new RegExp(`El servidor registró esta operación como ${label === 'voided' ? 'anulada' : 'rechazada'}`));
+      assert.equal(store().deleteItemAsync.mock.calls.length, 0, 'reading a closure deletes nothing');
+      assert.equal(mockSecureValues.get(ownKey()), record, 'the record is byte-identical after the read');
+      assert.equal(app.voids().length, 0, 'the read sends no void');
+      await app.press('Ir al inicio');
+      await app.wait(60);
+      assert.ok(!app.homeOffersNewTransfer(), 'Home stays blocked after reading the closure on M09');
+      assert.equal(mockSecureValues.get(ownKey()), record);
+      await app.confirmTwice('Anular esta transferencia');
+      assert.equal(app.voids().length, 1);
+      assert.equal(mockSecureValues.get(ownKey()), undefined, 'the explicit void (200) releases');
+      await app.finish();
+    });
+  }
+
+  it('record REPLACED (another key) between opening the void confirmation and the tap: 0 void, the other attempt stays and is shown', async () => {
+    const app = await signIn({ [ownKey()]: v2() }, () => undefined);
+    await app.press('Anular esta transferencia');
+    await app.wait();
+    assert.match(app.visible(), VOID_CONFIRM);
+    const other = JSON.stringify({ v: 2, attemptId: '0b8f4d1e-2c3a-4b5d-9e6f-7a8b9c0d1e2f', key: 'other-key-0002-wxyz', sendEpoch: '3', payload: { ...storedPayload, amountMinor: '77700', reference: '9911' }, userId: USER });
+    mockSecureValues.set(ownKey(), other);
+    await app.press('Anular esta transferencia');
+    await app.wait(60);
+    assert.equal(app.voids().length, 0, 'the attempt shown is no longer the one stored: nothing is voided');
+    assert.equal(mockSecureValues.get(ownKey()), other, 'the other attempt is kept');
+    assert.match(app.visible(), /"\$777.00 MXN"/);
+    assert.ok(!app.homeOffersNewTransfer());
+    await app.finish();
+  });
+
+  it('record DELETED between opening the void confirmation and the tap: 0 void, no error, Home free', async () => {
+    const app = await signIn({ [ownKey()]: v2() }, () => undefined);
+    await app.press('Anular esta transferencia');
+    await app.wait();
+    mockSecureValues.delete(ownKey());
+    await app.press('Anular esta transferencia');
+    await app.wait(60);
+    assert.equal(app.voids().length, 0);
+    assert.doesNotMatch(app.visible(), /No se pudo anular|Cannot read properties/);
+    assert.ok(app.homeOffersNewTransfer(), 'nothing is stored: Home is free');
+    await app.finish();
+  });
+});
