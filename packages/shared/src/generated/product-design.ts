@@ -198,7 +198,7 @@ export interface paths {
         put?: never;
         /**
          * Crear intento de transferencia interna
-         * @description Idempotency-Key identifica el intento. Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Si la respuesta se pierde, repetir la misma key y payload devuelve el mismo intento.
+         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409.
          */
         post: operations["createTransfer"];
         delete?: never;
@@ -235,7 +235,7 @@ export interface paths {
         put?: never;
         /**
          * Confirmar intento con OTP simulado
-         * @description El challenge pertenece a un único intento y expira según configuración; no genera SPEI/banco externo.
+         * @description El challenge pertenece a un único transferId y expira según configuración; no genera SPEI/banco externo. Cada envío de código OTP usa una key de confirm-transfer; ante pérdida de respuesta se reintenta misma key+payload, y un nuevo código usa una nueva key.
          */
         post: operations["confirmTransfer"];
         delete?: never;
@@ -315,6 +315,8 @@ export interface components {
             /** @constant */
             currency: "MXN";
             availableBalanceMinor: string;
+            /** @description CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. */
+            readonly clabe: string;
             clabeMasked: string;
             /** @description Configured policy; demo values do not define production policy. */
             dailyLimitMinor?: string;
@@ -381,6 +383,8 @@ export interface components {
             completedAt?: string | null;
             receiptReference?: string | null;
             requestId?: string;
+            /** @description Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. */
+            readonly demoOnlyCode?: string;
         };
         Movement: {
             /** Format: uuid */

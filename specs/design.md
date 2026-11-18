@@ -39,7 +39,7 @@ El backend se organiza por módulos/capas de auth, accounts, beneficiaries, tran
 
 ```mermaid
 erDiagram
-  USER ||--|{ ACCOUNT : owns
+  USER o|--o{ ACCOUNT : owns
   USER ||--o{ BENEFICIARY : registers
   ACCOUNT ||--o{ TRANSFER : source
   ACCOUNT ||--o{ TRANSFER : destination
@@ -52,8 +52,8 @@ erDiagram
   TRANSFER ||--o| IDEMPOTENCY_RECORD : deduplicates
   ACCOUNT ||--o{ BENEFICIARY : resolves_to
   USER { uuid id PK }
-  ACCOUNT { uuid id PK uuid owner_id FK bigint balance_minor currency account_kind }
-  BENEFICIARY { uuid id PK uuid owner_id FK uuid destination_account_id FK varchar clabe }
+  ACCOUNT { uuid id PK uuid owner_id FK bigint balance_minor currency account_kind varchar clabe_ciphertext varchar clabe_lookup_hash }
+  BENEFICIARY { uuid id PK uuid owner_id FK uuid destination_account_id FK varchar clabe_ciphertext varchar clabe_lookup_hash }
   TRANSFER { uuid id PK uuid owner_id FK uuid source_account_id FK uuid destination_account_id FK bigint amount_minor status }
   LEDGER_ENTRY { uuid id PK uuid transfer_id FK uuid account_id FK bigint signed_amount_minor }
   DAILY_LIMIT_USAGE { uuid id PK uuid owner_id FK date business_date bigint outgoing_minor }
@@ -62,7 +62,7 @@ erDiagram
   AUDIT_EVENT { uuid id PK uuid actor_id FK varchar action jsonb created_at }
 ```
 
-Los tipos/constraints exactos se materializan en migraciones TypeORM. Cuenta `clearing` puede carecer de owner y tener saldo firmado; cuentas customer deben permanecer no-negativas. CLABE se valida checksum, es única por cuenta, se oculta/enmascara en respuestas/logs; el destino de beneficiario debe ser cuenta interna. `ledger_entries` son append-only y se verifica suma cero por transacción usando constraint trigger diferido; `audit_events` append-only por privilegios. Migrations/runtime DB roles siguen separados. El diagrama no agrega SPEI, bancos externos, KYC ni biometría.
+Los tipos/constraints exactos se materializan en migraciones TypeORM. Cuenta `clearing` puede carecer de owner y tener saldo firmado; cuentas customer deben permanecer no-negativas. CLABE se valida por checksum; almacenamiento usa ciphertext autenticado más HMAC lookup hash con llave de entorno separada, y salida enmascarada salvo CLABE de cuenta propia. El beneficiario referencia la cuenta interna ya resuelta. `ledger_entries` son append-only y se verifica suma cero por transacción usando constraint trigger diferido; `audit_events` append-only por privilegios. Migrator/runtime DB roles siguen separados. El diagrama no agrega SPEI, bancos externos, KYC ni biometría.
 
 ## Dinero, concurrencia e idempotencia
 

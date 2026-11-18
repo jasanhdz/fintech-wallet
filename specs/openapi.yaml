@@ -236,9 +236,10 @@ paths:
       operationId: createTransfer
       summary: Crear intento de transferencia interna
       description: >-
-        Idempotency-Key identifica el intento. Si requiere OTP se crea estado
-        awaiting_confirmation sin debitar; la confirmación se liga a transferId.
-        Si la respuesta se pierde, repetir la misma key y payload devuelve el mismo intento.
+        Idempotency-Key identifica la operación create-transfer (unique por usuario
+        y operación). Si requiere OTP se crea estado awaiting_confirmation sin
+        debitar; la confirmación se liga a transferId. Repetir igual key+payload
+        devuelve el mismo intento; key con payload distinto produce 409.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -285,7 +286,11 @@ paths:
       tags: [Transfers]
       operationId: confirmTransfer
       summary: Confirmar intento con OTP simulado
-      description: El challenge pertenece a un único intento y expira según configuración; no genera SPEI/banco externo.
+      description: >-
+        El challenge pertenece a un único transferId y expira según configuración;
+        no genera SPEI/banco externo. Cada envío de código OTP usa una key de
+        confirm-transfer; ante pérdida de respuesta se reintenta misma key+payload,
+        y un nuevo código usa una nueva key.
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -398,13 +403,14 @@ components:
         email: { type: string, format: email }
     Account:
       type: object
-      required: [id, name, kind, currency, availableBalanceMinor, clabeMasked]
+      required: [id, name, kind, currency, availableBalanceMinor, clabe, clabeMasked]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
         kind: { type: string, enum: [checking, savings] }
         currency: { type: string, const: MXN }
         availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        clabe: { type: string, pattern: '^[0-9]{18}$', readOnly: true, description: CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. }
         clabeMasked: { type: string }
         dailyLimitMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: Configured policy; demo values do not define production policy. }
         dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
@@ -473,6 +479,7 @@ components:
         completedAt: { type: [string, 'null'], format: date-time }
         receiptReference: { type: [string, 'null'] }
         requestId: { type: string }
+        demoOnlyCode: { type: string, pattern: '^[0-9]{6}$', readOnly: true, description: Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. }
     Movement:
       type: object
       required: [id, type, amountMinor, currency, concept, reference, status, occurredAt]

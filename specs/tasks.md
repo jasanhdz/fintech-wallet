@@ -4,8 +4,8 @@ Estado 2026-11-14: diseño Stitch aprobado como referencia visual; tareas funcio
 
 | ID | Estado / etiqueta | Requisitos | Diseño | Criterios verificables / prueba esperada |
 |---|---|---|---|---|
-| DESIGN-01 | IN PROGRESS · infra/docs | W01–W14, M01–M12, todos REQ-* | `docs/design-mapping.md`, `docs/design/README.md` | Fuentes HTML/capturas inspeccionadas; assets faltantes/contradicciones/out-of-scope registrados; estado visual aprobado sin convertir claims demo en política. |
-| API-CONTRACT-01 | IN PROGRESS · api/shared | REQ-AUTH, ACCT, BEN, XFER, LIMIT, HIST, QUAL | `specs/openapi.yaml`, `specs/design.md` | Contrato OpenAPI 3.1 válido, tipos shared reproducibles; auth/cookie/CSRF, idempotencia, `amountMinor`, cursor y Problem Details definidos antes de worktrees. |
+| DESIGN-01 | COMPLETE · infra/docs | W01–W14, M01–M12, todos REQ-* | `docs/design-mapping.md`, `docs/design/README.md` | Fuentes HTML/capturas inspeccionadas; assets faltantes/contradicciones/out-of-scope registrados; estado visual aprobado sin convertir claims demo en política. |
+| API-CONTRACT-01 | COMPLETE · api/shared | REQ-AUTH, ACCT, BEN, XFER, LIMIT, HIST, QUAL | `specs/openapi.yaml`, `specs/design.md` | Contrato OpenAPI 3.1 válido, tipos shared reproducibles; auth/cookie/CSRF, idempotencia, `amountMinor`, cursor y Problem Details definidos antes de worktrees. |
 | BOOT-00 | COMPLETADA · infra/api/web/mobile | BOOT-00-01..06 | SPEC BOOT-00, diseño inicial | Monorepo, health, DB aislada, scaffold, CI; no contaba como producto. |
 | API-01 | READY_FOR_IMPLEMENTATION · api | REQ-AUTH-01..04, REQ-QUAL-01 | auth/seguridad y OpenAPI | Registro/login, hash, JWT corto, refresh rotativo/revocación, rate limit, authorization owner; PostgreSQL integration. |
 | API-02 | READY_FOR_IMPLEMENTATION · api | REQ-ACCT-01..02, REQ-BEN-01..03 | ER/account/beneficiary | Cuenta auto al registro; saldo solo propio; CLABE checksum; beneficiario solo a cuenta interna; acceso ajeno no revela existencia. |
