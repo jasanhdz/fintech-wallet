@@ -5,10 +5,11 @@ async function capture(page: import('@playwright/test').Page, name: string) {
     path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
     fullPage: false,
     mask: [
-      page.locator('input, select'),
+      page.locator('input:not(.otp-input), select'),
+      ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
     ],
     maskColor: '#172b4d',
   });
@@ -23,10 +24,11 @@ async function captureAfterScrollIfOutsideViewport(page: import('@playwright/tes
     path: `test-results/visual/${name}-${viewport.width}-scroll.png`,
     fullPage: false,
     mask: [
-      page.locator('input, select'),
+      page.locator('input:not(.otp-input), select'),
+      ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
     ],
     maskColor: '#172b4d',
   });
@@ -188,7 +190,7 @@ test('registers with the development fixture and transfers between own accounts'
 
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   expect(transferId).toBeTruthy();
-  const receipt = page.getByRole('heading', { name: 'Comprobante interno' }).locator('..');
+  const receipt = page.locator('.receipt-card');
   await expect(receipt).toContainText('Transferencia propia E2E');
   await expect(receipt).toContainText('204201');
   await capture(page, 'W12-recibo-own');
@@ -213,7 +215,7 @@ test('registers with the development fixture and transfers between own accounts'
   await expect(transferRow).toContainText('Completado');
   await transferRow.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
-  await expect(page.getByRole('heading', { name: 'Comprobante interno' })).toBeVisible();
+  await expect(page.locator('.movement-page > h1', { hasText: 'Comprobante interno' })).toBeVisible();
   await expect(page.locator('.receipt-card')).toContainText('Transferencia propia E2E');
   await capture(page, 'W04-detalle-own');
   await page.setViewportSize({ width: 1440, height: 960 });

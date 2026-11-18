@@ -88,7 +88,7 @@ export function AccountsPage() {
   </AppShell>;
 }
 
-export function SessionExpiredPage() { return <AuthLayout title="Tu sesión terminó." subtitle="Vuelve a iniciar sesión para consultar tus cuentas."><Notice tone="info">Por seguridad, necesitas autenticarte de nuevo.</Notice><Link className="primary-button full button-link" to="/login">Ir a iniciar sesión <span aria-hidden="true">→</span></Link></AuthLayout>; }
+export function SessionExpiredPage() { return <main className="session-expired-page"><Brand /><section className="session-expired-card"><span className="session-expired-icon" aria-hidden="true">◷</span><h1>Tu sesión venció</h1><p>Inicia sesión para continuar operando de forma segura.</p><Link className="primary-button full button-link" to="/login">Iniciar sesión <span aria-hidden="true">→</span></Link></section></main>; }
 
 export function AccessDeniedPage() { return <main className="access-denied-page"><Brand /><section className="access-denied-card"><div className="state-icon" aria-hidden="true">🔒</div><h1>Acceso no disponible</h1><p>No tienes permiso para consultar esta sección o el enlace no es válido.</p><Link className="primary-button button-link" to="/accounts">← Volver al inicio</Link></section></main>; }
 

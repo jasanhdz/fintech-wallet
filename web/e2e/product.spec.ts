@@ -7,11 +7,12 @@ async function capture(page: import('@playwright/test').Page, name: string, full
     path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
     fullPage,
     mask: [
-      page.locator('input'),
+      page.locator('input:not(.otp-input)'),
       page.locator('select'),
+      ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
     ],
     maskColor: '#172b4d',
   });
@@ -26,11 +27,12 @@ async function captureAfterScrollIfOutsideViewport(page: import('@playwright/tes
     path: `test-results/visual/${name}-${viewport.width}-scroll.png`,
     fullPage: false,
     mask: [
-      page.locator('input'),
+      page.locator('input:not(.otp-input)'),
       page.locator('select'),
+      ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
     ],
     maskColor: '#172b4d',
   });
@@ -53,7 +55,7 @@ test('login and registration screens render responsively without browser errors 
   await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
   await page.screenshot({ path: 'test-results/visual/web-register-mobile-390.png', fullPage: false });
   await page.setViewportSize({ width: 1440, height: 960 });
-  await expect(page.locator('.auth-side')).toBeVisible();
+  await expect(page.locator('.auth-page-centered')).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
   await capture(page, 'W02-registro');
   await page.getByRole('link', { name: 'Inicia sesión' }).click();
@@ -76,13 +78,57 @@ test('a browser without a refresh cookie sees the real login and registration sc
   expect(consoleErrors).toEqual([]);
 });
 
+test('W10 OTP screen captures six separately masked cells at responsive widths @visual', async ({ page }) => {
+  const unique = crypto.randomUUID();
+  await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
+  await page.goto('/register');
+  await page.getByLabel('Nombre completo').fill('OTP Visual QA');
+  await page.getByLabel('Correo electrónico').fill(`otp-visual-${unique}@example.test`);
+  await page.getByLabel('Crea una contraseña').fill(`Local-test-${unique}-Aa1`);
+  await page.getByRole('button', { name: /Crear cuenta/ }).click();
+  await expect(page).toHaveURL(/\/accounts$/);
+
+  const transferId = crypto.randomUUID();
+  const sourceAccountId = crypto.randomUUID();
+  const destinationAccountId = crypto.randomUUID();
+  await page.route('**/v1/transfers', (route) => route.request().method() === 'POST'
+    ? route.fulfill({ status: 202, contentType: 'application/json', body: JSON.stringify({
+      id: transferId,
+      status: 'awaiting_confirmation',
+      sourceAccountId,
+      destination: { id: destinationAccountId, name: 'Cuenta de prueba', kind: 'savings', currency: 'MXN', availableBalanceMinor: '0', clabeMasked: '••••1234' },
+      amountMinor: '1', currency: 'MXN', concept: 'Captura OTP', reference: '1', createdAt: new Date().toISOString(), demoOnlyCode: '419682',
+    }) })
+    : route.continue());
+
+  await page.locator('.welcome-row').getByRole('link', { name: /Transferir/ }).click();
+  await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
+  await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
+  await page.getByLabel('Cuenta de destino').selectOption({ index: 2 });
+  await page.getByLabel('Importe en MXN').fill('0.01');
+  await page.getByLabel('Concepto').fill('Captura OTP');
+  await page.getByLabel('Referencia numérica').fill('104201');
+  await page.getByRole('button', { name: /Continuar a revisión/ }).click();
+  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+
+  const otpInput = page.getByLabel('Código de confirmación de 6 dígitos');
+  await expect(otpInput).toBeVisible();
+  await otpInput.fill('419682');
+  await expect(page.locator('.otp-box')).toHaveCount(6);
+  await expect(page.locator('.otp-box.filled')).toHaveCount(6);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W10-otp');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W10-otp');
+});
+
 test('an expired authenticated session shows the real session-expired screen responsively @visual', async ({ page }) => {
   // Empty refresh probe represents a browser session without a refresh cookie; no token claims are fabricated.
   await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/session-expired');
   await expect(page).toHaveURL(/\/session-expired$/);
-  await expect(page.getByRole('heading', { name: 'Tu sesión terminó.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tu sesión venció' })).toBeVisible();
   await capture(page, 'W14-session-expired');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W14-session-expired');
@@ -355,7 +401,8 @@ test('retries an uncertain real transfer with identical idempotency key and show
     else await route.fulfill({ response });
   });
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
-  await expect(page.getByText(/No conocemos el resultado del envío/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Estamos verificando el resultado' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tu envío sigue en verificación' })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 1440, height: 960 });
@@ -404,10 +451,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   }
   await expect(page.getByRole('heading', { name: 'Transferencia completada' })).toBeVisible({ timeout: 15_000 });
   expect(await page.evaluate(() => Object.keys(sessionStorage).some((key) => key.startsWith('wallet:web:transfer-attempt:')))).toBeFalsy();
-  const receipt = page.getByRole('heading', { name: 'Comprobante interno' }).locator('..');
+  const receipt = page.locator('.receipt-card');
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');
-  await expect(page.getByText('Completada', { exact: true })).toBeVisible();
+  await expect(receipt.locator('.receipt-status')).toHaveText('Completada');
   await capture(page, 'W12-recibo');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W12-recibo');
@@ -445,11 +492,11 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(transferRow).toContainText('Completado');
   await transferRow.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
-  await expect(page.getByRole('heading', { name: 'Comprobante interno' })).toBeVisible();
+  await expect(page.locator('.movement-page > h1', { hasText: 'Comprobante interno' })).toBeVisible();
   const movementReceipt = page.locator('.receipt-card');
   await expect(movementReceipt).toContainText('Prueba idempotente');
   await expect(movementReceipt).toContainText('804201');
-  await expect(movementReceipt).toContainText('completed');
+  await expect(movementReceipt).toContainText('Completada');
   await expectNoHorizontalOverflow();
   await capture(page, 'W04-detalle');
   await page.setViewportSize({ width: 1440, height: 960 });
