@@ -95,6 +95,8 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
     await destinationApi.dispose();
   }
 
+  // This flow tests beneficiary creation, not the empty-session refresh probe; preserve auth limiter capacity for its real registration.
+  await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
   await page.goto('/register');
   await page.getByLabel('Nombre completo').fill('Beneficiary Owner');
   await page.getByLabel('Correo electrónico').fill(ownerEmail);
