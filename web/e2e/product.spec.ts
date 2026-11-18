@@ -135,11 +135,15 @@ test('retries an uncertain real transfer with identical idempotency key and show
   const ownerEmail = `owner-${unique}@example.test`;
   const ownerPassword = `Local-test-${unique}-Aa1`;
   let sourceBalance = 0n;
+  let sourceAccountId = '';
   page.on('response', async (response) => {
     if (new URL(response.url()).pathname !== '/v1/accounts' || !response.ok()) return;
     try {
-      const data = await response.json() as { items: Array<{ availableBalanceMinor: string }> };
-      if (data.items[0]) sourceBalance = BigInt(data.items[0].availableBalanceMinor);
+      const data = await response.json() as { items: Array<{ id: string; availableBalanceMinor: string }> };
+      if (data.items[0]) {
+        sourceBalance = BigInt(data.items[0].availableBalanceMinor);
+        sourceAccountId = data.items[0].id;
+      }
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
   let destinationClabe = '';
@@ -218,4 +222,23 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');
   await expect(page.getByText('Completada', { exact: true })).toBeVisible();
+
+  const transferId = observed[1].transferId;
+  expect(sourceAccountId).toBeTruthy();
+  await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
+  await expect(page).toHaveURL(/\/accounts$/);
+  await page.locator(`a[href="/accounts/${sourceAccountId}/movements"]`).click();
+  await expect(page).toHaveURL(`/accounts/${sourceAccountId}/movements`);
+  await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
+  await page.getByLabel('Tipo').selectOption('debit');
+  const transferRow = page.getByRole('row').filter({ hasText: 'Prueba idempotente' });
+  await expect(transferRow).toContainText('Cargo');
+  await expect(transferRow).toContainText('Completado');
+  await transferRow.getByRole('link', { name: 'Ver detalle' }).click();
+  await expect(page).toHaveURL(new RegExp(`/transfers/${transferId}/movement-receipt$`));
+  await expect(page.getByRole('heading', { name: 'Comprobante interno' })).toBeVisible();
+  const movementReceipt = page.locator('.receipt-card');
+  await expect(movementReceipt).toContainText('Prueba idempotente');
+  await expect(movementReceipt).toContainText('804201');
+  await expect(movementReceipt).toContainText('completed');
 });
