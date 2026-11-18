@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc">
+  <title id="title">Referencia curada Billetera MXN — móvil</title>
+  <desc id="desc">Esquema neutral nativo: encabezado, selector de cuenta, saldo, acciones y últimos movimientos con navegación inferior.</desc>
+  <rect width="390" height="844" fill="#f9f9ff"/>
+  <rect x="16" y="18" width="358" height="62" rx="14" fill="#fff"/>
+  <text x="34" y="47" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#141b2c">Billetera MXN</text>
+  <text x="34" y="67" font-family="Arial,sans-serif" font-size="11" letter-spacing="1" fill="#434655">INICIO</text>
+  <circle cx="340" cy="48" r="21" fill="#e9edff"/><text x="331" y="53" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#0037b0">••</text>
+  <text x="24" y="124" font-family="Arial,sans-serif" font-size="26" font-weight="700" fill="#141b2c">Tus cuentas</text>
+  <rect x="20" y="146" width="350" height="54" rx="16" fill="#e9edff"/>
+  <rect x="26" y="152" width="166" height="42" rx="12" fill="#fff"/>
+  <text x="46" y="178" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#0037b0">Principal</text>
+  <text x="225" y="178" font-family="Arial,sans-serif" font-size="14" fill="#434655">Ahorro</text>
+  <rect x="20" y="214" width="350" height="176" rx="18" fill="#fff" stroke="#e0e8ff"/>
+  <rect x="38" y="232" width="150" height="26" rx="8" fill="#e9edff"/>
+  <text x="49" y="250" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#0037b0">CUENTA PRINCIPAL</text>
+  <text x="38" y="294" font-family="Arial,sans-serif" font-size="14" fill="#434655">Saldo disponible</text>
+  <text x="38" y="345" font-family="Arial,sans-serif" font-size="36" font-weight="700" fill="#141b2c">$ ———</text>
+  <text x="282" y="345" font-family="Arial,sans-serif" font-size="14" fill="#434655">MXN</text>
+  <rect x="20" y="406" width="350" height="58" rx="15" fill="#0037b0"/>
+  <text x="127" y="442" font-family="Arial,sans-serif" font-size="17" font-weight="700" fill="#fff">Transferir</text>
+  <rect x="20" y="478" width="350" height="72" rx="16" fill="#e9edff"/>
+  <text x="40" y="508" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#141b2c">Movimientos recientes</text>
+  <text x="40" y="532" font-family="Arial,sans-serif" font-size="13" fill="#434655">Últimos 20 · estado consultado</text>
+  <rect x="20" y="564" width="350" height="166" rx="16" fill="#fff" stroke="#e0e8ff"/>
+  <path d="M38 620h314M38 675h314" stroke="#e0e8ff"/>
+  <g font-family="Arial,sans-serif" fill="#141b2c">
+    <text x="42" y="596" font-size="14" font-weight="700">Movimiento de ejemplo</text><text x="42" y="615" font-size="12" fill="#434655">Concepto · fecha</text><text x="280" y="602" font-size="14">— MXN</text>
+    <text x="42" y="651" font-size="14" font-weight="700">Movimiento de ejemplo</text><text x="42" y="670" font-size="12" fill="#434655">Concepto · fecha</text><text x="280" y="657" font-size="14">— MXN</text>
+    <text x="42" y="706" font-size="14" font-weight="700">Movimiento de ejemplo</text><text x="42" y="725" font-size="12" fill="#434655">Concepto · fecha</text><text x="280" y="712" font-size="14">— MXN</text>
+  </g>
+  <rect x="0" y="764" width="390" height="80" fill="#fff" stroke="#e0e8ff"/>
+  <text x="88" y="806" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#0037b0">Inicio</text>
+  <text x="226" y="806" font-family="Arial,sans-serif" font-size="14" fill="#434655">Movimientos</text>
+</svg>
