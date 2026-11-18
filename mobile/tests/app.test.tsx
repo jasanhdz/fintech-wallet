@@ -2206,7 +2206,8 @@ describe('round 7 · 4: M07/M08 code states follow the server (threshold, expiry
     assert.equal(input.props.autoComplete, 'one-time-code');
     assert.equal(input.props.textContentType, 'oneTimeCode');
     assert.equal(input.props.keyboardType, 'number-pad');
-    assert.equal(input.props.maxLength, 6);
+    // F-24: no maxLength on the control; the digit filter caps the value at 6 (see the paste test below).
+    assert.equal(input.props.maxLength, undefined);
     const boxes = flow.renderer.root.findAll((node) => String(node.type) === 'View' && node.props.accessibilityElementsHidden === true && node.props.pointerEvents === 'none');
     assert.ok(boxes.length >= 1, 'the six boxes are hidden from assistive technologies');
     await type(flow, '74');
@@ -2218,6 +2219,32 @@ describe('round 7 · 4: M07/M08 code states follow the server (threshold, expiry
     assert.equal(authorize(flow).props.accessibilityState?.disabled, false);
     await type(flow, '74289');
     assert.match(flow.visible(), /Falta 1 dígito/);
+    await flow.finish();
+  });
+
+  it('F-24: pasting a code with separators yields its 6 digits even through the platform maxLength cut', async () => {
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '742890' }, { status: 202 });
+      return policyHandler(url);
+    }, { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    // The test renderer does not apply maxLength; a native/web TextInput cuts the incoming text to maxLength BEFORE
+    // onChangeText (measured on RN-Web: "12 34-56" -> 4 digits). Model that cut so the test reflects the device.
+    const paste = async (text: string) => {
+      const input = codeInput(flow);
+      const max = input.props.maxLength as number | undefined;
+      await TestRenderer.act(async () => { input.props.onChangeText(max === undefined ? text : text.slice(0, max)); });
+      return codeInput(flow).props.value as string;
+    };
+    assert.equal(await paste('12 34-56'), '123456');
+    assert.equal(await paste('12a3456789'), '123456');
+    assert.equal(await paste(' 742-890 '), '742890');
+    assert.equal(await paste('9'), '9');
+    assert.equal(codeInput(flow).props.autoComplete, 'one-time-code');
+    assert.equal(codeInput(flow).props.textContentType, 'oneTimeCode');
+    assert.equal(codeInput(flow).props.accessibilityLabel, 'Código de confirmación');
     await flow.finish();
   });
 
