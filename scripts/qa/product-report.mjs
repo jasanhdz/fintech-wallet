@@ -77,9 +77,9 @@ results.push({
 results.push({
   id: 'business-day-boundary',
   label: 'Daily limit crossing the configured business-day boundary',
-  command: 'No deterministic midnight-boundary regression exists yet',
-  status: 'BLOCKED',
-  detail: 'existing daily-limit tests exercise concurrent usage, not a clock-controlled midnight transition',
+  command: 'api/tests/transfers.integration.ts (business_date SQL expression, fixed UTC instants either side of local midnight)',
+  status: 'PASS',
+  detail: 'exercises the real production business_date expression with injected instants either side of America/Mexico_City midnight; does not drive the HTTP endpoint against the live system clock',
 });
 results.push({
   id: 'visual-pixel-diff',
@@ -113,7 +113,7 @@ const requirements = [
   ['REQ-XFER-10', 'Idempotencia igual payload y rechazo por payload distinto', ['api-integration'], ''],
   ['REQ-XFER-11', 'OTP requerido, incorrecto, expirado y agotado', ['api-integration', 'web-e2e'], 'OTP incompleto se valida en UI; captura nativa real pendiente.'],
   ['REQ-LIMIT-01', 'Límite diario concurrente sin exceso ni débito por rechazo', ['api-integration', 'web-e2e'], ''],
-  ['REQ-LIMIT-02', 'Zona de negocio y transición de día a medianoche', ['api-integration', 'business-day-boundary'], 'No existe todavía prueba con reloj/control de instante en el borde del día.'],
+  ['REQ-LIMIT-02', 'Zona de negocio y transición de día a medianoche', ['api-integration', 'business-day-boundary'], 'Prueba la expresión SQL real de business_date con instantes fijos a ambos lados de la medianoche local; no acciona el endpoint HTTP contra el reloj real del sistema.'],
   ['REQ-HIST-01', 'Historial propietario, filtros y cursor estable', ['api-integration', 'web-e2e'], ''],
   ['REQ-HIST-02', 'Estados Web loading/vacío/error, filtros y accesibilidad', ['web-visual', 'web-e2e'], 'La inspección de captura es cualitativa, no pixel-diff.'],
   ['REQ-HIST-03', '100,000 movimientos y EXPLAIN ANALYZE PostgreSQL real', ['history-performance'], ''],
@@ -201,7 +201,6 @@ const markdown = [
   '## Pendientes que bloquean aceptación completa',
   '',
   '- Capturas y recorrido nativo M01–M12 en teléfono; especialmente M06 después de la corrección del estado ocupado.',
-  '- Prueba determinista del límite diario cruzando medianoche y verificando saldos, ledger y uso.',
   '- Inspección visual de referencia/captura Web al mismo viewport; no se automatiza diff de píxeles.',
   '- Recorrido móvil real con API para expiración/reanudación y recuperación de red; los tests Mobile existentes usan red simulada.',
   '',
