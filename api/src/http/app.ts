@@ -11,6 +11,7 @@ import { ensureDemoClearingAccount } from '../db/clearing-account.js';
 import { clabeFingerprint, decryptClabe, encryptClabe, generateClabe, hashSecret } from '../security/crypto.js';
 import { isValidClabe, loginRequestSchema, registerRequestSchema } from '@fintech-wallet/shared';
 import { confirmTransfer, createTransfer, getTransfer, TransferFault, type TransferRequest } from '../transfers/service.js';
+import { listMovements, MovementFault } from '../movements/service.js';
 
 const validRequestId = /^[a-zA-Z0-9._:-]{1,128}$/;
 const cookieName = 'wallet_refresh';
@@ -98,6 +99,7 @@ export function createApp() {
   api.get('/auth/me',async(_req,res,next)=>{try{const rows=await db.query('SELECT id,email,full_name AS "fullName" FROM users WHERE id=$1',[res.locals.userId]);if(!rows[0])return problem(res,401,'Unauthorized','Sesión inválida.');res.json(rows[0]);}catch(error){next(error);}});
   api.get('/accounts',async(_req,res,next)=>{try{const rows=await db.query("SELECT id,name,kind,currency,balance_minor::text AS balance,clabe_ciphertext FROM accounts WHERE owner_id=$1 ORDER BY created_at,id",[res.locals.userId]);res.json({items:rows.map((a:Record<string,string>)=>accountDto(a))});}catch(error){next(error);}});
   api.get('/accounts/:accountId',async(req,res,next)=>{try{const rows=await db.query("SELECT id,name,kind,currency,balance_minor::text AS balance,clabe_ciphertext FROM accounts WHERE id=$1 AND owner_id=$2",[req.params.accountId,res.locals.userId]);if(!rows[0])return problem(res,404,'Not Found','Cuenta no encontrada.');res.json(accountDto(rows[0] as Record<string,string>));}catch(error){next(error);}});
+  api.get('/accounts/:accountId/movements',async(req,res,next)=>{try{res.json(await listMovements(db,String(res.locals.userId),req.params.accountId,req.query));}catch(error){if(error instanceof MovementFault)return problem(res,error.status,error.title,error.message);next(error);}});
   api.get('/beneficiaries',async(_req,res,next)=>{try{const rows=await db.query('SELECT id,name,alias,destination_account_id,clabe_ciphertext FROM beneficiaries WHERE owner_id=$1 ORDER BY created_at,id',[res.locals.userId]);res.json({items:rows.map((row:Record<string,string>)=>beneficiaryDto(row))});}catch(error){next(error);}});
   api.post('/beneficiaries',async(req,res,next)=>{
     const body=req.body as Record<string,unknown>|null;
