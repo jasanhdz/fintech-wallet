@@ -126,6 +126,26 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
 });
 
 test('retries an uncertain real transfer with identical idempotency key and shows one receipt', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', (message) => {
+    // The deliberately aborted first transfer attempt emits this browser diagnostic by design.
+    if (message.type() === 'error' && message.text() !== 'Failed to load resource: net::ERR_FAILED') browserErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => browserErrors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  const overflowPages: string[] = [];
+  const expectNoHorizontalOverflow = async () => {
+    const dimensions = await page.evaluate(() => {
+      const viewportWidth = document.documentElement.clientWidth;
+      const offenders = [...document.querySelectorAll('body *')].flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.right > viewportWidth + 1 ? [{ tag: element.tagName.toLowerCase(), className: typeof element.className === 'string' ? element.className : '', left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) }] : [];
+      });
+      return { scrollWidth: document.documentElement.scrollWidth, clientWidth: viewportWidth, offenders };
+    });
+    if (dimensions.scrollWidth > dimensions.clientWidth) overflowPages.push(`${new URL(page.url()).pathname}: ${dimensions.scrollWidth} > ${dimensions.clientWidth}; ${JSON.stringify(dimensions.offenders)}`);
+  };
+
   const unique = crypto.randomUUID();
   const apiBase = 'http://127.0.0.1:3100';
   const origin = 'http://127.0.0.1:5174';
@@ -174,7 +194,11 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect.poll(() => sourceBalance > 1n).toBeTruthy();
 
   await page.getByRole('link', { name: 'Beneficiarios' }).click();
+  await expect(page.getByRole('heading', { name: 'Beneficiarios', exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow();
   await page.locator('a.primary-button[href="/beneficiaries/new"]').click();
+  await expect(page.getByRole('heading', { name: 'Agregar beneficiario' })).toBeVisible();
+  await expectNoHorizontalOverflow();
   await page.getByLabel('Nombre del beneficiario').fill('Transfer Destination');
   await page.getByLabel('Alias').fill('Transfer test');
   await page.getByLabel('CLABE interbancaria').fill(destinationClabe);
@@ -182,6 +206,8 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(page).toHaveURL(/\/beneficiaries$/);
 
   await page.getByRole('link', { name: 'Transferir' }).click();
+  await expect(page.getByLabel('Cuenta de origen')).toBeVisible();
+  await expectNoHorizontalOverflow();
   await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
   await page.getByLabel('Beneficiario').selectOption({ index: 1 });
   await page.getByLabel('Importe en MXN').fill('0.01');
@@ -189,6 +215,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.getByLabel('Referencia numérica').fill('804201');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await expectNoHorizontalOverflow();
 
   const observed: Array<{ key: string | undefined; body: string; status: number; transferId: string; transfer: Record<string, unknown> }> = [];
   await page.route('**/v1/transfers', async (route) => {
@@ -222,6 +249,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(receipt).toContainText('Prueba idempotente');
   await expect(receipt).toContainText('804201');
   await expect(page.getByText('Completada', { exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow();
 
   const transferId = observed[1].transferId;
   expect(sourceAccountId).toBeTruthy();
@@ -230,6 +258,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.locator(`a[href="/accounts/${sourceAccountId}/movements"]`).click();
   await expect(page).toHaveURL(`/accounts/${sourceAccountId}/movements`);
   await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
+  await expectNoHorizontalOverflow();
   await page.getByLabel('Tipo').selectOption('debit');
   const transferRow = page.getByRole('row').filter({ hasText: 'Prueba idempotente' });
   await expect(transferRow).toContainText('Cargo');
@@ -241,4 +270,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expect(movementReceipt).toContainText('Prueba idempotente');
   await expect(movementReceipt).toContainText('804201');
   await expect(movementReceipt).toContainText('completed');
+  await expectNoHorizontalOverflow();
+
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await expectNoHorizontalOverflow();
+  expect(overflowPages).toEqual([]);
+  expect(browserErrors).toEqual([]);
 });
