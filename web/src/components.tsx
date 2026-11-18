@@ -19,7 +19,7 @@ export function AppShell({ children, active = 'accounts' }: { children: ReactNod
   const { session, end } = useSession();
   const navigate = useNavigate();
   async function logout() {
-    try { await request<void>('/auth/logout', { method: 'POST' }, session?.accessToken); } catch { /* Local session is cleared even when the network is unavailable. */ } finally { end(); navigate('/login'); }
+    try { await request<void>('/auth/logout', { method: 'POST' }); } catch { /* Local session is cleared even when the network is unavailable. */ } finally { end(); navigate('/login'); }
   }
   return <div className="app-shell"><header className="topbar"><Brand /><nav aria-label="Navegación principal"><Link className={active === 'accounts' ? 'nav-active' : ''} to="/accounts">Mis cuentas</Link></nav><div className="profile"><span className="avatar" aria-hidden="true">{session?.user.fullName.slice(0, 1).toUpperCase()}</span><span className="profile-name">{session?.user.fullName}</span><button className="text-button" onClick={() => void logout()}>Salir</button></div></header><main className="page-content">{children}</main><footer className="app-footer">Billetera <span>·</span> Tus cuentas, en un solo lugar</footer></div>;
 }

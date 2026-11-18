@@ -15,7 +15,7 @@ export class ApiError extends Error {
 
 let csrfToken: string | undefined;
 let accessToken: string | undefined;
-let refreshFlight: Promise<AuthResponse> | undefined;
+let refreshFlight: Promise<AuthResponse | null> | undefined;
 let onSessionExpired: (() => void) | undefined;
 
 export function setCsrfToken(value: string) { csrfToken = value; }
@@ -48,11 +48,12 @@ export async function getCsrf(): Promise<string> {
   return result.csrfToken;
 }
 
-export async function refreshSession(): Promise<AuthResponse> {
+export async function refreshSession(): Promise<AuthResponse | null> {
   if (!refreshFlight) {
     refreshFlight = (async () => {
       await getCsrf();
       const response = await send('/auth/refresh', { method: 'POST', body: JSON.stringify({ client: 'web' }) });
+      if (response.status === 204) return null;
       if (!response.ok) throw await errorFor(response);
       return response.json() as Promise<AuthResponse>;
     })().finally(() => { refreshFlight = undefined; });
@@ -69,7 +70,12 @@ export async function request<T>(path: string, options: RequestInit = {}, token?
       // Another request may already have completed rotation while this 401 was in flight.
       retryToken = accessToken && accessToken !== usedToken
         ? accessToken
-        : (await refreshSession()).accessToken;
+        : (await refreshSession())?.accessToken ?? '';
+      if (!retryToken) {
+        accessToken = undefined;
+        onSessionExpired?.();
+        throw new Error('La sesión ya no está disponible. Inicia sesión de nuevo.');
+      }
     }
     catch (error) {
       if (error instanceof ApiError && error.problem.status === 401) {

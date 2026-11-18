@@ -12,10 +12,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     let active = true;
     setSessionExpiredHandler(() => { if (active) { setAccessToken(undefined); setSession(null); } });
     refreshSession().then((result) => {
-      if (active) { setAccessToken(result.accessToken); setSession({ accessToken: result.accessToken, user: result.user }); }
+      if (active) {
+        setAccessToken(result?.accessToken);
+        setSession(result ? { accessToken: result.accessToken, user: result.user } : null);
+      }
     }).catch((error: unknown) => {
       // A transport failure is recoverable; leave the cookie untouched and let a later visit retry.
       if (active && error instanceof Error && error.message.startsWith('No fue posible conectar')) return;
+      // An invalid/revoked refresh is an unauthenticated browser, not a render-time failure.
     }).finally(() => { if (active) setHydrated(true); });
     return () => { active = false; setSessionExpiredHandler(undefined); };
   }, []);

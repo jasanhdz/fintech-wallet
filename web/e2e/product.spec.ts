@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('login and registration screens render responsively without browser errors @visual', async ({ page }) => {
+  await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
   const consoleErrors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
@@ -16,6 +17,20 @@ test('login and registration screens render responsively without browser errors 
   await page.screenshot({ path: 'test-results/web-register-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 960 });
   await expect(page.locator('.auth-side')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
+  expect(consoleErrors).toEqual([]);
+});
+
+test('a browser without a refresh cookie sees the real login and registration screens @visual', async ({ page }) => {
+  await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', (error) => consoleErrors.push(error.message));
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
+  await expect(page.getByLabel('Correo electrónico')).toBeVisible();
+  await page.getByRole('link', { name: 'Regístrate' }).click();
+  await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
   expect(consoleErrors).toEqual([]);
 });
@@ -43,6 +58,7 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await expect(page).toHaveURL(/\/accounts$/);
   await expect(page.getByRole('heading', { name: /Hola, Web/ })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
+  // A real backend session is restored from its HttpOnly cookie after reload.
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
   expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual([]);
 });

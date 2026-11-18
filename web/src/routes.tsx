@@ -60,7 +60,7 @@ function balance(value: string) { return formatMxnFromMinor(value); }
 
 export function AccountsPage() {
   const { session, end, hydrated } = useSession();
-  const accounts = useQuery({ queryKey: ['accounts'], queryFn: () => request<{ items: Account[] }>('/accounts', {}, session?.accessToken) });
+  const accounts = useQuery({ queryKey: ['accounts'], queryFn: () => request<{ items: Account[] }>('/accounts') });
   if (!hydrated) return <AppShell><StatePanel title="Cargando tu sesión">Estamos verificando tu acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: '/accounts' }} />;
   if (accounts.error instanceof ApiError && accounts.error.problem.status === 401) { end(); return <Navigate to="/session-expired" replace />; }
