@@ -65,7 +65,7 @@ export function AccountsPage() {
   if (!session) return <Navigate to="/login" replace state={{ from: '/accounts' }} />;
   if (accounts.error instanceof ApiError && accounts.error.problem.status === 401) { end(); return <Navigate to="/session-expired" replace />; }
   if (accounts.error instanceof ApiError && accounts.error.problem.status === 403) return <AppShell><StatePanel title="Acceso no autorizado">No tienes permiso para consultar estas cuentas.</StatePanel></AppShell>;
-  return <AppShell><div className="welcome-row"><div><span className="eyebrow">RESUMEN</span><h1>Hola, {session.user.fullName.split(' ')[0]} <span aria-hidden="true">✦</span></h1><p>Este es el estado de tus cuentas.</p></div><div className="secure-label"><span aria-hidden="true">◉</span> Tu espacio personal</div></div>
+  return <AppShell><div className="welcome-row"><div><span className="eyebrow">RESUMEN</span><h1>Hola, {session.user.fullName.split(' ')[0]} <span aria-hidden="true">✦</span></h1><p>Este es el estado de tus cuentas.</p></div><Link className="primary-button button-link" to="/transfers/new">Transferir <span aria-hidden="true">→</span></Link></div>
     {accounts.isPending ? <section className="account-grid" aria-label="Cargando cuentas" aria-busy="true"><div className="account-skeleton" /><div className="account-skeleton" /></section>
       : accounts.error ? <StatePanel title="No pudimos cargar tus cuentas" action={<button className="secondary-button" onClick={() => void accounts.refetch()}>Intentar de nuevo</button>}>{messageFor(accounts.error)}</StatePanel>
       : accounts.data.items.length === 0 ? <StatePanel title="Aún no hay cuentas" >Cuando tengas una cuenta disponible, aparecerá aquí.</StatePanel>

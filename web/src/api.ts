@@ -92,3 +92,10 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
+
+/** Transfer operations keep their idempotency key in memory and forward it unchanged on retries. */
+export function requestTransfer<T>(path: string, key: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+  headers.set('Idempotency-Key', key);
+  return request<T>(path, { ...options, headers });
+}
