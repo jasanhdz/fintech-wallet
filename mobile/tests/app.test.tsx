@@ -271,7 +271,10 @@ describe('mobile movement history', () => {
     const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
       const url = String(input); calls.push(url);
       if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'movement-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
-      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'own-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '10000', clabe: '000000000000000000', clabeMasked: '••0000' }] });
+      if (url.endsWith('/accounts')) return Response.json({ items: [
+        { id: 'own-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '10000', clabe: '000000000000000000', clabeMasked: '••0000' },
+        { id: 'own-2', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '2500', clabe: '111111111111111111', clabeMasked: '••1111' },
+      ] });
       if (url.includes('/accounts/own-1/movements?limit=20')) {
         if (!url.includes('cursor=')) {
           firstPageAttempts += 1;
@@ -290,6 +293,8 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
     await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /125\.00/);
+    assert.match(JSON.stringify(renderer!.toJSON()), /100\.00/);
     assert.match(JSON.stringify(renderer!.toJSON()), /Sin conexión|No pudimos conectar/);
     await TestRenderer.act(async () => { button('Reintentar').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
