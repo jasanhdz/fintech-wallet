@@ -1404,3 +1404,129 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     await app.finish();
   });
 });
+
+const demoPolicy = (overrides: Record<string, unknown> = {}) => ({ currency: 'MXN', businessDate: '2026-11-13', businessTimeZone: 'America/Mexico_City', dailyLimitMinor: '2000000', dailyUsedMinor: '175156', dailyRemainingMinor: '1824844', otpThresholdMinor: '500000', otpExpirySeconds: 300, otpMaxAttempts: 5, demoOnly: true, ...overrides });
+
+describe('round 6 · H: server transfer policy, threshold variant and real code expiry', () => {
+  it('M06 shows the server daily limit and remaining amount (demo) and blocks an amount above what is left today', async () => {
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy()) : undefined), { amount: '18248.45', accounts: () => [{ ...flowAccount, availableBalanceMinor: '5000000' }] });
+    // startTransferFlow pressed Continuar before the policy arrived (the API would still reject it); back to details.
+    await TestRenderer.act(async () => { flow.button('Modificar datos').props.onPress(); });
+    await flow.wait();
+    const details = flow.visible();
+    assert.match(details, /Límite diario \(demo\): /);
+    assert.match(details, /"\$20,000.00 MXN"/);
+    assert.match(details, /"\$18,248.44 MXN"/);
+    assert.match(details, /configuración de demostración/);
+    assert.match(details, /supera lo disponible hoy/);
+    assert.equal(flow.button('Continuar').props.disabled, true);
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('18248.44'); });
+    assert.notEqual(flow.button('Continuar').props.disabled, true);
+    await flow.finish();
+  });
+
+  it.each([
+    ['5000.00', true],
+    ['4999.99', false],
+  ])('M07 with %s against a 500000 threshold (BigInt >=) requires code: %s', async (amount, otp) => {
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy({ dailyRemainingMinor: '2000000' })) : undefined), { amount });
+    await flow.wait();
+    const review = flow.visible();
+    if (otp) {
+      assert.match(review, /Operación mayor o igual a \$5,000.00 MXN requiere código de autorización/);
+      assert.ok(flow.button('Continuar a verificación'));
+    } else {
+      assert.doesNotMatch(review, /requiere código de autorización/);
+      assert.ok(flow.button('Confirmar transferencia'));
+    }
+    await flow.finish();
+  });
+
+  it('M08 counts down from Transfer.expiresAt, then shows the real expired state; "Solicitar nuevo código" cancels and creates a new attempt with a new key', async () => {
+    const keys: string[] = [];
+    let created = 0;
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') {
+        keys.push((init.headers as Record<string, string>)['Idempotency-Key']!);
+        created += 1;
+        // First attempt: 2 s left. Second attempt: a fresh 5-minute code.
+        const expiresAt = new Date(Date.now() + (created === 1 ? 1500 : 300_000)).toISOString();
+        return Response.json({ ...flowTransfer({ id: `tr-otp-${created}`, expiresAt }), demoOnlyCode: '123456' }, { status: 202 });
+      }
+      if (url.endsWith('/cancel')) return Response.json(flowTransfer({ id: 'tr-otp-1', status: 'cancelled' }));
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /El código expira en /);
+    assert.match(flow.visible(), /"00:0[12]"/);
+    await flow.wait(2200);
+    const expired = flow.visible();
+    assert.match(expired, /El código ha expirado/);
+    assert.equal(flow.button('Autorizar transferencia').props.disabled, true);
+    await TestRenderer.act(async () => { flow.button('Solicitar nuevo código de demostración').props.onPress(); });
+    await flow.wait();
+    const cancelCalls = flow.calls.filter((call) => call.url.endsWith('/transfers/tr-otp-1/cancel'));
+    assert.equal(cancelCalls.length, 1);
+    assert.equal(cancelCalls[0]!.init?.method, 'POST');
+    assert.equal(keys.length, 2);
+    assert.notEqual(keys[0], keys[1], 'a new code is a new attempt with a new Idempotency-Key');
+    assert.match(flow.visible(), /"0[45]:[0-5]\d"/);
+    assert.doesNotMatch(flow.visible(), /El código ha expirado/);
+    await flow.finish();
+  });
+});
+
+describe('round 6 · G (F-10): leaving the code step cancels the pending attempt', () => {
+  it('"Cancelar y volver a revisar" cancels the pending transfer, clears the recovery record and a new confirm uses a new key', async () => {
+    const keys: string[] = [];
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') {
+        keys.push((init.headers as Record<string, string>)['Idempotency-Key']!);
+        return Response.json({ ...flowTransfer({ id: `tr-${keys.length}` }), demoOnlyCode: '123456' }, { status: 202 });
+      }
+      if (url.endsWith('/cancel')) return Response.json(flowTransfer({ id: 'tr-1', status: 'cancelled' }));
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.ok(mockSecureValues.get('wallet.transfer-recovery'));
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    await flow.wait();
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/transfers/tr-1/cancel') && call.init?.method === 'POST').length, 1);
+    assert.equal(mockSecureValues.get('wallet.transfer-recovery'), undefined);
+    assert.match(flow.visible(), /Revisar transferencia/);
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.equal(keys.length, 2);
+    assert.notEqual(keys[0], keys[1]);
+    await flow.finish();
+  });
+
+  it('never cancels or abandons the attempt while the confirm outcome is uncertain (F-06 wins)', async () => {
+    let getBlocked = true;
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-u' }), demoOnlyCode: '123456' }, { status: 202 });
+      if (url.endsWith('/confirm')) throw new Error('lost');
+      if (url.endsWith('/transfers/tr-u') && getBlocked) throw new Error('offline');
+      if (url.endsWith('/transfers/tr-u')) return Response.json(flowTransfer({ id: 'tr-u', status: 'completed', completedAt: '2026-11-13T20:32:00.000Z' }));
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('123456'); });
+    await TestRenderer.act(async () => { flow.button('Autorizar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Solicitar nuevo código').length, 0, 'no new code while uncertain');
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    await flow.wait();
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
+    assert.match(flow.visible(), /Código de confirmación/);
+    getBlocked = false;
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
+    await flow.finish();
+  });
+});
