@@ -885,10 +885,12 @@ describe('mobile rejected transfer (M11)', () => {
 describe('mobile background privacy (M12)', () => {
   it('replaces every balance with the branded privacy curtain in the background and restores the session on return', async () => {
     const listeners: Array<(state: string) => void> = [];
-    const spy = jest.spyOn(AppState, 'addEventListener').mockImplementation(((_type: string, listener: (state: string) => void) => {
+    // jest-expo already replaces addEventListener with a mock, so restore the exact original instead of mockRestore().
+    const originalAddEventListener = AppState.addEventListener;
+    AppState.addEventListener = ((_type: string, listener: (state: string) => void) => {
       listeners.push(listener);
       return { remove: () => { listeners.splice(listeners.indexOf(listener), 1); } };
-    }) as unknown as typeof AppState.addEventListener);
+    }) as unknown as typeof AppState.addEventListener;
     try {
       const flow = await startTransferFlow((url) => {
         if (url.endsWith('/auth/me')) return Response.json({ id: 'u', fullName: 'Ana López', email: 'ana@example.com' });
@@ -907,7 +909,20 @@ describe('mobile background privacy (M12)', () => {
       assert.match(flow.visible(), /"Paso 2 de 2"/, 'returning to the foreground resumes the same step');
       await flow.finish();
     } finally {
-      spy.mockRestore();
+      AppState.addEventListener = originalAddEventListener;
     }
+  });
+});
+
+describe('mobile login reference (M01)', () => {
+  it('keeps the web-only registration notice and the technical-demo footer without unsupported claims', async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const visible = JSON.stringify(renderer!.toJSON());
+    assert.match(visible, /"¿No tienes cuenta\?"/);
+    assert.match(visible, /exclusivamente desde el panel web de Billetera MXN/);
+    assert.match(visible, /Billetera MXN • Demostración técnica/);
+    assert.doesNotMatch(visible, /SIMULAR ESTADO|Versión \d|cifrada|SPEI|Alfanumérica/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
   });
 });
