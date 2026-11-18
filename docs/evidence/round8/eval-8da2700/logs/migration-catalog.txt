@@ -1,0 +1,135 @@
+### R8-01 catalog (migrator)
+                 name                 
+--------------------------------------
+ TransferAttemptRecovery1763000009000
+(1 row)
+
+    column_name    | data_type | is_nullable 
+-------------------+-----------+-------------
+ client_attempt_id | uuid      | YES
+(1 row)
+
+                  indexname                   |                                                                                       indexdef                                                                                       
+----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ transfers_owner_attempt_uidx                 | CREATE UNIQUE INDEX transfers_owner_attempt_uidx ON public.transfers USING btree (owner_id, client_attempt_id) WHERE (client_attempt_id IS NOT NULL)
+ transfer_send_gates_pkey                     | CREATE UNIQUE INDEX transfer_send_gates_pkey ON public.transfer_send_gates USING btree (owner_id)
+ transfer_attempt_closures_pkey               | CREATE UNIQUE INDEX transfer_attempt_closures_pkey ON public.transfer_attempt_closures USING btree (id)
+ transfer_attempt_closures_owner_key_uidx     | CREATE UNIQUE INDEX transfer_attempt_closures_owner_key_uidx ON public.transfer_attempt_closures USING btree (owner_id, key_hash)
+ transfer_attempt_closures_owner_attempt_uidx | CREATE UNIQUE INDEX transfer_attempt_closures_owner_attempt_uidx ON public.transfer_attempt_closures USING btree (owner_id, client_attempt_id) WHERE (client_attempt_id IS NOT NULL)
+ transfer_attempt_closures_owner_closed_idx   | CREATE INDEX transfer_attempt_closures_owner_closed_idx ON public.transfer_attempt_closures USING btree (owner_id, closed_at DESC, id DESC)
+(6 rows)
+
+             t             |                    conname                     |                                             pg_get_constraintdef                                              
+---------------------------+------------------------------------------------+---------------------------------------------------------------------------------------------------------------
+ transfer_send_gates       | transfer_send_gates_epoch_check                | CHECK ((epoch >= 0))
+ transfer_send_gates       | transfer_send_gates_owner_id_fkey              | FOREIGN KEY (owner_id) REFERENCES users(id)
+ transfer_send_gates       | transfer_send_gates_pkey                       | PRIMARY KEY (owner_id)
+ transfer_attempt_closures | transfer_attempt_closures_amount_check         | CHECK (((amount_minor IS NULL) OR (amount_minor > 0)))
+ transfer_attempt_closures | transfer_attempt_closures_owner_id_fkey        | FOREIGN KEY (owner_id) REFERENCES users(id)
+ transfer_attempt_closures | transfer_attempt_closures_pkey                 | PRIMARY KEY (id)
+ transfer_attempt_closures | transfer_attempt_closures_problem_status_check | CHECK (((problem_status IS NULL) OR (problem_status = ANY (ARRAY[404, 422, 429]))))
+ transfer_attempt_closures | transfer_attempt_closures_rejected_check       | CHECK ((((status)::text = 'rejected'::text) = ((problem_status IS NOT NULL) AND (payload_hash IS NOT NULL))))
+ transfer_attempt_closures | transfer_attempt_closures_status_check         | CHECK (((status)::text = ANY ((ARRAY['voided'::character varying, 'rejected'::character varying])::text[])))
+(9 rows)
+
+             t             |                tgname                 | tgenabled |                                                                                                   pg_get_triggerdef                                                                                                   
+---------------------------+---------------------------------------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ idempotency_records       | idempotency_records_closed_key_guard  | O         | CREATE TRIGGER idempotency_records_closed_key_guard BEFORE INSERT ON public.idempotency_records FOR EACH ROW WHEN (((new.operation)::text = 'create-transfer'::text)) EXECUTE FUNCTION guard_idempotency_closed_key()
+ transfer_attempt_closures | transfer_attempt_closures_append_only | O         | CREATE TRIGGER transfer_attempt_closures_append_only BEFORE DELETE OR UPDATE ON public.transfer_attempt_closures FOR EACH ROW EXECUTE FUNCTION prevent_transfer_attempt_closure_mutation()
+ transfer_attempt_closures | transfer_attempt_closures_cross_guard | O         | CREATE TRIGGER transfer_attempt_closures_cross_guard BEFORE INSERT ON public.transfer_attempt_closures FOR EACH ROW EXECUTE FUNCTION guard_transfer_attempt_closure_insert()
+ transfer_send_gates       | transfer_send_gates_monotonic         | O         | CREATE TRIGGER transfer_send_gates_monotonic BEFORE DELETE OR UPDATE ON public.transfer_send_gates FOR EACH ROW EXECUTE FUNCTION guard_transfer_send_gate()
+ transfers                 | transfers_attempt_id_immutable        | O         | CREATE TRIGGER transfers_attempt_id_immutable BEFORE UPDATE OF client_attempt_id ON public.transfers FOR EACH ROW EXECUTE FUNCTION prevent_transfer_attempt_id_change()
+ transfers                 | transfers_closed_attempt_guard        | O         | CREATE TRIGGER transfers_closed_attempt_guard BEFORE INSERT ON public.transfers FOR EACH ROW WHEN ((new.client_attempt_id IS NOT NULL)) EXECUTE FUNCTION guard_transfer_closed_attempt()
+(6 rows)
+
+ triggers 
+----------
+        6
+(1 row)
+
+             tgname             
+--------------------------------
+ transfers_attempt_id_immutable
+ transfers_closed_attempt_guard
+ transfers_terminal_state_guard
+(3 rows)
+
+### idempotence: run up SQL again in one transaction (twice)
+psql:<stdin>:2: NOTICE:  column "client_attempt_id" of relation "transfers" already exists, skipping
+ALTER TABLE
+psql:<stdin>:3: NOTICE:  relation "transfers_owner_attempt_uidx" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+psql:<stdin>:18: NOTICE:  relation "transfer_send_gates" already exists, skipping
+CREATE TABLE
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+psql:<stdin>:45: NOTICE:  relation "transfer_attempt_closures" already exists, skipping
+psql:<stdin>:46: NOTICE:  relation "transfer_attempt_closures_owner_key_uidx" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+psql:<stdin>:47: NOTICE:  relation "transfer_attempt_closures_owner_attempt_uidx" already exists, skipping
+psql:<stdin>:48: NOTICE:  relation "transfer_attempt_closures_owner_closed_idx" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+DO
+exit=0
+ALTER TABLE
+CREATE INDEX
+CREATE FUNCTION
+psql:<stdin>:2: NOTICE:  column "client_attempt_id" of relation "transfers" already exists, skipping
+psql:<stdin>:3: NOTICE:  relation "transfers_owner_attempt_uidx" already exists, skipping
+DROP TRIGGER
+CREATE TRIGGER
+psql:<stdin>:18: NOTICE:  relation "transfer_send_gates" already exists, skipping
+CREATE TABLE
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+psql:<stdin>:45: NOTICE:  relation "transfer_attempt_closures" already exists, skipping
+CREATE TABLE
+CREATE INDEX
+psql:<stdin>:46: NOTICE:  relation "transfer_attempt_closures_owner_key_uidx" already exists, skipping
+psql:<stdin>:47: NOTICE:  relation "transfer_attempt_closures_owner_attempt_uidx" already exists, skipping
+CREATE INDEX
+psql:<stdin>:48: NOTICE:  relation "transfer_attempt_closures_owner_closed_idx" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+DROP TRIGGER
+CREATE TRIGGER
+DO
+exit=0
+### privileges (runtime role)
+          t          | sel | ins | upd | del | trunc 
+---------------------+-----+-----+-----+-----+-------
+ gates               | t   | t   | t   | f   | f
+ closures            | t   | t   | f   | f   | f
+ transfers           | t   | t   | t   | f   | f
+ idempotency_records | t   | t   | t   | f   | f
+ audit_events        | t   | t   | f   | f   | f
+(5 rows)
+

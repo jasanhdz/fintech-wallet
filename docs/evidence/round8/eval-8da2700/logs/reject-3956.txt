@@ -1,0 +1,6 @@
+== 429 limite diario con cabeceras
+PASS 429 typed rejected 
+PASS replay same 429 
+PASS no consumption of daily limit, 0 transfers 
+PASS listed as rejected with problem 429 
+SUMMARY pass=4 fail=0

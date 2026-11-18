@@ -1,0 +1,7 @@
+replay of an EXECUTED transfer on the API without the variable -> 500
+PASS replay of executed result is 500 too (variable read before replay) 
+confirm of a pending transfer -> 500
+PASS confirm -> 500 
+PASS cancel works (no variable needed) 
+PASS GET transfer works 
+SUMMARY pass=4 fail=0

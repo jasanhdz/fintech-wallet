@@ -1,0 +1,12 @@
+
+Resolver
+EI
+
+Resolver con el servidor
+No pudimos actualizar este dispositivo. El resultado ya es definitivo en el servidor, pero para evitar un cargo doble la app no enviará otra transferencia hasta poder actualizarlo. Toca «Reintentar»; si sigue fallando, puedes usar la web.
+
+Reintentar
+Tus intentos en el servidor ahora
+No hay intentos de transferencia registrados en el servidor.
+
+Volver al inicio

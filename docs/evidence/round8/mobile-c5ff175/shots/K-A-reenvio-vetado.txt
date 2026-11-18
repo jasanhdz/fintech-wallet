@@ -1,0 +1,12 @@
+
+Transferir
+KO
+
+Operación anulada
+Transferencia anulada. No se realizó ningún cargo por esta operación.
+Monto
+$90.00 MXN
+Referencia
+8312
+
+Volver al inicio

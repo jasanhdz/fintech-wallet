@@ -1,0 +1,17 @@
+
+Transferir
+HA
+
+Anular esta transferencia
+Si ya se aplicó, te mostraremos su resultado y no se cancelará el cargo. Si no se aplicó, quedará anulada y ya no podrá aplicarse aunque llegue después.
+Monto
+$250.00 MXN
+Destinatario
+Cuenta de ahorro demo (Ahorro demo) •• 5618
+Concepto
+H anulada
+Referencia
+8309
+
+Anular esta transferencia
+Volver sin anular

@@ -1,0 +1,46 @@
+made attempts 46
+PASS >= 45 attempts covering completed/awaiting/expired/cancelled/rejected/voided 
+PASS page 0 200 
+PASS page 1 200 
+PASS page 2 200 
+PASS page 3 200 
+PASS page 4 200 
+PASS no duplicates across pages 
+PASS no omissions vs direct DB query (pre-injection set) 
+PASS new attempts created while paging did not enter later pages 
+PASS order createdAt DESC across pages 
+PASS all 6 statuses present 
+PASS order equals DB order (created_at DESC, kind DESC, id DESC) 
+PASS status filter exact 
+PASS status=voided exact 
+PASS status=rejected 8 with problem 
+PASS attemptId filter exact -> 1 item 
+PASS unknown attemptId -> empty 
+PASS from/to filters bound createdAt 
+PASS limit=0 -> 400 
+PASS limit=51 -> 400 
+PASS limit=x -> 400 
+PASS from>to -> 400 
+PASS bad status -> 400 
+PASS bad attemptId -> 400 
+PASS bad from -> 400 
+PASS altered cursor #0 -> 400 
+PASS altered cursor #1 -> 400 
+PASS altered cursor #2 -> 400 
+PASS altered cursor #3 -> 400 
+PASS altered cursor #4 -> 400 
+PASS default limit 20 
+PASS listing: no 18-digit CLABE, demoOnlyCode, code, idempotencyKey, keyHash, requestId 
+PASS only clabeMasked 
+PASS voided closure shape (nulls) 
+PASS rejected closure has amountMinor/problem 
+== R8-11 isolation (user B)
+PASS B list has none of A 
+PASS B ?attemptId=<A> same as unknown -> items [] 
+PASS B GET /transfers/<A> -> 404 
+PASS B void with A key+attemptId -> voided in B scope 
+PASS A POST with that key still returns A transfer 
+PASS B void-all does not change A epoch or pendings 
+PASS A listing for that attemptId unchanged (1 item, transfer) 
+PASS B void with A pending key does not cancel it 
+SUMMARY pass=43 fail=0

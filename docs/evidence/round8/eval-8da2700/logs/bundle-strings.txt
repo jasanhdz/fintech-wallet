@@ -1,0 +1,30 @@
+web index-29d679d281f94b27a8 788367
+  absent  -> 0 No la envíes de nuevo
+  absent  -> 0 No intentes enviar el dinero nuevamente
+  absent  -> 0 Podrás hacer otra transferencia cuando conozcamos su resultado
+  absent  -> 0 Verificar de nuevo
+  present -> 2 No hagas otra transferencia igual
+  present -> 1 Podrás hacer otra transferencia cuando esta quede resuelta.
+  present -> 1 Si ya se aplicó, te mostraremos su resultado y no se cancela
+  present -> 1 Transferencia anulada. No se realizó ningún cargo por esta o
+  present -> 1 también se detienen las transferencias aún no aplicadas envi
+ios entry-ad0a431cbdc44596a2 3282742
+  absent  -> 0 No la envíes de nuevo
+  absent  -> 0 No intentes enviar el dinero nuevamente
+  absent  -> 0 Podrás hacer otra transferencia cuando conozcamos su resultado
+  absent  -> 0 Verificar de nuevo
+  present -> 1 No hagas otra transferencia igual
+  present -> 0 Podrás hacer otra transferencia cuando esta quede resuelta.
+  present -> 0 Si ya se aplicó, te mostraremos su resultado y no se cancela
+  present -> 0 Transferencia anulada. No se realizó ningún cargo por esta o
+  present -> 0 también se detienen las transferencias aún no aplicadas envi
+ios (Hermes bytecode, utf-16-le scan)
+  absent -> 0 No la envíes de nuevo
+  absent -> 0 No intentes enviar el dinero nuevamente
+  absent -> 0 Podrás hacer otra transferencia cuando conozcamos su resulta
+  absent -> 0 Verificar de nuevo
+  present -> 1 Podrás hacer otra transferencia cuando esta quede resuelta.
+  present -> 1 Si ya se aplicó, te mostraremos su resultado y no se cancela
+  present -> 1 Transferencia anulada. No se realizó ningún cargo por esta o
+  present -> 1 también se detienen las transferencias aún no aplicadas envi
+  present -> 2 No hagas otra transferencia igual

@@ -1,0 +1,87 @@
+
+> fintech-wallet@0.1.0 test
+> npm run test --workspaces --if-present
+
+
+> @fintech-wallet/api@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ production configuration accepts explicit operational values without imposing example policy (17.836334ms)
+✔ production requires every operational setting and rejects malformed, fractional, zero, and out-of-range values (1.00375ms)
+✔ production requires a valid IANA time zone and disallows the development fixture (0.200542ms)
+✔ test and development environments retain existing harness configuration behavior (0.072375ms)
+✔ R8-12: idempotency retention days come only from IDEMPOTENCY_RECORD_RETENTION_DAYS (no default, positive integer) (0.21825ms)
+✔ R8-12: the transfer module has no hard-coded idempotency retention interval (0.869334ms)
+✔ health returns status and propagates request ID (221.117958ms)
+✔ invalid request ID is replaced; not found uses RFC 7807 (109.956166ms)
+✔ generated CLABEs pass checksum and are encrypted with separate lookup fingerprints (2.062334ms)
+✔ attempt cursor round-trips canonically and rejects any alteration (1.293333ms)
+✔ attempt query validates status list, dates, attemptId and limit 1..50 (0.335417ms)
+✔ Transfer-Attempt-Id and Transfer-Send-Epoch are both-or-none, UUID and bigint decimal (0.201959ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 749.815791
+
+> @fintech-wallet/web@0.1.0 test
+> tsx --test tests/*.test.*
+
+✔ movement query uses contract filters, limit and cursor without offset (1.557209ms)
+✔ movement history renders rows, applies filters, pages by cursor, and preserves rows on retry error (468.667875ms)
+✔ recent activity requests three real movements for the first account and renders their details (434.092208ms)
+✔ consolidated balance sums two accounts exactly in minor units (0.190875ms)
+✔ hydrates a web session through CSRF and cookie refresh (13.931541ms)
+✔ 204 without a refresh cookie hydrates to login without logging an error (210.359792ms)
+✔ provider hydrates a cookie session into in-memory context (15.581916ms)
+✔ revoked refresh rejects and network failure remains recoverable (1.896125ms)
+✔ a 401 rotates once and retries the same request with the fresh access token (1.207625ms)
+✔ later account queries use the rotated token despite a stale session snapshot (0.619917ms)
+✔ concurrent 401 responses share a single refresh and retry only once each (6.899917ms)
+✔ logout sends the current in-memory access token, CSRF token, and cookie credentials (1.234958ms)
+✔ transfer form accepts only exact positive MXN values and preserves minor units as strings (0.841458ms)
+✔ transfer variants and OTP follow shared OpenAPI validation (1.816959ms)
+✔ create retries forward identical payload and idempotency key (12.313791ms)
+✔ transfer recovery is session-persisted, exact, and isolated when the user changes (48.81825ms)
+✔ transfer UI renders contract-backed destination choices with accessible labels (351.86625ms)
+✔ login and registration use the shared contract validation (3.562792ms)
+✔ account balance formatting preserves integer minor units (23.886292ms)
+✔ beneficiary form uses contract limits and validates CLABE checksum (2.262834ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1465.281875
+
+> @fintech-wallet/mobile@0.1.0 test
+> jest --runInBan
+Te
+Test Suites: 10 passed, 10 total
+Tests:       277 passed, 277 total
+Snapshots:   0 total
+Time:        54.432 s, estimated 59 s
+Ran all test suites.
+
+> @fintech-wallet/shared@0.1.0 test
+> tsx --test tests/*.test.ts
+
+✔ CLABE validation checks length, digits and verification digit (0.462958ms)
+✔ MXN decimal input converts exactly to bigint minor-unit string (0.317167ms)
+✔ minor-unit formatting and addition do not use binary floating point (12.20125ms)
+✔ shared request schemas reject invalid CLABE and transfer payload (2.048958ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 143.259625
+
+exit 0

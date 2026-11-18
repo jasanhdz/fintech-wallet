@@ -1,0 +1,10 @@
+const API='http://127.0.0.1:3972/v1', ORIGIN='http://localhost:8971', PW=process.env.PW;
+(async()=>{const csrf=await fetch(API+'/auth/csrf',{headers:{origin:ORIGIN}});const cookie=csrf.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');const {csrfToken}=await csrf.json();
+const email=`noret.${Date.now()}@example.test`;const reg=await fetch(API+'/auth/register',{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfToken,origin:ORIGIN,cookie},body:JSON.stringify({fullName:'Sin Retencion',email,password:PW})});
+const t=(await reg.json()).accessToken;const h={'content-type':'application/json',authorization:'Bearer '+t};
+const acc=(await (await fetch(API+'/accounts',{headers:h})).json()).items;const pr=acc.find(a=>a.kind==='checking'),sv=acc.find(a=>a.kind==='savings');
+const ben=await (await fetch(API+'/beneficiaries',{method:'POST',headers:h,body:JSON.stringify({name:'Ahorro',alias:'Ahorro',clabe:sv.clabe})})).json();
+const pol=await fetch(API+'/transfer-policy',{headers:h});
+const x=await fetch(API+'/transfers',{method:'POST',headers:{...h,'Idempotency-Key':crypto.randomUUID()},body:JSON.stringify({sourceAccountId:pr.id,destinationType:'beneficiary',beneficiaryId:ben.id,amountMinor:'1000',concept:'x',reference:'1'})});
+console.log('startup ok; GET /transfer-policy', pol.status, '; POST /transfers without IDEMPOTENCY_RECORD_RETENTION_DAYS ->', x.status, (await x.json()).detail);
+const n=await fetch(API+'/accounts',{headers:h}); console.log('balance unchanged:', (await n.json()).items.find(a=>a.kind==='checking').availableBalanceMinor===pr.availableBalanceMinor);})();

@@ -104,13 +104,24 @@ Auditoría: sólo acciones efectivas (un `void` repetido o un `void-all` no-op n
 | Campo | Decisión |
 |---|---|
 | `otp_challenges.expires_at` / `Transfer.expiresAt` | Sin cambio. `void`/`void-all` aplican la misma regla (vencido → `expired`, si no → `cancelled`). |
-| `idempotency_records.expires_at` | **Replay indefinido**; ninguna lógica lo lee. Se escribe `now() + make_interval(days => IDEMPOTENCY_RECORD_RETENTION_DAYS)` en create y confirm. Sin literal en el código: la variable es obligatoria en producción (`assertProductionConfiguration`) y se lee del entorno en todos los entornos (si falta, crear/confirmar falla con 500 y no se escribe nada). Rango aceptado 1–1,000,000 (cota de representabilidad de `timestamptz`, no política). |
+| `idempotency_records.expires_at` | **Replay indefinido**; ninguna lógica lo lee. Se escribe `now() + make_interval(days => IDEMPOTENCY_RECORD_RETENTION_DAYS)` en create y confirm. Sin literal en el código: la variable es obligatoria en producción (`assertProductionConfiguration`) y, desde H6 (F-32), **se valida al arrancar en todos los entornos** (`assertStartupConfiguration` en `server.ts`, antes de abrir la base de datos o escuchar): ausente, vacía, `0`, negativa, no numérica o mayor que el tope → el proceso termina con código 1 y una línea `{"event":"api.config_invalid","message":"IDEMPOTENCY_RECORD_RETENTION_DAYS …"}` que nombra la variable sin imprimir su valor ni otros valores. Create/confirm la siguen leyendo del entorno (sin valor por defecto). Rango aceptado 1–1,000,000 (cota de representabilidad de `timestamptz`, no política). |
 | Cierres y época | Permanentes. |
 
 Consecuencia operativa: un `.env` local anterior a la ronda 8 no tiene la variable. Las suites que crean transferencias
-(`transfers`, `round6-contract`, `movements`) la fijan con `??= '30'` (ejemplo demo), y `npm run env:local` la copia de
-`.env.example`. **Antes de actualizar la demo** (fuera de esta ronda) hay que añadirla a la `.env` del checkout principal
-y aplicar la migración a `wallet_dev`; ambas cosas requieren autorización del usuario (§R8.11).
+(`transfers`, `round6-contract`, `movements`) la fijan con `??= '30'` (ejemplo demo) y usan `createApp` sin pasar por
+`server.ts`, así que no cambian; `npm run env:local` la copia de `.env.example`. **Antes de actualizar la demo** (fuera de
+esta ronda) hay que añadirla a la `.env` del checkout principal y aplicar la migración a `wallet_dev`; ambas cosas
+requieren autorización del usuario (§R8.11). Sin la variable, la API actualizada **no arranca** (F-32): `npm start`,
+`npm run dev:api`, `npm run dev` y `npm run dev:api:testdb` imprimen `api.config_invalid` y no escuchan (en los modos
+`tsx watch` el observador sigue vivo esperando cambios, pero no hay proceso API ni puerto abierto), de modo que
+`GET /transfer-policy` ya no responde 200 con una API que no puede crear transferencias.
+
+Pruebas (F-32): `api/tests/config.test.ts` (`assertStartupConfiguration` en `development`, `test`, sin `APP_ENV` y
+producción; ausente, vacía, `0`, negativas, no numéricas, fraccionarias, `1000001` y enormes; el mensaje no repite el valor)
+y `api/tests/startup.test.ts`, que lanza el `server.ts` real con un entorno sintético (llaves desechables, base de datos
+inalcanzable en el puerto 1, sin `.env`): sin variable o con valor inválido el proceso sale con código ≠ 0 antes de
+intentar la conexión (sin `ECONNREFUSED`, sin `api.listening`) y sin imprimir valores; el control con `30` pasa la
+configuración y sólo entonces falla en la base de datos.
 
 ## 6. Residuales y decisiones (SPEC §R8.11)
 

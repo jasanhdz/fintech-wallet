@@ -1,0 +1,4 @@
+API aislada en 3972 sobre wallet_test SIN IDEMPOTENCY_RECORD_RETENTION_DAYS (env -u), tools/no-retention-probe.cjs:
+startup ok; GET /transfer-policy 200 ; POST /transfers without IDEMPOTENCY_RECORD_RETENTION_DAYS -> 500 Ocurrió un error interno.
+balance unchanged: true
+Checkout principal: grep -c '^IDEMPOTENCY_RECORD_RETENTION_DAYS=' /Users/jasanhernandez/Develop/fintech-wallet/.env -> 0 (sólo se contó la línea; no se leyeron valores)

@@ -1,0 +1,23 @@
+== void on awaiting_confirmation -> cancelled; confirm afterwards 409; no ledger
+PASS POST >= threshold -> 202 awaiting_confirmation 
+PASS void -> transfer_found with status cancelled 
+PASS audit transfer.cancelled metadata.via=void 
+PASS confirm after void -> 409 
+PASS no ledger entries, balance unchanged 
+PASS repeat void: same result, no second audit 
+PASS POST replay after void reports cancelled with same id (no new transfer) 
+== void with OTP already expired -> expired
+PASS void on elapsed OTP -> expired 
+PASS exactly one closing audit event (expired or via listing/expireDue); got [{"via":"void"}] 
+== confirm vs void race, 24 iterations
+PASS confirm vs void 24: always exactly completed(1 debit) or cancelled(0 entries) 
+distribution {"comp":15,"canc":9}
+== void-all closes only own pending (incl. created without headers), expired -> expired
+PASS void-all closed own pendings incl. header-less (web) one 
+PASS pending -> cancelled 
+PASS elapsed pending -> expired 
+PASS other user pending untouched and epoch unchanged 
+PASS audit via=void_all for each closed pending 
+PASS audit transfer.send_epoch_advanced from/to 
+PASS void-all repeated -> advanced:false, no audit 
+SUMMARY pass=17 fail=0

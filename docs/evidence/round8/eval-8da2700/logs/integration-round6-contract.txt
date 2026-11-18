@@ -1,0 +1,14 @@
+◇ injected env (22) from ../.env
+✔ round 6 contract: own-account identity, transfer policy, OTP expiry/cancel lifecycle, receipts and history in wallet_test (1263.066792ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1545.494208
+real 1.81
+user 1.74
+sys 0.12
+exit 0

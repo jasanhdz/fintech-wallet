@@ -1,0 +1,46 @@
+{"event":"r8.migration.rerun","ok":true}
+{"event":"r8.fixture","section":"R8-01","userId":"b5f2ee7d-ad0f-4f8b-b606-e43ecaa6aac6","principal":"fc04e257-edbc-49f5-a0fb-d1c820d7c91f","savings":"6353fff4-ca73-4693-b7b0-ba629a5f457b"}
+▶ round 8: authoritative transfer-attempt recovery (R8-01..R8-14) in wallet_test
+  ✔ R8-01 migration 1763000009000: applied, idempotent, catalog, grants and DB guards (413.592167ms)
+{"event":"r8.fixture","section":"R8-03","userId":"d5ead033-6c8a-4fc4-8605-325b22069994","principal":"3b5f00a6-ed13-4f9b-ac11-8b82f4e02939","savings":"6298d2c8-d380-4f44-9831-9ed8c554a74c"}
+  ✔ R8-03 authoritative listing: 45+ attempts, keyset pages, filters, 400s and privacy (915.798334ms)
+{"event":"r8.fixture","section":"R8-04","userId":"06c56c2c-857a-43cd-8696-9a424de4ee29","principal":"0747cc48-a8dc-491e-b961-11521d4daf94","savings":"d944c8cf-0801-499a-a27f-d44aad32b9cd"}
+  ✔ R8-04 lost response on send (destination account locked), API restart, authoritative read and replay (384.871708ms)
+{"event":"r8.fixture","section":"R8-05","userId":"cba2696e-0253-4c9f-b545-3381927119ce","principal":"ad4f6f9a-84d2-45d0-a677-9a09f0f21b69","savings":"28967615-3bdc-44d1-898f-0dfa78a33b4d"}
+  ✔ R8-05 lost response on void and void-all: repeated calls are no-ops (335.506458ms)
+{"event":"r8.fixture","section":"R8-06","userId":"66e6353e-13f7-47c6-a26c-8c223635149d","principal":"86c77f0f-469e-4ddc-a8ec-169febc1efcd","savings":"a92dea5d-b7b0-43a7-ab0a-a13d043b58da"}
+{"event":"r8.race.post_vs_void","iterations":50,"executed":25,"voided":25}
+{"event":"r8.race.post_vs_void_all","iterations":20,"executed":10,"vetoed":10}
+  ✔ R8-06 send vs void races: forced orders, held send, 50 concurrent identities, void-all vs POST (1930.612917ms)
+{"event":"r8.fixture","section":"R8-07","userId":"acab792e-d7d2-4c60-90b7-08826edf7685","principal":"13213bac-0383-4862-bd76-c3b5ea747e62","savings":"f6c7b3cd-4fc6-45b2-9076-32d2d92a8cd6"}
+  ✔ R8-07 late send vetoed after void and after void-all (357.9435ms)
+{"event":"r8.fixture","section":"R8-08","userId":"009d3629-d9f2-47fa-85a5-27d99fe90e2d","principal":"33c5940c-bdb0-485f-9543-3fddb3267639","savings":"58180fc8-1996-478c-85d6-07eb80d20a9a"}
+{"event":"r8.fixture","section":"R8-08-other","userId":"c46941dd-1921-485c-a9fc-fe88e6d95872","principal":"0bef28d1-676a-4597-8c75-e9e4518b494b","savings":"81ca8ed2-5b0b-4043-9444-4d0410232869"}
+{"event":"r8.race.confirm_vs_void","iterations":20,"completed":10,"cancelled":10}
+  ✔ R8-08 voiding OTP-pending attempts, confirm vs void race, void-all scope (1499.064ms)
+{"event":"r8.fixture","section":"R8-09","userId":"cc6dbad9-6e23-4717-8131-3c68a38484a9","principal":"9bd955ab-6554-4621-9dbf-ccdfe4e8e3a9","savings":"85818c58-048f-4514-b5ad-84a2ebc5ccd5"}
+  ✔ R8-09 terminal rejections with headers, header-less re-evaluation, and 8 concurrent sends of one key (530.655625ms)
+{"event":"r8.fixture","section":"R8-10","userId":"e5f9497c-94dd-4e0b-b7b4-0121caccba66","principal":"bf7e5687-b189-4706-a0a1-dbc6f8c01c6e","savings":"a93eba42-a6ca-4392-9b74-942af4178e68"}
+  ✔ R8-10 OTP threshold preserved (amount >= threshold): 4,999.99 → 201, 5,000.00 → 202, 5,000.01 → 202 (357.618542ms)
+{"event":"r8.fixture","section":"R8-11-a","userId":"6bbc1a6a-fd27-4ded-aee1-e26076f78dd4","principal":"f3b5361a-6a98-4cf1-829e-8e38a42d9935","savings":"f7c1e8aa-2b8d-4fed-a851-42b801d98eed"}
+{"event":"r8.fixture","section":"R8-11-b","userId":"50ad4274-b405-43e0-861b-728920c619b5","principal":"01179161-f982-4b91-852c-2784cff93f78","savings":"5a3e2417-002c-41fe-9a81-79027a96e921"}
+  ✔ R8-11 isolation between users (642.4345ms)
+{"event":"r8.fixture","section":"R8-12","userId":"4054fe8c-0e4d-4065-b092-d28512724309","principal":"d62df3cc-f304-410e-8670-519ae9a5bf6b","savings":"c935212f-5572-4a81-875b-659541d464c4"}
+  ✔ R8-12 expiration policy: replay indefinite, retention days configurable (355.784125ms)
+{"event":"r8.fixture","section":"R8-14","userId":"98398c3b-b7ae-4b79-9c7c-c2366dfbece3","principal":"6384e69f-3a67-495d-a1fe-32e0ed9dc762","savings":"98d1e4ee-11d4-4179-8831-98478625ceae"}
+  ✔ R8-14 recovery from another client: applied and never-arrived sends (927.228958ms)
+{"event":"r8.privacy","auditEvents":241,"keysChecked":203,"codesChecked":48,"clabesChecked":28,"logLines":18}
+  ✔ R8-13 audit and privacy across the whole suite (audit metadata and process logs) (7.549833ms)
+✔ round 8: authoritative transfer-attempt recovery (R8-01..R8-14) in wallet_test (8967.564583ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9289.751958
+real 9.55
+user 6.54
+sys 0.26
+exit 0

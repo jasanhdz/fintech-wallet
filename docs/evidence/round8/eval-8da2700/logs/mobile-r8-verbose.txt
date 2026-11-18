@@ -1,0 +1,5 @@
+Test Suites: 1 passed, 1 total
+Tests:       60 passed, 60 total
+Snapshots:   0 total
+Time:        16.743 s, estimated 21 s
+Ran all test suites matching tests/recovery-r8.test.tsx.

@@ -1,0 +1,21 @@
+== R8-04 send with destination account locked; client aborts; lock released; API restarted
+PASS client aborted before answer 
+PASS server not yet committed while lock held 
+PASS server confirmed after lock release: exactly 1 transfer for the identity 
+PASS API process restarted (new PID) 
+PASS GET ?attemptId= returns exactly 1 item with transferId after restart 
+PASS replay (same key/body/headers) -> same id 
+PASS 1 debit exactly; ledger sum 0 
+== R8-05 lost response on void x3 / void-all x3
+PASS void x3 -> same resolution, 1 closure, 1 audit 
+PASS void-all x3 same fromEpoch -> [true,false,false], epoch +1 once 
+PASS 1 audit send_epoch_advanced 
+PASS void-all fromEpoch > current -> 400 
+== R8-14 another client
+PASS B sees A applied attempt with its attemptId 
+PASS B void-all 
+PASS A later reads by attemptId -> applied, same id 
+PASS A resend applied variant -> replay same id 
+PASS A late send (old epoch) -> 409 voided 
+PASS <=1 debit per attempt; ledger sum 0 
+SUMMARY pass=17 fail=0

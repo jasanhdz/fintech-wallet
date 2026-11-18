@@ -1,0 +1,33 @@
+
+Detalle
+BA
+
+
+
+Protección contra duplicados activa
+Estamos verificando si tu transferencia se completó
+No pudimos confirmar el resultado de la operación de $300.25 MXN a Cuenta de ahorro demo •• 7534. Para evitar cobros duplicados, consultamos el estado del intento original (Ref: 8302).
+El servidor aún no registra esta operación, así que no podemos confirmar si se realizó un cargo: si el envío original sigue en camino, aún podría aplicarse. Usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces) o «Anular esta transferencia» (si no se aplicó, ya no podrá aplicarse).
+
+No hagas otra transferencia igual
+Verificar el estado sólo consulta el intento original; no envía nada ni genera cargos. Las salidas seguras son Verificar, Reenviar la misma transferencia (misma clave) y Anular esta transferencia.
+Destinatario
+Cuenta de ahorro demo
+Monto en verificación
+$300.25 MXN
+Referencia de seguimiento
+8302
+Estado actual
+En verificación de estado
+
+Verificar estado de la transferencia
+
+Anular esta transferencia
+
+Reenviar la misma transferencia
+
+Ver movimientos
+En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.
+Ir al inicio (revisar saldo después)
+Referencia: 8302
+Billetera MXN • Validación interna de operación

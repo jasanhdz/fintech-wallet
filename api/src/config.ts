@@ -27,8 +27,18 @@ const MAX_RETENTION_DAYS = 1_000_000n;
  */
 export function idempotencyRetentionDays(env: NodeJS.ProcessEnv = process.env): number {
   const value = env.IDEMPOTENCY_RECORD_RETENTION_DAYS;
-  if (value === undefined || value.trim() === '') throw new Error('IDEMPOTENCY_RECORD_RETENTION_DAYS is required');
+  if (value === undefined || value.trim() === '') throw new Error('IDEMPOTENCY_RECORD_RETENTION_DAYS is required (positive integer of days; see .env.example)');
   return Number(positiveInteger('IDEMPOTENCY_RECORD_RETENTION_DAYS', value, MAX_RETENTION_DAYS));
+}
+
+/**
+ * Fail-fast validation run by `server.ts` before the database connection opens, in every environment (R8 F-32):
+ * the production-only settings first, then IDEMPOTENCY_RECORD_RETENTION_DAYS, which has no default anywhere.
+ * Error messages name the variable and never echo a configured value.
+ */
+export function assertStartupConfiguration(env: NodeJS.ProcessEnv = process.env): void {
+  assertProductionConfiguration(env);
+  idempotencyRetentionDays(env);
 }
 
 /** Fail-fast validation of operational settings that are mandatory in production. */

@@ -1,0 +1,167 @@
+
+===== A: respuesta perdida DESPUÉS de aplicarse; Verificar lee GET /transfer-attempts?attemptId= y resuelve =====
+SHOT A-M09-respuesta-perdida scrollW=390 errs=0
+PASS M09 without claims and without the retired sentences
+PASS record v2 matches the three headers of the POST
+PASS DB: the server applied it (1 transfer with that attempt id)
+PASS no way to a new transfer while unresolved (record kept)
+SHOT A-verificar-resuelve scrollW=390 errs=0
+requests of "Verificar": ["GET /transfer-attempts?attemptId=76082e70&limit=1","GET /transfers/d5af2707","GET /accounts"]
+PASS "Verificar": GET /transfer-attempts?attemptId= then GET of the transfer; 0 writes
+PASS receipt from the server result; record released
+PASS "Transferir" is back only after the terminal result + deletion
+principal debit 30025
+DB A: transfers=[completed:30025:76082e70] | 1 debit(s) total 30025 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT A: transfer.created {"status": "completed", "amountMinor": "30025"}
+PASS A: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS A: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS A: 1 transfer, 1 debit of 30025, no closure
+
+===== B: respuesta perdida ANTES de aplicarse; Verificar no envía; Reenviar (misma identidad) =====
+SHOT B-M09-no-registrada scrollW=390 errs=0
+PASS Verificar: list empty -> explained, 0 writes, DB 0 transfers
+PASS Anular and Reenviar are offered
+PASS foreground x2 + Home again: 0 POST, 0 void, 0 void-all; still blocked
+SHOT B-inicio-aviso scrollW=390 errs=0
+PASS F-30 texts on Home
+SHOT B-reenvio-revision scrollW=390 errs=0
+resend review 390x929: consent 584..694, primary button top 710 -> gap 16 px
+PASS F-30 (d): >= 12 px between the consent box and the main button (16 px)
+SHOT B-reenviado scrollW=390 errs=0
+creates [{"key":"991b0a0e","attempt":"bcfcd35b","epoch":"0"},{"key":"991b0a0e","attempt":"bcfcd35b","epoch":"0"}]
+PASS the resend sent the same key, identity, epoch and body bytes
+PASS receipt; released
+DB B: transfers=[completed:30025:bcfcd35b] | 1 debit(s) total 30025 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT B: transfer.created {"status": "completed", "amountMinor": "30025"}
+PASS B: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS B: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS B: 1 transfer, 1 debit
+
+===== C: recarga de la app (arranque) con respuesta perdida, aplicada y no aplicada =====
+SHOT C-recarga-aplicada scrollW=390 errs=0
+start-up requests: ["POST /auth/refresh","GET /accounts","GET /transfer-attempts?attemptId=54eb1533&limit=1","GET /accounts/8447b61b/movements?limit=20","GET /transfers/a15fd60e","GET /accounts"]
+PASS start-up: 0 POST /transfers, 0 void, 0 void-all
+PASS start-up + Home read the list by identity and resolved it (receipt); released
+SHOT C-recarga-no-aplicada scrollW=390 errs=0
+PASS reload with a never-arrived send: only reads, explained, blocked
+PASS foreground x3: 0 writes
+DB C: transfers=[completed:12000:54eb1533] | 1 debit(s) total 12000 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT C: transfer.created {"status": "completed", "amountMinor": "12000"}
+PASS C: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS C: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS C: one transfer (the applied one)
+
+===== D: registro dañado -> Resolver con el servidor -> void-all -> listado -> desbloqueo =====
+pending with code (API, other client): 202 awaiting_confirmation
+SHOT D-inicio-danado scrollW=390 errs=0
+PASS damaged: explained, blocked, no resend
+PASS start-up: no void-all on its own
+SHOT D-resolver-listado scrollW=390 errs=0
+PASS Resolver: lists (pending with code shown) and explains; nothing written yet
+SHOT D-resuelto scrollW=390 errs=0
+requests: ["GET /transfer-attempts?limit=20","POST /transfer-attempts/void-all","GET /transfer-attempts?limit=20","GET /accounts","GET /accounts/23dbfe4c/movements?limit=20"]
+PASS list -> void-all -> list
+PASS after: pending cancelled in the list, record deleted
+PASS unblocked
+late send of the damaged record (old epoch): 409 urn:billetera:problem:transfer-attempt-voided
+PASS a send with the old epoch that arrives later is vetoed (409 transfer-attempt-voided)
+DB D: transfers=[cancelled:600000:25591ec2] | 0 debit(s) total 0 | unbalanced tx=0 | max debits/attempt=0 | closures=[(none)] | epoch=1
+AUDIT D: transfer.created {"status": "awaiting_confirmation", "amountMinor": "600000"} | transfer.cancelled {"via": "void_all"} | transfer.send_epoch_advanced {"to": "1", "from": "0", "closedCount": 1}
+PASS D: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS D: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS D: epoch +1, pending cancelled via void_all, audited, 0 debits
+
+===== E: almacenamiento ilegible -> Resolver con el servidor; D6 mientras no se pueda leer =====
+SHOT E-inicio-ilegible scrollW=390 errs=0
+PASS unreadable: explained, blocked, "Reintentar lectura" and "Resolver con el servidor"
+PASS "Reintentar lectura" while unreadable: still blocked
+SHOT E-d6-sigue-bloqueado scrollW=390 errs=0
+PASS void-all done but the store still cannot be read: D6 explained
+PASS still blocked (D6)
+SHOT E-reintentar-ok scrollW=390 errs=0
+PASS store readable again: "Reintentar" (delete + re-read null) unblocks
+DB E: transfers=[(none)] | 0 debit(s) total 0 | unbalanced tx=0 | max debits/attempt=0 | closures=[(none)] | epoch=1
+AUDIT E: transfer.send_epoch_advanced {"to": "1", "from": "0", "closedCount": 0}
+PASS E: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS E: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS E: epoch advanced once
+
+===== F: registro sin userId (ranura antigua) cuya llave ya se aplicó sin cabeceras -> Anular -> transfer_found =====
+legacy send (no headers): 201 completed
+SHOT F-inicio-sin-usuario scrollW=390 errs=0
+PASS explained (no owner, older build), blocked
+PASS moved to this user, new identity + legacy, same key and payload bytes
+SHOT F-anular-confirmacion scrollW=390 errs=0
+PASS confirmation shows the mandatory text
+SHOT F-anulada-ya-aplicada scrollW=390 errs=0
+requests: ["POST /transfer-attempts/void","GET /accounts","GET /transfers/4a9628ea","GET /accounts"]
+PASS void -> transfer_found: its receipt is shown (no "no charge" claim); released
+DB F: transfers=[completed:12345:null] | 1 debit(s) total 12345 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT F: transfer.created {"status": "completed", "amountMinor": "12345"}
+PASS F: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS F: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS F: still 1 transfer and 1 debit; no closure
+
+===== G: GET 404 del transferId guardado -> sin "Verificar de nuevo"; Anular -> voided; envío tardío vetado =====
+SHOT G-inicio-404 scrollW=390 errs=0
+PASS GET 404 (real): no "Verificar de nuevo"; Anular, Reenviar, Ver movimientos
+PASS blocked; 0 writes
+SHOT G-anulada scrollW=390 errs=0
+PASS voided: mandatory text; released
+PASS unblocked
+late send: 409 urn:billetera:problem:transfer-attempt-voided
+PASS the same send arriving later -> 409 transfer-attempt-voided
+DB G: transfers=[(none)] | 0 debit(s) total 0 | unbalanced tx=0 | max debits/attempt=0 | closures=[voided:1a3d065f] | epoch=0
+AUDIT G: transfer.attempt_voided
+PASS G: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS G: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS G: 0 transfers, 1 voided closure, audited
+
+===== H: anulación de un envío que nunca llegó; su llegada tardía queda vetada =====
+SHOT H-confirmacion scrollW=390 errs=0
+PASS confirmation screen with the mandatory text; nothing sent yet
+PASS "Volver sin anular": nothing sent, record kept
+SHOT H-anulada scrollW=390 errs=0
+PASS voided; released
+late arrival of the original send: 409 urn:billetera:problem:transfer-attempt-voided
+PASS late arrival vetoed (409 transfer-attempt-voided)
+DB H: transfers=[(none)] | 0 debit(s) total 0 | unbalanced tx=0 | max debits/attempt=0 | closures=[voided:b32c5f6b] | epoch=0
+AUDIT H: transfer.attempt_voided
+PASS H: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS H: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS H: 0 transfers, balance unchanged
+
+===== J: carrera real — anular mientras el envío está retenido en el servidor (lock de cuenta) =====
+PASS the send is held by the account lock (0 transfers yet)
+SHOT J-anulando scrollW=390 errs=0
+SHOT J-resultado scrollW=390 errs=0
+timeline: lock released at +10141 ms; void tapped at +3609 ms; held POST -> 201 completed after 9319 ms
+PASS the held send completed once the lock was released
+PASS the void waited for it and answered transfer_found: the applied transfer is shown, never hidden; released
+DB J: transfers=[completed:33333:872fbf7c] | 1 debit(s) total 33333 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=0
+AUDIT J: transfer.created {"status": "completed", "amountMinor": "33333"}
+PASS J: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS J: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS J: 1 transfer, 1 debit, no closure for the same key
+
+===== K: recuperación desde otra sesión (sin registro local) con void-all =====
+session B list: [{"attempt":"a73d562c","status":"completed","transfer":"87a7f62f"}] epoch 0
+PASS session B sees the applied attempt of A with its attemptId
+B void-all: 200 {"sendEpoch":"1","advanced":true,"closedTransferIds":[]}
+SHOT K-A-vuelve-aplicada scrollW=390 errs=0
+PASS A (reload): reads its identity -> the applied transfer (receipt)
+PASS A: released by the read, 0 writes
+PASS B does not see the never-arrived attempt
+B void-all #2: 200 {"sendEpoch":"2","advanced":true,"closedTransferIds":[]}
+SHOT K-A-reenvio-vetado scrollW=390 errs=0
+A resend: [{"attempt":"a73d562c","epoch":"0"},{"attempt":"1774b40c","epoch":"1"},{"attempt":"1774b40c","epoch":"1"}]
+PASS A resend -> 409 transfer-attempt-voided: "Transferencia anulada…", released
+PASS A unblocked
+DB K: transfers=[completed:21000:a73d562c] | 1 debit(s) total 21000 | unbalanced tx=0 | max debits/attempt=1 | closures=[(none)] | epoch=2
+AUDIT K: transfer.created {"status": "completed", "amountMinor": "21000"} | transfer.send_epoch_advanced {"to": "1", "from": "0", "closedCount": 0} | transfer.send_epoch_advanced {"to": "2", "from": "1", "closedCount": 0}
+PASS K: audit metadata without keys, key_hash, OTP or 18-digit CLABE
+PASS K: every ledger transaction sums 0 and <= 1 debit per attempt
+PASS K: one transfer (the applied one), the vetoed one never created, 1 debit
+epoch 2
+
+FAILURES: 0

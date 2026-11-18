@@ -1,0 +1,38 @@
+### before down
+closures|947
+accounts|4546
+idem|14996
+transfers|113903
+ledger_entries|233978
+### down
+DROP TRIGGER
+DROP FUNCTION
+DROP TRIGGER
+DROP FUNCTION
+DROP TABLE
+DROP FUNCTION
+DROP FUNCTION
+DROP TABLE
+DROP FUNCTION
+DROP TRIGGER
+DROP FUNCTION
+DROP INDEX
+ALTER TABLE
+exit=0
+### after down: objects
+||0|0|0
+accounts|4546
+idem|14996
+transfers|113903
+ledger_entries|233978
+### down again (idempotent)
+exit=0
+### compat: old API behaviour on pre-migration schema is N/A; re-up
+up exit=0
+transfer_send_gates|transfer_attempt_closures|1|6
+ closures_upd | gates_del | gates_upd 
+--------------+-----------+-----------
+ f            | f         | t
+(1 row)
+
+113903

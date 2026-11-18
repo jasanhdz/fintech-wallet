@@ -1,0 +1,6 @@
+# own mutations on mobile/App.tsx, jest tests/recovery-r8.test.tsx tests/recovery-h4.test.tsx tests/recovery-h5.test.tsx tests/app.test.tsx
+r4	SURVIVED	release on 404 caught in checkTransferStatus	Tests:       228 passed, 228 total	(24s)
+r12	SURVIVED	list closure read releases (M09)	Tests:       228 passed, 228 total	(23s)
+h3	SURVIVED	send without valid epoch (header guard removed)	Tests:       228 passed, 228 total	(24s)
+f1	KILLED	F-29 3g: resend guard removed	● R8-18 (F-29): the resend is checked against the stored record at the tap › record DELETED between opening the resend review and the tap: 0 POST, Home free |   ● R8-18 (F-29): the resend is checked against the stored record at the tap › record REPLACED (another key) between opening the resend revie	(24s)
+f2	SURVIVED	void guard removed (stale record voided)	Tests:       228 passed, 228 total	(23s)

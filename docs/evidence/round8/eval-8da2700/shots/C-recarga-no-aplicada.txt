@@ -1,0 +1,46 @@
+
+Billetera MXN
+INICIO
+CR
+Hola, Cata Recarga
+Actualizado hoy, 07:12 hrs
+
+Principal
+•• 6952
+Ahorro
+•• 9668
+CUENTA PRINCIPAL
+•• 6952
+Saldo disponible
+$9,880.00
+MXN
+
+Transferencia en verificación
+Aún no confirmamos si se aplicó la operación de $80.00 MXN (Ref: 8304). No hagas otra transferencia igual: las salidas seguras son «Verificar estado» (sólo consulta), «Reenviar la misma transferencia» (misma clave: nunca cobra dos veces) y «Anular esta transferencia». Podrás hacer otra transferencia cuando esta quede resuelta.
+El servidor aún no registra esta operación, así que no podemos confirmar si se realizó un cargo: si el envío original sigue en camino, aún podría aplicarse. Usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces) o «Anular esta transferencia» (si no se aplicó, ya no podrá aplicarse).
+
+Verificar estado de la transferencia
+
+Anular esta transferencia
+
+Reenviar la misma transferencia
+
+Ver movimientos
+En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.
+
+Última actualización de saldo
+Actualizado hoy, 07:12 hrs • Saldo total $15,000.00 MXN
+Actividad reciente
+ÚLTIMOS MOVIMIENTOS
+
+Traspaso a Cuenta de ahorro demo
+•• 9668 · C aplicada
+17 nov, 07:12
+-$120.00 MXN
+Completado
+Ver los últimos 20 movimientos
+
+
+Inicio
+
+Movimientos

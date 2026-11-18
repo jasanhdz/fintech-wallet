@@ -1,0 +1,42 @@
+== R8-06 send vs void: 60 iterations, both orders, random 0-6 ms offset
+PASS R8-06 60 send-vs-void iterations: every one exactly {2xx+transfer_found same id | 409 voided + voided}; never 2 debits, never transfer+closure 
+outcome distribution {"A_exec":30,"B_voided":30} by order (postFirst [exec,voided], voidFirst [exec,voided]) {"postFirst":[30,0],"voidFirst":[0,30]}
+PASS both outcomes occurred (real interleaving, not a single deterministic order) 
+PASS totals: transfers == executed, closures == voided, 2 ledger entries per transfer 
+PASS ledger entries sum 0 over all of the user transfers 
+PASS DB: no duplicated idempotency record; no attempt that has both a transfer and a closure 
+== R8-06(c) real overlap by lock: POST held on an account lock after taking the gate; void launched and blocked; release
+PASS POST is blocked on the account lock (pg_stat_activity wait_event_type=Lock), after taking gate FOR SHARE 
+PASS void is blocked on the gate (FOR UPDATE waits for in-flight send) 
+PASS neither answered while the lock is held 
+PASS after release: POST confirms; void returns transfer_found (does not hide the executed op) 
+PASS 1 debit, no closure 
+== R8-06(a)/(b) forced orders
+PASS (a) void first -> POST 409 voided, 0 transfers 
+PASS (b) POST first -> void transfer_found with that id 
+== R8-06 void-all vs POST with headers, 60 iterations
+PASS 60 void-all-vs-POST iterations: each is {executed (replay returns it) | vetoed 409 voided with 0 transfers}; epoch +1 exactly once each 
+outcome distribution {"exec":28,"vetoed":32}
+PASS both outcomes occurred 
+PASS ledger sum 0; transfers == executed 
+== R8-07 late send vetoed
+PASS void of unknown identity -> voided 
+PASS same POST / current epoch / no headers with the same key -> 409 transfer-attempt-voided 
+PASS same key with a different identity -> still 409 voided (key closed) 
+PASS balances, daily_limit_usage and transfers unchanged 
+PASS voided identity + another key -> 409 voided 
+PASS void-all advances epoch 
+PASS old epoch + new key -> 409 voided; new epoch -> 201 
+PASS epoch greater than current -> 400 
+PASS web-style POST (no headers, new key) after void-all -> 201 (D4/web unchanged) 
+== R8-09 8 simultaneous POST same key
+PASS 8 simultaneous (headers) -> 8 x 201, same id, no 409 in-progress 
+PASS 1 transfer, 1 debit (2 entries) 
+PASS 8 simultaneous WITHOUT headers -> 8 x 201 same id 
+PASS total 2 transfers (one per key) 
+PASS same attemptId with 8 distinct keys -> exactly 1 x 201, 7 x 409 conflict (no second debit) 
+PASS 1 transfer for that identity; ledger sum 0 
+PASS 8 simultaneous void -> 8 x voided 
+PASS 1 closure + 1 audit transfer.attempt_voided 
+PASS 8 concurrent void-all same fromEpoch -> exactly 1 advance, 1 audit 
+SUMMARY pass=33 fail=0

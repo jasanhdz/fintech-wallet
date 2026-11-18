@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readdirSync, readFileSync } from 'node:fs';
-import { assertProductionConfiguration, idempotencyRetentionDays } from '../src/config.js';
+import { assertProductionConfiguration, assertStartupConfiguration, idempotencyRetentionDays } from '../src/config.js';
 
 const validProduction = {
   APP_ENV: 'production',
@@ -69,4 +69,22 @@ test('R8-12: the transfer module has no hard-coded idempotency retention interva
   const directory = new URL('../src/transfers/', import.meta.url);
   const offenders = readdirSync(directory).filter((file) => /interval\s*'30 days'/.test(readFileSync(new URL(file, directory), 'utf8')));
   assert.deepEqual(offenders, []);
+});
+
+test('F-32: startup validates IDEMPOTENCY_RECORD_RETENTION_DAYS in every environment, not only per request', () => {
+  for (const appEnv of ['development', 'test', undefined]) {
+    const base = appEnv === undefined ? {} : { APP_ENV: appEnv };
+    assert.doesNotThrow(() => assertStartupConfiguration({ ...base, IDEMPOTENCY_RECORD_RETENTION_DAYS: '30' }));
+    assert.doesNotThrow(() => assertStartupConfiguration({ ...base, IDEMPOTENCY_RECORD_RETENTION_DAYS: '1000000' }));
+    assert.throws(() => assertStartupConfiguration(base), /IDEMPOTENCY_RECORD_RETENTION_DAYS is required/);
+    for (const value of ['', ' ', '0', '-1', '-30', 'treinta', '1.5', '30 days', '1000001', '99999999999999999999']) {
+      assert.throws(() => assertStartupConfiguration({ ...base, IDEMPOTENCY_RECORD_RETENTION_DAYS: value }), (error: Error) => {
+        assert.match(error.message, /IDEMPOTENCY_RECORD_RETENTION_DAYS/);
+        if (value.trim() !== '') assert.ok(!error.message.includes(value), 'the error must not echo the configured value');
+        return true;
+      });
+    }
+  }
+  assert.doesNotThrow(() => assertStartupConfiguration(validProduction));
+  assert.throws(() => assertStartupConfiguration({ ...validProduction, IDEMPOTENCY_RECORD_RETENTION_DAYS: undefined }), /IDEMPOTENCY_RECORD_RETENTION_DAYS is required in production/);
 });

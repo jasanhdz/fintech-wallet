@@ -1,0 +1,36 @@
+== 422 saldo insuficiente con cabeceras
+PASS 422 typed transfer-attempt-rejected 
+PASS 1 rejected closure, 0 transfers/entries, balance unchanged 
+PASS after funding: replay still 422 rejected (terminal for the identity) 
+PASS still 0 transfers 
+PASS same key WITHOUT headers -> still typed rejected (key closed) 
+PASS same key, other payload -> 409 
+PASS same identity, other key -> 409 conflict 
+PASS void on rejected -> resolution rejected (no new closure) 
+PASS 1 audit transfer.attempt_rejected 
+PASS 8 concurrent rejected -> 8 x 422 typed, 1 closure 
+== 404 beneficiario inexistente
+PASS 404 typed rejected 
+== web-style (no headers) 422 re-evaluated, no closure
+PASS no headers: 422 about:blank 
+PASS no closure for header-less rejection 
+PASS header-less: same key re-evaluated after funding -> 201 (as before round 8) 
+== header validation 400, nothing written
+PASS only attempt id -> 400 
+PASS only epoch -> 400 
+PASS attempt id not uuid -> 400 
+PASS epoch 01 -> 400 
+PASS epoch -1 -> 400 
+PASS epoch 1.5 -> 400 
+PASS epoch 20 digits -> 400 
+PASS epoch > bigint -> 400 
+PASS epoch empty -> 400 
+PASS epoch future -> 400 
+PASS nothing written by the 400s 
+PASS short idempotency key -> 400 
+PASS void with short key -> 400 
+PASS void with unknown field -> 400 
+PASS void-all bad fromEpoch -> 400 
+PASS list without token -> 401 
+PASS void without token -> 401 
+SUMMARY pass=31 fail=0

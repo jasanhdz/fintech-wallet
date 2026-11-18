@@ -169,7 +169,7 @@ function attemptHeaders(record: RecoveryRecord): Record<string, string> | null {
 // returns null. Never on a 404 of GET, any 4xx/409 without the new types (incl. 422/429 without type and 409 "en curso"),
 // a rate-limit 429, 5xx, no answer, transfer-attempt-conflict, a match in Movimientos, elapsed time, sign-out or a user
 // change: in those cases nobody knows whether money moved, so the record and the block stay.
-// What the user is told when the read of a stored attempt answers 404 (the record is kept; no "Verificar de nuevo").
+// What the user is told when the read of a stored attempt answers 404 (the record is kept; no re-verify button).
 const NOT_FOUND_TEXT = 'El servidor no encuentra esta operación. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo. Puedes anularla o reenviarla con la misma clave.';
 // §R8.4-2: the authoritative list has nothing for this identity yet (it never arrived, or it is still on its way).
 const NO_ID_TEXT = 'El servidor aún no registra esta operación, así que no podemos confirmar si se realizó un cargo: si el envío original sigue en camino, aún podría aplicarse. Usa «Reenviar la misma transferencia» (misma clave: si ya se aplicó, el servidor devuelve esa misma transferencia y no se cobra dos veces) o «Anular esta transferencia» (si no se aplicó, ya no podrá aplicarse).';
@@ -593,9 +593,10 @@ function Wallet() {
   }
 
   // §R8.4-1: the send epoch of a NEW attempt comes from GET /transfer-policy loaded for the review (staleTime 0); when that
-  // read is not available it is read once more (a GET). Without a valid sendEpoch nothing is sent (fail closed).
-  async function currentSendEpoch(accessToken: string): Promise<string | null> {
-    const loaded = policyQuery.data?.sendEpoch;
+  // read is not available it is read once more (a GET). `fresh` (a record of a build before round 8, §R8.8) always reads
+  // the policy now. Without a valid sendEpoch nothing is sent (fail closed).
+  async function currentSendEpoch(accessToken: string, fresh = false): Promise<string | null> {
+    const loaded = fresh ? undefined : policyQuery.data?.sendEpoch;
     if (typeof loaded === 'string' && EPOCH_PATTERN.test(loaded)) return loaded;
     try {
       const policy = await request<TransferPolicy>('/transfer-policy', accessToken);
@@ -754,7 +755,7 @@ function Wallet() {
     // §R8.8: a record of a build before round 8 has no epoch yet: it is read from the policy (a GET) and persisted with the
     // record BEFORE the resend; if either fails nothing is sent.
     if (!record.sendEpoch) {
-      const sendEpoch = await currentSendEpoch(session.accessToken);
+      const sendEpoch = await currentSendEpoch(session.accessToken, true);
       let persisted = false;
       if (sendEpoch) {
         record = { ...record, sendEpoch };
@@ -1188,7 +1189,13 @@ function Wallet() {
       record = await readOwnRecovery(userId);
       if (sessionUserRef.current !== userId) return;
       setRecoveryProblem(null);
-      if (!record) { setPendingRecord(null); setPendingCheck('idle'); setDeviceUpdateFailed(false); return; }
+      if (!record) {
+        // §R8.4-6: a deletion that reported an error is not a verified release even if the key now reads empty: the block
+        // stays until "Reintentar" deletes and re-reads it without error.
+        setPendingCheck('idle');
+        if (!deviceUpdateFailed) setPendingRecord(null);
+        return;
+      }
       setPendingRecord(record);
       setPendingCheck('checking');
       const found = await lookupAttempt(record, userId, token);
@@ -1230,7 +1237,7 @@ function Wallet() {
   // F-26: no new transfer can start while an own record exists or the stored record cannot be used. There is no discard.
   const transferBlocked = Boolean(pendingRecord || recoveryProblem);
   // H5 (F-27) / §R8.8: the explicit resend and "Anular esta transferencia" are offered only while the attempt's server
-  // state is unknown: its id never arrived, or its read answered 404 (then there is no "Verificar de nuevo"). The resend
+  // state is unknown: its id never arrived, or its read answered 404 (then there is no re-verify button). The resend
   // always re-sends the stored key, identity, epoch and body (the API answers a repeated key with the same attempt, so it
   // cannot charge twice). A damaged/unreadable record or an identity in conflict has neither: its way out is "Resolver
   // con el servidor". An identity the list shows closed is confirmed with "Anular esta transferencia".
@@ -1426,7 +1433,7 @@ function AppTopbar({ section, initials: userInitials }: { section: string; initi
 // F-21: Home's only transfer action while an attempt of this user is unresolved or still waits for its code. Nothing on
 // Home can start another one until it is resolved. F-26 (H5) / §R8.8: the same notice covers an unusable stored record
 // (damaged / secure store unreadable: "Reintentar lectura" and the explicit "Resolver con el servidor"), an identity in
-// conflict, a stored attempt the server does not find (404: Anular, Reenviar, Ver movimientos; no "Verificar de nuevo")
+// conflict, a stored attempt the server does not find (404: Anular, Reenviar, Ver movimientos; no re-verify button)
 // and a known result whose local deletion failed ("Reintentar"). None discards the record on its own.
 function PendingTransferNotice({ record, problem, lookup, canResend, canVoid, canResolve, identityConflict, closure, deviceUpdateFailed, onVerify, onResend, onVoid, onResolve, onRetryRelease, onRetryRead, onMovements }: { record: RecoveryRecord | null; problem: RecoveryProblem | null; lookup: PendingLookup; canResend: boolean; canVoid: boolean; canResolve: boolean; identityConflict: boolean; closure: TransferAttemptSummary | null; deviceUpdateFailed: boolean; onVerify: () => void; onResend: () => void; onVoid: () => void; onResolve: () => void; onRetryRelease: () => void; onRetryRead: () => void; onMovements: () => void }) {
   const movements = <Button title="Ver movimientos" variant="secondary" leadingIcon="list-outline" onPress={onMovements}/>;
@@ -1887,7 +1894,7 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
       </View>
       <View style={styles.actions}>
         {/* H5 · 2: "Verificar" is read-only; the resend and the void are separate, explicit actions with their own
-            confirmation. F-30 (c) / §R8.8: after a GET 404 there is no "Verificar de nuevo" (Anular, Reenviar, Ver movimientos). */}
+            confirmation. F-30 (c) / §R8.8: after a GET 404 there is no re-verify button (Anular, Reenviar, Ver movimientos). */}
         {notFound || props.identityConflict ? null : <Button title="Verificar estado de la transferencia" size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy} onPress={props.onCheck}/>}
         {props.canResolve ? <Button title="Resolver con el servidor" size="lg" variant="secondary" leadingIcon="shield-checkmark-outline" disabled={props.busy} onPress={props.onResolve}/> : null}
         {props.canVoid ? <Button title="Anular esta transferencia" size="lg" variant="secondary" leadingIcon="close-circle-outline" disabled={props.busy} onPress={props.onVoid}/> : null}

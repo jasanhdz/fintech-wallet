@@ -1,0 +1,14 @@
+◇ injected env (22) from ../.env
+✔ movement history is owner-scoped, ledger-backed and keyset-paginated in wallet_test (1335.453ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1621.940875
+real 1.87
+user 1.75
+sys 0.12
+exit 0
