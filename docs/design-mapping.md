@@ -64,3 +64,7 @@ Los IDs identifican exportaciones de Stitch; las URLs siguientes son **rutas int
 - **Fase 4:** WEB W04–W05/W12–W14 + MOBILE M03–M04/M10–M12 + API history/receipts/security. Cursor, detalle/comprobante interno, privacidad foreground/background y estados.
 
 Todos los elementos quedan autorizados dentro del alcance obligatorio del challenge, sujeto a que las reglas de diseño no contradigan `specs/requirements.md`. Las variantes de bonus/out-of-scope arriba no se implementan.
+
+## Referencias versionadas curadas
+
+Para inspección fuera del checkout que contiene los originales locales, consultar [`docs/design/references/`](design/references/README.md). Incluye esquemas SVG neutrales para escritorio web y móvil, junto con hashes SHA-256 de las fuentes locales inspeccionadas. Los esquemas omiten los datos de muestra de los exports; no sustituyen la revisión del HTML/capturas originales durante el desarrollo y nunca se copian como código de interfaz.

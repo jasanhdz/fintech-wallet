@@ -43,9 +43,9 @@ Este registro separa el trabajo histórico BOOT-00 del ciclo de producto. No es 
 |---|---|---|---|---|
 | 1 | Registro web, login web/móvil, sesión, cuentas/saldos | Integrada | Registro/login/logout/reload web real; login/cuentas móvil en código | `test:integration` 3/3, `test:e2e` 1/1, `test:visual` 2/2, typecheck/lint/unit/build; móvil sin dispositivo |
 | 2 | Alta/lista de beneficiarios web, selección móvil | Integrada | Alta UI real contra API/PostgreSQL, CLABE inválida y masking; selector móvil real en código | `test:integration` 5/5, `test:e2e` 2/2, `test:visual` 2/2, typecheck/lint/unit/build; móvil sin dispositivo |
-| 3 | Transferencias internas, review/OTP demo, idempotencia, límites configurables y recuperación | Pendiente | Pendiente | Pendiente |
-| 4 | Historial/cursor, detalle/recibo interno, rechazos, privacidad/background y sesión expirada | Pendiente | Pendiente | Pendiente |
-| QA final | PostgreSQL integridad, 100 concurrentes, 100k movimientos/EXPLAIN, CI y revisión responsive | Pendiente | Pendiente | Pendiente |
+| 3 | Transferencias internas, review/OTP demo, idempotencia, límites configurables y recuperación | Integrada | Web E2E real con respuesta perdida → mismo intento/clave → recibo; móvil implementado | API integra OTP/ledger/límite/100 concurrentes; web E2E 3/3 y mobile Jest/Expo; no device E2E |
+| 4 | Historial/cursor, detalle/recibo interno, rechazos, privacidad/background y sesión expirada | Integrada | Web E2E verifica débito en historial filtrado y detalle; mobile implementado | API cursor/ownership/filtros en wallet_test; unit/API integration 7/7; no device E2E |
+| QA final | PostgreSQL integridad, 100 concurrentes, 100k movimientos/EXPLAIN, CI y revisión responsive | CÓDIGO/QA LOCAL COMPLETOS · DEVICE E2E PENDIENTE | Web real flow comprobado a 390×844 y 1440×960 sin overflow | `docs/history-performance.md`; lint/typecheck/unit/build/OpenAPI/Playwright pasan; CI remota y revisión independiente pendientes |
 
 ## Fase 1 — registro, sesión, cuentas y saldos
 
@@ -64,6 +64,27 @@ Este registro separa el trabajo histórico BOOT-00 del ciclo de producto. No es 
 - **Web WEB-03:** directorio con búsqueda, alta, validación y estados responsive/accesibles; E2E Playwright contra API y PostgreSQL registra un usuario destino, alta UI de beneficiario, rechazo de CLABE inválida y presentación enmascarada. Commits `356d3e8`, `1c33ac4`, `e45ae9c`, `413c012`.
 - **Móvil M05:** selector React Native consulta beneficiarios reales, búsqueda por nombre/alias/CLABE enmascarada y selección provisional; transferencia completa pendiente de Fase 3. Commit `7eaa64f`. Jest y Expo export pasaron; simulador/dispositivo no verificado (`simctl`/`adb` no disponibles).
 - **Verificación integrada en `feature/product-mvp`:** `db:migrate:test` pasó; API `test:integration` 5/5 en `wallet_test`; `test:e2e` 2/2 (incluye registro de beneficiario real); `test:visual` 2/2; typecheck, lint, unit tests y build workspaces pasaron. Seed local `wallet_dev` ejecutado dos veces con éxito; no se ejecutaron fixtures de prueba sobre `wallet_dev`.
-- **Siguiente:** transferencia interna entre cuentas propias/beneficiarios con atomicidad, OTP configurable, límites demo, idempotencia y recuperación; conservar evidencia móvil solo como código/Jest/export mientras no haya dispositivo disponible.
+- **Estado de corte:** Fase 2 cerró con la transferencia como siguiente entrega; las secciones siguientes documentan su implementación integrada y la de historial.
+
+## Fase 3 — transferencias internas
+
+- **Backend API-04/05/06:** creación/consulta/confirmación, destinatario beneficiario propio o cuenta propia, locks de cuentas, saldo y contra-asientos, límite por día de negocio, idempotencia y OTP ligado a intento; snapshots de retry sin OTP plano. Commit `af10cc7`; hardening OTP cifrado + índice de trigger `aa02724`.
+- **Web WEB-04:** formulario → revisión → envío, OTP, consulta/recuperación y comprobante interno; importe minor-unit y claves/payload en memoria, doble submit bloqueado. Playwright prueba pérdida de respuesta después de commit real y retry de mismo key+payload/resultado. Commits `d21f399`, `8a5c47a`.
+- **Móvil M06–M11:** flujo React Native de datos/revisión/OTP/estado/recibo; retry conserva key+payload, transferencia nativa conectada al contrato API. Commit `b5a66ab`; pruebas Jest y Expo export pasan; device E2E pendiente.
+- **Evidencia integrada:** integración PostgreSQL 7/7 incluye transferencia/OTP/lockout/expiry/ownership/idempotencia, saldo/ledger/límite y 100 solicitudes concurrentes; E2E Web real 3/3.
+
+## Fase 4 — historial y detalle
+
+- **Backend API-07:** movimientos reales derivados de ledger, filtros `from/to/type`, cursor keyset por timestamp+UUID, ownership 404, `limit` 1–100/default20 y sin OFFSET. Commit `d231934`.
+- **Web WEB-02:** historial filtrable, cursor y estados; detalle consulta transferencia propia y se presenta explícitamente como comprobante interno. El E2E real confirma que el débito recién procesado aparece filtrando `debit` y abre el detalle. Commit `289e2ab`, E2E `84d7808`.
+- **Móvil M03/M04:** últimos 20/cursor, detalle desde API, loading/empty/offline/retry y moneda string. Commit `fa4076f`; Jest/Expo export pasan; device E2E pendiente.
+- **QA perf:** script repetible y fail-closed `npm run qa:history-performance` sembró 100,000 movimientos sintéticos en la cuenta dedicada de `wallet_test`; se ejecutó dos veces y mantuvo 100,000 filas. Salida real `EXPLAIN (ANALYZE, BUFFERS)` y contexto en `docs/history-performance.md`.
+
+## QA integrada posterior
+
+- `npm run db:migrate:test && npm run test:integration`: 7/7 en `wallet_test`; `test:e2e`: 3/3 con API/PostgreSQL reales; `test:visual`: 2/2.
+- Typecheck, lint, unit tests, builds API/Web/Expo Android/iOS/web y OpenAPI validate/check pasan desde `feature/product-mvp`.
+- Playwright responsive del flujo real detectó inicialmente overflow de 563px; Web corrigió shell/nav móvil y la verificación 390×844/1440×960 ahora pasa sin overflow ni errores de consola no intencionales.
+- **Pendiente por host:** ejecutar recorridos de transferencia/historial/privacidad en simulador/dispositivo móvil (`simctl` y `adb` no disponibles), CI remota y revisión independiente. Expo export no se presenta como device E2E ni como aprobación del producto.
 
 Las filas se actualizan solo con commits/pruebas ejecutados; mocks o exports HTML no se consideran recorridos integrados.
