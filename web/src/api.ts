@@ -61,8 +61,9 @@ export async function refreshSession(): Promise<AuthResponse | null> {
   return refreshFlight;
 }
 
-export async function request<T>(path: string, options: RequestInit = {}, token?: string): Promise<T> {
-  const usedToken = token ?? accessToken;
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // The module-owned token is canonical: a React context snapshot can lag after refresh rotation.
+  const usedToken = accessToken;
   let response = await send(path, options, usedToken);
   if (response.status === 401 && path !== '/auth/refresh') {
     let retryToken: string;

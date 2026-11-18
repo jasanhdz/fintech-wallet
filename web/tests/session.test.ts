@@ -88,6 +88,28 @@ test('a 401 rotates once and retries the same request with the fresh access toke
   setAccessToken(undefined);
 });
 
+test('later account queries use the rotated token despite a stale session snapshot', async () => {
+  const accountAuthHeaders: string[] = [];
+  let accountAttempts = 0;
+  setAccessToken('context-expired');
+  globalThis.fetch = (async (input, init = {}) => {
+    const path = new URL(String(input)).pathname;
+    if (path.endsWith('/auth/csrf')) return csrf();
+    if (path.endsWith('/auth/refresh')) return ok(auth('context-rotated'));
+    accountAuthHeaders.push(new Headers(init.headers).get('Authorization') || '');
+    accountAttempts += 1;
+    return accountAttempts === 1 ? problem(401) : ok({ items: [] });
+  }) as typeof fetch;
+
+  await request('/accounts');
+  await request('/accounts');
+
+  assert.deepEqual(accountAuthHeaders, ['Bearer context-expired', 'Bearer context-rotated', 'Bearer context-rotated']);
+  assert.equal(accountAttempts, 3);
+  setAccessToken(undefined);
+  setSessionExpiredHandler(undefined);
+});
+
 test('concurrent 401 responses share a single refresh and retry only once each', async () => {
   setAccessToken('parallel-expired');
   let refreshes = 0;
