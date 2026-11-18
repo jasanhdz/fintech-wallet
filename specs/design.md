@@ -44,7 +44,8 @@ erDiagram
   ACCOUNT ||--o{ TRANSFER : source
   ACCOUNT ||--o{ TRANSFER : destination
   BENEFICIARY o|--o{ TRANSFER : payee_reference
-  TRANSFER ||--|{ LEDGER_ENTRY : posts
+  TRANSFER o|--|| LEDGER_TRANSACTION : posts
+  LEDGER_TRANSACTION ||--|{ LEDGER_ENTRY : balances
   LEDGER_ENTRY }o--|| ACCOUNT : posts_to
   USER ||--o{ DAILY_LIMIT_USAGE : consumes
   USER ||--o{ REFRESH_SESSION : authenticates
@@ -55,14 +56,15 @@ erDiagram
   ACCOUNT { uuid id PK uuid owner_id FK bigint balance_minor currency account_kind varchar clabe_ciphertext varchar clabe_lookup_hash }
   BENEFICIARY { uuid id PK uuid owner_id FK uuid destination_account_id FK varchar clabe_ciphertext varchar clabe_lookup_hash }
   TRANSFER { uuid id PK uuid owner_id FK uuid source_account_id FK uuid destination_account_id FK bigint amount_minor status }
-  LEDGER_ENTRY { uuid id PK uuid transfer_id FK uuid account_id FK bigint signed_amount_minor }
+  LEDGER_TRANSACTION { uuid id PK uuid transfer_id FK source_type reference created_at }
+  LEDGER_ENTRY { uuid id PK uuid ledger_transaction_id FK uuid account_id FK bigint signed_amount_minor }
   DAILY_LIMIT_USAGE { uuid id PK uuid owner_id FK date business_date bigint outgoing_minor }
   IDEMPOTENCY_RECORD { uuid id PK uuid user_id FK varchar key_hash uuid transfer_id FK }
   REFRESH_SESSION { uuid id PK uuid user_id FK varchar token_hash timestamptz expires_at }
   AUDIT_EVENT { uuid id PK uuid actor_id FK varchar action jsonb created_at }
 ```
 
-Los tipos/constraints exactos se materializan en migraciones TypeORM. Cuenta `clearing` puede carecer de owner y tener saldo firmado; cuentas customer deben permanecer no-negativas. CLABE se valida por checksum; almacenamiento usa ciphertext autenticado más HMAC lookup hash con llave de entorno separada, y salida enmascarada salvo CLABE de cuenta propia. El beneficiario referencia la cuenta interna ya resuelta. `ledger_entries` son append-only y se verifica suma cero por transacción usando constraint trigger diferido; `audit_events` append-only por privilegios. Migrator/runtime DB roles siguen separados. El diagrama no agrega SPEI, bancos externos, KYC ni biometría.
+Los tipos/constraints exactos se materializan en migraciones TypeORM. Cuenta `clearing` puede carecer de owner y tener saldo firmado; cuentas customer deben permanecer no-negativas. CLABE se valida por checksum; almacenamiento usa ciphertext autenticado más HMAC lookup hash con llave de entorno separada, y salida enmascarada salvo CLABE de cuenta propia. El beneficiario referencia la cuenta interna ya resuelta. `ledger_entries` son append-only y se verifica suma cero por `ledger_transaction_id` usando constraint trigger diferido; cada transfer completed tiene una ledger transaction, y la apertura demo también usa una transacción de ledger con contra-posting clearing. `audit_events` append-only por privilegios. Migrator/runtime DB roles siguen separados. El diagrama no agrega SPEI, bancos externos, KYC ni biometría.
 
 ## Dinero, concurrencia e idempotencia
 

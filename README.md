@@ -13,10 +13,10 @@ BOOT-00 publicó la base reproducible. El diseño Stitch está aprobado como ref
 ```sh
 nvm use
 npm ci
-cp .env.example .env
+npm run env:local
 ```
 
-`.env.example` contiene solo credenciales locales ficticias de desarrollo. No subir `.env`. Desarrollo usa `wallet_dev`; tests usan exclusivamente `wallet_test`. Las credenciales `wallet_runtime_*` son roles de aplicación; `wallet_migrator_*` son roles separados para migraciones.
+`.env.example` contiene credenciales locales ficticias y políticas ilustrativas de demo. Ejecuta `npm run env:local` para crear `.env` con llaves criptográficas aleatorias sin imprimirlas; el script no sobrescribe un `.env` existente. No subir `.env`. Desarrollo usa `wallet_dev`; tests usan exclusivamente `wallet_test`. Las credenciales `wallet_runtime_*` son roles de aplicación; `wallet_migrator_*` son roles separados para migraciones. Valores de límite/OTP/semilla son configurables demo, no policy de producción aprobada.
 
 ## Comandos desde raíz
 
@@ -31,7 +31,10 @@ npm run dev:mobile   # inicia Metro/Expo en LAN; parar con Ctrl-C
 npm run lint
 npm run typecheck
 npm test
-npm run test:visual # Playwright Chromium: browser smoke test del scaffold web, no producto
+npm run test:visual # Playwright Chromium: smoke visual separado de qa:bootstrap
+npm run db:migrate:test # aplica esquema solo en wallet_test, tras db:up
+npm run test:integration # integration PostgreSQL con guard de base de prueba
+npm run test:e2e # web+API reales, obliga wallet_test; servicios temporales en 3100/5174
 npm run build
 npm --workspace @fintech-wallet/api run test:db # requiere PostgreSQL levantado y URLs del .env
 npm run openapi:validate
@@ -59,7 +62,8 @@ API: `GET http://localhost:3000/health`; una ruta no implementada responde Probl
 - `npm run docs:api` genera Redoc desde el contrato OpenAPI de producto; `npm run docs:bootstrap-api` conserva la referencia inicial health-only.
 - TypeORM mantiene `synchronize: false`; migraciones y fixture demo balanceada se agregarán antes de integrar los flujos. Tests de base deben rechazar `wallet_dev` antes de conectar.
 - Las pruebas financieras, 100 transferencias concurrentes y `EXPLAIN ANALYZE` real sobre 100k movimientos se reportarán solo cuando se ejecuten contra `wallet_test`.
-- `npm run test:visual` es el smoke visual BOOT-00; el producto requiere inspección Playwright responsive adicional, y móvil debe probarse en simulador/dispositivo. Export de Expo no acredita prueba en dispositivo.
+- `npm run test:visual` es una prueba de navegador real, separada del informe `qa:bootstrap`; `npm run test:e2e` valida recorridos integrados con API y PostgreSQL. Móvil requiere simulador/dispositivo para evidencia visual y de red; export de Expo no acredita prueba en dispositivo.
+- `npm run test:visual` y `npm run test:e2e` arrancan servidores Playwright en puertos dedicados (API 3100, web 5174); ambos validan `TEST_DATABASE_URL` contra `wallet_test` antes de iniciar. Las migraciones de test deben ejecutarse primero. Detener `db:up` solo para el proyecto wallet con `docker-compose stop postgres`; nunca usar `down -v`.
 - `docs/aws-deploy.md` permanece pendiente. No se despliega AWS, no se publica Expo/EAS y no se abre túnel público.
 
 ## Contrato y tipos compartidos

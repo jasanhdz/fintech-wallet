@@ -25,6 +25,16 @@ Este registro separa el trabajo histórico BOOT-00 del ciclo de producto. No es 
 - OpenAPI es el contrato de request/response; `packages/shared` genera tipos. Coordinator es propietario exclusivo del contrato/shared/root manifests/lockfile/CI/documentación. Backend, Web y Mobile implementan rutas disjuntas en worktrees.
 - Product SPEC de Forge y su commit documental preceden a los worktrees/cambios de aplicación.
 
+## Base común de implementación — en preparación
+
+- OpenAPI 0.2.0 se validó con Redocly y sus tipos shared se generan/verifican desde OpenAPI.
+- Se fijaron dependencias para auth/seguridad/validación, React Query/router y pruebas web con Testing Library sobre el runner `tsx` existente; Expo Router/SecureStore/Vector Icons/React Native Web pasan Expo SDK 58 checks.
+- `packages/shared` incorpora conversión exacta de MXN a minor units y checksum CLABE, con tests positivos/negativos.
+- E2E Playwright arranca API y web en puertos aislados 3100/5174 con guard `wallet_test`; CI separa visual, integration y end-to-end.
+- `npm run env:local` genera llaves locales en `.env` con modo restrictivo sin mostrar valores. No se iniciaron Docker/Compose ni se accedió a Lucem.
+- En Node 26.13.1: `npm ci`, OpenAPI validate/generate/check, typecheck, npm test (API/web/mobile/shared) y Expo install check pasan; los flujos producto requieren rutas/app/migraciones de los worktrees.
+- Se detectó que la peer opcional de Expo Router `@testing-library/react-native` instalaba el árbol Jest en un perfil audit `--omit=dev`; se retiró esa biblioteca, manteniendo renderer Expo/Jest para mobile. El lockfile conserva avisos de dependencias que están registrados para la revisión final.
+
 ## Entregas verticales
 
 | Fase | Alcance | Agentes/commit | Qué funciona end-to-end | Pruebas/evidencia |

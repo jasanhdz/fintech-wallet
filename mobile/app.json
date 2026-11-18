@@ -1,1 +1,13 @@
-{"expo":{"name":"Fintech Wallet BOOT-00","slug":"fintech-wallet-boot","version":"0.1.0","orientation":"portrait","userInterfaceStyle":"light"}}
+{
+  "expo": {
+    "name": "Fintech Wallet",
+    "slug": "fintech-wallet",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}

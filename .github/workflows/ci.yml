@@ -1,4 +1,4 @@
-name: bootstrap-ci
+name: product-ci
 on:
   push:
   pull_request:
@@ -24,6 +24,8 @@ jobs:
           node-version: 26.13.1
           cache: npm
       - run: npm ci
+      - name: Create ephemeral local-only config
+        run: npm run env:local
       - name: Create isolated test role and database
         env:
           PGPASSWORD: postgres_ci_only
@@ -32,19 +34,37 @@ jobs:
           psql -h localhost -U postgres -d postgres -c "CREATE ROLE wallet_runtime_test LOGIN PASSWORD 'ci_runtime_test';"
           psql -h localhost -U postgres -d postgres -c "CREATE DATABASE wallet_test OWNER wallet_migrator_test;"
           psql -h localhost -U postgres -d postgres -c "GRANT CONNECT ON DATABASE wallet_test TO wallet_runtime_test;"
+      - name: Apply test-only migrations
+        run: npm run db:migrate:test
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
+          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
+          TEST_MIGRATOR_DATABASE_URL: postgres://wallet_migrator_test:ci_migrator_test@localhost:5432/wallet_test
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
         env:
+          APP_ENV: test
+          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
+          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
+      - name: PostgreSQL integration tests
+        run: npm run test:integration
+        env:
+          APP_ENV: test
           DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
           TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: Browser smoke check (BOOT-00 only)
+      - name: Browser visual check
         run: npm run test:visual
-      - name: PostgreSQL test database isolation
-        run: npm --workspace @fintech-wallet/api run test:db
         env:
+          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
+          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
+      - name: Integrated web/API end-to-end
+        run: npm run test:e2e
+        env:
+          APP_ENV: development
           DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
           TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
       - run: npm run build
