@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { loginRequestSchema, registerRequestSchema, formatMxnFromMinor } from '@fintech-wallet/shared';
 import { ApiError, getCsrf, request, type Account, type AuthResponse, type Problem } from './api.js';
 import { AppShell, AuthLayout, Brand, Field, Notice, StatePanel } from './components.js';
 import { useSession } from './session.js';
+import { readActiveTransferSummary } from './transfer-attempt.js';
 
 type RecentMovement = { id: string; type: 'debit' | 'credit'; amountMinor: string; concept: string; occurredAt: string; status: 'processing' | 'completed' | 'rejected' };
 type RecentMovementPage = { items: RecentMovement[] };
@@ -29,16 +30,17 @@ function completeSession(result: AuthResponse, start: (token: string, user: Auth
 
 export function LoginPage() {
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const navigate = useNavigate(); const { session, start, hydrated } = useSession();
+  const navigate = useNavigate(); const location = useLocation(); const { session, start, hydrated } = useSession();
+  const resumeTransfer = (location.state as { resumeTransfer?: boolean } | null)?.resumeTransfer === true;
   if (!hydrated) return <AuthLayout title="Cargando tu sesión…" subtitle="Estamos verificando tu acceso."> </AuthLayout>;
-  if (session) return <Navigate to="/accounts" replace />;
+  if (session) return <Navigate to={resumeTransfer ? '/transfers/new' : '/accounts'} replace />;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(''); setFieldErrors({});
     const data = new FormData(event.currentTarget);
     const parsed = loginRequestSchema.safeParse({ email: data.get('email'), password: data.get('password'), client: 'web' });
     if (!parsed.success) { setFieldErrors(Object.fromEntries(parsed.error.issues.map((issue) => [String(issue.path[0]), issue.message]))); return; }
     setBusy(true);
-    try { await getCsrf(); const result = await request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(parsed.data) }); completeSession(result, start); navigate('/accounts'); }
+    try { await getCsrf(); const result = await request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(parsed.data) }); completeSession(result, start); navigate(resumeTransfer ? '/transfers/new' : '/accounts'); }
     catch (cause) { setError(messageFor(cause)); setFieldErrors(fieldsFor(cause)); }
     finally { setBusy(false); }
   }
@@ -76,9 +78,9 @@ export function AccountsPage() {
   const recent = useQuery({ queryKey: ['recent-movements', firstAccountId], queryFn: () => request<RecentMovementPage>(recentMovementsPath(firstAccountId!)), enabled: Boolean(firstAccountId) });
   if (!hydrated) return <AppShell><StatePanel title="Cargando tu sesión">Estamos verificando tu acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: '/accounts' }} />;
-  if (accounts.error instanceof ApiError && accounts.error.problem.status === 401) { end(); return <Navigate to="/session-expired" replace />; }
+  if (accounts.error instanceof ApiError && accounts.error.problem.status === 401) { end(true); return <Navigate to="/session-expired" replace />; }
   if (accounts.error instanceof ApiError && accounts.error.problem.status === 403) return <AppShell><StatePanel title="Acceso no autorizado">No tienes permiso para consultar estas cuentas.</StatePanel></AppShell>;
-  return <AppShell><div className="welcome-row"><div><span className="eyebrow">RESUMEN</span><h1>Hola, {session.user.fullName.split(' ')[0]} <span aria-hidden="true">✦</span></h1><p>Este es el estado de tus cuentas.</p></div><Link className="primary-button button-link" to="/transfers/new">Transferir <span aria-hidden="true">→</span></Link></div>
+  return <AppShell><div className="welcome-row"><div><span className="eyebrow">RESUMEN</span><h1>Hola, {session.user.fullName} <span aria-hidden="true">✦</span></h1><p>Este es el estado de tus cuentas.</p></div><Link className="primary-button button-link" to="/transfers/new">Transferir <span aria-hidden="true">→</span></Link></div>
     {accounts.isPending ? <section className="account-grid" aria-label="Cargando cuentas" aria-busy="true"><div className="account-skeleton" /><div className="account-skeleton" /></section>
       : accounts.error ? <StatePanel title="No pudimos cargar tus cuentas" action={<button className="secondary-button" onClick={() => void accounts.refetch()}>Intentar de nuevo</button>}>{messageFor(accounts.error)}</StatePanel>
       : accounts.data.items.length === 0 ? <StatePanel title="Aún no hay cuentas" >Cuando tengas una cuenta disponible, aparecerá aquí.</StatePanel>
@@ -88,7 +90,12 @@ export function AccountsPage() {
   </AppShell>;
 }
 
-export function SessionExpiredPage() { return <main className="session-expired-page"><Brand /><section className="session-expired-card"><span className="session-expired-icon" aria-hidden="true">◷</span><h1>Tu sesión venció</h1><p>Inicia sesión para continuar operando de forma segura.</p><Link className="primary-button full button-link" to="/login">Iniciar sesión <span aria-hidden="true">→</span></Link></section></main>; }
+export function SessionExpiredPage() {
+  const pending = readActiveTransferSummary();
+  const loginState = pending ? { from: '/transfers/new', resumeTransfer: true } : undefined;
+  if (!pending) return <main className="session-expired-page"><Brand /><section className="session-expired-card"><span className="session-expired-icon" aria-hidden="true">◷</span><h1>Tu sesión venció</h1><p>Inicia sesión para continuar operando de forma segura.</p><Link className="primary-button full button-link" to="/login">Iniciar sesión <span aria-hidden="true">→</span></Link></section></main>;
+  return <main className="session-recovery-shell"><aside className="session-recovery-rail"><Brand /><span className="eyebrow">ACCESO</span><nav aria-label="Navegación de sesión"><Link to="/login" state={loginState}>Inicio</Link><Link to="/login" state={loginState}>Movimientos</Link><Link to="/login" state={loginState}>Beneficiarios</Link><Link to="/login" state={loginState}>Transferir</Link></nav><p>La sesión debe renovarse para continuar.</p></aside><header className="session-recovery-topbar"><span>Billetera MXN</span><span className="session-expired-badge">Sesión vencida</span></header><section className="session-recovery-content"><div className="session-recovery-breadcrumb">Billetera MXN <span>/</span> Sesión y recuperación</div><span className="eyebrow">SESIÓN Y RECUPERACIÓN</span><h1>Tu sesión venció</h1><p className="session-recovery-intro">Vuelve a autenticarte para consultar el resultado de la operación pendiente.</p><div className="session-recovery-grid"><section className="session-system-card"><span className="session-expired-icon" aria-hidden="true">◷</span><span className="eyebrow">ESTADO DE SESIÓN</span><h2>Se requiere iniciar sesión</h2><p>El acceso caducó. La operación pendiente se conserva en esta pestaña hasta volver a validar tu sesión.</p><Link className="primary-button button-link" to="/login" state={loginState}>Iniciar sesión y recuperar intento <span aria-hidden="true">→</span></Link></section><section className="session-pending-card" aria-labelledby="session-pending-title"><span className="eyebrow">CONTEXTO DE RECUPERACIÓN</span><h2 id="session-pending-title">Transferencia pendiente</h2><p>Al autenticarte, Billetera consultará el mismo intento para evitar duplicados.</p><dl><div><dt>Tipo de destino</dt><dd>{pending.destinationType === 'own_account' ? 'Entre mis cuentas' : 'Beneficiario Billetera'}</dd></div><div><dt>Importe</dt><dd data-sensitive>{formatMxnFromMinor(pending.amountMinor)} MXN</dd></div><div><dt>Concepto</dt><dd data-sensitive>{pending.concept}</dd></div><div><dt>Referencia</dt><dd data-sensitive>{pending.reference}</dd></div></dl><p className="session-pending-safe">No se muestran datos de autenticación ni identificadores del intento.</p></section></div></section></main>;
+}
 
 export function AccessDeniedPage() { return <main className="access-denied-page"><Brand /><section className="access-denied-card"><div className="state-icon" aria-hidden="true">🔒</div><h1>Acceso no disponible</h1><p>No tienes permiso para consultar esta sección o el enlace no es válido.</p><Link className="primary-button button-link" to="/accounts">← Volver al inicio</Link></section></main>; }
 

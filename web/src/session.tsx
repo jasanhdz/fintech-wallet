@@ -3,7 +3,7 @@ import { refreshSession, setAccessToken, setSessionExpiredHandler, type User } f
 import { activateTransferUser, clearAllTransferDrafts, forgetTransferUser } from './transfer-attempt.js';
 
 type Session = { accessToken: string; user: User };
-type SessionContextValue = { session: Session | null; hydrated: boolean; start: (accessToken: string, user: User) => void; end: () => void };
+type SessionContextValue = { session: Session | null; hydrated: boolean; start: (accessToken: string, user: User) => void; end: (preservePendingTransfer?: boolean) => void };
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -29,7 +29,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     session,
     hydrated,
     start: (token: string, user: User) => { activateTransferUser(user.id); setAccessToken(token); setSession({ accessToken: token, user }); },
-    end: () => { clearAllTransferDrafts(); forgetTransferUser(); setAccessToken(undefined); setSession(null); },
+    end: (preservePendingTransfer = false) => { if (!preservePendingTransfer) { clearAllTransferDrafts(); forgetTransferUser(); } setAccessToken(undefined); setSession(null); },
   }), [session, hydrated]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

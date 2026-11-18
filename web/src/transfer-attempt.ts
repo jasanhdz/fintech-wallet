@@ -1,4 +1,5 @@
 export type TransferDraft = { body: Record<string, string>; key: string; transferId?: string };
+export type TransferAttemptSummary = { destinationType: 'beneficiary' | 'own_account'; amountMinor: string; concept: string; reference: string };
 
 const storageKey = (userId: string) => `wallet:web:transfer-attempt:${userId}`;
 const prefix = 'wallet:web:transfer-attempt:';
@@ -29,6 +30,22 @@ export function readTransferDraft(userId: string): TransferDraft | null {
   } catch {
     return null;
   }
+}
+
+/** Exposes only presentation-safe fields for same-tab recovery context; never returns the key or account identifiers. */
+export function readActiveTransferSummary(): TransferAttemptSummary | null {
+  try {
+    const userId = sessionStorage.getItem(activeUserKey);
+    if (!userId) return null;
+    const draft = readTransferDraft(userId);
+    if (!draft) return null;
+    const { destinationType, amountMinor, concept, reference } = draft.body;
+    if ((destinationType !== 'beneficiary' && destinationType !== 'own_account')
+      || typeof amountMinor !== 'string' || !/^[1-9][0-9]*$/.test(amountMinor)
+      || typeof concept !== 'string' || concept.length < 1 || concept.length > 40
+      || typeof reference !== 'string' || !/^[0-9]{1,7}$/.test(reference)) return null;
+    return { destinationType, amountMinor, concept, reference };
+  } catch { return null; }
 }
 
 export function saveTransferDraft(userId: string, draft: TransferDraft) {

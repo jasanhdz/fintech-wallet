@@ -41,7 +41,7 @@ export function BeneficiariesPage() {
   if (!hydrated) return <AppShell active="beneficiaries"><StatePanel title="Cargando tu sesión">Estamos verificando tu acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: '/beneficiaries' }} />;
   if (beneficiaries.error instanceof ApiError && beneficiaries.error.problem.status === 401) {
-    end(); return <Navigate to="/session-expired" replace />;
+    end(true); return <Navigate to="/session-expired" replace />;
   }
   if (beneficiaries.error instanceof ApiError && beneficiaries.error.problem.status === 403) return <AppShell active="beneficiaries"><StatePanel title="Acceso no autorizado">No tienes permiso para consultar estos beneficiarios.</StatePanel></AppShell>;
 
@@ -62,6 +62,7 @@ export function NewBeneficiaryPage() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'error' | 'info'; text: string }>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState({ name: '', alias: '', clabe: '' });
 
   if (!hydrated) return <AppShell active="beneficiaries"><StatePanel title="Cargando tu sesión">Estamos verificando tu acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: '/beneficiaries/new' }} />;
@@ -81,7 +82,7 @@ export function NewBeneficiaryPage() {
       await queryClient.invalidateQueries({ queryKey: ['beneficiaries'] });
       navigate('/beneficiaries', { replace: true, state: { created: created.alias } });
     } catch (error) {
-      if (error instanceof ApiError && error.problem.status === 401) { end(); navigate('/session-expired', { replace: true }); return; }
+      if (error instanceof ApiError && error.problem.status === 401) { end(true); navigate('/session-expired', { replace: true }); return; }
       const status = error instanceof ApiError ? error.problem.status : undefined;
       const errors = serverFieldErrors(error);
       if (status === 409) setNotice({ tone: 'error', text: 'Esta CLABE ya está registrada en tus beneficiarios.' });
@@ -94,13 +95,13 @@ export function NewBeneficiaryPage() {
   }
 
   return <AppShell active="beneficiaries"><div className="beneficiary-form-page"><Link className="back-link" to="/beneficiaries">← Volver a beneficiarios</Link><span className="eyebrow">NUEVO BENEFICIARIO</span><h1>Agregar beneficiario</h1><p className="beneficiary-intro">Registra una cuenta de Billetera para encontrarla fácilmente después.</p>
-    <form className="beneficiary-form" onSubmit={submit} noValidate>
+    <div className="beneficiary-form-layout"><form className="beneficiary-form" onSubmit={submit} noValidate>
       {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
-      <div className="field"><label htmlFor="name">Nombre del beneficiario</label><input id="name" name="name" autoComplete="name" maxLength={120} required aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : 'name-help'} />{fieldErrors.name ? <span className="field-error" id="name-error">{fieldErrors.name}</span> : <span className="helper-text" id="name-help">Hasta 120 caracteres.</span>}</div>
-      <div className="field"><label htmlFor="alias">Alias</label><input id="alias" name="alias" autoComplete="off" maxLength={80} required aria-invalid={Boolean(fieldErrors.alias)} aria-describedby={fieldErrors.alias ? 'alias-error' : 'alias-help'} />{fieldErrors.alias ? <span className="field-error" id="alias-error">{fieldErrors.alias}</span> : <span className="helper-text" id="alias-help">Un nombre corto para reconocer la cuenta; hasta 80 caracteres.</span>}</div>
-      <div className="field"><label htmlFor="clabe">CLABE interbancaria</label><input id="clabe" name="clabe" type="text" inputMode="numeric" autoComplete="off" maxLength={18} pattern="[0-9]{18}" required aria-invalid={Boolean(fieldErrors.clabe)} aria-describedby={fieldErrors.clabe ? 'clabe-error' : 'clabe-help'} />{fieldErrors.clabe ? <span className="field-error" id="clabe-error">{fieldErrors.clabe}</span> : <span className="helper-text" id="clabe-help">18 dígitos. Solo se agregan cuentas internas de Billetera.</span>}</div>
+      <div className="field"><label htmlFor="name">Nombre del beneficiario</label><input id="name" name="name" autoComplete="name" maxLength={120} required value={preview.name} onChange={(event) => setPreview((current) => ({ ...current, name: event.target.value }))} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : 'name-help'} />{fieldErrors.name ? <span className="field-error" id="name-error">{fieldErrors.name}</span> : <span className="helper-text" id="name-help">Hasta 120 caracteres.</span>}</div>
+      <div className="field"><label htmlFor="alias">Alias</label><input id="alias" name="alias" autoComplete="off" maxLength={80} required value={preview.alias} onChange={(event) => setPreview((current) => ({ ...current, alias: event.target.value }))} aria-invalid={Boolean(fieldErrors.alias)} aria-describedby={fieldErrors.alias ? 'alias-error' : 'alias-help'} />{fieldErrors.alias ? <span className="field-error" id="alias-error">{fieldErrors.alias}</span> : <span className="helper-text" id="alias-help">Un nombre corto para reconocer la cuenta; hasta 80 caracteres.</span>}</div>
+      <div className="field"><label htmlFor="clabe">CLABE interbancaria</label><input id="clabe" name="clabe" type="text" inputMode="numeric" autoComplete="off" maxLength={18} pattern="[0-9]{18}" required value={preview.clabe} onChange={(event) => setPreview((current) => ({ ...current, clabe: event.target.value.replace(/\D/g, '').slice(0, 18) }))} aria-invalid={Boolean(fieldErrors.clabe)} aria-describedby={fieldErrors.clabe ? 'clabe-error' : 'clabe-help'} />{fieldErrors.clabe ? <span className="field-error" id="clabe-error">{fieldErrors.clabe}</span> : <span className="helper-text" id="clabe-help">18 dígitos. Solo se agregan cuentas internas de Billetera.</span>}</div>
       <div className="privacy-note" role="note"><span aria-hidden="true">◉</span><p>La CLABE se validará con el servicio y se mostrará enmascarada en tu directorio.</p></div>
       <div className="beneficiary-form-actions"><Link className="secondary-button button-link" to="/beneficiaries">Cancelar</Link><button className="primary-button" disabled={busy}>{busy ? <><span className="button-spinner" aria-hidden="true" /> Guardando…</> : <>Guardar beneficiario <span aria-hidden="true">→</span></>}</button></div>
-    </form>
+    </form><aside className="beneficiary-preview" aria-label="Vista previa del beneficiario"><span className="eyebrow">VISTA PREVIA</span><div className="beneficiary-preview-person"><span className="beneficiary-avatar" aria-hidden="true">{preview.name.trim().slice(0, 1).toLocaleUpperCase() || '•'}</span><div><strong data-sensitive>{preview.name.trim() || 'Nombre del beneficiario'}</strong><span data-sensitive>{preview.alias.trim() || 'Alias o nombre corto'}</span></div></div><div className="beneficiary-preview-account"><span>CUENTA BILLETERA</span><strong>CLABE enmascarada</strong><code aria-label="CLABE enmascarada">•••• •••• •••• •••• ••</code><small>{preview.clabe.length} de 18 dígitos capturados</small></div><p>Los datos se validarán antes de guardar. En el directorio, la CLABE permanece enmascarada.</p></aside></div>
   </div></AppShell>;
 }

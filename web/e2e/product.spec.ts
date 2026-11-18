@@ -123,8 +123,20 @@ test('W10 OTP screen captures six separately masked cells at responsive widths @
 });
 
 test('an expired authenticated session shows the real session-expired screen responsively @visual', async ({ page }) => {
-  // Empty refresh probe represents a browser session without a refresh cookie; no token claims are fabricated.
+  // Create a real synthetic owner in wallet_test, then expire its browser cookie while retaining same-tab recovery.
   await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
+  const unique = crypto.randomUUID();
+  const userEmail = `session-recovery-${unique}@example.test`;
+  const userPassword = `Local-test-${unique}-Aa1`;
+  await page.goto('/register');
+  await page.getByLabel('Nombre completo').fill('Session Recovery QA');
+  await page.getByLabel('Correo electrónico').fill(userEmail);
+  await page.getByLabel('Crea una contraseña').fill(userPassword);
+  await page.getByRole('button', { name: /Crear cuenta/ }).click();
+  await expect(page).toHaveURL(/\/accounts$/);
+  const recoveryUserId = await page.evaluate(() => sessionStorage.getItem('wallet:web:active-user'));
+  expect(Boolean(recoveryUserId && /^[0-9a-f-]{36}$/i.test(recoveryUserId))).toBeTruthy();
+  await page.context().clearCookies();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/session-expired');
   await expect(page).toHaveURL(/\/session-expired$/);
@@ -132,6 +144,45 @@ test('an expired authenticated session shows the real session-expired screen res
   await capture(page, 'W14-session-expired');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W14-session-expired');
+  const recoveryKey = crypto.randomUUID();
+  const recoveryTransferId = crypto.randomUUID();
+  const recoveryBody = {
+    sourceAccountId: crypto.randomUUID(), destinationType: 'beneficiary', beneficiaryId: crypto.randomUUID(),
+    amountMinor: '123456', concept: 'Contexto visual', reference: '1234',
+  };
+  await page.evaluate(({ userId, key, body }) => {
+    sessionStorage.setItem(`wallet:web:transfer-attempt:${userId}`, JSON.stringify({ key, body }));
+  }, { userId: recoveryUserId!, key: recoveryKey, body: recoveryBody });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Transferencia pendiente' })).toBeVisible();
+  await expect(page.getByText('No se muestran datos de autenticación ni identificadores del intento.')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W14-session-expired-pending');
+  await captureAfterScrollIfOutsideViewport(page, page.locator('.session-pending-card'), 'W14-session-expired-pending-context');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W14-session-expired-pending');
+  await page.getByRole('link', { name: 'Iniciar sesión y recuperar intento' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(await page.evaluate(({ userId, key }) => sessionStorage.getItem(`wallet:web:transfer-attempt:${userId}`)?.includes(key), { userId: recoveryUserId, key: recoveryKey })).toBeTruthy();
+  let recoveredKey = '';
+  let recoveredBody = '';
+  await page.route('**/v1/transfers', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    recoveredKey = route.request().headers()['idempotency-key'] ?? '';
+    recoveredBody = route.request().postData() ?? '';
+    await route.fulfill({ status: 202, contentType: 'application/json', body: JSON.stringify({
+      id: recoveryTransferId, status: 'awaiting_confirmation', sourceAccountId: recoveryBody.sourceAccountId,
+      destination: { id: recoveryBody.beneficiaryId, name: 'Beneficiario visual', alias: 'Visual', destinationAccountId: recoveryBody.beneficiaryId, clabeMasked: '••••1234' },
+      amountMinor: recoveryBody.amountMinor, currency: 'MXN', concept: recoveryBody.concept, reference: recoveryBody.reference, createdAt: new Date().toISOString(),
+    }) });
+  });
+  await page.getByLabel('Correo electrónico').fill(userEmail);
+  await page.getByLabel('Contraseña').fill(userPassword);
+  await page.getByRole('button', { name: /Iniciar sesión/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/transfers/${recoveryTransferId}/status$`), { timeout: 15_000 });
+  expect(recoveredKey === recoveryKey).toBeTruthy();
+  expect(recoveredBody === JSON.stringify(recoveryBody)).toBeTruthy();
+  await expect(page.getByLabel('Código de confirmación de 6 dígitos')).toBeVisible();
   await page.goto('/access-denied');
   await expect(page.getByRole('heading', { name: 'Acceso no disponible' })).toBeVisible();
   await expect(page.getByText('No tienes permiso para consultar esta sección o el enlace no es válido.')).toBeVisible();
@@ -248,6 +299,7 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W07-alta');
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('button', { name: /Guardar beneficiario/ }), 'W07-acciones');
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Vista previa del beneficiario' }), 'W07-preview');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W07-alta');
 
@@ -368,6 +420,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W08-formulario');
   await page.setViewportSize({ width: 390, height: 844 });
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen');
   await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
   await page.getByLabel('Beneficiario').selectOption({ index: 1 });
   await page.getByLabel('Importe en MXN').fill('0.01');
@@ -375,10 +428,14 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.getByLabel('Referencia numérica').fill('804201');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review');
   await page.setViewportSize({ width: 1440, height: 960 });
+  await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review');
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W09-resumen');
   await expectNoHorizontalOverflow();
 
   const observed: Array<{ key: string | undefined; body: string; status: number; transferId: string; transfer: Record<string, unknown> }> = [];
@@ -409,6 +466,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 390, height: 844 });
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Datos del mismo intento pendiente' }), 'W11-datos-intento');
   // A full reload must recover the exact persisted attempt; the first POST was committed server-side.
   expect((await page.context().cookies()).some((cookie) => cookie.name === 'wallet_refresh')).toBeTruthy();
   await page.unroute('**/auth/refresh', emptyRefreshProbe);

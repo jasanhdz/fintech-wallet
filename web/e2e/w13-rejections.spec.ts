@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { Client } from 'pg';
 import { assertSafeTestDatabase } from '../../api/src/db/test-database-guard.js';
 
@@ -58,6 +58,16 @@ async function openOwnTransfer(page: Page, accounts: BrowserFixture['accounts'],
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
 }
 
+function rejectionMasks(page: Page): Locator[] {
+  return [
+    page.locator('input:not(.otp-input), select'),
+    ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
+    page.locator('[data-sensitive]'),
+    page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
+    page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
+  ];
+}
+
 async function captureResponsiveRejection(page: Page, name: string) {
   for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 960 }]) {
     await page.setViewportSize(viewport);
@@ -66,16 +76,18 @@ async function captureResponsiveRejection(page: Page, name: string) {
     await page.screenshot({
       path: `test-results/visual/${name}-${viewport.width}.png`,
       fullPage: false,
-      mask: [
-        page.locator('input:not(.otp-input), select'),
-        ...Array.from({ length: 6 }, (_, index) => page.locator('.otp-box').nth(index)),
-        page.locator('[data-sensitive]'),
-        page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-        page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd, .receipt-amount strong'),
-      ],
+      mask: rejectionMasks(page),
       maskColor: '#172b4d',
     });
   }
+}
+
+async function captureRejectionBreakdown(page: Page, name: string) {
+  const viewport = { width: 390, height: 844 };
+  await page.setViewportSize(viewport);
+  await page.locator('.rejection-breakdown').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `test-results/visual/${name}-390-breakdown.png`, fullPage: true, mask: rejectionMasks(page), maskColor: '#172b4d' });
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 test('W13 insufficient-balance rejection is captured responsively for a synthetic wallet_test user @visual', async ({ page }) => {
@@ -108,8 +120,11 @@ test('W13 insufficient-balance rejection is captured responsively for a syntheti
   await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
   await expect(page.getByRole('heading', { name: 'Transferencia no realizada' })).toBeVisible();
   await expect(rejection).toContainText(/saldo insuficiente|no se realizó ningún débito/i);
+  await expect(rejection.locator('.rejection-breakdown')).toContainText('Importe solicitado');
+  await expect(rejection.locator('.rejection-breakdown')).toContainText('Saldo disponible sin débito');
   await expect.poll(() => confirmationStatus).toBe(422);
   await captureResponsiveRejection(page, 'W13-saldo-insuficiente');
+  await captureRejectionBreakdown(page, 'W13-saldo-insuficiente');
 });
 
 test('W13 configured demo daily-limit rejection is captured responsively for a synthetic wallet_test user @visual', async ({ page }) => {
@@ -125,6 +140,10 @@ test('W13 configured demo daily-limit rejection is captured responsively for a s
   await openOwnTransfer(page, fixture.accounts, '0.01', '913402');
   await expect(page.getByRole('heading', { name: 'Transferencia no realizada' })).toBeVisible();
   await expect(page.getByRole('alert')).toContainText(/límite diario configurado|no se realizó ningún débito/i);
+  await expect(page.getByRole('alert').locator('.rejection-breakdown')).toContainText('Importe solicitado');
+  await expect(page.getByRole('alert').locator('.rejection-breakdown')).toContainText('Límite diario de demostración alcanzado');
+  await expect(page.getByRole('alert').locator('.rejection-breakdown')).not.toContainText(/uso acumulado|disponible del límite/i);
   await expect.poll(() => createStatus).toBe(429);
   await captureResponsiveRejection(page, 'W13-limite-diario-demo');
+  await captureRejectionBreakdown(page, 'W13-limite-diario-demo');
 });

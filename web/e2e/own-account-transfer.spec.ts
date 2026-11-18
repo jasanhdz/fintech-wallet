@@ -154,12 +154,17 @@ test('registers with the development fixture and transfers between own accounts'
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W08-formulario-own');
   await page.setViewportSize({ width: 390, height: 844 });
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen-own');
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review-own');
   await page.setViewportSize({ width: 1440, height: 960 });
+  await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W09-review-own');
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W09-resumen-own');
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('Transferencia propia E2E');
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toContainText('204201');
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();

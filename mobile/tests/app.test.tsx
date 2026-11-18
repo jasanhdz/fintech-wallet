@@ -298,6 +298,10 @@ describe('mobile movement history', () => {
     assert.match(JSON.stringify(renderer!.toJSON()), /Sin conexión|No pudimos conectar/);
     await TestRenderer.act(async () => { button('Reintentar').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const movementsTab = renderer!.root.findAll((node) => node.props.accessibilityRole === 'tab').find((node) => node.findAll((child) => child.props.children === 'Movimientos').length > 0);
+    assert.ok(movementsTab);
+    await TestRenderer.act(async () => { movementsTab.props.onPress(); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Últimos movimientos/);
     assert.match(JSON.stringify(renderer!.toJSON()), /900,719,925,474,099,312\.34/);
     await TestRenderer.act(async () => { button('Cargar más movimientos').props.onPress(); });
     assert.ok(calls.some((url) => url.endsWith('cursor=next%20%2F%20cursor')));
