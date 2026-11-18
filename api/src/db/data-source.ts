@@ -7,11 +7,12 @@ import { InternalBeneficiaries1763000003000 } from './migrations/1763000003000-I
 import { Transfers1763000004000 } from './migrations/1763000004000-Transfers.js';
 import { TransferRuntimeGrants1763000005000 } from './migrations/1763000005000-TransferRuntimeGrants.js';
 import { TransferRuntimePrivileges1763000006000 } from './migrations/1763000006000-TransferRuntimePrivileges.js';
+import { TransferOtpAndLedgerHardening1763000007000 } from './migrations/1763000007000-TransferOtpAndLedgerHardening.js';
 
 let instance: DataSource | undefined;
 let instanceUrl: string | undefined;
 export const dataSource = (url = process.env.DATABASE_URL) => {
   if (instance && instanceUrl !== url) throw new Error('Database connection already configured for a different URL');
-  if (!instance) { instanceUrl = url; instance = new DataSource({ type: 'postgres', url, entities: [], migrations: [InitialWallet1763000000000, LedgerTransactionAppendOnly1763000001000, RuntimeLeastPrivilege1763000002000, InternalBeneficiaries1763000003000, Transfers1763000004000, TransferRuntimeGrants1763000005000, TransferRuntimePrivileges1763000006000], synchronize: false, migrationsRun: false }); }
+  if (!instance) { instanceUrl = url; instance = new DataSource({ type: 'postgres', url, entities: [], migrations: [InitialWallet1763000000000, LedgerTransactionAppendOnly1763000001000, RuntimeLeastPrivilege1763000002000, InternalBeneficiaries1763000003000, Transfers1763000004000, TransferRuntimeGrants1763000005000, TransferRuntimePrivileges1763000006000, TransferOtpAndLedgerHardening1763000007000], synchronize: false, migrationsRun: false }); }
   return instance;
 };

@@ -27,6 +27,8 @@ export function decryptClabe(value: string): string {
   decipher.setAuthTag(tag!);
   return Buffer.concat([decipher.update(encrypted!), decipher.final()]).toString('utf8');
 }
+export const encryptOtpDemoCode = (value: string): string => encryptClabe(value);
+export const decryptOtpDemoCode = (value: string): string => decryptClabe(value);
 export const clabeFingerprint = (value: string) => createHmac('sha256', key('CLABE_LOOKUP_KEY')).update(value).digest('hex');
 
 export function generateClabe(): string {
