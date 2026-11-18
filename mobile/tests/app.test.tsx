@@ -1,5 +1,6 @@
 import React from 'react';
 import assert from 'node:assert/strict';
+import { ActivityIndicator } from 'react-native';
 import TestRenderer from 'react-test-renderer';
 import App from '../App';
 
@@ -221,9 +222,18 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
     const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Importe' });
+    const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Revisar transferencia').length > 0);
     await TestRenderer.act(async () => { amountInput.props.onChangeText('12.345'); });
-    assert.equal(renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').some((node) => node.findAll((child) => child.props.children === 'Revisar transferencia').length > 0), false);
-    await TestRenderer.act(async () => { amountInput.props.onChangeText('12.34'); renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('123'); });
+    const invalidAmountReviewButton = findReviewButton();
+    assert.ok(invalidAmountReviewButton, 'the invalid amount should keep the review action visible');
+    assert.equal(invalidAmountReviewButton.props.accessibilityState?.disabled, true);
+    assert.equal(invalidAmountReviewButton.findAllByType(ActivityIndicator).length, 0, 'an invalid amount must not make the review action look busy');
+    await TestRenderer.act(async () => { amountInput.props.onChangeText('12.34'); });
+    const reviewButton = findReviewButton();
+    assert.ok(reviewButton, 'the incomplete form should keep the review action visible');
+    assert.equal(reviewButton.props.accessibilityState?.disabled, true);
+    assert.equal(reviewButton.findAllByType(ActivityIndicator).length, 0, 'validation-disabled review action must not look busy');
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('123'); });
     await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     const createCalls = () => fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/transfers')) as [RequestInfo | URL, RequestInit?][];

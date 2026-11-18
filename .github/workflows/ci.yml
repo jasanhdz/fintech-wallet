@@ -35,48 +35,24 @@ jobs:
           psql -h localhost -U postgres -d postgres -c "CREATE ROLE wallet_runtime_test LOGIN PASSWORD 'ci_runtime_test';"
           psql -h localhost -U postgres -d postgres -c "CREATE DATABASE wallet_test OWNER wallet_migrator_test;"
           psql -h localhost -U postgres -d postgres -c "GRANT CONNECT ON DATABASE wallet_test TO wallet_runtime_test;"
-      - name: Apply test-only migrations
-        run: npm run db:migrate:test
-        env:
-          APP_ENV: test
-          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
-          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
-          TEST_MIGRATOR_DATABASE_URL: postgres://wallet_migrator_test:ci_migrator_test@localhost:5432/wallet_test
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-        env:
-          APP_ENV: test
-          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
-          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
-      - name: PostgreSQL integration tests
-        run: npm run test:integration
-        env:
-          APP_ENV: test
-          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
-          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
-          TEST_MIGRATOR_DATABASE_URL: postgres://wallet_migrator_test:ci_migrator_test@localhost:5432/wallet_test
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: Browser visual check
-        run: npm run test:visual
-        env:
-          DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
-          TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
-      - name: Integrated web/API end-to-end
-        run: npm run test:e2e
+      - name: Run unified sequential QA
+        run: npm run qa:report
         env:
           APP_ENV: development
           OTP_THRESHOLD_MINOR: '1'
           DATABASE_URL: postgres://wallet_runtime_dev:never-used@localhost:5432/wallet_dev
           TEST_DATABASE_URL: postgres://wallet_runtime_test:ci_runtime_test@localhost:5432/wallet_test
-      - name: Publish masked responsive visual captures
+          TEST_MIGRATOR_DATABASE_URL: postgres://wallet_migrator_test:ci_migrator_test@localhost:5432/wallet_test
+      - name: Publish QA report and masked responsive captures
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-captures-${{ github.sha }}
-          path: test-results/visual/*.png
+          name: qa-evidence-${{ github.sha }}
+          path: |
+            test-results/qa/qa-report.md
+            test-results/qa/qa-report.json
+            test-results/visual/*.png
           if-no-files-found: warn
           retention-days: 7
-      - run: npm run build
-      - run: npm run openapi:check

@@ -32,6 +32,7 @@ npm run dev:mobile   # inicia Metro/Expo en LAN; parar con Ctrl-C
 npm run test:integration # integración PostgreSQL, siempre wallet_test
 npm run test:e2e     # recorridos web+API+PostgreSQL, wallet_test
 npm run test:visual  # checks de navegador Chromium; wallet_test
+npm run qa:report    # QA secuencial + informe PASS/FAIL/BLOCKED y capturas
 npm run qa:history-performance # fixture sintética 100k + EXPLAIN ANALYZE en wallet_test
 npm run lint
 npm run typecheck
@@ -116,6 +117,7 @@ La dirección LAN debe ser accesible desde el teléfono en la misma Wi-Fi. Escan
 - `docs/product-integration-report.md` recoge evidencia del ciclo de integración. `docs/integration-review.md` preserva la revisión independiente del SHA `f5e9a4868409740aff29b1f5a4ea11b9a4194413`; no es aprobación de la versión actual ni final.
 - `docs/design-mapping.md` registra la correspondencia de fuentes visuales, estados y alcance. `docs/design/references/round3/` contiene capturas PNG de referencia sanitizadas, capturas PNG de implementación del CI y su matriz de revisión; `docs/design/references/` conserva además dos esquemas SVG complementarios.
 - `docs/design-fidelity-round4.md` registra las correcciones Web, capturas CI y el estado pantalla a pantalla de Mobile nativo. `docs/mobile-review-round4.md` contiene el recorrido actualizado de validación con Expo Go; no se declara aceptación visual del teléfono sin capturas del revisor.
+- `docs/qa-round5.md` mapea las capturas manuales nuevas a pantallas/referencias aprobadas y documenta correcciones/gaps. `npm run qa:report` ejecuta las suites existentes secuencialmente sobre `wallet_test` y genera `test-results/qa/qa-report.md` + `.json`, con estados por suite y requisito; las capturas Web quedan en `test-results/visual/`. `BLOCKED` impide declarar aceptación completa.
 - `docs/acceptance-handoff-round3.md` registra el SHA, el arranque no destructivo, la diferencia de llaves entre worktrees y el límite de atribución del request histórico; la aceptación sigue pendiente.
 - `docs/aws-deploy.md` es una propuesta documental; no se despliega AWS. No se publica Expo/EAS ni se abre un túnel público.
 

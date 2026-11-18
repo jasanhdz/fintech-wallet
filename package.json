@@ -32,6 +32,7 @@
     "test:visual": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && playwright test --grep @visual",
     "test:e2e": "tsx --import dotenv/config scripts/qa/assert-test-db.ts && playwright test --grep-invert @visual",
     "qa:history-performance": "tsx --import dotenv/config scripts/qa/history-performance.ts",
+    "qa:report": "node scripts/qa/product-report.mjs",
     "build": "npm run build --workspaces --if-present",
     "qa:bootstrap": "tsx scripts/qa/bootstrap.ts",
     "openapi:validate": "tsx scripts/qa/openapi.ts validate",

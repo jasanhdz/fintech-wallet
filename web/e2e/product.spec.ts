@@ -113,7 +113,12 @@ test('W10 OTP screen captures six separately masked cells at responsive widths @
 
   const otpInput = page.getByLabel('Código de confirmación de 6 dígitos');
   await expect(otpInput).toBeVisible();
+  const confirmButton = page.getByRole('button', { name: 'Confirmar transferencia' });
+  await expect(confirmButton).toBeDisabled();
+  await otpInput.fill('419');
+  await expect(confirmButton).toBeDisabled();
   await otpInput.fill('419682');
+  await expect(confirmButton).toBeEnabled();
   await expect(page.locator('.otp-box')).toHaveCount(6);
   await expect(page.locator('.otp-box.filled')).toHaveCount(6);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -213,6 +218,8 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   const consolidatedBalance = page.getByRole('region', { name: 'Saldo consolidado' });
   await expect(page.getByLabel(/pesos mexicanos$/)).toBeVisible();
   await expect(consolidatedBalance.locator('strong')).toHaveText(/MXN$/);
+  const consolidatedBalanceText = await consolidatedBalance.locator('strong').innerText();
+  expect(consolidatedBalanceText.match(/MXN/g) ?? []).toHaveLength(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await capture(page, 'W03-cuentas');
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente');
@@ -255,7 +262,7 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   const ownerEmail = `owner-${unique}@example.test`;
   const ownerPassword = `Local-test-${unique}-Aa1`;
   const apiBase = 'http://127.0.0.1:3100';
-  const origin = 'http://127.0.0.1:5174';
+  const origin = process.env.PLAYWRIGHT_WEB_ORIGIN ?? 'http://127.0.0.1:5175';
   const destinationApi = await playwrightRequest.newContext({ baseURL: apiBase, extraHTTPHeaders: { Origin: origin } });
   let destinationClabe = '';
 
@@ -302,6 +309,12 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Vista previa del beneficiario' }), 'W07-preview');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W07-alta');
+  const beneficiaryFormBox = await page.locator('.beneficiary-form').boundingBox();
+  const beneficiaryPreviewBox = await page.getByRole('complementary', { name: 'Vista previa del beneficiario' }).boundingBox();
+  expect(beneficiaryFormBox && beneficiaryPreviewBox && beneficiaryPreviewBox.x).toBeGreaterThan(beneficiaryFormBox.x);
+  const beneficiaryActionsBox = await page.getByRole('button', { name: /Guardar beneficiario/ }).boundingBox();
+  const footerBox = await page.locator('.app-footer').boundingBox();
+  expect(beneficiaryActionsBox && footerBox && beneficiaryActionsBox.y + beneficiaryActionsBox.height).toBeLessThan(footerBox.y);
 
   await page.getByLabel('Nombre del beneficiario').fill('Beneficiary Destination');
   await page.getByLabel('Alias').fill('Cuenta de prueba');
@@ -321,6 +334,9 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await expect(page.getByText(/agregado correctamente/i)).toBeVisible();
   const beneficiaryCard = page.getByRole('region', { name: 'Tus beneficiarios' });
   await expect(beneficiaryCard.getByRole('heading', { name: 'Beneficiary Destination' })).toBeVisible();
+  const directoryBox = await beneficiaryCard.boundingBox();
+  const directoryContentBox = await page.locator('.beneficiary-page').boundingBox();
+  expect(directoryBox && directoryContentBox && directoryBox.width).toBeGreaterThan(directoryContentBox.width * 0.85);
   const maskedClabe = destinationClabe.replace(/^(\d{3})\d{11}(\d{4})$/, '$1•••••••••••$2');
   await expect(beneficiaryCard.getByText(`CLABE · ${maskedClabe}`)).toBeVisible();
   await expect(beneficiaryCard.getByText(destinationClabe, { exact: true })).toHaveCount(0);
@@ -356,7 +372,7 @@ test('retries an uncertain real transfer with identical idempotency key and show
 
   const unique = crypto.randomUUID();
   const apiBase = 'http://127.0.0.1:3100';
-  const origin = 'http://127.0.0.1:5174';
+  const origin = process.env.PLAYWRIGHT_WEB_ORIGIN ?? 'http://127.0.0.1:5175';
   const api = await playwrightRequest.newContext({ baseURL: apiBase, extraHTTPHeaders: { Origin: origin } });
   const destinationEmail = `destination-${unique}@example.test`;
   const destinationPassword = `Local-test-${unique}-Aa1`;
@@ -419,6 +435,9 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await capture(page, 'W08-formulario');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W08-formulario');
+  const transferFormBox = await page.locator('.transfer-form').boundingBox();
+  const transferSummaryBox = await page.getByRole('complementary', { name: 'Resumen de transferencia' }).boundingBox();
+  expect(transferFormBox && transferSummaryBox && transferSummaryBox.x).toBeGreaterThan(transferFormBox.x);
   await page.setViewportSize({ width: 390, height: 844 });
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen');
   await page.getByLabel('Cuenta de origen').selectOption({ index: 1 });
@@ -439,6 +458,8 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await expectNoHorizontalOverflow();
 
   const observed: Array<{ key: string | undefined; body: string; status: number; transferId: string; transfer: Record<string, unknown> }> = [];
+  let releaseFirstResponse!: () => void;
+  const firstResponseGate = new Promise<void>((resolve) => { releaseFirstResponse = resolve; });
   let confirmationResponseStatus: number | undefined;
   let confirmedStatus: string | undefined;
   page.on('response', async (response) => {
@@ -454,10 +475,19 @@ test('retries an uncertain real transfer with identical idempotency key and show
     const response = await route.fetch();
     const transfer = await response.json() as Record<string, unknown>;
     observed.push({ key: route.request().headers()['idempotency-key'], body: route.request().postData() ?? '', status: response.status(), transferId: String(transfer.id), transfer });
-    if (observed.length === 1) await route.abort('failed');
+    if (observed.length === 1) {
+      await firstResponseGate;
+      await route.abort('failed');
+    }
     else await route.fulfill({ response });
   });
-  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  await page.getByRole('button', { name: /Enviar transferencia/ }).dblclick();
+  try {
+    await expect.poll(() => observed.length).toBe(1);
+    expect(observed.length).toBe(1);
+  } finally {
+    releaseFirstResponse();
+  }
   await expect(page.getByRole('heading', { name: 'Estamos verificando el resultado' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Tu envío sigue en verificación' })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
