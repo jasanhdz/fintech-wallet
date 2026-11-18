@@ -926,3 +926,44 @@ describe('mobile login reference (M01)', () => {
     await TestRenderer.act(async () => { renderer!.unmount(); });
   });
 });
+
+describe('mobile home reference (M02)', () => {
+  it('shows the real update time, a primary transfer action and only the latest three movements with a link to the full list', async () => {
+    const today = new Date();
+    const items = ['Comida', 'Nómina', 'Renta', 'Farmacia'].map((concept, index) => ({ id: `home-m-${index}`, transferId: `home-t-${index}`, type: index === 1 ? 'credit' : 'debit', amountMinor: `${(index + 1) * 10000}`, currency: 'MXN', concept, reference: `${index + 1}`, status: 'completed', occurredAt: today.toISOString() }));
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'home-user', fullName: 'Ana López', email: 'ana@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount, { id: 'source-2', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '500000', clabe: '000000000000005931', clabeMasked: '000•••••••••••5931' }] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items, nextCursor: null });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const visible = () => JSON.stringify(renderer!.toJSON());
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const home = visible();
+    assert.match(home, /"Hola, ","Ana López"/);
+    assert.match(home, /Actualizado hoy, \d{2}:\d{2} hrs/);
+    assert.match(home, /"•• ","8412"/);
+    assert.match(home, /"•• ","5931"/);
+    assert.match(home, /Última actualización de saldo/);
+    assert.match(home, /"Saldo total ","\$17,450.00"," MXN"/);
+    assert.match(home, /"Transferir dinero"/);
+    assert.match(home, /Actividad reciente/);
+    assert.match(home, /Comida/);
+    assert.match(home, /Renta/);
+    assert.doesNotMatch(home, /Farmacia/, 'home shows only the latest three movements');
+    assert.doesNotMatch(home, /Tus cuentas|Cargar más movimientos/);
+    assert.equal(home.match(/\$12,450.00/g)?.length, 1, 'the selected balance appears once');
+    await TestRenderer.act(async () => { button('Ver los últimos 20 movimientos').props.onPress(); });
+    assert.match(visible(), /Últimos movimientos/);
+    assert.match(visible(), /Farmacia/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
