@@ -317,6 +317,12 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   expect(beneficiaryActionsBox && footerBox && beneficiaryActionsBox.y + beneficiaryActionsBox.height).toBeLessThan(footerBox.y);
 
   await page.getByLabel('Nombre del beneficiario').fill('Beneficiary Destination');
+  // F-04: keyboard tab order across the beneficiary creation form, in addition to the existing /access-denied coverage.
+  await page.getByLabel('Nombre del beneficiario').focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByLabel('Alias')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByLabel('CLABE interbancaria')).toBeFocused();
   await page.getByLabel('Alias').fill('Cuenta de prueba');
   await page.getByLabel('CLABE interbancaria').fill('002010077777777770');
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();

@@ -163,6 +163,10 @@ test('registers with the development fixture and transfers between own accounts'
   await capture(page, 'W08-formulario-own');
   await page.setViewportSize({ width: 390, height: 844 });
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('complementary', { name: 'Resumen de transferencia' }), 'W08-resumen-own');
+  // F-04: keyboard tab order for the transfer data form, in addition to the existing /access-denied coverage.
+  await page.getByLabel('Referencia numérica').focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: /Continuar a revisión/ })).toBeFocused();
   await page.getByRole('button', { name: /Continuar a revisión/ }).click();
   await expect(page.getByRole('region', { name: 'Revisión de transferencia' })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
