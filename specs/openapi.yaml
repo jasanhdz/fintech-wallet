@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Fintech Wallet API
-  version: 0.3.0
+  version: 0.4.0
   summary: Contrato de implementación del producto obligatorio de la prueba.
   description: >-
     Contrato aprobado para el alcance de docs/challenge.md y specs/requirements.md.
@@ -11,6 +11,12 @@ info:
     POST /transfers/{transferId}/cancel, Transfer.expiresAt, estados terminales
     expired/cancelled, Movement.counterparty y formato de fecha fijo
     (YYYY-MM-DDTHH:mm:ss.sssZ, UTC). Ver docs/round6-contract-notes.md.
+    0.4.0 (ronda 8, aditivo): recuperación autoritativa de intentos de transferencia
+    (GET /transfer-attempts, POST /transfer-attempts/void, POST /transfer-attempts/void-all),
+    cabeceras opcionales Transfer-Attempt-Id y Transfer-Send-Epoch en POST /transfers,
+    TransferPolicy.sendEpoch y tipos de problema urn:billetera:problem:transfer-attempt-*.
+    Las peticiones sin las cabeceras nuevas conservan su comportamiento. Ver
+    docs/round8-api-notes.md.
 servers:
   - url: http://localhost:3000/v1
     description: Desarrollo local
@@ -263,9 +269,23 @@ paths:
         Si el intento original quedó awaiting_confirmation, la repetición informa
         su estado actual: 202 mientras siga pendiente, 200 si ya es completed,
         expired o cancelled (demoOnlyCode solo mientras siga pendiente).
+        Ronda 8 (aditivo): Transfer-Attempt-Id y Transfer-Send-Epoch son opcionales pero
+        van juntas (sólo una → 400). Con ellas la identidad del intento queda persistida
+        (TransferAttemptSummary.attemptId); un intento anulado o de una época vieja responde
+        409 con type urn:billetera:problem:transfer-attempt-voided (terminal, sin cargo);
+        un rechazo de negocio 404/422/429 queda cerrado para esa identidad y responde el
+        mismo status con type urn:billetera:problem:transfer-attempt-rejected (terminal,
+        sin cargo; repetirlo devuelve el mismo rechazo); una identidad ligada a otra llave
+        responde 409 urn:billetera:problem:transfer-attempt-conflict. Una época mayor que
+        la vigente o cabeceras malformadas → 400. Un envío ya ejecutado nunca se oculta:
+        la repetición con su llave devuelve su resultado cualquiera que sea la época, y una
+        llave anulada se rechaza (409 transfer-attempt-voided) también sin cabeceras. Los
+        envíos de la misma llave se serializan: el segundo siempre ve el resultado del primero.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/TransferAttemptId'
+        - $ref: '#/components/parameters/TransferSendEpoch'
       requestBody:
         required: true
         content:
@@ -385,6 +405,98 @@ paths:
         '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts:
+    get:
+      tags: [Transfers]
+      operationId: listTransferAttempts
+      summary: Listado autoritativo de intentos de transferencia propios
+      description: >-
+        Une las transferencias del usuario autenticado (con o sin attemptId) y los cierres
+        de intentos que nunca crearon transferencia (rejected, voided). Antes de leer se
+        cierran como expired los intentos cuyo OTP ya venció. Orden total createdAt DESC,
+        luego transferencias antes que cierres, luego id DESC; cursor keyset opaco (sin
+        OFFSET). Nunca incluye CLABE completa, demoOnlyCode, código OTP, llave de
+        idempotencia, su hash ni requestId. Un attemptId de otro usuario se comporta como
+        inexistente (items vacíos).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: 'Lista separada por comas de awaiting_confirmation, completed, expired, cancelled, rejected, voided. Por defecto todos.'
+          schema: { type: string, pattern: '^(awaiting_confirmation|completed|expired|cancelled|rejected|voided)(,(awaiting_confirmation|completed|expired|cancelled|rejected|voided))*$' }
+        - { name: from, in: query, required: false, description: 'Incluye intentos con createdAt >= from.', schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: false, description: 'Incluye intentos con createdAt <= to; from <= to.', schema: { type: string, format: date-time } }
+        - { name: attemptId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: cursor, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Página de intentos propios y época de envío vigente.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransferAttemptPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts/void:
+    post:
+      tags: [Transfers]
+      operationId: voidTransferAttempt
+      summary: Anular un intento de transferencia por su identidad
+      description: >-
+        Espera a los envíos en curso del usuario y resuelve el intento identificado por su
+        llave de idempotencia (y attemptId opcional) a un resultado terminal: transfer_found
+        si el servidor ya lo había recibido (se devuelve su estado; si estaba
+        awaiting_confirmation se cierra cancelled, o expired si su código ya venció; un
+        cargo aplicado nunca se revierte), rejected si ya estaba rechazado, o voided si nunca
+        se recibió (desde ese momento jamás podrá ejecutarse, aunque llegue después). Es
+        idempotente por estado: repetirlo devuelve la misma resolución, por eso no usa
+        Idempotency-Key de cabecera. Una llave desconocida no es 404. Llave y attemptId
+        ligados a intentos distintos → 409 transfer-attempt-conflict.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VoidAttemptRequest' }
+      responses:
+        '200':
+          description: Resolución terminal del intento.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VoidAttemptResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/TransferAttemptProblem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-attempts/void-all:
+    post:
+      tags: [Transfers]
+      operationId: voidAllTransferAttempts
+      summary: Anular todo lo no terminal del usuario (identidad desconocida)
+      description: >-
+        Espera a los envíos en curso del usuario. Si fromEpoch es la época vigente, la
+        avanza en uno: todo envío con cabeceras de una época anterior que aún no haya
+        llegado queda vetado (409 transfer-attempt-voided), y todo intento
+        awaiting_confirmation del usuario (de cualquier cliente, también web) se cierra
+        cancelled o expired. Lo ya ejecutado no cambia y aparece en el listado. Repetir con
+        el mismo fromEpoch es un no-op (advanced=false). fromEpoch mayor que la vigente → 400.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VoidAllRequest' }
+      responses:
+        '200':
+          description: Época resultante y pendientes cerrados por esta llamada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VoidAllResult' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
   /accounts/{accountId}/movements:
     get:
       tags: [Movements]
@@ -431,12 +543,40 @@ components:
         type: string
         minLength: 16
         maxLength: 128
+    TransferAttemptId:
+      name: Transfer-Attempt-Id
+      in: header
+      required: false
+      description: >-
+        Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional,
+        pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y
+        aparece en GET /transfer-attempts.
+      schema: { type: string, format: uuid }
+    TransferSendEpoch:
+      name: Transfer-Send-Epoch
+      in: header
+      required: false
+      description: >-
+        Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional,
+        pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409
+        transfer-attempt-voided; mayor → 400.
+      schema: { $ref: '#/components/schemas/SendEpoch' }
   responses:
     Problem:
       description: RFC 7807 `application/problem+json` con requestId; no filtra detalles internos.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+    TransferAttemptProblem:
+      description: RFC 7807 `application/problem+json` con requestId y type de TransferAttemptProblemType.
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Problem'
+              - type: object
+                properties:
+                  type: { $ref: '#/components/schemas/TransferAttemptProblemType' }
   schemas:
     RegisterRequest:
       type: object
@@ -605,7 +745,7 @@ components:
         ownAccountId: { type: string, format: uuid, description: Solo cuando la otra parte es una cuenta del mismo usuario. }
     TransferPolicy:
       type: object
-      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly]
+      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly, sendEpoch]
       properties:
         currency: { type: string, const: MXN }
         businessDate: { type: string, format: date, description: Día de negocio actual en businessTimeZone. }
@@ -617,6 +757,8 @@ components:
         otpExpirySeconds: { type: integer, minimum: 1 }
         otpMaxAttempts: { type: integer, minimum: 1 }
         demoOnly: { type: boolean, description: 'true fuera de producción; las cifras son ejemplos demo, no política aprobada.' }
+        sendEpoch:
+          $ref: '#/components/schemas/SendEpoch'
     Timestamp:
       type: string
       format: date-time
@@ -629,6 +771,120 @@ components:
       properties:
         items: { type: array, items: { $ref: '#/components/schemas/Movement' } }
         nextCursor: { type: [string, 'null'] }
+    SendEpoch:
+      type: string
+      pattern: '^(0|[1-9][0-9]{0,18})$'
+      description: >-
+        Época de envío del usuario (entero no negativo monotónico como cadena decimal). Sólo
+        avanza con POST /transfer-attempts/void-all; los envíos con Transfer-Send-Epoch menor
+        quedan vetados.
+      examples: ['0']
+    TransferAttemptStatus:
+      type: string
+      enum: [awaiting_confirmation, completed, expired, cancelled, rejected, voided]
+      description: >-
+        awaiting_confirmation es el único no terminal. completed tiene asientos; expired,
+        cancelled, rejected y voided nunca tienen asientos. rejected y voided son cierres de
+        intentos que no crearon transferencia (transferId null).
+    TransferAttemptSummary:
+      type: object
+      required: [attemptId, transferId, status, amountMinor, currency, concept, reference, sourceAccountId, destination, createdAt, completedAt, closedAt, expiresAt, problem]
+      description: >-
+        Resumen de un intento propio. Nunca contiene CLABE completa, demoOnlyCode, código
+        OTP, llave de idempotencia, su hash ni requestId.
+      properties:
+        attemptId: { type: [string, 'null'], format: uuid, description: 'Transfer-Attempt-Id con que se envió; null si se envió sin cabeceras.' }
+        transferId: { type: [string, 'null'], format: uuid, description: 'Id de la transferencia (GET /transfers/{transferId}); null para rejected/voided.' }
+        status: { $ref: '#/components/schemas/TransferAttemptStatus' }
+        amountMinor: { type: [string, 'null'], pattern: '^[1-9][0-9]*$', description: 'Importe en centavos; null para voided (nunca se recibió el cuerpo).' }
+        currency: { type: string, const: MXN }
+        concept: { type: [string, 'null'] }
+        reference: { type: [string, 'null'] }
+        sourceAccountId: { type: [string, 'null'], format: uuid }
+        destination:
+          oneOf:
+            - $ref: '#/components/schemas/TransferAttemptDestination'
+            - { type: 'null' }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        completedAt:
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        closedAt:
+          description: 'Instante de cierre para expired, cancelled, rejected y voided; null en otro caso.'
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        expiresAt:
+          description: Vencimiento del OTP si el intento lo requirió; null en otro caso.
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        problem:
+          description: Rechazo de negocio registrado (sólo status rejected).
+          oneOf:
+            - $ref: '#/components/schemas/TransferAttemptProblem'
+            - { type: 'null' }
+    TransferAttemptDestination:
+      type: object
+      required: [name, clabeMasked]
+      properties:
+        name: { type: string }
+        clabeMasked: { type: string, description: 'Primeros 3 y últimos 4 dígitos; nunca la CLABE completa.' }
+        ownAccountId: { type: string, format: uuid, description: Sólo cuando el destino es una cuenta del mismo usuario. }
+    TransferAttemptProblem:
+      type: object
+      required: [status, detail]
+      properties:
+        status: { type: integer, enum: [404, 422, 429] }
+        detail: { type: string }
+    TransferAttemptPage:
+      type: object
+      required: [items, nextCursor, sendEpoch]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/TransferAttemptSummary' } }
+        nextCursor: { type: [string, 'null'] }
+        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+    VoidAttemptRequest:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey]
+      properties:
+        idempotencyKey: { type: string, minLength: 16, maxLength: 128, writeOnly: true, description: 'La misma Idempotency-Key del envío; viaja sólo en el cuerpo y nunca se devuelve ni se registra.' }
+        attemptId: { type: string, format: uuid }
+    VoidAttemptResult:
+      type: object
+      required: [resolution, attempt]
+      properties:
+        resolution:
+          type: string
+          enum: [transfer_found, rejected, voided]
+          description: 'transfer_found: el servidor ya lo había recibido (attempt trae su estado). rejected: ya estaba rechazado. voided: nunca se recibió y ya no podrá ejecutarse. Las tres son terminales.'
+        attempt: { $ref: '#/components/schemas/TransferAttemptSummary' }
+    VoidAllRequest:
+      type: object
+      additionalProperties: false
+      required: [fromEpoch]
+      properties:
+        fromEpoch: { $ref: '#/components/schemas/SendEpoch' }
+    VoidAllResult:
+      type: object
+      required: [sendEpoch, advanced, closedTransferIds]
+      properties:
+        sendEpoch: { $ref: '#/components/schemas/SendEpoch' }
+        advanced: { type: boolean, description: 'true sólo si esta llamada avanzó la época (fromEpoch era la vigente).' }
+        closedTransferIds: { type: array, items: { type: string, format: uuid }, description: Intentos awaiting_confirmation cerrados por esta llamada. }
+    TransferAttemptProblemType:
+      type: string
+      enum:
+        - urn:billetera:problem:transfer-attempt-voided
+        - urn:billetera:problem:transfer-attempt-rejected
+        - urn:billetera:problem:transfer-attempt-conflict
+      description: >-
+        Valores de Problem.type para intentos de transferencia (ronda 8). voided: identidad
+        anulada o época vieja (409, terminal, sin cargo). rejected: rechazo de negocio
+        404/422/429 cerrado para esa identidad (terminal, sin cargo). conflict: identidad
+        ligada a otra llave o intento (409, no terminal). El resto de problemas usa about:blank.
     Problem:
       type: object
       required: [type, title, status, instance, requestId]

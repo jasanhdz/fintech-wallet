@@ -1,0 +1,9 @@
+Reenviar la misma transferencia: 1
+Volver sin reenviar: 1
+Reintentar lectura: 1
+Verificar de nuevo: 1
+una coincidencia no prueba que sea este intento: 1
+Descartar este intento: 0
+Descartar intento: 0
+Ya puedes hacer otra transferencia: 0
+movements?type=debit: 0

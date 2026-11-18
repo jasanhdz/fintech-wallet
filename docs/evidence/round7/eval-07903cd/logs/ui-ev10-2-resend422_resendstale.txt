@@ -1,0 +1,29 @@
+
+===== resend422-saldo: the attempt was never applied (lost-before); the REAL API now rejects it (422 Saldo insuficiente) =====
+drain -> 201 201
+prepared transfers: 2
+SHOT ev10-2-resend422-saldo minFont=12 scrollW=390 offscreen=0 errs=3
+POSTs sent by that ONE tap: 2 | same key: true | same bytes: true
+PASS resend422-saldo: a rejection confirmed twice with the same key opens M11 (nothing was applied)
+PASS resend422-saldo: the attempt created nothing (transfers 2 == prepared 2)
+PASS resend422-saldo: record released only because the business rejection was confirmed
+
+===== resend422-limite: the attempt was never applied (lost-before); the REAL API now rejects it (429 límite diario) =====
+prep 2 429 429 Se excedió el límite diario.
+prep 3 429 429 Se excedió el límite diario.
+prepared transfers: 4
+SHOT ev10-2-resend422-limite minFont=12 scrollW=390 offscreen=0 errs=3
+POSTs sent by that ONE tap: 2 | same key: true | same bytes: true
+PASS resend422-limite: a rejection confirmed twice with the same key opens M11 (nothing was applied)
+PASS resend422-limite: the attempt created nothing (transfers 4 == prepared 4)
+PASS resend422-limite: record released only because the business rejection was confirmed
+
+===== resendstale-deleted: the review is open and the stored record is deleted before the confirmation tap (covers survivor 3g) =====
+PASS resendstale-deleted: the tap sent NOTHING (creates 0)
+screen after the tap: Home free (no record)
+PASS resendstale-deleted: DB 0 transfers
+
+===== resendstale-replaced: the review is open and the stored record is replaced before the confirmation tap (covers survivor 3g) =====
+PASS resendstale-replaced: the tap sent NOTHING (creates 0)
+screen after the tap: Home notice of the OTHER attempt
+PASS resendstale-replaced: DB 0 transfers

@@ -1,0 +1,43 @@
+== (a) lookup endpoints
+GET /transfers -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+GET /transfers?limit=5 -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+GET /transfers?idempotencyKey=<uuid> -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+GET /idempotency-records -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+GET /idempotency/<uuid> -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+GET /accounts/<uuid>/transfers -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Recurso no encontrado.","
+HEAD /transfers/<uuid> -> 404 
+GET /transfers/<uuid> -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Transferencia no encontra
+GET /transfers/not-a-uuid -> 404 {"type":"about:blank","title":"Not Found","status":404,"detail":"Transferencia no encontra
+declared routes in api/src/http/app.ts for transfers: POST /transfers, GET /transfers/:id, POST /transfers/:id/cancel, POST /transfers/:id/confirm, GET /transfer-policy (grep in README)
+== (b) atomicity
+start 0 transfers / 0 idem / 0 ledger rows
+over-balance above threshold -> 202 awaiting_confirmation
+499999 (below threshold) -> 201 completed
+after 2 transfers / 2 idem / 2 ledger rows
+principal balance 500001
+== (c) expires_at not checked
+first 201 completed be069c0e
+record 04:15:55 exp=2026-12-17 (+30d)
+record after forcing expires_at to the past: 2026-10-03 < now: true
+PASS replay with an EXPIRED record still returns the same transfer (HTTP 201, same id true)
+transfers with 12345: 1
+== (d) unknown key creates a new operation (no server veto of a late send)
+attempt A (key lost by the client; never sent) -> nothing exists server side; account balance 487656
+late send of A with its original key -> 201 completed
+same data, a different new key -> 201 completed distinctIds=true
+debits for 23456: 2  ledger 8 rows sum 0
+== real 404 (GET unknown id; POST with a beneficiary that does not exist)
+GET unknown -> 404 Transferencia no encontrada.
+POST unknown beneficiary -> 404 Beneficiario no encontrado.
+== (e) pending/expired/cancelled not in movements
+pending 202 awaiting_confirmation
+cancel -> 200 cancelled
+GET after expiry -> 200 expired
+movement concepts: ["Ev10","Ev10","Ev10","Ev10","Ev10","Ev10","Ev10","Ev10"]
+PASS awaiting_confirmation / cancelled / expired are not listed in movements
+DB statuses: PENDIENTE=awaiting_confirmation | CANCELADA=cancelled | EXPIRADA=expired
+== real concurrent same-key race
+statuses of 8 concurrent POST with the same key: [201,201,409,409,201,409,201,201]
+real 409 body: {"title":"Conflict","detail":"La solicitud idempotente está en curso; reintenta con la misma llave.","status":409}
+DB rows for race user: completed:30025 | ledger 2 rows sum 0
+debits (completed 30025): 1

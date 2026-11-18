@@ -1,0 +1,7 @@
+lint exit 0
+typecheck exit 0
+test exit 0
+build exit 0
+expo install --check exit 0
+npm ci --dry-run exit 0
+node v26.13.1

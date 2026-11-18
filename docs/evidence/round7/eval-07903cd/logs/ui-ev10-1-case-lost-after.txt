@@ -1,0 +1,43 @@
+
+===== CASE lost-after: first send -> lost-after (server applied it: true) =====
+PASS lost-after: M09 "Estamos verificando", never M11
+SHOT ev10-1-lost-after-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-after: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: completed:30025 debits=1 (applied expected true)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS lost-after: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 3124), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS lost-after: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3124","Ahorro •• 2426","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS lost-after: Inicio only shows the notice
+SHOT ev10-1-lost-after-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 3124), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS lost-after: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3124","Ahorro •• 2426","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso de Cuenta principal, •• 3","Ver los últimos 20 movimientos\n"]
+PASS lost-after: account switch no entry
+"Verificar" offline -> no-id text
+PASS lost-after: POST /transfers count still 1 after Verificar/exits
+PASS lost-after: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3124","Ahorro •• 2426","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS lost-after: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3124","Ahorro •• 2426","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS lost-after: relogin still locked
+PASS lost-after: record byte-identical after reload and logout/login
+PASS lost-after: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS lost-after: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS lost-after: DB 1 transfer (applied)
+SHOT ev10-1-lost-after-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-lost-after-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-after: resend review shows the ORIGINAL data and the registered consent
+PASS lost-after: opening the resend review sent nothing
+PASS lost-after: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS lost-after: the resend tap sent exactly 1 POST (got 1)
+PASS lost-after: resend Idempotency-Key == first send == stored record (f2e7e25a)
+PASS lost-after: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-lost-after-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-after: resend reaches the receipt
+receipt folio 4e4402bb == DB transfer 4e4402bb : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS lost-after: 1 transfer, 1 debit in DB
+PASS lost-after: record released only now (server confirmed completed)

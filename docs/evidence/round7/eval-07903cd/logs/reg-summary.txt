@@ -1,0 +1,12 @@
+api-ev9 exit 0
+ui-f24 exit 0
+ui-f15 exit 0
+ui-labels exit 0
+ui-share exit 1
+ui-dbltap exit 0
+ui-m02-m09 exit 0
+ui-m09-m12 exit 0
+ui-f25 exit 0
+e2e exit 0
+ui-otp exit 1
+DONE

@@ -1,0 +1,32 @@
+== web bundle
+(none above = 0 files)
+== ios bundle (hbc strings)
+    1949
+Descartar este intento                                  0
+Descartar                                               0
+Ya puedes hacer otra transferencia                      0
+Revisa tu saldo antes de reintentar                     0
+El servidor no tiene registro                           0
+Reenviar la misma transferencia                         1
+Volver sin reenviar                                     1
+Unexpected end of JSON                                  0
+No podemos confirmar si se realizó un cargo             0
+wallet.transfer-recovery                                1
+== source (mobile/App.tsx, mobile/src, README, docs excl. evidence, specs, web, api/src)
+docs/round7-notes.md:101:  variante "Revisa tu saldo antes de reintentar" de M11 ya no existe.
+docs/round7-notes.md:195:La tanda H4 (pasada 9) añadió un descarte manual ("Descartar este intento"), liberaba el registro ante un 404 de
+docs/round7-notes.md:196:`GET /transfers/{id}` o del `POST` ("El servidor no tiene registro… Ya puedes hacer otra transferencia") y su "Verificar estado"
+== positive controls (method validity)
+Reenviar la misma transferencia               ascii:1 utf16:0
+No podemos confirmar si se realiz             ascii:0 utf16:0
+Estamos verificando                           ascii:0 utf16:0
+Verificar estado de la transferencia          ascii:1 utf16:0
+Ver movimientos                               ascii:1 utf16:0
+Descartar este intento                        ascii:0 utf16:0
+Ya puedes hacer otra transferencia            ascii:0 utf16:0
+Revisa tu saldo antes                         ascii:0 utf16:0
+web:
+Reenviar la misma transferencia               
+Estamos verificando                           
+Descartar este intento                        
+Ya puedes hacer otra transferencia            

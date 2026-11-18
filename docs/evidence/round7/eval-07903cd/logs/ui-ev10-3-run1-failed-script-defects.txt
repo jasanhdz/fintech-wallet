@@ -1,0 +1,30 @@
+
+===== otp-normal: $6,000.00 (>= threshold) -> 202 -> M08 -> code -> completed =====
+PASS otp-normal: M08 shown
+DB: awaiting_confirmation:600000 debits 0
+PASS otp-normal: pending attempt has 0 debits/ledger
+PASS otp-normal: demo code present in the 202 response (not printed)
+PASS otp-normal: consent.otp=required and the record does not contain the code
+PASS otp-normal: receipt
+DB final: transfers=1 [completed:600000] debits=1 ledger=2 rows sum 0 idem=1 balances principal=400000 ahorro=1100000
+PASS otp-normal: 1 transfer, 1 debit
+PASS otp-normal: record released after the server confirmed completed
+
+===== otp-lost: first send (202, awaiting_confirmation) response lost -> M09 -> explicit resend -> must ask for the code (M08) =====
+PASS otp-lost: M09
+DB: awaiting_confirmation:600000 debits 0
+FAIL otp-lost: foreground/reload sent 0 POST; still pending and 0 debits
+PASS otp-lost: the review tells that the code is required
+PASS otp-lost: resend answered 202 -> M08 asks for the code (the resend cannot skip it)
+PASS otp-lost: still 0 debits before the code
+PASS otp-lost: resend = same key, byte-identical body
+PASS otp-lost: code recovered by the idempotent replay
+PASS otp-lost: receipt after authorizing
+DB final: transfers=1 [completed:600000] debits=1 ledger=2 rows sum 0 idem=1 balances principal=400000 ahorro=1100000
+PASS otp-lost: 1 transfer, 1 debit
+
+===== otp-reload-newcode: M08 -> reload -> Home pending -> Continuar (no code) -> "Solicitar un código nuevo" =====
+after reload screen: M08
+AUDIT Home pending: forbidden=[] buttons=["Cancelar y volver a revisar","Solicitar un código nuevo","\nAutorizar transferencia","\nCancelar y volver a revisar"]
+FAIL otp-reload: Home pending notice, no new-transfer entry
+FAIL otp-reload: start-up/Home sent 0 POST

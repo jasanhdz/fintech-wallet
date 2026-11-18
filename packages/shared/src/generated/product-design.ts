@@ -198,7 +198,7 @@ export interface paths {
         put?: never;
         /**
          * Crear intento de transferencia interna
-         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409. Si el intento original quedó awaiting_confirmation, la repetición informa su estado actual: 202 mientras siga pendiente, 200 si ya es completed, expired o cancelled (demoOnlyCode solo mientras siga pendiente).
+         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409. Si el intento original quedó awaiting_confirmation, la repetición informa su estado actual: 202 mientras siga pendiente, 200 si ya es completed, expired o cancelled (demoOnlyCode solo mientras siga pendiente). Ronda 8 (aditivo): Transfer-Attempt-Id y Transfer-Send-Epoch son opcionales pero van juntas (sólo una → 400). Con ellas la identidad del intento queda persistida (TransferAttemptSummary.attemptId); un intento anulado o de una época vieja responde 409 con type urn:billetera:problem:transfer-attempt-voided (terminal, sin cargo); un rechazo de negocio 404/422/429 queda cerrado para esa identidad y responde el mismo status con type urn:billetera:problem:transfer-attempt-rejected (terminal, sin cargo; repetirlo devuelve el mismo rechazo); una identidad ligada a otra llave responde 409 urn:billetera:problem:transfer-attempt-conflict. Una época mayor que la vigente o cabeceras malformadas → 400. Un envío ya ejecutado nunca se oculta: la repetición con su llave devuelve su resultado cualquiera que sea la época, y una llave anulada se rechaza (409 transfer-attempt-voided) también sin cabeceras. Los envíos de la misma llave se serializan: el segundo siempre ve el resultado del primero.
          */
         post: operations["createTransfer"];
         delete?: never;
@@ -278,6 +278,66 @@ export interface paths {
          * @description El challenge pertenece a un único transferId y expira según configuración; no genera SPEI/banco externo. Cada envío de código OTP usa una key de confirm-transfer; ante pérdida de respuesta se reintenta misma key+payload, y un nuevo código usa una nueva key.
          */
         post: operations["confirmTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listado autoritativo de intentos de transferencia propios
+         * @description Une las transferencias del usuario autenticado (con o sin attemptId) y los cierres de intentos que nunca crearon transferencia (rejected, voided). Antes de leer se cierran como expired los intentos cuyo OTP ya venció. Orden total createdAt DESC, luego transferencias antes que cierres, luego id DESC; cursor keyset opaco (sin OFFSET). Nunca incluye CLABE completa, demoOnlyCode, código OTP, llave de idempotencia, su hash ni requestId. Un attemptId de otro usuario se comporta como inexistente (items vacíos).
+         */
+        get: operations["listTransferAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular un intento de transferencia por su identidad
+         * @description Espera a los envíos en curso del usuario y resuelve el intento identificado por su llave de idempotencia (y attemptId opcional) a un resultado terminal: transfer_found si el servidor ya lo había recibido (se devuelve su estado; si estaba awaiting_confirmation se cierra cancelled, o expired si su código ya venció; un cargo aplicado nunca se revierte), rejected si ya estaba rechazado, o voided si nunca se recibió (desde ese momento jamás podrá ejecutarse, aunque llegue después). Es idempotente por estado: repetirlo devuelve la misma resolución, por eso no usa Idempotency-Key de cabecera. Una llave desconocida no es 404. Llave y attemptId ligados a intentos distintos → 409 transfer-attempt-conflict.
+         */
+        post: operations["voidTransferAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-attempts/void-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Anular todo lo no terminal del usuario (identidad desconocida)
+         * @description Espera a los envíos en curso del usuario. Si fromEpoch es la época vigente, la avanza en uno: todo envío con cabeceras de una época anterior que aún no haya llegado queda vetado (409 transfer-attempt-voided), y todo intento awaiting_confirmation del usuario (de cualquier cliente, también web) se cierra cancelled o expired. Lo ya ejecutado no cambia y aparece en el listado. Repetir con el mismo fromEpoch es un no-op (advanced=false). fromEpoch mayor que la vigente → 400.
+         */
+        post: operations["voidAllTransferAttempts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -495,6 +555,7 @@ export interface components {
             otpMaxAttempts: number;
             /** @description true fuera de producción; las cifras son ejemplos demo, no política aprobada. */
             demoOnly: boolean;
+            sendEpoch: components["schemas"]["SendEpoch"];
         };
         /**
          * Format: date-time
@@ -506,6 +567,96 @@ export interface components {
             items: components["schemas"]["Movement"][];
             nextCursor?: string | null;
         };
+        /**
+         * @description Época de envío del usuario (entero no negativo monotónico como cadena decimal). Sólo avanza con POST /transfer-attempts/void-all; los envíos con Transfer-Send-Epoch menor quedan vetados.
+         * @example 0
+         */
+        SendEpoch: string;
+        /**
+         * @description awaiting_confirmation es el único no terminal. completed tiene asientos; expired, cancelled, rejected y voided nunca tienen asientos. rejected y voided son cierres de intentos que no crearon transferencia (transferId null).
+         * @enum {string}
+         */
+        TransferAttemptStatus: "awaiting_confirmation" | "completed" | "expired" | "cancelled" | "rejected" | "voided";
+        /** @description Resumen de un intento propio. Nunca contiene CLABE completa, demoOnlyCode, código OTP, llave de idempotencia, su hash ni requestId. */
+        TransferAttemptSummary: {
+            /**
+             * Format: uuid
+             * @description Transfer-Attempt-Id con que se envió; null si se envió sin cabeceras.
+             */
+            attemptId: string | null;
+            /**
+             * Format: uuid
+             * @description Id de la transferencia (GET /transfers/{transferId}); null para rejected/voided.
+             */
+            transferId: string | null;
+            status: components["schemas"]["TransferAttemptStatus"];
+            /** @description Importe en centavos; null para voided (nunca se recibió el cuerpo). */
+            amountMinor: string | null;
+            /** @constant */
+            currency: "MXN";
+            concept: string | null;
+            reference: string | null;
+            /** Format: uuid */
+            sourceAccountId: string | null;
+            destination: components["schemas"]["TransferAttemptDestination"] | null;
+            createdAt: components["schemas"]["Timestamp"];
+            completedAt: components["schemas"]["Timestamp"] | null;
+            /** @description Instante de cierre para expired, cancelled, rejected y voided; null en otro caso. */
+            closedAt: components["schemas"]["Timestamp"] | null;
+            /** @description Vencimiento del OTP si el intento lo requirió; null en otro caso. */
+            expiresAt: components["schemas"]["Timestamp"] | null;
+            /** @description Rechazo de negocio registrado (sólo status rejected). */
+            problem: components["schemas"]["TransferAttemptProblem"] | null;
+        };
+        TransferAttemptDestination: {
+            name: string;
+            /** @description Primeros 3 y últimos 4 dígitos; nunca la CLABE completa. */
+            clabeMasked: string;
+            /**
+             * Format: uuid
+             * @description Sólo cuando el destino es una cuenta del mismo usuario.
+             */
+            ownAccountId?: string;
+        };
+        TransferAttemptProblem: {
+            /** @enum {integer} */
+            status: 404 | 422 | 429;
+            detail: string;
+        };
+        TransferAttemptPage: {
+            items: components["schemas"]["TransferAttemptSummary"][];
+            nextCursor: string | null;
+            sendEpoch: components["schemas"]["SendEpoch"];
+        };
+        VoidAttemptRequest: {
+            /** @description La misma Idempotency-Key del envío; viaja sólo en el cuerpo y nunca se devuelve ni se registra. */
+            idempotencyKey: string;
+            /** Format: uuid */
+            attemptId?: string;
+        };
+        VoidAttemptResult: {
+            /**
+             * @description transfer_found: el servidor ya lo había recibido (attempt trae su estado). rejected: ya estaba rechazado. voided: nunca se recibió y ya no podrá ejecutarse. Las tres son terminales.
+             * @enum {string}
+             */
+            resolution: "transfer_found" | "rejected" | "voided";
+            attempt: components["schemas"]["TransferAttemptSummary"];
+        };
+        VoidAllRequest: {
+            fromEpoch: components["schemas"]["SendEpoch"];
+        };
+        VoidAllResult: {
+            sendEpoch: components["schemas"]["SendEpoch"];
+            /** @description true sólo si esta llamada avanzó la época (fromEpoch era la vigente). */
+            advanced: boolean;
+            /** @description Intentos awaiting_confirmation cerrados por esta llamada. */
+            closedTransferIds: string[];
+        };
+        /**
+         * @description Valores de Problem.type para intentos de transferencia (ronda 8). voided: identidad anulada o época vieja (409, terminal, sin cargo). rejected: rechazo de negocio 404/422/429 cerrado para esa identidad (terminal, sin cargo). conflict: identidad ligada a otra llave o intento (409, no terminal). El resto de problemas usa about:blank.
+         * @enum {string}
+         */
+        TransferAttemptProblemType: "urn:billetera:problem:transfer-attempt-voided" | "urn:billetera:problem:transfer-attempt-rejected" | "urn:billetera:problem:transfer-attempt-conflict";
         Problem: {
             /** Format: uri-reference */
             type: string;
@@ -532,12 +683,27 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description RFC 7807 `application/problem+json` con requestId y type de TransferAttemptProblemType. */
+        TransferAttemptProblem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"] & {
+                    type?: components["schemas"]["TransferAttemptProblemType"];
+                };
+            };
+        };
     };
     parameters: {
         /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
         CsrfToken: string;
         /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
         IdempotencyKey: string;
+        /** @description Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional, pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y aparece en GET /transfer-attempts. */
+        TransferAttemptId: string;
+        /** @description Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional, pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409 transfer-attempt-voided; mayor → 400. */
+        TransferSendEpoch: components["schemas"]["SendEpoch"];
     };
     requestBodies: never;
     headers: never;
@@ -853,6 +1019,10 @@ export interface operations {
             header: {
                 /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+                /** @description Identidad del intento elegida por el cliente (UUID, distinta de la llave). Opcional, pero debe enviarse junto con Transfer-Send-Epoch. Se persiste en la transferencia y aparece en GET /transfer-attempts. */
+                "Transfer-Attempt-Id"?: components["parameters"]["TransferAttemptId"];
+                /** @description Época de envío leída de GET /transfer-policy (sendEpoch) antes de enviar. Opcional, pero debe enviarse junto con Transfer-Attempt-Id. Menor que la vigente → 409 transfer-attempt-voided; mayor → 400. */
+                "Transfer-Send-Epoch"?: components["parameters"]["TransferSendEpoch"];
             };
             path?: never;
             cookie?: never;
@@ -1005,6 +1175,94 @@ export interface operations {
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    listTransferAttempts: {
+        parameters: {
+            query?: {
+                /** @description Lista separada por comas de awaiting_confirmation, completed, expired, cancelled, rejected, voided. Por defecto todos. */
+                status?: string;
+                /** @description Incluye intentos con createdAt >= from. */
+                from?: string;
+                /** @description Incluye intentos con createdAt <= to; from <= to. */
+                to?: string;
+                attemptId?: string;
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de intentos propios y época de envío vigente. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferAttemptPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    voidTransferAttempt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidAttemptRequest"];
+            };
+        };
+        responses: {
+            /** @description Resolución terminal del intento. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoidAttemptResult"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            409: components["responses"]["TransferAttemptProblem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    voidAllTransferAttempts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoidAllRequest"];
+            };
+        };
+        responses: {
+            /** @description Época resultante y pendientes cerrados por esta llamada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoidAllResult"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
         };
     };

@@ -121,7 +121,11 @@ async function readOwnRecovery(userId: string): Promise<RecoveryRecord | null> {
 // What the user is told when the read of a stored attempt answers 404 (the record is kept).
 const NOT_FOUND_TEXT = 'El servidor no encuentra esta operación. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo.';
 // H5 (F-27): what a read can say about an attempt whose id never arrived (there is nothing to GET; nothing is sent).
-const NO_ID_TEXT = 'Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo.';
+const NO_ID_TEXT = 'Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo. Para conocer su resultado sin riesgo de un cargo doble usa «Reenviar la misma transferencia»: se envía con la misma clave y, si ya se aplicó, el servidor devuelve esa misma transferencia.';
+// H5: Movimientos is only informative. Matching amount, concept, reference or time is NOT proof that a charge is this
+// attempt, so the app never resolves, releases nor shows a receipt from such a match; the only authoritative
+// reconciliation of an attempt without id is the consented resend with its own key (idempotent on the server).
+const MOVEMENTS_CAVEAT = 'En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento.';
 // M08 reopened from a stored attempt: the code is never kept on the device.
 const CODE_NOT_STORED_TEXT = 'Por seguridad el código no se guarda en el dispositivo. Si ya no lo tienes, usa «Solicitar un código nuevo».';
 const RECOVERY_DAMAGED_TEXT = 'No pudimos recuperar los datos de una transferencia en verificación guardada en este dispositivo. No sabemos si se realizó un cargo; no vuelvas a enviar hasta revisar Movimientos. Para evitar un cargo doble, la app no enviará otra transferencia mientras no pueda leer esos datos.';
@@ -553,10 +557,20 @@ function Wallet() {
   // The ONLY place a POST /transfers is sent: the first send (tap on "Confirmar transferencia" / "Continuar a
   // verificación" or "Solicitar un código nuevo") and the explicit, confirmed "Reenviar la misma transferencia". Both send
   // the stored record's own key and body. A record is released only by a final result the server confirmed for it.
-  async function sendAttempt(record: RecoveryRecord, userId: string, accessToken: string) {
+  async function sendAttempt(record: RecoveryRecord, userId: string, accessToken: string, resend = false) {
     setPendingCheck('idle');
+    const send = () => request<Transfer & { demoOnlyCode?: string }>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': record.key }, body: JSON.stringify(record.payload) });
     try {
-      const result = await request<Transfer & { demoOnlyCode?: string }>('/transfers', accessToken, { method: 'POST', headers: { 'Idempotency-Key': record.key }, body: JSON.stringify(record.payload) });
+      let result: Transfer & { demoOnlyCode?: string };
+      try { result = await send(); }
+      catch (error) {
+        // H5: a resend can meet an earlier send of the SAME key that the server was still applying; it then answers
+        // 422/429 "límite diario" because that send already used the balance/limit (it locks the accounts first, so it has
+        // committed by then). Within the same tap the same key and body are sent once more: if the earlier send was
+        // applied the server now returns it (no new charge); a second business rejection confirms nothing was applied.
+        if (!(resend && error instanceof ApiError && isBusinessRejection(error))) throw error;
+        result = await send();
+      }
       setDemoOnlyCode(result.demoOnlyCode ?? '');
       // The server's id is kept before anything else, so a later read (GET) can resolve this attempt.
       const otp: RecoveryConsent['otp'] = result.status === 'awaiting_confirmation' ? (record.consent?.otp === 'authorized' ? 'authorized' : 'required') : record.consent?.otp ?? 'unknown';
@@ -613,7 +627,7 @@ function Wallet() {
     if (!record || record.key !== pendingRecord?.key) { transferInFlight.current = false; holdForPendingAttempt(record); if (!record) setPendingRecord(null); return; }
     setCreateAttempt({ key: record.key, payload: record.payload }); setTransfer(null); setCodeNotStored(false);
     setTransferBusy(true); setTransferError(''); setOtpExpired(false); setOtpWrong(false); setOtpLocked(false); setTransferScreen('status');
-    try { await sendAttempt(record, userId, session.accessToken); }
+    try { await sendAttempt(record, userId, session.accessToken, true); }
     finally { setTransferBusy(false); transferInFlight.current = false; }
   }
 
@@ -1149,6 +1163,7 @@ function PendingTransferNotice({ record, problem, lookup, canResend, onVerify, o
           : lookup === 'failed' ? <Text accessibilityLiveRegion="polite" style={styles.pendingNoticeText}>Sin respuesta por ahora. La consultaremos de nuevo al volver a Inicio o a la app.</Text> : null}
     <Button title={awaitingCode ? 'Continuar con la transferencia pendiente' : notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} leadingIcon={awaitingCode ? 'arrow-forward' : 'sync-outline'} loading={checking} disabled={checking} onPress={onVerify}/>
     {awaitingCode ? null : movements}
+    {awaitingCode ? null : <Text style={styles.pendingNoticeText}>{MOVEMENTS_CAVEAT}</Text>}
     {canResend && !checking ? <Button title="Reenviar la misma transferencia" variant="secondary" leadingIcon="repeat-outline" onPress={onResend}/> : null}
   </View>;
 }
@@ -1467,6 +1482,7 @@ function TransferFlow(props: { screen: FlowScreen; policy: TransferPolicy | null
         {/* H5 · 2: "Verificar" is read-only; the resend is a separate, explicit action with its own confirmation. */}
         <Button title={notFound ? 'Verificar de nuevo' : 'Verificar estado de la transferencia'} size="lg" leadingIcon="sync-outline" loading={props.busy} disabled={props.busy} onPress={props.onCheck}/>
         <Button title="Ver movimientos" size="lg" variant="secondary" leadingIcon="list-outline" disabled={props.busy} onPress={props.onViewMovements}/>
+        <Text style={styles.warningText}>{MOVEMENTS_CAVEAT}</Text>
         {props.canResend ? <Button title="Reenviar la misma transferencia" size="lg" variant="secondary" leadingIcon="repeat-outline" disabled={props.busy} onPress={props.onResend}/> : null}
         <Button title="Ir al inicio (revisar saldo después)" size="lg" variant="surfaceLow" disabled={props.busy} onPress={props.onLeave}/>
       </View>

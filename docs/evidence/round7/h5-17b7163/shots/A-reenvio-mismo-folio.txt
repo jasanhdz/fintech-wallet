@@ -1,0 +1,46 @@
+
+Detalle
+AA
+
+
+Transferencia completada
+-$300.25
+MXN
+
+16 de noviembre de 2026, 21:58 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 0752
+Para
+Cuenta de ahorro demo
+Ahorro demo
+Cuenta destino
+Billetera MXN
+•• 0733
+Concepto
+A aplicada
+Referencia
+8201
+Folio interno
+1cf96434-1f8a-4891-b584-3dac22caa2c2
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$9,699.75
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

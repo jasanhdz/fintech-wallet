@@ -1,0 +1,18 @@
+input attrs: {"tag":"INPUT","maxlength":null,"autocomplete":"one-time-code","inputmode":"numeric","type":"text","ariaLabel":"Código de confirmación"}
+PASS no maxLength; oneTimeCode, numeric keyboard and accessible name kept
+PASS paste "12 34-56" -> "123456" (expected "123456")
+PASS paste "12a3456789" -> "123456" (expected "123456")
+PASS paste "123456" -> "123456" (expected "123456")
+PASS paste "1234567890" -> "123456" (expected "123456")
+PASS paste " 742-890 " -> "742890" (expected "742890")
+PASS paste "١٢٣٤٥٦" -> "" (expected "")
+PASS paste "12" -> "12" (expected "12")
+typed 1234567 -> "123456"
+PASS typing a 7th digit is ignored
+after 2 backspaces -> "1234"
+PASS backspace deletes
+typing letter x then 9 -> "12349"
+PASS letters ignored, digit accepted
+M08 text shows "Faltan 1 dígito": false
+Autorizar enabled with a pasted separated real code: true
+receipt: true | DB: completed:600000

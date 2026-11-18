@@ -1,0 +1,40 @@
+FAIL H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+FAIL H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > first send answered 401: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+FAIL H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > first send answered 403: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+FAIL H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > first send answered 400: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+FAIL H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > first send answered 429 rate limit: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+PASS H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send > a confirmed business rejection (422) of the first send is the only 4xx that opens M11 and releases the record
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > a damaged record is explained without technical text; "Reintentar lectura" re-reads it, nothing is deleted or sent and there is no discard
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > a damaged record found by the guard when confirming sends nothing and Home shows the same explanation
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > an unreadable secure store blocks with an explanation; "Reintentar lectura" unblocks only once it can be read again
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+FAIL H5 · 4 (F-26): no release without a confirmed final result and no discard > a business rejection at confirm time releases the record only once the cancel of that attempt is confirmed
+FAIL H5 · 2: verifying (consulting) never creates a transfer > M09 "Verificar estado" of an attempt whose id never arrived sends nothing (no POST, no other key) and says why
+FAIL H5 · 2: verifying (consulting) never creates a transfer > Home "Verificar estado" of a stored attempt without id sends nothing and explains it with the safe actions
+PASS H5 · 2: verifying (consulting) never creates a transfer > with an id, verifying only reads it (GET), from Home and from M09
+FAIL H5 · 2: verifying (consulting) never creates a transfer > an attempt waiting for its code is reopened (start-up) with a READ only: M08 without the code and 0 POST
+FAIL H5 · 2: verifying (consulting) never creates a transfer > an attempt waiting for its code is reopened (sign-in) with a READ only: M08 without the code and 0 POST
+FAIL H5 · 2: verifying (consulting) never creates a transfer > "Continuar con la transferencia pendiente" on Home reads the attempt and opens M08 without sending anything
+FAIL H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) > "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+FAIL H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) > the consented resend with the stored key is what reconciles it: the server returns the same folio, one transfer
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > the first send stores the user's consent with the attempt; the code authorization is recorded without the code
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > opening it shows the original data and consent and sends nothing; "Volver sin reenviar" changes nothing
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > the confirmation tap sends EXACTLY the stored key and body (the same bytes the first send used), once
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend of a stored record (after a restart) sends the record's key and payload as stored
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 202 (code required) goes to M08: the resend cannot skip the code
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 409 "en curso" stays in verification with the record intact and no path to another attempt
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 401 stays in verification with the record intact and no path to another attempt
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 403 stays in verification with the record intact and no path to another attempt
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 400 stays in verification with the record intact and no path to another attempt
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 429 rate limit stays in verification with the record intact and no path to another attempt
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a resend whose 422 came from the earlier send of the same key still being applied shows that transfer (no claim of "no debit", no new charge)
+PASS H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a FIRST send answered 422 is final at once (no other send of that key can exist): one POST, M11
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > a legacy record (no owner) whose resend answers 404 is kept: no release, no claim
+FAIL H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body > after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer
+PASS H5 · 5 (F-27): nothing creates or debits on its own — only reads > a record without id, network back: start-up, foreground x3, Home shown again, sign-out + sign-in send 0 creates
+FAIL H5 · 5 (F-27): nothing creates or debits on its own — only reads > a record WITH id waiting for its code: start-up, foreground and sign-in only read it (GET), 0 creates
+FAIL H5 · 6 (F-28): coverage found missing by the H5 mutations > M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+summary: 35 failed, 4 passed

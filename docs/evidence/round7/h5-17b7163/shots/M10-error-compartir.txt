@@ -1,0 +1,47 @@
+
+Detalle
+AL
+
+
+Transferencia completada
+-$850.00
+MXN
+
+16 de noviembre de 2026, 22:05 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 3309
+Para
+Carlos Ruiz
+Carlos
+Cuenta destino
+Billetera MXN
+•• 0169
+Concepto
+<b>Comida</b> & "x"
+Referencia
+••••••
+Folio interno
+cba11030-4cdd-4279-8c7c-6ad18d2c7881
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+No se pudo abrir la hoja para compartir. Inténtalo de nuevo.
+
+Nuevo saldo disponible en Cuenta principal:
+$9,150.00
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN

@@ -1,0 +1,7 @@
+start 0 transfers / 0 idem / 0 ledger / 0 audit
+ok 499999 -> 201 | 1 transfers / 1 idem / 2 ledger / 1 audit
+replay -> 201 same id true | 1 transfers / 1 idem / 2 ledger / 1 audit
+3 more below threshold -> 201 422 422 | 2 transfers / 2 idem / 4 ledger / 2 audit | balance 2
+beyond the balance or the daily limit -> 422 Saldo insuficiente. | 2 transfers / 2 idem / 4 ledger / 2 audit
+rejected key leaves an idempotency record? count of records equals transfers: 2
+same rejected key again -> 422 Saldo insuficiente. (re-evaluated, no stored result)

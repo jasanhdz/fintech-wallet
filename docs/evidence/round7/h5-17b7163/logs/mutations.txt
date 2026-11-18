@@ -1,0 +1,114 @@
+KILLED  F-28.1 guard fails OPEN when SecureStore cannot be read: catch { existing = null } :: Tests:       2 failed, 166 passed, 168 total
+    ● H4 · F-28: guard coverage › (1) when the secure store cannot be read at confirm time the guard fails closed: 0 POST /transfers and a clear message
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › a damaged record found by the guard when confirming sends nothing and Home shows the same explanation
+KILLED  F-28.2 requestNewCode always passes replacesClosedAttempt=true :: Tests:       1 failed, 167 passed, 168 total
+    ● H4 · F-28: guard coverage › (2) "Solicitar un código nuevo" without a previous attempt does not bypass the guard: a stored unresolved attempt still blocks the new key
+KILLED  1a unconfirmed 4xx (409/401/403/400/429) goes to M11 :: Tests:       21 failed, 147 passed, 168 total
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 401 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 403 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 429 rate limit keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 400 (validated before the key lookup) keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › a first send answered with an unverified 4xx stays in verification on M09 and its exits keep the record (no edit path)
+KILLED  1b unconfirmed 4xx deletes the record :: Tests:       21 failed, 147 passed, 168 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers HTTP 500: the record is kept and only the same key is used
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 401 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 403 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 429 rate limit keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 400 (validated before the key lookup) keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+KILLED  1c an M09 exit ("Ir al inicio") deletes the record :: Tests:       38 failed, 130 passed, 168 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 500: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers no answer: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 409: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers HTTP 401: the record is kept byte-identical and Home offers no new transfer
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers HTTP 500: the record is kept and only the same key is used
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers no answer: the record is kept and only the same key is used
+KILLED  2a M09 "Verificar" POSTs the create when there is no id :: Tests:       4 failed, 164 passed, 168 total
+    ● H5 · 2: verifying (consulting) never creates a transfer › M09 "Verificar estado" of an attempt whose id never arrived sends nothing (no POST, no other key) and says why
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › the consented resend with the stored key is what reconciles it: the server returns the same folio, one transfer
+    ● mobile uncertain result (M09) › explains the uncertain attempt; verifying only reads, and the explicit resend replays the same key (never a second attempt)
+KILLED  2b Home "Verificar" (tap) POSTs the create when there is no id :: Tests:       7 failed, 161 passed, 168 total
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; "Verificar estado" sends 0 too and only the confirmed resend sends one with the same key
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › after "Ir al inicio" from M09 (response lost before it was applied) the foreground sends nothing until the tap
+    ● H5 · 2: verifying (consulting) never creates a transfer › Home "Verificar estado" of a stored attempt without id sends nothing and explains it with the safe actions
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+    ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+    ● round 7 · 6/8: unresolved attempts, background curtain and expired sessions › M09 "Ir al inicio" keeps a pending notice on Home; verifying only reads and the explicit resend replays the same key: receipt with one row
+KILLED  2c start-up/sign-in replays the create to recover the demo code of an attempt waiting for it :: Tests:       3 failed, 165 passed, 168 total
+    ● H5 · 2: verifying (consulting) never creates a transfer › an attempt waiting for its code is reopened (start-up) with a READ only: M08 without the code and 0 POST
+    ● H5 · 2: verifying (consulting) never creates a transfer › an attempt waiting for its code is reopened (sign-in) with a READ only: M08 without the code and 0 POST
+    ● H5 · 5 (F-27): nothing creates or debits on its own — only reads › a record WITH id waiting for its code: start-up, foreground and sign-in only read it (GET), 0 creates
+KILLED  6a M09 "Verificar" resolves an attempt without id from a matching charge in Movimientos (amount/concept/reference) :: Tests:       2 failed, 166 passed, 168 total
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › the consented resend with the stored key is what reconciles it: the server returns the same folio, one transfer
+KILLED  6b Home resolves an attempt without id from a matching charge in Movimientos :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does) › "Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays
+KILLED  3a resend uses a NEW Idempotency-Key :: Tests:       26 failed, 142 passed, 168 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers HTTP 500: the record is kept and only the same key is used
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers no answer: the record is kept and only the same key is used
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 401 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 403 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+    ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 429 rate limit keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+KILLED  3b resend sends a rebuilt (re-captured) payload :: Tests:       4 failed, 164 passed, 168 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › the confirmation tap sends EXACTLY the stored key and body (the same bytes the first send used), once
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend of a stored record (after a restart) sends the record's key and payload as stored
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit
+    ● mobile transfer attempt › recovers an uncertain create after a true unmount/remount
+KILLED  3c "Reenviar" sends on the first tap (no review / confirmation) :: Tests:       21 failed, 147 passed, 168 total
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers HTTP 500: the record is kept and only the same key is used
+    ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › the replay of an attempt without id answers no answer: the record is kept and only the same key is used
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; "Verificar estado" sends 0 too and only the confirmed resend sends one with the same key
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › after "Ir al inicio" from M09 (response lost before it was applied) the foreground sends nothing until the tap
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › opening it shows the original data and consent and sends nothing; "Volver sin reenviar" changes nothing
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend of a stored record (after a restart) sends the record's key and payload as stored
+KILLED  3d consent not stored with the attempt :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › the first send stores the user's consent with the attempt; the code authorization is recorded without the code
+KILLED  3e code authorization not recorded in the consent :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › the first send stores the user's consent with the attempt; the code authorization is recorded without the code
+KILLED  3f a resend's 422/429 is taken as final without re-confirming with the same key :: Tests:       2 failed, 166 passed, 168 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend whose 422 came from the earlier send of the same key still being applied shows that transfer (no claim of "no debit", no new charge)
+KILLED  4a start-up GET 404 releases the record :: Tests:       2 failed, 166 passed, 168 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer
+KILLED  4b Home GET 404 releases the record :: Tests:       4 failed, 164 passed, 168 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › after a GET 404 the resend is offered; it re-sends the same key and the server answers with ONE transfer
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+KILLED  4c M09 GET 404 releases the record :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 6 (F-28): coverage found missing by the H5 mutations › M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)
+KILLED  4d a 404 of the create releases the record (old createProvesNotApplied) :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a legacy record (no owner) whose resend answers 404 is kept: no release, no claim
+KILLED  4e "Descartar este intento" button is back on the notice :: Tests:       3 failed, 165 passed, 168 total
+    ● H4 · F-26 (b)/(c)/(d): an attempt waiting for its code › an attempt the server confirms is waiting for its code offers no discard (its way out is the confirmed cancel in M08)
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (start-up): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › GET of the stored attempt answers 404 (Home): the record is kept byte-identical, Home explains it without claiming anything and offers only safe actions
+KILLED  4f "Reintentar lectura" deletes the damaged record :: Tests:       3 failed, 165 passed, 168 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › a damaged record is explained without technical text; "Reintentar lectura" re-reads it, nothing is deleted or sent and there is no discard
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › an unreadable secure store blocks with an explanation; "Reintentar lectura" unblocks only once it can be read again
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+KILLED  4g unreadable SecureStore treated as "no record" (Home fails open) :: Tests:       3 failed, 165 passed, 168 total
+    ● H4 · F-28: guard coverage › (1) when the secure store cannot be read at confirm time the guard fails closed: 0 POST /transfers and a clear message
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › an unreadable secure store blocks with an explanation; "Reintentar lectura" unblocks only once it can be read again
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+KILLED  4h business rejection at confirm releases without a confirmed cancel :: Tests:       1 failed, 167 passed, 168 total
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › a business rejection at confirm time releases the record only once the cancel of that attempt is confirmed
+KILLED  5a Home shown / foreground replays the create of an attempt without id :: Tests:       20 failed, 148 passed, 168 total
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; "Verificar estado" sends 0 too and only the confirmed resend sends one with the same key
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › after "Ir al inicio" from M09 (response lost before it was applied) the foreground sends nothing until the tap
+    ● H4 · F-28: guard coverage › (2) "Solicitar un código nuevo" without a previous attempt does not bypass the guard: a stored unresolved attempt still blocks the new key
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 409 "en curso": M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 401: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+    ● H5 · 1 (F-21): an unconfirmed 4xx keeps the attempt in verification on ANY send › first send answered 403: M09 (never M11), the record stays byte-identical and no exit of M09 deletes it
+KILLED  5b start-up / sign-in replays the create of an attempt without id :: Tests:       10 failed, 158 passed, 168 total
+    ● H4 · F-27: an attempt whose id never arrived is never re-sent without a tap › start-up, Home shown again and returns to the foreground send 0 creates; "Verificar estado" sends 0 too and only the confirmed resend sends one with the same key
+    ● H5 · 4 (F-26): no release without a confirmed final result and no discard › when the store is readable again and holds a record, "Reintentar lectura" shows that attempt (still blocked)
+    ● H5 · 2: verifying (consulting) never creates a transfer › Home "Verificar estado" of a stored attempt without id sends nothing and explains it with the safe actions
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › opening it shows the original data and consent and sends nothing; "Volver sin reenviar" changes nothing
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend of a stored record (after a restart) sends the record's key and payload as stored
+    ● H5 · 3: "Reenviar la misma transferencia" is explicit, shows the original data and re-sends the same key and body › a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit
+survivors: 0 of 26

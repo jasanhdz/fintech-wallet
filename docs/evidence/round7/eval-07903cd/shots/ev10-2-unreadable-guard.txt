@@ -1,0 +1,36 @@
+
+Transferir
+AL
+Paso 2 de 2
+Revisar transferencia
+
+Monto a transferir
+$300.25
+MXN
+
+CUENTA DE ORIGEN
+Cuenta principal •• 5246
+Saldo disponible: $10,000.00 MXN
+
+TRANSFERENCIA INTERNA
+
+DESTINATARIO
+Cuenta de ahorro demo (Ahorro demo) •• 3370
+Billetera MXN
+Concepto
+Prueba Ev10
+Referencia numérica
+9001
+Tipo de operación
+Transferencia interna
+
+Saldo posterior estimado
+$9,699.75 MXN
+Cálculo:
+$10,000.00 - $300.25 = $9,699.75 MXN
+
+El envío aún no está confirmado. El saldo final se actualizará en tu cuenta una vez procesada la operación por el sistema.
+No pudimos comprobar si tienes una transferencia en verificación. Para evitar un cargo doble no enviamos nada; inténtalo de nuevo en un momento.
+Confirmar transferencia
+
+Modificar datos

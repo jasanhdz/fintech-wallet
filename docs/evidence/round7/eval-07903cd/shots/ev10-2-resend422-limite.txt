@@ -1,0 +1,25 @@
+
+Transferir
+AL
+
+No se pudo completar la transferencia
+El monto solicitado ($300.25 MXN) supera lo disponible hoy según el límite diario de demostración ($0.04 MXN disponibles hoy).
+
+Tu dinero está intacto
+No se aplicó ningún cargo a tu cuenta por este intento.
+Cuenta de origen
+
+Principal •• 3726
+Saldo disponible
+$10,000.00 MXN
+Disponible hoy (límite diario)
+$0.04 MXN
+Monto solicitado
+$300.25 MXN
+Importe debitado
+Ningún dinero fue retirado
+$0.00 MXN
+
+Modificar monto o cuenta
+
+Volver al inicio

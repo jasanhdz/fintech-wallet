@@ -1,0 +1,192 @@
+
+===== resend-409-applied: first send lost-before (never applied), explicit resend answered exec-err:409:La solici (applied by server: true) =====
+PASS resend-409-applied: resend answered 409 stays in M09 verification (never M11)
+SHOT ev10-2-resend-409-applied-m09 minFont=12 scrollW=390 offscreen=0 errs=2
+PASS resend-409-applied: record byte-identical after the 409
+DB: completed:30025 debits 1
+AUDIT M09 after 409: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS resend-409-applied: no path to another attempt from M09
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 8309","Ahorro •• 2856","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-409-applied: Inicio locked
+PASS resend-409-applied: second resend: same key 5fbb51e2 and byte-identical body
+PASS resend-409-applied: receipt
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-409-applied: 1 transfer, 1 debit
+
+===== resend-409-notapplied: first send lost-before (never applied), explicit resend answered err:409:La solicitud i (applied by server: false) =====
+PASS resend-409-notapplied: resend answered 409 stays in M09 verification (never M11)
+SHOT ev10-2-resend-409-notapplied-m09 minFont=12 scrollW=390 offscreen=0 errs=2
+PASS resend-409-notapplied: record byte-identical after the 409
+DB: (none) debits 0
+AUDIT M09 after 409: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS resend-409-notapplied: no path to another attempt from M09
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0246","Ahorro •• 4862","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS resend-409-notapplied: Inicio locked
+PASS resend-409-notapplied: second resend: same key 9cba20c8 and byte-identical body
+PASS resend-409-notapplied: receipt
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-409-notapplied: 1 transfer, 1 debit
+
+===== resend-400: explicit resend answered err:400:Datos de transferencia =====
+PASS resend-400: stays in M09 (never M11)
+PASS resend-400: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1557","Ahorro •• 1417","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-400: Inicio locked
+AUDIT after foreground+reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1557","Ahorro •• 1417","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-400: still no path
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-400: 1 transfer, 1 debit in DB
+
+===== resend-401: explicit resend answered err:401:La sesión expiró. =====
+PASS resend-401: stays in M09 (never M11)
+PASS resend-401: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7246","Ahorro •• 1734","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-401: Inicio locked
+AUDIT after foreground+reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7246","Ahorro •• 1734","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-401: still no path
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-401: 1 transfer, 1 debit in DB
+
+===== resend-403: explicit resend answered err:403:Acceso denegado. =====
+PASS resend-403: stays in M09 (never M11)
+PASS resend-403: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 8548","Ahorro •• 2322","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-403: Inicio locked
+AUDIT after foreground+reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 8548","Ahorro •• 2322","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-403: still no path
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-403: 1 transfer, 1 debit in DB
+
+===== resend-429-rate: explicit resend answered err:429:Demasiadas solicitudes =====
+PASS resend-429-rate: stays in M09 (never M11)
+PASS resend-429-rate: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 6609","Ahorro •• 0147","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-429-rate: Inicio locked
+AUDIT after foreground+reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 6609","Ahorro •• 0147","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-429-rate: still no path
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-429-rate: 1 transfer, 1 debit in DB
+
+===== resend-500: explicit resend answered exec-err:500:Ocurrió un proble =====
+PASS resend-500: stays in M09 (never M11)
+PASS resend-500: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0637","Ahorro •• 5173","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-500: Inicio locked
+AUDIT after foreground+reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0637","Ahorro •• 5173","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS resend-500: still no path
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS resend-500: 1 transfer, 1 debit in DB
+
+===== race attempt 1: the app's first send races 3 identical sends of the same key (real API) =====
+race result: app 409 others [201,409,409]
+PASS race: the REAL 409 answer to the app leaves it in M09 verification (never M11)
+SHOT ev10-2-race-real-409-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+M09 detail line contains the server text: true
+PASS race: record kept
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 4191","Ahorro •• 3182","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS race: Inicio locked, no new-transfer entry
+AUDIT Movimientos: forbidden=[] buttons=["Cuenta principal (•• 4191), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS race: Movimientos no entry
+PASS race: record intact (or released only if the server confirmed completed)
+DB after real 409: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS race: DB 1 transfer, 1 debit (3 identical concurrent sends + the app)
+resend after the real 409: creates 1 same key true
+DB final: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS race: after resend still 1 transfer / 1 debit
+
+===== get404: record WITH an unknown transferId (real GET 404 from the API) =====
+direct API GET of that id -> 404 Transferencia no encontrada.
+SHOT ev10-2-get404-home minFont=12 scrollW=390 offscreen=0 errs=2
+PASS get404: explained safely
+PASS get404: no claim of "no charge", no technical text
+PASS get404: record byte-identical
+AUDIT Home: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1942","Ahorro •• 3032","\nVerificar de nuevo","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS get404: no new-transfer entry
+AUDIT after Verificar de nuevo: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1942","Ahorro •• 3032","\nVerificar de nuevo","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS get404: "Verificar de nuevo" keeps the record and the lock
+AUDIT after relogin+foreground: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1942","Ahorro •• 3032","\nVerificar de nuevo","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS get404: relogin/foreground keep the record and the lock
+PASS get404: 0 POST /transfers and 0 DB transfers (creates 0)
+SHOT ev10-2-get404-after-relogin minFont=12 scrollW=390 offscreen=0 errs=6
+SHOT ev10-2-get404-resend-review minFont=12 scrollW=390 offscreen=0 errs=6
+DB after resend of an unknown id: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS get404: resend carried the stored key and byte-identical body
+PASS get404: resend created exactly 1 transfer / 1 debit (server did not know it)
+
+===== post404: record WITHOUT id whose beneficiary the server does not find (real POST 404) =====
+PASS post404: start-up with a record without id sent 0 POST
+SHOT ev10-2-post404-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+POST creates: 1 last mode create:pass
+PASS post404: real 404 of the POST leaves M09 verification (never M11)
+M09 text has server detail: true
+PASS post404: no claim of no charge, no technical text
+PASS post404: record byte-identical
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 9487","Ahorro •• 0264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS post404: Inicio locked
+AUDIT after relogin/foreground/reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 9487","Ahorro •• 0264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS post404: still locked and unchanged (permanent: no exit in the app)
+SHOT ev10-2-post404-inicio-permanent minFont=12 scrollW=390 offscreen=0 errs=1
+PASS post404: DB 0 transfers
+PASS post404: another user of the same device is NOT blocked
+PASS post404: the other user did not touch the first user record
+
+===== corrupt (truncated-json) =====
+SHOT ev10-2-corrupt-truncated-json-home minFont=12 scrollW=390 offscreen=0 errs=0
+PASS corrupt truncated-json: explained, does not claim no charge
+PASS corrupt truncated-json: no raw technical text, no discard
+PASS corrupt truncated-json: record untouched
+AUDIT Home: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 4676","Ahorro •• 3164","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt truncated-json: no new-transfer entry
+PASS corrupt truncated-json: no resend (no key/body recoverable)
+AUDIT after Reintentar lectura: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 4676","Ahorro •• 3164","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt truncated-json: "Reintentar lectura" keeps lock and record
+AUDIT after relogin/foreground: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 4676","Ahorro •• 3164","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt truncated-json: relogin/foreground keep the lock
+PASS corrupt truncated-json: 0 POST, 0 DB transfers
+
+===== corrupt (missing-fields) =====
+SHOT ev10-2-corrupt-missing-fields-home minFont=12 scrollW=390 offscreen=0 errs=0
+PASS corrupt missing-fields: explained, does not claim no charge
+PASS corrupt missing-fields: no raw technical text, no discard
+PASS corrupt missing-fields: record untouched
+AUDIT Home: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3599","Ahorro •• 8633","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt missing-fields: no new-transfer entry
+PASS corrupt missing-fields: no resend (no key/body recoverable)
+AUDIT after Reintentar lectura: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3599","Ahorro •• 8633","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt missing-fields: "Reintentar lectura" keeps lock and record
+AUDIT after relogin/foreground: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3599","Ahorro •• 8633","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt missing-fields: relogin/foreground keep the lock
+PASS corrupt missing-fields: 0 POST, 0 DB transfers
+
+===== corrupt while in review (guard of submitCreate) =====
+SHOT ev10-2-corrupt-guard minFont=12 scrollW=390 offscreen=0 errs=0
+PASS corrupt-guard: 0 POST, 0 DB transfers
+PASS corrupt-guard: explained without technical text
+AUDIT after guard: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2175","Ahorro •• 6078","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS corrupt-guard: no new-transfer entry
+
+===== unreadable SecureStore =====
+SHOT ev10-2-unreadable-guard minFont=12 scrollW=390 offscreen=0 errs=0
+PASS unreadable guard: 0 POST, 0 DB transfers
+PASS unreadable guard: safe explanation, no raw text
+AUDIT after guard: forbidden=[] buttons=["Volver","Confirmar transferencia\n","Modificar datos"]
+PASS unreadable guard: (audit shown)
+SHOT ev10-2-unreadable-home minFont=12 scrollW=390 offscreen=0 errs=0
+PASS unreadable home: explained, no claim, no raw text
+AUDIT Home: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5246","Ahorro •• 3370","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS unreadable home: no new-transfer entry
+AUDIT after retry (still unreadable): forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5246","Ahorro •• 3370","\nReintentar lectura","\nVer movimientos","Última actualización de saldo, Act"]
+PASS unreadable: still blocked while unreadable
+PASS unreadable: 0 POST, 0 DB transfers
+
+===== matching: the attempt was applied (lost-after); a SEPARATE identical transfer (other key) also exists =====
+foreign identical transfer (other key, e.g. another device) -> 201 completed
+SHOT ev10-2-matching-movimientos minFont=12 scrollW=390 offscreen=0 errs=1
+Movimientos shows matching charges: 1 | amount 300.25: 1
+AUDIT after Verificar with matching charges: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 3063","Ahorro •• 4765","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS matching: with real matching charges the attempt is NOT resolved, NOT released, NO receipt
+PASS matching: record intact and 0 POST after Verificar/foreground/Movimientos
+PASS matching: no receipt shown
+DB after resend: transfers=2 [completed:30025 | completed:30025] debits=2 ledger=4 rows sum 0 idem=2 balances principal=939950 ahorro=560050
+the resend returned the ORIGINAL folio of the attempt: true
+PASS matching: DB 2 transfers = the attempt + the foreign identical one (the resend added none)

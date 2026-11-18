@@ -1,0 +1,49 @@
+Expo Autolinking module resolution enabled
+Starting Metro Bundler
+
+iOS Bundled 4337ms ../fintech-wallet/node_modules/expo-router/entry.js (1287 modules)
+
+› Assets (46):
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/AntDesign.ttf (130KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Entypo.ttf (66KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/EvilIcons.ttf (13KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf (56KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome.ttf (166KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf (134KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf (34KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf (203KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Brands.ttf (209KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf (68KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf (424KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Fontisto.ttf (314KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Foundation.ttf (57KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf (390KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf (1.3MB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf (357KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Octicons.ttf (69KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/SimpleLineIcons.ttf (54KB)
+../../fintech-wallet/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Zocial.ttf (26KB)
+../../fintech-wallet/node_modules/expo-router/assets/arrow_down.png (9.5KB)
+../../fintech-wallet/node_modules/expo-router/assets/error.png (469B)
+../../fintech-wallet/node_modules/expo-router/assets/file.png (138B)
+../../fintech-wallet/node_modules/expo-router/assets/forward.png (188B)
+../../fintech-wallet/node_modules/expo-router/assets/pkg.png (364B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon-mask.png (653B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/back-icon.png (4 variations | 566B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/clear-icon.png (4 variations | 425B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/close-icon.png (4 variations | 235B)
+../../fintech-wallet/node_modules/expo-router/assets/react-navigation/elements/search-icon.png (3 variations | 582B)
+../../fintech-wallet/node_modules/expo-router/assets/sitemap.png (465B)
+../../fintech-wallet/node_modules/expo-router/assets/unmatched.png (4.8KB)
+node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf (342KB)
+node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf (343KB)
+node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf (344KB)
+node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf (344KB)
+
+› ios bundles (1):
+_expo/static/js/ios/entry-78786e8ac93f02c9ed0af6cd26e75652.hbc (3.3MB)
+
+› Files (1):
+metadata.json (3KB)
+
+Exported: /private/tmp/claude-501/-Users-jasanhernandez-Develop-fintech-wallet/2ea3dc70-874a-47fc-b6a0-d91389549965/scratchpad/dist-ios

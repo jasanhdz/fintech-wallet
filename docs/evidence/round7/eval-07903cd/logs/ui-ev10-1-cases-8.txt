@@ -1,0 +1,344 @@
+
+===== CASE 409-applied: first send -> exec-err:409:La solicitud idempotente es (server applied it: true) =====
+PASS 409-applied: M09 "Estamos verificando", never M11
+SHOT ev10-1-409-applied-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-applied: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: completed:30025 debits=1 (applied expected true)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 409-applied: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 0844), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS 409-applied: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0844","Ahorro •• 5568","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 409-applied: Inicio only shows the notice
+SHOT ev10-1-409-applied-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 0844), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS 409-applied: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0844","Ahorro •• 5568","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso de Cuenta principal, •• 0","Ver los últimos 20 movimientos\n"]
+PASS 409-applied: account switch no entry
+"Verificar" offline -> no-id text
+PASS 409-applied: POST /transfers count still 1 after Verificar/exits
+PASS 409-applied: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0844","Ahorro •• 5568","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 409-applied: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0844","Ahorro •• 5568","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 409-applied: relogin still locked
+PASS 409-applied: record byte-identical after reload and logout/login
+PASS 409-applied: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 409-applied: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 409-applied: DB 1 transfer (applied)
+SHOT ev10-1-409-applied-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-409-applied-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-applied: resend review shows the ORIGINAL data and the registered consent
+PASS 409-applied: opening the resend review sent nothing
+PASS 409-applied: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 409-applied: the resend tap sent exactly 1 POST (got 1)
+PASS 409-applied: resend Idempotency-Key == first send == stored record (57847375)
+PASS 409-applied: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-409-applied-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-applied: resend reaches the receipt
+receipt folio 2bf88cea == DB transfer 2bf88cea : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 409-applied: 1 transfer, 1 debit in DB
+PASS 409-applied: record released only now (server confirmed completed)
+
+===== CASE 409-notapplied: first send -> err:409:La solicitud idempotente está en (server applied it: false) =====
+PASS 409-notapplied: M09 "Estamos verificando", never M11
+SHOT ev10-1-409-notapplied-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-notapplied: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 409-notapplied: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 0657), cambia"]
+PASS 409-notapplied: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0657","Ahorro •• 3264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 409-notapplied: Inicio only shows the notice
+SHOT ev10-1-409-notapplied-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 0657), cambia"]
+PASS 409-notapplied: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0657","Ahorro •• 3264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 409-notapplied: account switch no entry
+"Verificar" offline -> no-id text
+PASS 409-notapplied: POST /transfers count still 1 after Verificar/exits
+PASS 409-notapplied: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0657","Ahorro •• 3264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 409-notapplied: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0657","Ahorro •• 3264","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 409-notapplied: relogin still locked
+PASS 409-notapplied: record byte-identical after reload and logout/login
+PASS 409-notapplied: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 409-notapplied: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS 409-notapplied: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-409-notapplied-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-409-notapplied-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-notapplied: resend review shows the ORIGINAL data and the registered consent
+PASS 409-notapplied: opening the resend review sent nothing
+PASS 409-notapplied: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 409-notapplied: the resend tap sent exactly 1 POST (got 1)
+PASS 409-notapplied: resend Idempotency-Key == first send == stored record (5905ae4a)
+PASS 409-notapplied: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-409-notapplied-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 409-notapplied: resend reaches the receipt
+receipt folio 9f177de5 == DB transfer 9f177de5 : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 409-notapplied: 1 transfer, 1 debit in DB
+PASS 409-notapplied: record released only now (server confirmed completed)
+
+===== CASE 400: first send -> err:400:Datos de transferencia inválidos (server applied it: false) =====
+PASS 400: M09 "Estamos verificando", never M11
+SHOT ev10-1-400-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 400: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 400: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 7934), cambia"]
+PASS 400: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7934","Ahorro •• 5039","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 400: Inicio only shows the notice
+SHOT ev10-1-400-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 7934), cambia"]
+PASS 400: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7934","Ahorro •• 5039","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 400: account switch no entry
+"Verificar" offline -> no-id text
+PASS 400: POST /transfers count still 1 after Verificar/exits
+PASS 400: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7934","Ahorro •• 5039","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 400: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7934","Ahorro •• 5039","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 400: relogin still locked
+PASS 400: record byte-identical after reload and logout/login
+PASS 400: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 400: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS 400: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-400-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-400-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 400: resend review shows the ORIGINAL data and the registered consent
+PASS 400: opening the resend review sent nothing
+PASS 400: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 400: the resend tap sent exactly 1 POST (got 1)
+PASS 400: resend Idempotency-Key == first send == stored record (00a8e2fd)
+PASS 400: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-400-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 400: resend reaches the receipt
+receipt folio d3ecae78 == DB transfer d3ecae78 : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 400: 1 transfer, 1 debit in DB
+PASS 400: record released only now (server confirmed completed)
+
+===== CASE 401: first send -> err:401:La sesión expiró. (server applied it: false) =====
+PASS 401: M09 "Estamos verificando", never M11
+SHOT ev10-1-401-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 401: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 401: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 1873), cambia"]
+PASS 401: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1873","Ahorro •• 3265","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 401: Inicio only shows the notice
+SHOT ev10-1-401-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 1873), cambia"]
+PASS 401: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1873","Ahorro •• 3265","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 401: account switch no entry
+"Verificar" offline -> no-id text
+PASS 401: POST /transfers count still 1 after Verificar/exits
+PASS 401: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1873","Ahorro •• 3265","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 401: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 1873","Ahorro •• 3265","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 401: relogin still locked
+PASS 401: record byte-identical after reload and logout/login
+PASS 401: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 401: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS 401: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-401-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-401-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 401: resend review shows the ORIGINAL data and the registered consent
+PASS 401: opening the resend review sent nothing
+PASS 401: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 401: the resend tap sent exactly 1 POST (got 1)
+PASS 401: resend Idempotency-Key == first send == stored record (95c31de3)
+PASS 401: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-401-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 401: resend reaches the receipt
+receipt folio e7f7895a == DB transfer e7f7895a : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 401: 1 transfer, 1 debit in DB
+PASS 401: record released only now (server confirmed completed)
+
+===== CASE 403: first send -> err:403:Acceso denegado. (server applied it: false) =====
+PASS 403: M09 "Estamos verificando", never M11
+SHOT ev10-1-403-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 403: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 403: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 0340), cambia"]
+PASS 403: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0340","Ahorro •• 1204","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 403: Inicio only shows the notice
+SHOT ev10-1-403-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 0340), cambia"]
+PASS 403: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0340","Ahorro •• 1204","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 403: account switch no entry
+"Verificar" offline -> no-id text
+PASS 403: POST /transfers count still 1 after Verificar/exits
+PASS 403: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0340","Ahorro •• 1204","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 403: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 0340","Ahorro •• 1204","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 403: relogin still locked
+PASS 403: record byte-identical after reload and logout/login
+PASS 403: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 403: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS 403: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-403-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-403-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 403: resend review shows the ORIGINAL data and the registered consent
+PASS 403: opening the resend review sent nothing
+PASS 403: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 403: the resend tap sent exactly 1 POST (got 1)
+PASS 403: resend Idempotency-Key == first send == stored record (69445b6d)
+PASS 403: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-403-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 403: resend reaches the receipt
+receipt folio 100dce65 == DB transfer 100dce65 : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 403: 1 transfer, 1 debit in DB
+PASS 403: record released only now (server confirmed completed)
+
+===== CASE 429-rate: first send -> err:429:Demasiadas solicitudes. Inténtal (server applied it: false) =====
+PASS 429-rate: M09 "Estamos verificando", never M11
+SHOT ev10-1-429-rate-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 429-rate: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 429-rate: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 7659), cambia"]
+PASS 429-rate: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7659","Ahorro •• 7686","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 429-rate: Inicio only shows the notice
+SHOT ev10-1-429-rate-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 7659), cambia"]
+PASS 429-rate: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7659","Ahorro •• 7686","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 429-rate: account switch no entry
+"Verificar" offline -> no-id text
+PASS 429-rate: POST /transfers count still 1 after Verificar/exits
+PASS 429-rate: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7659","Ahorro •• 7686","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 429-rate: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 7659","Ahorro •• 7686","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS 429-rate: relogin still locked
+PASS 429-rate: record byte-identical after reload and logout/login
+PASS 429-rate: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 429-rate: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS 429-rate: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-429-rate-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-429-rate-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 429-rate: resend review shows the ORIGINAL data and the registered consent
+PASS 429-rate: opening the resend review sent nothing
+PASS 429-rate: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 429-rate: the resend tap sent exactly 1 POST (got 1)
+PASS 429-rate: resend Idempotency-Key == first send == stored record (ceb62f6b)
+PASS 429-rate: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-429-rate-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 429-rate: resend reaches the receipt
+receipt folio 7b662e3a == DB transfer 7b662e3a : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 429-rate: 1 transfer, 1 debit in DB
+PASS 429-rate: record released only now (server confirmed completed)
+
+===== CASE 500-applied: first send -> exec-err:500:Ocurrió un problema. (server applied it: true) =====
+PASS 500-applied: M09 "Estamos verificando", never M11
+SHOT ev10-1-500-applied-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 500-applied: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: completed:30025 debits=1 (applied expected true)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS 500-applied: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 5890), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS 500-applied: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5890","Ahorro •• 3544","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 500-applied: Inicio only shows the notice
+SHOT ev10-1-500-applied-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 5890), cambia","Traspaso a Cuenta de ahorro demo, "]
+PASS 500-applied: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5890","Ahorro •• 3544","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso de Cuenta principal, •• 5","Ver los últimos 20 movimientos\n"]
+PASS 500-applied: account switch no entry
+"Verificar" offline -> no-id text
+PASS 500-applied: POST /transfers count still 1 after Verificar/exits
+PASS 500-applied: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5890","Ahorro •• 3544","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 500-applied: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 5890","Ahorro •• 3544","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act","Traspaso a Cuenta de ahorro demo, ","Ver los últimos 20 movimientos\n"]
+PASS 500-applied: relogin still locked
+PASS 500-applied: record byte-identical after reload and logout/login
+PASS 500-applied: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS 500-applied: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 500-applied: DB 1 transfer (applied)
+SHOT ev10-1-500-applied-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-500-applied-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 500-applied: resend review shows the ORIGINAL data and the registered consent
+PASS 500-applied: opening the resend review sent nothing
+PASS 500-applied: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS 500-applied: the resend tap sent exactly 1 POST (got 1)
+PASS 500-applied: resend Idempotency-Key == first send == stored record (42484cd7)
+PASS 500-applied: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-500-applied-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS 500-applied: resend reaches the receipt
+receipt folio a7750cea == DB transfer a7750cea : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS 500-applied: 1 transfer, 1 debit in DB
+PASS 500-applied: record released only now (server confirmed completed)
+
+===== CASE lost-before: first send -> lost-before (server applied it: false) =====
+PASS lost-before: M09 "Estamos verificando", never M11
+SHOT ev10-1-lost-before-m09 minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-before: record stored before send, no transferId (key,payload,consent,display,userId)
+DB after first send: (none) debits=0 (applied expected false)
+AUDIT M09: forbidden=[] buttons=["Ir al inicio","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Ir al inicio (revisar saldo despué"]
+PASS lost-before: M09 offers no new-transfer entry
+AUDIT after "Ver movimientos" (M09): forbidden=[] buttons=["Cuenta principal (•• 2876), cambia"]
+PASS lost-before: Movimientos from M09 has no new-transfer entry
+AUDIT Inicio: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2876","Ahorro •• 3163","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS lost-before: Inicio only shows the notice
+SHOT ev10-1-lost-before-inicio minFont=12 scrollW=390 offscreen=0 errs=1
+AUDIT Movimientos tab: forbidden=[] buttons=["Cuenta principal (•• 2876), cambia"]
+PASS lost-before: Movimientos tab no entry
+AUDIT account tab Ahorro: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2876","Ahorro •• 3163","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS lost-before: account switch no entry
+"Verificar" offline -> no-id text
+PASS lost-before: POST /transfers count still 1 after Verificar/exits
+PASS lost-before: record byte-identical after exits
+AUDIT after reload: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2876","Ahorro •• 3163","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS lost-before: reload no entry
+AUDIT after logout/login: forbidden=[] buttons=["Cerrar sesión","Cuenta principal •• 2876","Ahorro •• 3163","\nVerificar estado de la transfere","\nVer movimientos","\nReenviar la misma transferencia","Última actualización de saldo, Act"]
+PASS lost-before: relogin still locked
+PASS lost-before: record byte-identical after reload and logout/login
+PASS lost-before: network back, 3x foreground + start-up + login + "Verificar" -> 0 POST /transfers (creates 0)
+PASS lost-before: record byte-identical (reads did not resolve or touch it)
+DB before the explicit resend: transfers=0 [(none)] debits=0 ledger=0 rows sum 0 idem=0 balances principal=1000000 ahorro=500000
+PASS lost-before: DB 0 transfers (never applied): reads did not create one
+SHOT ev10-1-lost-before-network-back minFont=12 scrollW=390 offscreen=0 errs=1
+SHOT ev10-1-lost-before-resend-review minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-before: resend review shows the ORIGINAL data and the registered consent
+PASS lost-before: opening the resend review sent nothing
+PASS lost-before: "Volver sin reenviar" sent nothing and left the record unchanged
+PASS lost-before: the resend tap sent exactly 1 POST (got 1)
+PASS lost-before: resend Idempotency-Key == first send == stored record (7a27c2fe)
+PASS lost-before: resend body is byte-identical to the first send and to JSON.stringify(record.payload) (210 bytes)
+SHOT ev10-1-lost-before-after-resend minFont=12 scrollW=390 offscreen=0 errs=1
+PASS lost-before: resend reaches the receipt
+receipt folio 89a19e2d == DB transfer 89a19e2d : true
+DB after the resend: transfers=1 [completed:30025] debits=1 ledger=2 rows sum 0 idem=1 balances principal=969975 ahorro=530025
+PASS lost-before: 1 transfer, 1 debit in DB
+PASS lost-before: record released only now (server confirmed completed)

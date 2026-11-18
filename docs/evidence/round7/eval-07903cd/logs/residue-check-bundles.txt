@@ -1,0 +1,17 @@
+positive controls (must be >0): ios / web
+  'Reenviar la misma transferencia'                            ios=2 web=5
+  'Volver sin reenviar'                                        ios=1 web=2
+  'Estamos verificando'                                        ios=1 web=1
+  'Verificar estado de la transferencia'                       ios=1 web=2
+  'No podemos confirmar si se realiz'                          ios=2 web=2
+  'Ver movimientos'                                            ios=1 web=2
+  'En Movimientos revisa si aparece'                           ios=1 web=1
+  'no prueba que sea'                                          ios=1 web=1
+removed texts (must be 0, except the storage key control): ios / web
+  'Descartar'                                                  ios=0 web=0
+  'Ya puedes hacer otra transferencia'                         ios=0 web=0
+  'Revisa tu saldo antes de reintentar'                        ios=0 web=0
+  'El servidor no tiene registro'                              ios=0 web=0
+  'Unexpected end of JSON'                                     ios=0 web=0
+  'Tu dinero está intacto'                                     ios=1 web=0
+  'wallet.transfer-recovery'                                   ios=1 web=1

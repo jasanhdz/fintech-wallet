@@ -303,7 +303,8 @@ describe('H5 · 4 (F-26): no release without a confirmed final result and no dis
   });
 });
 
-const NO_ID = /Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo: revisa Movimientos y tu saldo./;
+const NO_ID = /Esta operación aún no tiene número del servidor, así que no podemos consultarla. No podemos confirmar si se realizó un cargo. Para conocer su resultado sin riesgo de un cargo doble usa «Reenviar la misma transferencia»/;
+const MOVEMENTS_CAVEAT = /En Movimientos revisa si aparece un cargo con estos datos; una coincidencia no prueba que sea este intento./;
 const RESEND = 'Reenviar la misma transferencia';
 const lostOnce = (then: () => Response | undefined = () => undefined) => {
   let sends = 0;
@@ -397,6 +398,78 @@ describe('H5 · 2: verifying (consulting) never creates a transfer', () => {
     await app.wait(60);
     assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
     assert.equal(app.creates().length, 0);
+    await app.finish();
+  });
+});
+
+describe('H5 · 2b: a matching charge in Movimientos never resolves an attempt without id (only the same-key resend does)', () => {
+  // The account shows a completed debit with exactly the attempt's amount, concept and reference, and its transfer has the
+  // same origin and destination. That is NOT proof that it is this attempt: nothing may resolve, release or show a receipt
+  // from it. The consented resend with the stored key is the authoritative reconciliation (the server returns the same
+  // transfer if that key was applied).
+  const applied = transferBody({ id: 'tr-applied', receiptReference: 'R-APPLIED' });
+  const matchingDebit = { id: 'mv-1', transferId: 'tr-applied', type: 'debit', amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', status: 'completed', occurredAt: new Date().toISOString(), counterparty: { name: 'Carlos Ruiz', clabeMasked: beneficiary.clabeMasked } };
+  const handler = () => {
+    let sends = 0;
+    return (url: string, init?: RequestInit) => {
+      if (url.includes('/accounts/source-1/movements')) return Response.json({ items: [matchingDebit], nextCursor: null });
+      if (url.endsWith('/transfers/tr-applied')) return Response.json(applied);
+      if (!isCreate({ url, init })) return undefined;
+      sends += 1;
+      // 1st: the server applied it and the response was lost; 2nd (same key): the API returns the same transfer.
+      if (sends === 1) throw new TypeError('response lost after the server applied it');
+      return Response.json(applied, { status: 201 });
+    };
+  };
+  const readsOfApplied = (app: Awaited<ReturnType<typeof signIn>>) => app.calls.filter((call) => call.url.endsWith('/transfers/tr-applied')).length;
+
+  it('"Verificar" (M09 and Home), Home shown, and Movimientos never take the matching charge as this attempt; the record stays', async () => {
+    const app = await signIn({}, handler());
+    await app.transferOnce();
+    const stored = mockSecureValues.get(ownKey());
+    assert.ok(stored);
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    let screen = app.visible();
+    assert.match(screen, /Estamos verificando si tu transferencia se completó/);
+    assert.match(screen, NO_ID);
+    assert.match(screen, MOVEMENTS_CAVEAT);
+    assert.doesNotMatch(screen, /Transferencia completada|R-APPLIED|Tu dinero está intacto/);
+    await app.press('Ir al inicio (revisar saldo después)');
+    await app.wait(80);
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    await tabTo(app, 'Movimientos');
+    assert.match(app.visible(), /Últimos movimientos/);
+    await tabTo(app, 'Inicio');
+    screen = app.visible();
+    assert.match(screen, /Transferencia en verificación/);
+    assert.match(screen, MOVEMENTS_CAVEAT);
+    assert.doesNotMatch(screen, /Transferencia completada|R-APPLIED/);
+    assert.ok(!app.homeOffersNewTransfer());
+    assert.equal(mockSecureValues.get(ownKey()), stored, 'never released by a match');
+    assert.equal(app.creates().length, 1, 'verifying sent nothing');
+    assert.equal(readsOfApplied(app), 0, 'the matching transfer is never read as if it were this attempt');
+    await app.finish();
+  });
+
+  it('the consented resend with the stored key is what reconciles it: the server returns the same folio, one transfer', async () => {
+    const app = await signIn({}, handler());
+    await app.transferOnce();
+    const firstKey = keyOf(app.creates()[0]!);
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    assert.ok(mockSecureValues.get(ownKey()));
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.match(app.visible(), /"Transferencia completada"/);
+    assert.match(app.visible(), /R-APPLIED/, 'the same folio the server had applied');
+    assert.equal(app.creates().length, 2);
+    assert.equal(new Set(app.creates().map(keyOf)).size, 1);
+    assert.equal(keyOf(app.creates()[1]!), firstKey);
+    assert.equal(mockSecureValues.get(ownKey()), undefined, 'released by the server-confirmed result of the same key');
     await app.finish();
   });
 });
@@ -521,17 +594,47 @@ describe('H5 · 3: "Reenviar la misma transferencia" is explicit, shows the orig
     });
   }
 
-  it('a resend answered 422 (business rejection of the same key) releases the record: M11 with no debit', async () => {
+  it('a resend answered 422 twice (business rejection of the same key, re-confirmed in the same tap) releases the record: M11 with no debit', async () => {
     const app = await signIn({ [ownKey()]: record() }, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
     await app.press(RESEND);
     await app.wait();
     await app.press(RESEND);
     await app.wait(60);
+    assert.equal(app.creates().length, 2, 'the rejection is re-confirmed once with the same key and body');
+    assert.ok(app.creates().every((call) => keyOf(call) === STORED_KEY && String(call.init?.body) === JSON.stringify(storedPayload)));
     assert.match(app.visible(), /Tu dinero está intacto/);
     assert.equal(mockSecureValues.get(ownKey()), undefined);
     await app.press('Volver al inicio');
     await app.wait(60);
     assert.ok(app.homeOffersNewTransfer());
+    await app.finish();
+  });
+
+  it('a resend whose 422 came from the earlier send of the same key still being applied shows that transfer (no claim of "no debit", no new charge)', async () => {
+    let sends = 0;
+    const app = await signIn({ [ownKey()]: record() }, (url, init) => {
+      if (!isCreate({ url, init })) return undefined;
+      sends += 1;
+      // 1st: the server was still applying the earlier send of this key (balance already used) -> 422;
+      // 2nd: the earlier send has committed -> the same key returns it.
+      return sends === 1 ? problem(422, 'Saldo insuficiente.') : Response.json(transferBody({ id: 'tr-new', amountMinor: '30025', reference: '4401' }), { status: 201 });
+    });
+    await app.press(RESEND);
+    await app.wait();
+    await app.press(RESEND);
+    await app.wait(60);
+    assert.match(app.visible(), /"Transferencia completada"/);
+    assert.doesNotMatch(app.visible(), /Tu dinero está intacto/);
+    assert.equal(app.creates().length, 2);
+    assert.equal(new Set(app.creates().map(keyOf)).size, 1);
+    await app.finish();
+  });
+
+  it('a FIRST send answered 422 is final at once (no other send of that key can exist): one POST, M11', async () => {
+    const app = await signIn({}, (url, init) => (isCreate({ url, init }) ? problem(422, 'Saldo insuficiente.') : undefined));
+    await app.transferOnce();
+    assert.equal(app.creates().length, 1);
+    assert.match(app.visible(), /Tu dinero está intacto/);
     await app.finish();
   });
 
@@ -607,5 +710,33 @@ describe('H5 · 5 (F-27): nothing creates or debits on its own — only reads', 
       assert.ok(reads >= 1);
       await app.finish();
     });
+  });
+});
+
+describe('H5 · 6 (F-28): coverage found missing by the H5 mutations', () => {
+  it('M09 "Verificar" whose GET answers 404 keeps the record, explains it and offers the resend (no release from M09 either)', async () => {
+    let reads = 0;
+    const stored = record({ transferId: 'tr-gone' });
+    const app = await signIn({ [ownKey()]: stored }, (url) => {
+      if (url.endsWith('/transfers/tr-gone')) { reads += 1; if (reads === 1) throw new TypeError('Network request failed'); return problem(404, 'Transferencia no encontrada.'); }
+      return undefined;
+    });
+    // The start-up read had no answer: M09.
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/);
+    await app.press('Verificar estado de la transferencia');
+    await app.wait(60);
+    assert.equal(reads, 2);
+    assert.match(app.visible(), /Estamos verificando si tu transferencia se completó/, 'still M09');
+    assert.match(app.visible(), NOT_FOUND);
+    assert.doesNotMatch(app.visible(), RELEASE_CLAIMS);
+    assert.equal(mockSecureValues.get(ownKey()), stored);
+    assert.ok(app.pressables('Verificar de nuevo').length > 0);
+    assert.ok(app.pressables(RESEND).length > 0);
+    assert.equal(app.creates().length, 0);
+    await app.press('Ir al inicio (revisar saldo después)');
+    await app.wait(60);
+    assert.ok(!app.homeOffersNewTransfer());
+    assert.equal(mockSecureValues.get(ownKey()), stored);
+    await app.finish();
   });
 });

@@ -1,0 +1,5 @@
+share buttons found: 1
+same-tick double click -> navigator.share calls: 1 | busy label present: true
+busy buttons: [{"text":"","label":null,"disabled":"true","busy":null},{"text":"\nCompartir PDF","label":null,"disabled":"true","busy":null}]
+share text then PDF while busy -> navigator.share calls: 1 (1 expected; PDF on web would add a message only)
+after sheet closes: busy cleared true

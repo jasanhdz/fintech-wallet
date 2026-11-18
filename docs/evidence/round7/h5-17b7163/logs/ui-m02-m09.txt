@@ -1,0 +1,23 @@
+M02 Principal->Ahorro: Continuar 1 Elegir otro destinatario 0
+SHOT M02-par-valido minFont=12 scrollW=390 offscreen=0 errs=0
+M02 Ahorro->Ahorro: Continuar 0 Elegir otro destinatario 1
+PASS incompatible pair offers only "Elegir otro destinatario"
+  warning text present: true
+SHOT M02-incompatible minFont=12 scrollW=390 offscreen=0 errs=0
+  after tap -> picker? true | review reached? false | POST /transfers 0
+SHOT M05-desde-incompatible minFont=12 scrollW=390 offscreen=0 errs=0
+M02 Ahorro->Principal: Continuar 1 Elegir otro destinatario 0
+SHOT M02-ahorro-a-principal minFont=12 scrollW=390 offscreen=0 errs=0
+M02 Principal->Principal: Continuar 0 Elegir otro destinatario 1
+  errs 0
+SHOT M09-verificando minFont=12 scrollW=390 offscreen=0 errs=1
+M09 text has "Estamos verificando": true | "Enviando transferencia": false | claims intact/debited: false
+DB after lost response: completed:30025 | ledger 2 rows sum 0
+recovery record before leaving: present
+SHOT M02-aviso-pendiente minFont=12 scrollW=390 offscreen=0 errs=1
+HOME with pending notice: notice shown true | "Continuar con transferencia" present: 0 | "Verificar estado" present: 1 | claims intact: false
+RESULT balances principal 1000000 -> 969975 (debit 30025 ) savings 500000 -> 530025
+DB transfers: completed:30025 | ledger 2 rows sum 0
+  after Verificar: POST count 1 | still in verification true
+SHOT M09-resuelto-desde-aviso minFont=12 scrollW=390 offscreen=0 errs=1
+VERIFY via notice: keys 2 distinct 1 | shows receipt: true | DB: completed:30025 | ledger 2 rows sum 0
