@@ -902,7 +902,7 @@ describe('mobile completed receipt (M10)', () => {
 describe('mobile rejected transfer (M11)', () => {
   it('shows the API reason, the untouched balance and lets the user edit the same data without a recovery record', async () => {
     const flow = await startTransferFlow((url) => {
-      if (url.endsWith('/transfers')) return Response.json({ title: 'Too Many Requests', detail: 'Se excedió el límite diario.' }, { status: 429 });
+      if (url.endsWith('/transfers')) return Response.json({ title: 'Unprocessable Entity', detail: 'Se excedió el límite diario.' }, { status: 422 });
       return undefined;
     }, { amount: '6000.00' });
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
@@ -927,6 +927,24 @@ describe('mobile rejected transfer (M11)', () => {
     assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
     await flow.finish();
   });
+
+  for (const [status, title, detail] of [[401, 'Unauthorized', 'Sesión vencida.'], [409, 'Conflict', 'La llave de idempotencia ya se usó con otros datos.'], [429, 'Too Many Requests', 'Demasiadas solicitudes.']] as const) {
+    it(`F-09: a ${status} answer does not claim the money is intact`, async () => {
+      const flow = await startTransferFlow((url) => {
+        if (url.endsWith('/transfers')) return Response.json({ title, detail }, { status });
+        return undefined;
+      }, { amount: '6000.00' });
+      await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+      await flow.wait();
+      const rejected = flow.visible();
+      assert.match(rejected, /No se pudo completar la transferencia/);
+      assert.ok(rejected.includes(detail));
+      assert.doesNotMatch(rejected, /Tu dinero está intacto|No se aplicó ningún cargo|Importe debitado|Ningún dinero fue retirado|"\$0.00 MXN"/);
+      assert.match(rejected, /Revisa tu saldo antes de reintentar/);
+      assert.match(rejected, /Consulta tus movimientos antes de volver a enviar/);
+      await flow.finish();
+    });
+  }
 });
 
 describe('mobile background privacy (M12)', () => {
@@ -1010,6 +1028,36 @@ describe('mobile home reference (M02)', () => {
     await TestRenderer.act(async () => { button('Ver los últimos 20 movimientos').props.onPress(); });
     assert.match(visible(), /Últimos movimientos/);
     assert.match(visible(), /Farmacia/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+
+  it('F-08: opens on the principal account listed first even when the API returns savings first, with short tab labels', async () => {
+    const savings = { id: 'source-2', name: 'Ahorro', kind: 'savings', currency: 'MXN', availableBalanceMinor: '500000', clabe: '000000000000005931', clabeMasked: '000•••••••••••5931' };
+    const principal = { ...flowAccount, name: 'Cuenta principal', clabe: '000000000000000618', clabeMasked: '000•••••••••••0618' };
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'home-order-user', fullName: 'Ana López', email: 'ana@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [savings, principal] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    const tabs = renderer!.root.findAll((node) => typeof node.props.onPress === 'function' && /^(Cuenta principal|Ahorro) •• /.test(node.props.accessibilityLabel ?? ''));
+    assert.deepEqual(tabs.map((tab) => tab.props.accessibilityLabel), ['Cuenta principal •• 0618', 'Ahorro •• 5931'], 'principal tab comes first');
+    assert.equal(tabs[0]!.props.accessibilityState?.selected, true, 'home opens on the principal account');
+    const home = JSON.stringify(renderer!.toJSON());
+    assert.match(home, /"Principal"/, 'the tab uses the short reference label');
+    assert.match(home, /CUENTA PRINCIPAL/);
+    assert.equal(home.match(/\$12,450.00/g)?.length, 1, 'the principal balance is the one shown');
+    const digits = tabs[0]!.findAll((node) => String(node.type).includes('Text') && Array.isArray(node.props.children) && node.props.children[0] === '•• ' && node.props.children[1] === '0618');
+    assert.ok(digits.length > 0 && digits.every((node) => node.props.numberOfLines === 1), 'the tab digits never wrap');
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });

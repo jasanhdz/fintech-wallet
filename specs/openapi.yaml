@@ -1,12 +1,16 @@
 openapi: 3.1.0
 info:
   title: Fintech Wallet API
-  version: 0.2.0
+  version: 0.3.0
   summary: Contrato de implementación del producto obligatorio de la prueba.
   description: >-
     Contrato aprobado para el alcance de docs/challenge.md y specs/requirements.md.
     Implementación por fases; las respuestas se implementan de forma progresiva.
     No cubre SPEI real, bancos externos, inversiones, biometría ni bonus opcionales.
+    0.3.0 (ronda 6, aditivo): Beneficiary.ownAccountId, GET /transfer-policy,
+    POST /transfers/{transferId}/cancel, Transfer.expiresAt, estados terminales
+    expired/cancelled, Movement.counterparty y formato de fecha fijo
+    (YYYY-MM-DDTHH:mm:ss.sssZ, UTC). Ver docs/round6-contract-notes.md.
 servers:
   - url: http://localhost:3000/v1
     description: Desarrollo local
@@ -256,6 +260,9 @@ paths:
         y operación). Si requiere OTP se crea estado awaiting_confirmation sin
         debitar; la confirmación se liga a transferId. Repetir igual key+payload
         devuelve el mismo intento; key con payload distinto produce 409.
+        Si el intento original quedó awaiting_confirmation, la repetición informa
+        su estado actual: 202 mientras siga pendiente, 200 si ya es completed,
+        expired o cancelled (demoOnlyCode solo mientras siga pendiente).
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -267,6 +274,11 @@ paths:
       responses:
         '201':
           description: Transferencia inmediata completada en transacción.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '200':
+          description: Repetición idempotente de un intento OTP que ya alcanzó estado completed, expired o cancelled.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Transfer' }
@@ -298,6 +310,48 @@ paths:
               schema: { $ref: '#/components/schemas/Transfer' }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}/cancel:
+    post:
+      tags: [Transfers]
+      operationId: cancelTransfer
+      summary: Cancelar un intento propio pendiente de OTP
+      description: >-
+        Cierra un intento awaiting_confirmation como cancelled (o expired si su código
+        ya venció) sin mover dinero ni borrar filas; queda auditado. Es idempotente por
+        estado: repetirlo sobre un intento cancelled/expired devuelve 200 con ese estado
+        y no requiere Idempotency-Key. Un intento completed no se puede cancelar (409).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Intento en estado terminal cancelled o expired.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /transfer-policy:
+    get:
+      tags: [Transfers]
+      operationId: getTransferPolicy
+      summary: Controles de transferencia configurados en el servidor
+      description: >-
+        Límite diario, consumo del día de negocio del usuario autenticado, umbral y
+        vigencia del OTP tal como están configurados en este servidor. Fuera de
+        producción son valores de ejemplo demo (demoOnly=true), no política aprobada.
+        El cliente no debe fijar estas cifras en código.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Configuración vigente y consumo diario.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransferPolicy' }
+        '401': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
   /transfers/{transferId}/confirm:
     post:
@@ -433,8 +487,8 @@ components:
         availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
         clabe: { type: string, pattern: '^[0-9]{18}$', readOnly: true, description: CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. }
         clabeMasked: { type: string }
-        dailyLimitMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: Configured policy; demo values do not define production policy. }
-        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        dailyLimitMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', deprecated: true, description: 'No se devuelve; el límite es por usuario, no por cuenta. Usar GET /transfer-policy.' }
+        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', deprecated: true, description: No se devuelve; usar GET /transfer-policy. }
     BeneficiaryInput:
       type: object
       additionalProperties: false
@@ -451,7 +505,16 @@ components:
         name: { type: string }
         alias: { type: string }
         clabeMasked: { type: string }
-        destinationAccountId: { type: string, format: uuid, readOnly: true }
+        destinationAccountId: { type: string, format: uuid, readOnly: true, description: 'Cuenta interna a la que resuelve la CLABE (identidad que usa el servidor para validar origen distinto de destino).' }
+        ownAccountId:
+          type: string
+          format: uuid
+          readOnly: true
+          description: >-
+            Presente solo cuando el beneficiario resuelve a una cuenta del mismo usuario
+            (igual a destinationAccountId); nunca aparece para cuentas de terceros. El
+            cliente lo compara con la cuenta origen para impedir origen = destino antes de
+            enviar; el servidor sigue rechazando con 422.
         isFrequent: { type: boolean }
     TransferCreateRequest:
       oneOf:
@@ -486,7 +549,13 @@ components:
       required: [id, status, sourceAccountId, destination, amountMinor, currency, concept, reference, createdAt]
       properties:
         id: { type: string, format: uuid }
-        status: { type: string, enum: [awaiting_confirmation, processing, completed, rejected] }
+        status:
+          type: string
+          enum: [awaiting_confirmation, processing, completed, rejected, expired, cancelled]
+          description: >-
+            awaiting_confirmation (sin asientos) pasa a completed (OTP correcto), expired
+            (venció el código) o cancelled (POST /cancel). completed, expired, cancelled y
+            rejected son terminales; expired/cancelled nunca tienen asientos.
         sourceAccountId: { type: string, format: uuid }
         destination:
           oneOf:
@@ -496,8 +565,16 @@ components:
         currency: { type: string, const: MXN }
         concept: { type: string }
         reference: { type: string }
-        createdAt: { type: string, format: date-time }
-        completedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        completedAt:
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
+        expiresAt:
+          description: 'Vencimiento del código OTP de este intento (createdAt + OTP_EXPIRY_SECONDS); null si no requirió OTP. Pasado este instante el intento pasa a expired.'
+          oneOf:
+            - { $ref: '#/components/schemas/Timestamp' }
+            - { type: 'null' }
         receiptReference: { type: [string, 'null'] }
         requestId: { type: string }
         demoOnlyCode: { type: string, pattern: '^[0-9]{6}$', readOnly: true, description: Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. }
@@ -512,8 +589,40 @@ components:
         currency: { type: string, const: MXN }
         concept: { type: string }
         reference: { type: string }
-        status: { type: string, enum: [processing, completed, rejected] }
-        occurredAt: { type: string, format: date-time }
+        status: { type: string, enum: [processing, completed, rejected], description: 'Hoy solo se listan movimientos completed; intentos pendientes, expirados o cancelados no generan movimientos.' }
+        occurredAt: { $ref: '#/components/schemas/Timestamp' }
+        counterparty: { $ref: '#/components/schemas/MovementCounterparty' }
+    MovementCounterparty:
+      type: object
+      required: [name, clabeMasked]
+      description: >-
+        La otra parte vista por el dueño de la cuenta. Enviado (debit): el beneficiario tal
+        como lo registró el emisor, o la cuenta propia destino. Recibido (credit): la cuenta
+        propia origen, o el nombre del usuario emisor con su CLABE enmascarada.
+      properties:
+        name: { type: string }
+        clabeMasked: { type: string, description: 'Primeros 3 y últimos 4 dígitos; nunca la CLABE completa.' }
+        ownAccountId: { type: string, format: uuid, description: Solo cuando la otra parte es una cuenta del mismo usuario. }
+    TransferPolicy:
+      type: object
+      required: [currency, businessDate, businessTimeZone, dailyLimitMinor, dailyUsedMinor, dailyRemainingMinor, otpThresholdMinor, otpExpirySeconds, otpMaxAttempts, demoOnly]
+      properties:
+        currency: { type: string, const: MXN }
+        businessDate: { type: string, format: date, description: Día de negocio actual en businessTimeZone. }
+        businessTimeZone: { type: string, description: Zona IANA configurada para el día de negocio. }
+        dailyLimitMinor: { type: string, pattern: '^[1-9][0-9]*$' }
+        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: 'Salidas completadas del usuario en businessDate. Los intentos pendientes de OTP no reservan límite; se valida al confirmar.' }
+        dailyRemainingMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        otpThresholdMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Se exige OTP cuando amountMinor >= otpThresholdMinor. }
+        otpExpirySeconds: { type: integer, minimum: 1 }
+        otpMaxAttempts: { type: integer, minimum: 1 }
+        demoOnly: { type: boolean, description: 'true fuera de producción; las cifras son ejemplos demo, no política aprobada.' }
+    Timestamp:
+      type: string
+      format: date-time
+      pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z$'
+      description: 'Instante UTC en el formato de fecha-hora de ECMAScript (YYYY-MM-DDTHH:mm:ss.sssZ, siempre con milisegundos y Z); parseable con Date.parse en cualquier motor conforme.'
+      examples: ['2026-11-16T05:59:00.000Z']
     MovementPage:
       type: object
       required: [items]

@@ -1,4 +1,81 @@
-# Findings — pass 2 (producto, ciclo nuevo)
+# Findings — pass 4 (re-evaluación de F-06, F-08, F-09)
+
+Evaluado: rama `feature/product-mvp`, HEAD `deb5402` (fixes `1a1e254` F-06, `cce6aec` F-08, `deb5402` F-09 sobre `f8e1045`). Árbol: solo `M FINDINGS.md`, `?? design/`. No se modificó código de la aplicación.
+
+## Resumen
+
+Rubric de SPEC.md: sin cambio de conteo respecto a pass 3 (17/20; #7, #17-nativo y #18 siguen BLOCKED, ver F-05). Esta pasada solo re-verificó F-06, F-08, F-09 y regresión móvil. 3 findings resueltos; abiertos: F-05 (nativo, BLOCKED), F-07 (marcas DIAG, pendiente de usuario) y F-10 (nuevo, minor, huérfano ya conocido).
+
+- `npm run lint && npm run typecheck && npm test` (raíz): exit 0 (mobile jest 27/27, antes 22/22).
+- Entorno: `expo export --platform web` en scratch (bundle con `EXPO_PUBLIC_API_URL=http://127.0.0.1:3390/v1`, SecureStore sustituido por shim sobre localStorage en la copia del bundle) en :8390, API `dev:api:testdb` en :3390 sobre `wallet_test`, Playwright Chromium 390x1700 @2x, usuario nuevo `ana.p4@example.test`. **No es evidencia nativa** (SecureStore, AppState, teclado, Hermes reales siguen pendientes; F-05).
+- Scripts/evidencia: `/private/tmp/claude-501/-Users-jasanhernandez-Develop-fintech-wallet/2ea3dc70-874a-47fc-b6a0-d91389549965/scratchpad/p4/` (`e2e4.cjs`, `runlog4.txt`, `shots/` F08-*, D1-D3, E1-E2, F09-*; `reg.log`). Procesos propios (API :3390 con su wrapper npm/tsx, http.server :8390) terminados; 3200/5174/8083 intactos; `wallet_dev` no tocado. `wallet_test` conserva datos de esta pasada.
+
+## Abiertos
+
+- [ ] F-10 · minor · flujo móvil OTP — (separado de F-06; ya conocido) Si el confirm es incierto pero NO se aplicó en servidor y el usuario sale a "revisar" tras recuperar la consulta, queda un `awaiting_confirmation` huérfano y "Confirmar transferencia" crea un intento nuevo (run E: ref 4445, filas `1ce4e5d3` y `464996dd`, ambas `awaiting_confirmation`, saldo sin cambio 2,400,000). No mueve dinero sin un segundo OTP; es consistente con el comportamiento previo de "volver a revisar" sin incertidumbre. Sugerencia: reutilizar el transfer pendiente o cancelarlo al salir.
+- [ ] F-07 · minor · M01/M07 fidelidad — (sin cambio) Siguen las marcas `DIAG-MOBILE-32693d3-M07` y `DIAG-MOBILE-32693d3-A` en `mobile/App.tsx` gateadas por `__DEV__`; retirar en commit propio tras confirmación del usuario en iPhone.
+- [ ] F-05 · minor · criterios #7, #17 (mitad móvil), #18 — (sin cambio) BLOCKED: sin `simctl`/`adb` no hay evidencia nativa. Pendiente pasada en iPhone/simulador con SecureStore/Keychain, AppState y teclado reales (también para F-06/F-08/F-09 en nativo).
+
+## Resueltos (verificados este pass)
+
+- [x] F-06 · major · Verificado (run D, `e2e4.cjs`, `wallet_test`): transferencia $6,000 con OTP; confirm procesado por el servidor con respuesta perdida y GET de recuperación bloqueado -> pantalla OTP con mensaje "No pudimos verificar si tu autorización anterior se aplicó…" y reintento del mismo código. "Cancelar y volver a revisar" (botón y flecha del header) con GET bloqueado NO sale del OTP (0 botones "Confirmar transferencia" de revisión; sin segundo `POST /transfers`: solo `POST /transfers key=e3aa`, `POST …/confirm key=baba` y GETs del mismo id). Al desbloquear el GET, el mismo botón lee el transfer, detecta `completed` y muestra el comprobante. BD: 1 transferencia (`completed b0e94929`, 600000) para el usuario, 1 ledger transaction, saldo principal 3,000,000 -> 2,400,000 (un solo débito; ledger suma = saldo). Sin bloqueo permanente: la salida funciona en cuanto la consulta se recupera (D3); mientras no haya conectividad el usuario solo puede reintentar el mismo código (o cerrar la app; el registro de recuperación persiste). El huérfano `awaiting_confirmation` conocido sigue siendo menor (F-10).
+- [x] F-08 · minor · Verificado: con cuentas devueltas por la API [Ahorro, Cuenta principal] (confirmado en BD, ambas `created_at` iguales, API order Ahorro primero) M02 abre en "Principal" (tarjeta CUENTA PRINCIPAL •• 2052, $10,000.00). A 390 px y a 375 px, pestañas "Principal •• 2052" / "Ahorro •• 7601", 1 línea cada texto, sin truncado (scrollWidth == clientWidth, 169x48 cada tab); etiqueta accesible conserva "Cuenta principal •• 2052". Comparado con `design/mobile/m02_inicio_y_cuentas/screen.png`: misma estructura y tab seleccionada (`shots/F08-home.png`). Diferencias restantes solo de dato (sin movimientos en el usuario nuevo, nombre, importes).
+- [x] F-09 · minor · Verificado (respuestas `POST /transfers` simuladas con problem+json vía Playwright `route.fulfill`; el 422 real "Se excedió el límite diario" ya se había verificado en pass 3): 422 -> "Tu dinero está intacto" + "Importe debitado $0.00"; 401/409/429 -> "Revisa tu saldo antes de reintentar / No pudimos confirmar el efecto de este intento…", sin claim de dinero intacto ni caja "Importe debitado". Nota: con cuerpo sin `detail` el motivo mostrado es el `title` en inglés ("Unauthorized", "Too Many Requests"); es artefacto de la simulación, la API real emite detail en español para sus errores (no verificado para 401/429 reales).
+- [x] F-01, F-02, F-03, F-04 — (preservados de pass 2/3).
+
+## Regresión
+
+- Idempotencia/BigInt: en run D `POST /transfers` y `…/confirm` usaron una sola llave cada uno (sin reenvío con llave nueva); no se tocó lógica de importes (diff de `mobile/App.tsx` sin `parseFloat/Number` sobre dinero); jest 27/27 incluye los nuevos casos F-06/F-08/F-09.
+- M03–M12: el diff `f8e1045..deb5402` toca solo `mobile/App.tsx` y `mobile/tests/app.test.tsx`: lógica de leaveOtp/confirm/submitCreate, orden de cuentas, etiqueta de pestañas y bloque de rechazo (M11). Re-renderizados en esta pasada: M02, M07 (revisión, E2), M08 (OTP, D1/D2/E1), M10 (comprobante tras recuperación, D3) y M11 (4 variantes); sin diferencias respecto a pass 3 salvo las intencionales de F-06/F-09. M03, M04, M05, M06, M09 y M12 no se re-capturaron (código no modificado; no re-verificadas visualmente).
+
+---
+
+# Historial (pass 3) — Findings (ronda de fidelidad visual móvil M01–M12)
+
+Evaluado: rama `feature/product-mvp`, HEAD `f8e1045` (commits `6cc026e..f8e1045` sobre `c08e579`). Árbol: solo `?? design/`. No se modificó código.
+
+## Resumen
+
+Fidelidad M01–M12: 12/12 pantallas renderizadas y comparadas contra `design/mobile/*/screen.png`; ninguna diferencia material injustificada; 1 hallazgo funcional **major** (F-06) y 4 minor. Rubric de SPEC.md: sin cambio de conteo respecto a pass 2 (17/20; #7, #17-nativo y #18 siguen BLOCKED, ver F-05). Esta pasada no re-puntúa los demás criterios; solo revisó los que toca el móvil.
+
+- `npm run lint`, `npm run typecheck`, `npm test` (raíz): exit 0 (mobile jest 22/22, api 20/20, shared 4/4).
+- Render real: `expo export --platform web` (en scratch, repo intacto) servido en :8290 + Playwright Chromium 390x1700 @2x, contra API real en :3290 con base aislada `wallet_test` (migrada con `db:migrate:test`). Para correr en web hubo que sustituir SecureStore (no existe en web) por un shim sobre localStorage parcheado en la copia del bundle en scratch. **No es evidencia nativa**: SecureStore real, AppState real, Hermes/`expo-crypto` real, WebView/ausencia y teclado nativo siguen pendientes de dispositivo/simulador (host sin `simctl`/`adb`).
+- Capturas y scripts: `/private/tmp/claude-501/-Users-jasanhernandez-Develop-fintech-wallet/2ea3dc70-874a-47fc-b6a0-d91389549965/scratchpad/` (`shots/`, `shots2/`, `shots3/`, `e2e.cjs`, `e2e2.cjs`, `e2e3.cjs`, `runlog.txt`). Procesos iniciados (API :3290, http.server :8290) terminados; 3200/5174/8083 intactos; `wallet_dev` no tocado.
+
+## Abiertos
+
+- [ ] F-07 · minor · M01/M07 fidelidad — Siguen en el código las marcas temporales de diagnóstico `DIAG-MOBILE-32693d3-M07` (`mobile/App.tsx` rama `review`, línea ~682) y `DIAG-MOBILE-32693d3-A` (raíz `App`, línea ~970), gateadas por `__DEV__` (no aparecen en el bundle exportado; confirmado en capturas). El handoff pide retirarlas en commit propio tras confirmación del usuario en iPhone; pendiente.
+- [ ] F-05 · minor · criterios #7, #17 (mitad móvil), #18 — (preservado) BLOCKED estructural: sin `simctl`/`adb` no hay evidencia nativa en este host; el render web de esta pasada no la sustituye. Pendiente: pasada en iPhone/simulador de M01–M12, con SecureStore/Keychain, AppState/app switcher y teclado reales.
+
+## Resueltos (verificados este pass)
+
+- [x] F-01, F-02, F-03, F-04 — (preservados de pass 2, sin re-verificar aquí; ver historial abajo).
+- Verificado en esta pasada (sin finding previo): UUID/Hermes — `newIdempotencyKey` usa `globalThis.crypto.randomUUID` o `expo-crypto`, construido dentro del `try`; `transferInFlight` (ref) protege `submitCreate`, `confirmOtp` y `requestNewCode`; no hay `parseFloat/Number()` sobre importes (único `Number` es `remainingBasisPoints` de la barra, tras división BigInt); `amountToMinor` rechaza >2 decimales.
+- Verificado e2e (real, `wallet_test`): login→beneficiario→datos→revisión→confirmar→recibo→historial→saldo sin OTP ($100: POST /transfers una vez, GET detalle, nuevo saldo $9,900.00 re-leído de la API); con OTP ($6,000): código erróneo→422 mostrado, código expirado (expiración forzada en BD)→aviso + entrada deshabilitada, "Solicitar nuevo código"→nuevo POST con llave nueva→autorizar→completada, BD sin duplicado completado; create incierto (respuesta perdida tras commit)→pantalla de estado→"Verificar estado" reintenta con la MISMA llave (`30ac64f2` dos veces)→1 sola transferencia completada; confirm incierto→recuperación por GET sin segundo POST confirm→recibo; privacidad (visibilitychange emulado)→cortina sin saldos y restauración; picker vacío; back de status conserva el registro de recuperación; back de receipt/rejected llama `resetTransfer` (sin reenvío).
+
+## Notas
+
+**Matriz M01–M12 (captura real vs PNG+HTML)**
+- M01 Login: igual en estructura/tokens; sin claims. Omisión justificada: versión/footer cosmético (se usa "Demostración técnica").
+- M02 Inicio: orden saldo→transferir→actividad (3 últimos)→"Ver los últimos 20"; sin lista "Tus cuentas" y sin saldo duplicado; el selector de cuentas (tabs) mantiene el acceso a cada cuenta y el saldo total sigue en "Última actualización"; sin regresión funcional (`accounts.map` solo en tabs). Diferencias: F-08. Sin movimientos de tipo "Entre cuentas propias"/folio DEMO (dato fixture).
+- M03/M04 Movimientos y detalle: agrupación por día, selector de cuenta en tarjeta, detalle con cuenta origen/destino/folio; faltan botones compartir/PDF (omisión justificada: fuera de alcance).
+- M05 Picker: lista y estado vacío como estados alternos; sin copy "blindaje/2FA" (justificado).
+- M06 Datos: "Cambiar beneficiario" cableado (conserva importes); falta "Límite diario" junto al disponible (justificado: la API no lo expone; la API sí aplica el límite, visible solo al rechazar).
+- M07 Revisión: origen→destino, saldo posterior estimado con BigInt; falta umbral/QA y claims de comisión (justificado). Variante ">$6,000 verificación" muestra OTP en la pantalla siguiente.
+- M08 OTP: 6 casillas, código demo visible, estado expirado y nuevo código real. Omisiones justificadas: cuenta regresiva (API no expone tiempo restante), "Reenviar" en estado vigente, panel QA. Diferencia menor no registrada como finding: acciones no ancladas al fondo de pantalla como en la referencia; el copy "Operación sobre el umbral de verificación configurado (ilustrativo)" sustituye "> $5,000" (justificado, es política configurable).
+- M09 Incierto: pastilla "Protección contra duplicados" (respaldada por la llave de idempotencia), "no reintentes", verificar con misma llave.
+- M10 Comprobante: igual salvo compartir/PDF, copiar folio y "auditada/cifrada de extremo a extremo" (omisiones justificadas); folio es UUID/recibo real. Nota: en la captura el scroll queda abajo tras pulsar Confirmar (hero fuera de vista en `shots/m10-receipt.png`); con viewport alto (`shots2/A7-receipt-otp.png`) está completo.
+- M11 Rechazo: igual salvo las pestañas "Saldo insuficiente/Límite diario" (selector de QA, justificado); motivo viene de la API.
+- M12 Privacidad: cortina con marca, píldora y nota; sin "cifrado 256-bit/biométrico" (justificado). El `AppState` web se emuló con visibilitychange; el real en dispositivo sigue pendiente.
+
+**Claims no soportados**: no se encontró ninguno en `App.tsx` (sin límite diario, QA, PDF, cifrado, biometría, SPEI). "Monto extraordinario" en OTP depende del umbral configurable y está rotulado demostración.
+
+**Higiene**: `wallet_test` conserva usuarios/transferencias de esta pasada (base de pruebas, aislada). No hay marcas de commit ni cambios en repo.
+
+---
+
+# Historial preservado (pass 2, ciclo de producto)
+
 
 ## Resumen
 

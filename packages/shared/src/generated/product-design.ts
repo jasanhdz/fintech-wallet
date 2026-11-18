@@ -198,7 +198,7 @@ export interface paths {
         put?: never;
         /**
          * Crear intento de transferencia interna
-         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409.
+         * @description Idempotency-Key identifica la operación create-transfer (unique por usuario y operación). Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Repetir igual key+payload devuelve el mismo intento; key con payload distinto produce 409. Si el intento original quedó awaiting_confirmation, la repetición informa su estado actual: 202 mientras siga pendiente, 200 si ya es completed, expired o cancelled (demoOnlyCode solo mientras siga pendiente).
          */
         post: operations["createTransfer"];
         delete?: never;
@@ -216,6 +216,46 @@ export interface paths {
         };
         /** Consultar estado/comprobante del intento propio */
         get: operations["getTransfer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/{transferId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancelar un intento propio pendiente de OTP
+         * @description Cierra un intento awaiting_confirmation como cancelled (o expired si su código ya venció) sin mover dinero ni borrar filas; queda auditado. Es idempotente por estado: repetirlo sobre un intento cancelled/expired devuelve 200 con ese estado y no requiere Idempotency-Key. Un intento completed no se puede cancelar (409).
+         */
+        post: operations["cancelTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfer-policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Controles de transferencia configurados en el servidor
+         * @description Límite diario, consumo del día de negocio del usuario autenticado, umbral y vigencia del OTP tal como están configurados en este servidor. Fuera de producción son valores de ejemplo demo (demoOnly=true), no política aprobada. El cliente no debe fijar estas cifras en código.
+         */
+        get: operations["getTransferPolicy"];
         put?: never;
         post?: never;
         delete?: never;
@@ -318,8 +358,15 @@ export interface components {
             /** @description CLABE interna entregada únicamente a su propietario para usarla como beneficiario interno. */
             readonly clabe: string;
             clabeMasked: string;
-            /** @description Configured policy; demo values do not define production policy. */
+            /**
+             * @deprecated
+             * @description No se devuelve; el límite es por usuario, no por cuenta. Usar GET /transfer-policy.
+             */
             dailyLimitMinor?: string;
+            /**
+             * @deprecated
+             * @description No se devuelve; usar GET /transfer-policy.
+             */
             dailyUsedMinor?: string;
         };
         BeneficiaryInput: {
@@ -334,8 +381,16 @@ export interface components {
             name: string;
             alias: string;
             clabeMasked: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Cuenta interna a la que resuelve la CLABE (identidad que usa el servidor para validar origen distinto de destino).
+             */
             readonly destinationAccountId: string;
+            /**
+             * Format: uuid
+             * @description Presente solo cuando el beneficiario resuelve a una cuenta del mismo usuario (igual a destinationAccountId); nunca aparece para cuentas de terceros. El cliente lo compara con la cuenta origen para impedir origen = destino antes de enviar; el servidor sigue rechazando con 422.
+             */
+            readonly ownAccountId?: string;
             isFrequent?: boolean;
         };
         TransferCreateRequest: {
@@ -367,8 +422,11 @@ export interface components {
         Transfer: {
             /** Format: uuid */
             id: string;
-            /** @enum {string} */
-            status: "awaiting_confirmation" | "processing" | "completed" | "rejected";
+            /**
+             * @description awaiting_confirmation (sin asientos) pasa a completed (OTP correcto), expired (venció el código) o cancelled (POST /cancel). completed, expired, cancelled y rejected son terminales; expired/cancelled nunca tienen asientos.
+             * @enum {string}
+             */
+            status: "awaiting_confirmation" | "processing" | "completed" | "rejected" | "expired" | "cancelled";
             /** Format: uuid */
             sourceAccountId: string;
             destination: components["schemas"]["Beneficiary"] | components["schemas"]["Account"];
@@ -377,10 +435,10 @@ export interface components {
             currency: "MXN";
             concept: string;
             reference: string;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            completedAt?: string | null;
+            createdAt: components["schemas"]["Timestamp"];
+            completedAt?: components["schemas"]["Timestamp"] | null;
+            /** @description Vencimiento del código OTP de este intento (createdAt + OTP_EXPIRY_SECONDS); null si no requirió OTP. Pasado este instante el intento pasa a expired. */
+            expiresAt?: components["schemas"]["Timestamp"] | null;
             receiptReference?: string | null;
             requestId?: string;
             /** @description Se incluye solo en perfil development cuando OTP está simulado para mostrar el código de prueba al usuario autenticado. Nunca se registra en logs y no existe en producción. */
@@ -398,11 +456,52 @@ export interface components {
             currency: "MXN";
             concept: string;
             reference: string;
-            /** @enum {string} */
+            /**
+             * @description Hoy solo se listan movimientos completed; intentos pendientes, expirados o cancelados no generan movimientos.
+             * @enum {string}
+             */
             status: "processing" | "completed" | "rejected";
-            /** Format: date-time */
-            occurredAt: string;
+            occurredAt: components["schemas"]["Timestamp"];
+            counterparty?: components["schemas"]["MovementCounterparty"];
         };
+        /** @description La otra parte vista por el dueño de la cuenta. Enviado (debit): el beneficiario tal como lo registró el emisor, o la cuenta propia destino. Recibido (credit): la cuenta propia origen, o el nombre del usuario emisor con su CLABE enmascarada. */
+        MovementCounterparty: {
+            name: string;
+            /** @description Primeros 3 y últimos 4 dígitos; nunca la CLABE completa. */
+            clabeMasked: string;
+            /**
+             * Format: uuid
+             * @description Solo cuando la otra parte es una cuenta del mismo usuario.
+             */
+            ownAccountId?: string;
+        };
+        TransferPolicy: {
+            /** @constant */
+            currency: "MXN";
+            /**
+             * Format: date
+             * @description Día de negocio actual en businessTimeZone.
+             */
+            businessDate: string;
+            /** @description Zona IANA configurada para el día de negocio. */
+            businessTimeZone: string;
+            dailyLimitMinor: string;
+            /** @description Salidas completadas del usuario en businessDate. Los intentos pendientes de OTP no reservan límite; se valida al confirmar. */
+            dailyUsedMinor: string;
+            dailyRemainingMinor: string;
+            /** @description Se exige OTP cuando amountMinor >= otpThresholdMinor. */
+            otpThresholdMinor: string;
+            otpExpirySeconds: number;
+            otpMaxAttempts: number;
+            /** @description true fuera de producción; las cifras son ejemplos demo, no política aprobada. */
+            demoOnly: boolean;
+        };
+        /**
+         * Format: date-time
+         * @description Instante UTC en el formato de fecha-hora de ECMAScript (YYYY-MM-DDTHH:mm:ss.sssZ, siempre con milisegundos y Z); parseable con Date.parse en cualquier motor conforme.
+         * @example 2026-11-16T05:59:00.000Z
+         */
+        Timestamp: string;
         MovementPage: {
             items: components["schemas"]["Movement"][];
             nextCursor?: string | null;
@@ -764,6 +863,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Repetición idempotente de un intento OTP que ya alcanzó estado completed, expired o cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
             /** @description Transferencia inmediata completada en transacción. */
             201: {
                 headers: {
@@ -813,6 +921,54 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    cancelTransfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transferId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Intento en estado terminal cancelled o expired. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            503: components["responses"]["Problem"];
+        };
+    };
+    getTransferPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Configuración vigente y consumo diario. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferPolicy"];
+                };
+            };
+            401: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
         };
     };
