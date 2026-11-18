@@ -23,6 +23,8 @@ test('PostgreSQL auth, rotation, csrf and owner-scoped accounts', async (t) => {
   const deniedPreflight=await fetch(`${base}/auth/register`,{method:'OPTIONS',headers:{origin:'https://attacker.invalid','access-control-request-method':'POST'}});
   assert.equal(deniedPreflight.headers.get('access-control-allow-origin'),null);
   const csrfResponse=await fetch(`${base}/auth/csrf`); const csrfData=await csrfResponse.json() as {csrfToken:string}; const csrfCookie=csrfResponse.headers.getSetCookie().find((cookie)=>cookie.startsWith('wallet_csrf='))!.split(';')[0]!;
+  const anonymousRefresh=await fetch(`${base}/auth/refresh`,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfData.csrfToken,cookie:csrfCookie,origin:'http://localhost:5173'},body:JSON.stringify({client:'web'})}); assert.equal(anonymousRefresh.status,204); assert.equal(await anonymousRefresh.text(),'');
+  const invalidMobileRefresh=await fetch(`${base}/auth/refresh`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:'mobile',refreshToken:'invalid-refresh-token'})}); assert.equal(invalidMobileRefresh.status,401);
   const identity=`api-${crypto.randomUUID()}@example.test`;
   const register=await fetch(`${base}/auth/register`,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrfData.csrfToken,cookie:csrfCookie,origin:'http://localhost:5173'},body:JSON.stringify({fullName:'Integration User',email:identity.toUpperCase(),password:'correct horse battery staple'})});
   assert.equal(register.status,201); const registered=await register.json() as {accessToken:string}; assert.equal('refreshToken' in registered,false);

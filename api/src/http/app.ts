@@ -82,7 +82,7 @@ export function createApp() {
   api.post('/auth/refresh',limiter,async(req,res,next)=>{
     const client:Client=req.body?.client==='mobile'?'mobile':'web';
      if(client==='web'&&!csrfValid(req,webOrigin)) return problem(res,403,'Forbidden','Token CSRF u origen inválido.');
-    const refresh=client==='mobile'?req.body?.refreshToken:req.cookies[cookieName]; if(typeof refresh!=='string') return problem(res,401,'Unauthorized','Sesión inválida.');
+    const refresh=client==='mobile'?req.body?.refreshToken:req.cookies[cookieName]; if(typeof refresh!=='string') { if(client==='web'&&!req.cookies[cookieName]) return res.status(204).end(); return problem(res,401,'Unauthorized','Sesión inválida.'); }
     const runner=db.createQueryRunner(); await runner.connect(); await runner.startTransaction();
     try {
       const rows=await runner.query('SELECT s.id,s.user_id,s.client,s.rotated_at,s.revoked_at,s.expires_at,u.email,u.full_name FROM refresh_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 FOR UPDATE',[hashSecret(refresh)]); const row=rows[0] as (Record<string,unknown>&{id:string;user_id:string;client:Client;email:string;full_name:string})|undefined;
