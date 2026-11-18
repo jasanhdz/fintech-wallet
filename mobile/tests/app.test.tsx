@@ -749,6 +749,53 @@ describe('mobile confirmation code (M08)', () => {
     assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.value, '');
     await flow.finish();
   });
+
+  it('F-06: an uncertain confirm cannot be abandoned into a second attempt until the original transfer status is known', async () => {
+    let serverStatus = 'awaiting_confirmation';
+    let statusReadable = false;
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ ...flowTransfer({ id: 'transfer-f06' }), demoOnlyCode: '742890' }, { status: 202 });
+      if (url.endsWith('/transfers/transfer-f06/confirm')) {
+        // The server applies the confirmation but the response is lost.
+        serverStatus = 'completed';
+        throw new Error('Network request failed');
+      }
+      if (url.endsWith('/transfers/transfer-f06')) {
+        if (!statusReadable) throw new Error('Network request failed');
+        return Response.json(flowTransfer({ id: 'transfer-f06', status: serverStatus, completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'DEMO-F06' }));
+      }
+      return undefined;
+    }, { amount: '6000.00' });
+    const creations = () => flow.calls.filter((call) => call.url.endsWith('/transfers'));
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('742890'); });
+    await TestRenderer.act(async () => { flow.button('Autorizar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.ok(flow.button('Reintentar envío del mismo código'), 'the uncertain confirm keeps its attempt for a same-key retry');
+
+    // Leaving while the outcome is still unknown must not drop back to the review step.
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    await flow.wait();
+    assert.doesNotMatch(flow.visible(), /"Paso 2 de 2"/, 'cannot return to review while the confirm outcome is unknown');
+    assert.ok(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }), 'stays on the confirmation step');
+    assert.match(flow.visible(), /evitar un cargo doble/);
+    assert.ok(flow.button('Reintentar envío del mismo código'), 'the original confirm attempt key is preserved');
+    const reviewConfirm = flow.button('Confirmar transferencia');
+    if (reviewConfirm) await TestRenderer.act(async () => { reviewConfirm.props.onPress(); });
+    await flow.wait();
+    assert.equal(creations().length, 1, 'no second transfer attempt may be created');
+
+    // Once the original transfer can be read, leaving resolves it instead of starting over.
+    statusReadable = true;
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    assert.match(flow.visible(), /DEMO-F06/);
+    assert.equal(creations().length, 1);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/confirm')).length, 1);
+    await flow.finish();
+  });
 });
 
 describe('mobile uncertain result (M09)', () => {

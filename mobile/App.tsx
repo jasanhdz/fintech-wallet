@@ -16,6 +16,7 @@ type TransferRequest = ProductComponents['schemas']['TransferCreateRequest'];
 type Movement = ProductComponents['schemas']['Movement'];
 const REFRESH_KEY = 'wallet.refresh-token';
 const TRANSFER_RECOVERY_KEY = 'wallet.transfer-recovery';
+const UNCERTAIN_CONFIRM_MESSAGE = 'No pudimos verificar si tu autorización anterior se aplicó. Para evitar un cargo doble, reintenta con el mismo código o vuelve a intentarlo cuando tengas conexión.';
 const apiBase = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000, gcTime: 0 } } });
 
@@ -83,6 +84,9 @@ function Wallet() {
   // Set only when the API answers a confirm with "code expired"; the challenge can then never be confirmed.
   const [otpExpired, setOtpExpired] = useState(false);
   const [confirmAttempt, setConfirmAttempt] = useState<{ key: string; payload: { code: string } } | null>(null);
+  // True while a confirm may have been applied server-side but neither its response nor a status read arrived.
+  // Until the original transfer is read back, the flow must not leave the OTP step or create a new attempt.
+  const [confirmUncertain, setConfirmUncertain] = useState(false);
   // Balance of the source account re-read from the API after a completed transfer; null until that read succeeds.
   const [postBalance, setPostBalance] = useState<{ accountName: string; minor: string } | null>(null);
   const [movementDetail, setMovementDetail] = useState<Transfer | null>(null);
@@ -137,6 +141,7 @@ function Wallet() {
       setTransfer(null);
       setCreateAttempt(null);
       setConfirmAttempt(null);
+      setConfirmUncertain(false);
       setOtp('');
       setOtpExpired(false);
       setTransferScreen(null);
@@ -303,6 +308,10 @@ function Wallet() {
 
   async function submitCreate(retry = false, payloadOverride?: TransferRequest) {
     if (!session || transferBusy || transferInFlight.current) return;
+    if (confirmUncertain) {
+      setTransferError(UNCERTAIN_CONFIRM_MESSAGE);
+      return;
+    }
     transferInFlight.current = true;
     let attempt: { key: string; payload: TransferRequest; transferId?: string } | null;
     const payload = payloadOverride ?? transferPayload;
@@ -365,7 +374,7 @@ function Wallet() {
     try {
       const result = await request<Transfer>(`/transfers/${transfer.id}/confirm`, session.accessToken, { method: 'POST', headers: { 'Idempotency-Key': attempt.key }, body: JSON.stringify(attempt.payload) });
       const finalResult = result.status === 'completed' ? await request<Transfer>(`/transfers/${result.id}`, session.accessToken) : result;
-      setTransfer(finalResult); setConfirmAttempt(null); setOtp('');
+      setTransfer(finalResult); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
       if (finalResult.status === 'completed' || finalResult.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
       setTransferScreen(finalResult.status === 'rejected' ? 'rejected' : finalResult.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
     } catch (error) {
@@ -375,11 +384,12 @@ function Wallet() {
         // consumed_at is set), so re-querying by transfer id is always safe and never duplicates a charge.
         try {
           const recovered = await request<Transfer>(`/transfers/${transfer.id}`, session.accessToken);
-          setTransfer(recovered); setConfirmAttempt(null); setOtp('');
+          setTransfer(recovered); setConfirmAttempt(null); setConfirmUncertain(false); setOtp('');
           if (recovered.status === 'completed' || recovered.status === 'rejected') await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
           setTransferScreen(recovered.status === 'rejected' ? 'rejected' : recovered.status === 'awaiting_confirmation' ? 'otp' : 'receipt');
           return;
         } catch { /* Recovery query failed too; fall through and show the error with the attempt preserved for retry. */ }
+        setConfirmUncertain(true);
       }
       if (error instanceof ApiError && error.status === 422 && /expir/i.test(error.message)) { setOtpExpired(true); setOtp(''); }
       setTransferError(error instanceof Error ? error.message : 'No se pudo confirmar el resultado.');
@@ -399,7 +409,7 @@ function Wallet() {
 
   function resetTransfer() {
     void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
-    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
+    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
     void client.invalidateQueries({ queryKey: ['movements'] });
   }
 
@@ -415,7 +425,7 @@ function Wallet() {
   function leaveUncertainTransfer() {
     // Deliberately keeps the persisted recovery record (unlike resetTransfer): the next launch resumes this exact
     // attempt with its original Idempotency-Key instead of forgetting a transfer whose outcome is still unknown.
-    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
+    setTransferScreen(null); setAmount(''); setConcept(''); setReference(''); setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
     void client.invalidateQueries({ queryKey: ['accounts'] });
     void client.invalidateQueries({ queryKey: ['movements'] });
   }
@@ -429,11 +439,30 @@ function Wallet() {
   function editRejectedTransfer() {
     // A rejected attempt never moved money; keep the typed data so the user can adjust amount or account.
     void SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
-    setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
+    setTransfer(null); setCreateAttempt(null); setConfirmAttempt(null); setConfirmUncertain(false); setOtp(''); setOtpExpired(false); setTransferError(''); setDemoOnlyCode('');
     setTransferScreen('details');
   }
 
-  function leaveOtp() {
+  async function leaveOtp() {
+    if (confirmUncertain) {
+      // F-06: a confirm whose outcome is unknown may already have moved money. Read the original transfer first; only
+      // if it is still awaiting confirmation is it safe to go back to review (where a new attempt could be created).
+      if (!session || !transfer || transferBusy || transferInFlight.current) return;
+      transferInFlight.current = true;
+      setTransferBusy(true); setTransferError('');
+      try {
+        const current = await request<Transfer>(`/transfers/${encodeURIComponent(transfer.id)}`, session.accessToken);
+        setTransfer(current); setConfirmUncertain(false); setConfirmAttempt(null); setOtp('');
+        if (current.status === 'completed' || current.status === 'rejected') {
+          await SecureStore.deleteItemAsync(TRANSFER_RECOVERY_KEY);
+          setTransferScreen(current.status === 'completed' ? 'receipt' : 'rejected');
+          return;
+        }
+      } catch {
+        setTransferError(UNCERTAIN_CONFIRM_MESSAGE);
+        return;
+      } finally { setTransferBusy(false); transferInFlight.current = false; }
+    }
     setOtp(''); setOtpExpired(false); setConfirmAttempt(null); setTransferError('');
     setTransferScreen('review');
   }
@@ -488,7 +517,7 @@ function Wallet() {
 
   // Opened from Home or from "Cambiar beneficiario" on the transfer details step; any later step keeps priority.
   if (choosingBeneficiary && (!transferScreen || transferScreen === 'details')) return <BeneficiaryPickerScreen queryPending={beneficiariesQuery.isPending} error={beneficiariesQuery.error instanceof Error ? beneficiariesQuery.error.message : ''} beneficiaries={filteredBeneficiaries} total={beneficiaries.length} search={beneficiarySearch} setSearch={setBeneficiarySearch} userInitials={initials(session.user.fullName)} backLabel={transferScreen ? 'Volver a datos de transferencia' : 'Volver a inicio'} onRetry={() => void beneficiariesQuery.refetch()} onClose={() => setChoosingBeneficiary(false)} onChoose={(beneficiary) => { setDestination(beneficiary); setChoosingBeneficiary(false); }} />;
-  if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} otpExpired={otpExpired} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={requestNewCode} onLeave={leaveUncertainTransfer} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
+  if (transferScreen) return <TransferFlow screen={transferScreen} amount={amount} setAmount={setAmount} concept={concept} setConcept={setConcept} reference={reference} setReference={setReference} otp={otp} setOtp={setOtp} destination={destination} source={selected} transfer={transfer} demoOnlyCode={demoOnlyCode} error={transferError} busy={transferBusy} createRetry={Boolean(createAttempt && transferScreen === 'status' && !transfer)} confirmRetry={Boolean(confirmAttempt)} otpExpired={otpExpired} pendingPayload={createAttempt?.payload ?? null} accounts={accounts} postBalance={postBalance} userInitials={initials(session.user.fullName)} onChangeBeneficiary={() => { setBeneficiarySearch(''); setChoosingBeneficiary(true); }} onRequestNewCode={requestNewCode} onLeave={leaveUncertainTransfer} onMovements={showMovementsAfterTransfer} onEdit={editRejectedTransfer} onBack={() => { if (transferScreen === 'otp') void leaveOtp(); else setTransferScreen(transferScreen === 'review' ? 'details' : 'review'); }} onReview={() => { setTransferError(''); setTransferScreen('review'); }} onCreate={() => void submitCreate()} onRetryCreate={() => void submitCreate(true)} onConfirm={() => void confirmOtp()} onRetryConfirm={() => void confirmOtp(true)} onCheck={() => void checkTransferStatus()} onDone={resetTransfer} />;
 
   if (movementDetailBusy || movementDetailError) return <View style={styles.page}><View style={styles.flowContent}><Pressable accessibilityRole="button" accessibilityLabel="Volver a movimientos" style={styles.backButton} onPress={() => { setMovementDetailError(''); setMovementDetailBusy(false); setMovementDetailId(''); }}><Ionicons name="arrow-back" size={22} color={colors.primary}/><Text style={styles.link}>Movimientos</Text></Pressable>{movementDetailBusy ? <Centered><ActivityIndicator color={colors.primary}/><Text style={styles.muted}>Cargando comprobante…</Text></Centered> : <View style={styles.notice}><Text accessibilityRole="alert" style={styles.errorText}>{movementDetailError}</Text><Button title="Reintentar" onPress={() => { const item = movementsQuery.data?.items.find((movement) => movement.transferId === movementDetailId); if (item) void openMovement(item); }}/></View>}</View></View>;
   const closeMovementDetail = () => { setMovementDetail(null); setMovementDetailId(''); setMovementDetailError(''); setMovementDetailType(null); };
