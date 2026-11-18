@@ -241,7 +241,7 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
     const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Importe' });
-    const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Revisar transferencia').length > 0);
+    const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Continuar').length > 0);
     await TestRenderer.act(async () => { amountInput.props.onChangeText('12.345'); });
     const invalidAmountReviewButton = findReviewButton();
     assert.ok(invalidAmountReviewButton, 'the invalid amount should keep the review action visible');
@@ -253,7 +253,7 @@ describe('mobile transfer attempt', () => {
     assert.equal(reviewButton.props.accessibilityState?.disabled, true);
     assert.equal(reviewButton.findAllByType(ActivityIndicator).length, 0, 'validation-disabled review action must not look busy');
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('123'); });
-    await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     const createCalls = () => fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/transfers')) as [RequestInfo | URL, RequestInit?][];
     assert.equal(createCalls().length, 1);
@@ -330,7 +330,7 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('50.00'); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Ahorro'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('914'); });
-    await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('914823'); });
     await TestRenderer.act(async () => { button('Autorizar transferencia').props.onPress(); });
@@ -394,7 +394,7 @@ describe('mobile transfer attempt', () => {
       await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
       await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('100.00'); });
       await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Abono'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('1546'); });
-      await TestRenderer.act(async () => { button('Revisar transferencia').props.onPress(); });
+      await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
 
       // This is the exact tap that crashed with "Uncaught (in promise): No se pudo crear una
       // clave segura para el intento." on the real device.
@@ -554,6 +554,74 @@ describe('mobile beneficiary picker (M05)', () => {
     assert.match(visible, /"Transferir"/);
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Volver a inicio' }).props.onPress(); });
     assert.match(JSON.stringify(renderer!.toJSON()), /Hola, /);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+describe('mobile transfer details (M06)', () => {
+  it('changes the beneficiary from the details step, keeps typed data and sends the new destination', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    const createBodies: Array<Record<string, unknown>> = [];
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'm06-user', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'source-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '1245000', clabe: '000000000000008412', clabeMasked: '000•••••••••••8412' }] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+      if (url.endsWith('/beneficiaries')) return Response.json({ items: [
+        { id: 'beneficiary-1', name: 'Grace Hopper', alias: 'Grace', clabeMasked: '••••1234', destinationAccountId: 'dest-1' },
+        { id: 'beneficiary-2', name: 'Katherine Johnson', alias: 'KJ', clabeMasked: '••••5678', destinationAccountId: 'dest-2' },
+      ] });
+      if (url.endsWith('/transfers')) {
+        createBodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+        return Response.json({ id: 'transfer-m06', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: { id: 'beneficiary-2', name: 'Katherine Johnson', alias: 'KJ', clabeMasked: '••••5678', destinationAccountId: 'dest-2' }, amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: new Date().toISOString() }, { status: 202 });
+      }
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const visible = () => JSON.stringify(renderer!.toJSON());
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    const wait = () => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await wait();
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await wait();
+    await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0]!.props.onPress(); });
+    await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
+
+    assert.match(visible(), /PASO 1 DE 2/);
+    assert.match(visible(), /50% completado/);
+    assert.match(visible(), /Beneficiario destino/);
+    assert.match(visible(), /Grace Hopper/);
+    assert.match(visible(), /"Principal •• 8412"/);
+    assert.doesNotMatch(visible(), /Límite diario/, 'the API exposes no daily limit, so none may be shown');
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('850.00'); });
+
+    // Back from the picker returns to the details step, not Home.
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cambiar beneficiario' }).props.onPress(); });
+    await wait();
+    assert.match(visible(), /Elegir beneficiario/);
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Volver a datos de transferencia' }).props.onPress(); });
+    assert.match(visible(), /Beneficiario destino/);
+
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cambiar beneficiario' }).props.onPress(); });
+    await wait();
+    await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Katherine'))[0]!.props.onPress(); });
+    assert.match(visible(), /Katherine Johnson/);
+    assert.doesNotMatch(visible(), /Grace Hopper/);
+    assert.equal(renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '850.00', 'typed amount survives changing the beneficiary');
+
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('131126'); });
+    await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
+    await wait();
+    assert.equal(createBodies.length, 1);
+    assert.equal(createBodies[0]!.beneficiaryId, 'beneficiary-2');
+    assert.equal(createBodies[0]!.amountMinor, '85000');
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
