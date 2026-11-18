@@ -1,7 +1,5 @@
 node_modules/
 **/node_modules/
-.claude/
-**/.claude/
 dist/
 **/dist/
 coverage/
@@ -23,6 +21,7 @@ reportes/
 **/reports/
 **/reportes/
 *.tsbuildinfo
+.DS_Store
 docs/api-reference.html
 docs/bootstrap-api-reference.html
 docs/qa-report.md

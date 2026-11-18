@@ -30,3 +30,20 @@ Registro contemporáneo de esta fase; no representa aprobación humana ni revisi
 - No se detectaron ni se rechazan sugerencias AI de lógica financiera insegura: no se propuso ni implementó lógica financiera. Los montos/umbrales y supuestos de producto se mantienen como ilustrativos/propuestos pendientes, no aprobación humana.
 - No se han registrado sugerencias AI inseguras ni intervenciones humanas rechazadas hasta el momento; no se fabrican. Valores financieros de ejemplo y supuestos de producto se etiquetan como propuestas pendientes, no hechos.
 - No se registra aprobación de Planner/specs por persona; la revisión Stitch está pendiente.
+
+## Seguimiento producto y aprobación visual (2026-11-14)
+
+- El usuario sustituyó el stop anterior y aprobó los exports Stitch para implementación; se registra como aprobación del usuario real, no como aprobación de agentes.
+- El usuario eligió la opción de demo balanceada preguntada por el Coordinador: cuenta MXN automática al registrarse y fixture local de dos cuentas propias con contra-asientos. No aprobó importes exactos ni políticas de producción.
+- Tres contextos OpenCode `general` inspeccionaron por separado las fuentes web W01–W07, web W08–W14 y mobile M01–M12. Cada uno leyó los exports HTML y abrió las capturas disponibles; resultados consolidados por el Coordinador en `docs/design-mapping.md`.
+- Se encontraron 12 capturas web no disponibles, dos HTML incompletos y diferencias entre los tokens y el texto narrativo de color. Se registran como tales; no se afirma revisar assets ausentes.
+- El Coordinador fijó el alcance exclusivamente a requisitos obligatorios del challenge. Se excluyen SPEI/bancos externos, CEP/Banxico real, inversiones, garantías, biometría, export mensual y transferencias programadas.
+- En esta fase posterior el host soporta delegación real con la herramienta OpenCode `task` y agentes `general`/`explore`. No se han ejecutado todavía agentes implementadores Backend/Web/Mobile; se delegarán luego de congelar OpenAPI/types/ownership y commit del Planner.
+
+## Seguimiento: producto autorizado y revisión visual (2026-11-14)
+
+- El usuario aprobó los diseños web/móvil como referencia visual y autorizó la implementación obligatoria del producto en `feature/product-mvp`. Esta aprobación se registra como instrucción real, no como revisión independiente de AI.
+- Se inspeccionaron en contextos OpenCode `general` independientes los exports W01–W07, W08–W14 y M01–M12; los agentes leyeron el HTML y abrieron las capturas disponibles. La integración de hallazgos, prioridades, reglas excluidas y vínculos de pantalla están en `docs/design-mapping.md`.
+- Al revisar las fuentes se mantuvieron explícitamente fuera de alcance las afirmaciones/funciones de SPEI/bancos externos, CEP/Banxico, inversiones, garantías, biometría, export mensual y límites administrables. Se registraron 12 capturas web faltantes, dos export HTML incompletos y contradicciones de paleta/datos; no se afirma haber inspeccionado screenshots inexistentes.
+- El usuario aprobó la política de fixture demo equilibrado: cuenta MXN automática al registro y fixture local de dos cuentas propias con contra-asientos de apertura. No aprobó montos, límite diario, zona de negocio ni umbral/temporización OTP para producción. Esos valores permanecen demo/configurables y pendientes.
+- El ciclo Forge de producto inicia después de completar y versionar su contrato. Backend/Web/Mobile se ejecutan como tareas independientes OpenCode en worktrees; no se atribuye implementación a ningún rol hasta que ocurra.

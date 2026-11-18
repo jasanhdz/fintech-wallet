@@ -1,6 +1,6 @@
-# Fintech Wallet — BOOT-00
+# Fintech Wallet — producto en implementación
 
-Scaffold reproducible de infraestructura y clientes mínimos. El único endpoint implementado es `GET /health`; no hay funcionalidades de producto ni esquema financiero. Estado de las fases posteriores y diseños: `DESIGN_REVIEW_REQUIRED`.
+BOOT-00 publicó la base reproducible. El diseño Stitch está aprobado como referencia y la implementación del producto obligatorio está en curso en `feature/product-mvp`. La API de producto se implementará por fases; consulta `docs/design-mapping.md` y `docs/phase-log.md` para estados/evidencia. No hay despliegue AWS ni publicación EAS.
 
 ## Requisitos
 
@@ -52,19 +52,16 @@ npm run qa:bootstrap # guarda reporte real en docs/qa-report.md (gitignored)
 
 API: `GET http://localhost:3000/health`; una ruta no implementada responde Problem Details `application/problem+json` (RFC 7807), con request ID.
 
-## Estado BOOT-00
+## Estado de implementación
 
-- Web muestra exactamente **Entorno preparado. Diseño pendiente**.
-- Móvil muestra el mensaje equivalente y dispone de prueba que monta el componente con React Native renderer.
-- `npm run docs:api` genera Redoc navegable desde `specs/openapi.yaml`: contrato completo de producto PLANNED, pendiente de revisión/autorización y no implementado. El título del HTML lo marca explícitamente; sus rutas documentan diseño futuro, no endpoints disponibles.
-- `npm run docs:bootstrap-api` genera Redoc desde `specs/openapi.boot.yaml`: solo el contrato scaffold de `GET /health` y error genérico, también marcado como no implementado. La API BOOT-00 real implementa actualmente `GET /health`; las demás rutas devuelven 404. La generación de documentación no implementa endpoints.
-- `specs/openapi.yaml` preserva el contrato de diseño derivado previo. `specs/openapi.boot.yaml` limita la validación y tipos generados al scaffold.
-- TypeORM configura siempre `synchronize: false`; no hay entidades ni tablas de negocio. Tests DB rechazan URL/nombre dev antes de conectarse; aislamiento usa bases y roles runtime/migrator separados.
-- Suites financieras futuras no están implementadas ni aprobadas; permanecen bloqueadas por `DESIGN_REVIEW_REQUIRED`.
-- CI valida el scaffold; no equivale a aprobación final, prueba financiera, despliegue o publicación.
-- `npm run test:visual` inspecciona en Chromium el mensaje de preparación, HTTP 200 y ausencia de errores de consola; no sustituye pruebas de producto ni prueba en dispositivo móvil.
-- Diseños M01–M12 y W01–W14 están `DESIGN_REVIEW_REQUIRED`. El índice AWS queda `PENDIENTE`.
+- BOOT-00 permanece como entrega inicial en el historial. La aprobación visual y el alcance obligatorio están en `docs/design-mapping.md`; el análisis de fuentes, imágenes ausentes y exclusiones está documentado allí.
+- En el commit base de preparación de producto, el único endpoint implementado continúa siendo `GET /health`; las rutas OpenAPI se implementan verticalmente y su presencia en el contrato no acredita implementación.
+- `npm run docs:api` genera Redoc desde el contrato OpenAPI de producto; `npm run docs:bootstrap-api` conserva la referencia inicial health-only.
+- TypeORM mantiene `synchronize: false`; migraciones y fixture demo balanceada se agregarán antes de integrar los flujos. Tests de base deben rechazar `wallet_dev` antes de conectar.
+- Las pruebas financieras, 100 transferencias concurrentes y `EXPLAIN ANALYZE` real sobre 100k movimientos se reportarán solo cuando se ejecuten contra `wallet_test`.
+- `npm run test:visual` es el smoke visual BOOT-00; el producto requiere inspección Playwright responsive adicional, y móvil debe probarse en simulador/dispositivo. Export de Expo no acredita prueba en dispositivo.
+- `docs/aws-deploy.md` permanece pendiente. No se despliega AWS, no se publica Expo/EAS y no se abre túnel público.
 
 ## Contrato y tipos compartidos
 
-`npm run openapi:validate` valida el borrador de diseño `specs/openapi.yaml` y el contrato BOOT-00. Para respetar el commit documental sin editarlo, el validador normaliza en un archivo temporal dos descripciones inline que no son YAML válido; conserva la estructura/semántica fuente. `npm run openapi:generate` produce tipos separados del contrato planeado (no implementado) y del scaffold bajo `packages/shared`; `npm run openapi:check` confirma reproducibilidad. Shared no depende de TypeORM, secretos ni internals de Node.
+`npm run openapi:validate` valida el contrato de producto OpenAPI 3.1 y el contrato health-only. `npm run openapi:generate` produce tipos compartidos desde ambos documentos; `npm run openapi:check` confirma que la generación es reproducible. `packages/shared` no depende de TypeORM, secretos ni internals de Node.

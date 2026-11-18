@@ -1,6 +1,6 @@
 # Requisitos derivados de la prueba técnica
 
-**Fuente normativa:** [`../docs/challenge.md`](../docs/challenge.md), copia del enunciado original suministrado. Las etiquetas **obligatorio**, **bonus** y **BOOT-00** distinguen el requisito de producto de la fase autorizada actual. Todos los requisitos de producto quedan pendientes; BOOT-00 no los implementa.
+**Fuente normativa:** [`../docs/challenge.md`](../docs/challenge.md), copia del enunciado original suministrado. Las etiquetas **obligatorio**, **bonus** y **BOOT-00** distinguen el requisito de producto del scaffold inicial. El usuario autorizó el producto obligatorio tras aprobar las referencias visuales Stitch; los bonus siguen fuera del alcance actual.
 
 ## Alcance por cliente
 
@@ -8,7 +8,8 @@
 - **Web:** login, resumen de cuentas, historial, alta de beneficiarios y transferencia con confirmación/comprobante; estados de carga/vacío/error, validación, accesibilidad y bloqueo/idempotencia del envío.
 - **Móvil (alcance reducido):** login, saldo, últimos 20 movimientos y transferencia a beneficiario existente; almacenamiento seguro de tokens, reintento idempotente ante red inestable y ocultamiento sensible en background.
 - **Bonus:** exportar estado mensual CSV/PDF o transferencias futuras; biometría móvil. Ninguno es obligatorio.
-- **BOOT-00:** solo estructura reproducible y scaffold técnico; ninguna funcionalidad anterior se considera entregada.
+- **BOOT-00:** commit histórico que solo entregó estructura reproducible y scaffold técnico; no se considera que aquellas pruebas cubran funcionalidades financieras.
+- **Estado actual:** los criterios funcionales REQ-* están autorizados para implementación; verificar extremo a extremo con servicios reales y PostgreSQL, sin aceptar mocks como entrega integrada.
 
 ## Criterios obligatorios Given/When/Then
 

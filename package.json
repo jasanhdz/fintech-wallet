@@ -31,7 +31,7 @@
     "openapi:validate": "tsx scripts/qa/openapi.ts validate",
     "openapi:generate": "tsx scripts/qa/openapi.ts generate",
     "openapi:check": "tsx scripts/qa/openapi.ts check",
-    "docs:api": "redocly build-docs specs/openapi.yaml -o docs/api-reference.html --title 'Fintech Wallet API — PLANNED, NOT IMPLEMENTED'",
+    "docs:api": "redocly build-docs specs/openapi.yaml -o docs/api-reference.html --title 'Fintech Wallet API — PRODUCT CONTRACT'",
     "docs:bootstrap-api": "redocly build-docs specs/openapi.boot.yaml -o docs/bootstrap-api-reference.html --title 'Fintech Wallet BOOT-00 API — HEALTH ONLY, NOT IMPLEMENTED'"
   },
   "devDependencies": {

@@ -1,23 +1,13 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
 const plannedSource = 'specs/openapi.yaml';
 const scaffoldSource = 'specs/openapi.boot.yaml';
 const runId = `${process.pid}-${Date.now()}`;
-const normalized = `.openapi-design.${runId}.normalized.yaml`;
 const plannedTarget = 'packages/shared/src/generated/product-design.ts';
 const scaffoldTarget = 'packages/shared/src/generated/openapi.ts';
 const plannedTemporary = `${plannedTarget}.${runId}.tmp`;
 const scaffoldTemporary = `${scaffoldTarget}.${runId}.tmp`;
-
-async function normalizedSource() {
-  const contents = await readFile(plannedSource, 'utf8');
-  const result = contents
-    .replace('description: Requisito propuesto, longitud final pendiente.', "description: 'Requisito propuesto, longitud final pendiente.'")
-    .replace('description: Segundos, valor pendiente.', "description: 'Segundos, valor pendiente.'");
-  if (contents === result) throw new Error('Expected inline flow-mapping normalization points were not found in specs/openapi.yaml');
-  await writeFile(normalized, result);
-}
 
 function execute(command: string, args: string[]) {
   const result = spawnSync(command, args, { encoding: 'utf8' });
@@ -33,20 +23,19 @@ function localBin(name: string) {
 
 const mode = process.argv[2];
 try {
-  await normalizedSource();
   if (mode === 'validate') {
-    console.log(execute(localBin('redocly'), ['lint', normalized]));
+    console.log(execute(localBin('redocly'), ['lint', plannedSource]));
     console.log(execute(localBin('redocly'), ['lint', scaffoldSource]));
   } else if (mode === 'generate') {
-    execute(localBin('openapi-typescript'), [normalized, '-o', plannedTarget]);
+    execute(localBin('openapi-typescript'), [plannedSource, '-o', plannedTarget]);
     execute(localBin('openapi-typescript'), [scaffoldSource, '-o', scaffoldTarget]);
     console.log(`Generated planned design types (not implemented paths) and BOOT-00 scaffold types.`);
   } else if (mode === 'check') {
-    execute(localBin('redocly'), ['lint', normalized]);
+    execute(localBin('redocly'), ['lint', plannedSource]);
     execute(localBin('redocly'), ['lint', scaffoldSource]);
     const plannedBefore = await readFile(plannedTarget, 'utf8');
     const scaffoldBefore = await readFile(scaffoldTarget, 'utf8');
-    execute(localBin('openapi-typescript'), [normalized, '-o', plannedTemporary]);
+    execute(localBin('openapi-typescript'), [plannedSource, '-o', plannedTemporary]);
     execute(localBin('openapi-typescript'), [scaffoldSource, '-o', scaffoldTemporary]);
     const plannedAfter = await readFile(plannedTemporary, 'utf8');
     const scaffoldAfter = await readFile(scaffoldTemporary, 'utf8');
@@ -56,5 +45,5 @@ try {
     throw new Error('Expected validate, generate, or check');
   }
 } finally {
-  await Promise.all([normalized, plannedTemporary, scaffoldTemporary].map((path) => rm(path, { force: true })));
+  await Promise.all([plannedTemporary, scaffoldTemporary].map((path) => rm(path, { force: true })));
 }

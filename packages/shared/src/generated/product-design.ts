@@ -4,27 +4,24 @@
  */
 
 export interface paths {
-    "/v1/auth/register": {
+    "/auth/csrf": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Obtener token CSRF para sesión web */
+        get: operations["getCsrfToken"];
         put?: never;
-        /**
-         * [PENDIENTE] Registrar usuario
-         * @description No implementado. Campos/política de identidad requieren aprobación.
-         */
-        post: operations["registerUser"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/auth/login": {
+    "/auth/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -34,8 +31,28 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Iniciar sesión
-         * @description Access JWT corto y refresh rotativo son requisitos del reto; transporte web y duraciones pendientes.
+         * Registrar usuario desde web y abrir cuenta MXN
+         * @description La cuenta de cliente queda asociada al usuario; datos demo de apertura solo en perfil local de desarrollo.
+         */
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Iniciar sesión web o móvil
+         * @description Access JWT de corta vida permanece en memoria web; móvil recibe refresh token para SecureStore. No guardar credenciales/tokens en web localStorage ni mobile AsyncStorage.
          */
         post: operations["login"];
         delete?: never;
@@ -44,7 +61,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/auth/refresh": {
+    "/auth/refresh": {
         parameters: {
             query?: never;
             header?: never;
@@ -54,8 +71,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Rotar refresh token
-         * @description No implementado; rotación/reutilización revocada propuestas, detalles pendientes.
+         * Rotar refresh y renovar access token
+         * @description Web envía cookie HttpOnly y CSRF; móvil envía refresh token almacenado en SecureStore. Una rotación invalida el token previo y detecta reutilización.
          */
         post: operations["refreshSession"];
         delete?: never;
@@ -64,14 +81,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/accounts": {
+    "/auth/logout": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** [PENDIENTE] Listar cuentas propias */
+        get?: never;
+        put?: never;
+        /** Revocar sesión actual */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener identidad de sesión actual */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar cuentas propias y saldo disponible */
         get: operations["listAccounts"];
         put?: never;
         post?: never;
@@ -81,17 +132,37 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/beneficiaries": {
+    "/accounts/{accountId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** [PENDIENTE] Listar beneficiarios propios */
+        /** Consultar una cuenta propia */
+        get: operations["getAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/beneficiaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar beneficiarios registrados por el usuario */
         get: operations["listBeneficiaries"];
         put?: never;
-        /** [PENDIENTE] Registrar beneficiario */
+        /**
+         * Registrar beneficiario interno por CLABE
+         * @description CLABE de 18 dígitos, checksum válido y destino existente en la misma plataforma. No se conecta a SPEI ni bancos externos.
+         */
         post: operations["createBeneficiary"];
         delete?: never;
         options?: never;
@@ -99,22 +170,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/transfers": {
+    "/beneficiaries/{beneficiaryId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * [PENDIENTE] Consultar historial con cursor
-         * @description Cursor keyset opaco; filtros de fecha/tipo y orden estable pendientes de decisión.
-         */
-        get: operations["listTransfers"];
+        /** Consultar beneficiario propio */
+        get: operations["getBeneficiary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
-         * [PENDIENTE] Crear transferencia
-         * @description Requiere Idempotency-Key único por intento. La serialización amountMinor evita precisión JSON insegura; moneda, límites y máximo siguen pendientes.
+         * Crear intento de transferencia interna
+         * @description Idempotency-Key identifica el intento. Si requiere OTP se crea estado awaiting_confirmation sin debitar; la confirmación se liga a transferId. Si la respuesta se pierde, repetir la misma key y payload devuelve el mismo intento.
          */
         post: operations["createTransfer"];
         delete?: never;
@@ -123,7 +207,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/transfers/{transferId}": {
+    "/transfers/{transferId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consultar estado/comprobante del intento propio */
+        get: operations["getTransfer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transfers/{transferId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar intento con OTP simulado
+         * @description El challenge pertenece a un único intento y expira según configuración; no genera SPEI/banco externo.
+         */
+        post: operations["confirmTransfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/accounts/{accountId}/movements": {
         parameters: {
             query?: never;
             header?: never;
@@ -131,10 +252,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * [PENDIENTE] Consultar resultado por ID
-         * @description Necesario para estado incierto/reintento móvil; ownership y política de visibilidad pendientes.
+         * Historial propio paginado por cursor
+         * @description Cursor keyset estable; no usar OFFSET. Los últimos 20 son el tamaño por defecto en móvil.
          */
-        get: operations["getTransfer"];
+        get: operations["listMovements"];
         put?: never;
         post?: never;
         delete?: never;
@@ -148,12 +269,10 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         RegisterRequest: {
+            fullName: string;
             /** Format: email */
             email: string;
-            /**
-             * Format: password
-             * @description Requisito propuesto, longitud final pendiente.
-             */
+            /** Format: password */
             password: string;
         };
         LoginRequest: {
@@ -161,80 +280,127 @@ export interface components {
             email: string;
             /** Format: password */
             password: string;
+            /** @enum {string} */
+            client: "web" | "mobile";
         };
-        RefreshRequest: {
-            refreshToken: string;
+        MobileRefreshRequest: {
+            /** @description Required for mobile; web sends HttpOnly cookie. */
+            refreshToken?: string;
+            /** @enum {string} */
+            client?: "web" | "mobile";
         };
-        SessionResponse: {
-            /** @description JWT corto propuesto; transporte web pendiente. */
+        AuthResponse: {
+            /** @description Short-lived JWT held in memory on web. */
             accessToken: string;
-            /** @description En móvil solo almacenamiento seguro; en web evaluar cookie HttpOnly. */
+            /** @description Returned only for mobile and stored in SecureStore; web uses HttpOnly cookie. */
             refreshToken?: string;
             /** @constant */
             tokenType: "Bearer";
-            /** @description Segundos, valor pendiente. */
             expiresIn: number;
+            user: components["schemas"]["User"];
+        };
+        User: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            /** Format: email */
+            email: string;
         };
         Account: {
             /** Format: uuid */
             id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "checking" | "savings";
             /** @constant */
             currency: "MXN";
-            /** @description Centavos como entero serializado; rango pendiente. */
             availableBalanceMinor: string;
+            clabeMasked: string;
+            /** @description Configured policy; demo values do not define production policy. */
+            dailyLimitMinor?: string;
+            dailyUsedMinor?: string;
         };
         BeneficiaryInput: {
             name: string;
             alias: string;
-            /** @description Dígito verificador CLABE requerido por el reto. */
+            /** @description Checksum válido y vinculado a cuenta interna de Billetera MXN. */
             clabe: string;
         };
-        Beneficiary: components["schemas"]["BeneficiaryInput"] & {
+        Beneficiary: {
             /** Format: uuid */
             id: string;
-            /** @description Valor completo no se devolvería; representación de salida pendiente. */
-            clabe?: string;
-            readonly clabeMasked?: string;
+            name: string;
+            alias: string;
+            clabeMasked: string;
+            /** Format: uuid */
+            destinationAccountId: string;
+            isFrequent?: boolean;
         };
-        TransferRequest: {
+        TransferCreateRequest: {
             /** Format: uuid */
             sourceAccountId: string;
-            /**
-             * Format: uuid
-             * @description Cuenta propia de destino; mutually exclusive with beneficiaryId pendiente.
-             */
-            destinationAccountId?: string;
-            /**
-             * Format: uuid
-             * @description Beneficiario propio; mutually exclusive with destinationAccountId pendiente.
-             */
-            beneficiaryId?: string;
-            /** @description Centavos MXN serializados como string para evitar float; techo pendiente. */
+            /** @constant */
+            destinationType: "beneficiary";
+            /** Format: uuid */
+            beneficiaryId: string;
+            /** @description MXN cents as decimal string. */
             amountMinor: string;
             concept: string;
-            /** @description Longitud exacta pendiente de aprobar. */
             reference: string;
-            /** @description Necesario sobre umbral solo cuando política futura lo indique. */
-            otp?: string;
+        } | {
+            /** Format: uuid */
+            sourceAccountId: string;
+            /** @constant */
+            destinationType: "own_account";
+            /** Format: uuid */
+            destinationAccountId: string;
+            /** @description MXN cents as decimal string. */
+            amountMinor: string;
+            concept: string;
+            reference: string;
+        };
+        TransferConfirmRequest: {
+            code: string;
         };
         Transfer: {
             /** Format: uuid */
             id: string;
-            /**
-             * @description Estados propuestos; máquina de estados pendiente.
-             * @enum {string}
-             */
-            status: "pending" | "completed" | "rejected";
+            /** @enum {string} */
+            status: "awaiting_confirmation" | "processing" | "completed" | "rejected";
+            /** Format: uuid */
+            sourceAccountId: string;
+            destination: components["schemas"]["Beneficiary"] | components["schemas"]["Account"];
             amountMinor: string;
             /** @constant */
             currency: "MXN";
+            concept: string;
+            reference: string;
             /** Format: date-time */
             createdAt: string;
-            readonly receiptReference?: string;
+            /** Format: date-time */
+            completedAt?: string | null;
+            receiptReference?: string | null;
+            requestId?: string;
         };
-        TransferPage: {
-            items: components["schemas"]["Transfer"][];
-            /** @description Cursor opaco de keyset. */
+        Movement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            transferId?: string;
+            /** @enum {string} */
+            type: "debit" | "credit";
+            amountMinor: string;
+            /** @constant */
+            currency: "MXN";
+            concept: string;
+            reference: string;
+            /** @enum {string} */
+            status: "processing" | "completed" | "rejected";
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        MovementPage: {
+            items: components["schemas"]["Movement"][];
             nextCursor?: string | null;
         };
         Problem: {
@@ -242,11 +408,11 @@ export interface components {
             type: string;
             title: string;
             status: number;
-            /** @description Detalle no sensible y sin información interna. */
+            /** @description Safe user-facing message only. */
             detail?: string;
             /** Format: uri-reference */
-            instance?: string;
-            requestId?: string;
+            instance: string;
+            requestId: string;
             errors?: {
                 pointer: string;
                 detail: string;
@@ -254,7 +420,7 @@ export interface components {
         };
     };
     responses: {
-        /** @description Error compatible RFC 7807/9457. */
+        /** @description RFC 7807 `application/problem+json` con requestId; no filtra detalles internos. */
         Problem: {
             headers: {
                 [name: string]: unknown;
@@ -265,7 +431,9 @@ export interface components {
         };
     };
     parameters: {
-        /** @description Clave aleatoria por intento; reutilizarla solo para retries exactos. */
+        /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+        CsrfToken: string;
+        /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
         IdempotencyKey: string;
     };
     requestBodies: never;
@@ -274,10 +442,35 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    registerUser: {
+    getCsrfToken: {
         parameters: {
             query?: never;
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token para enviar en X-CSRF-Token; API también coloca cookie no HttpOnly de comprobación. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        csrfToken: string;
+                    };
+                };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -287,23 +480,29 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Cuenta creada (propuesto). */
+            /** @description Usuario y cuenta inicial creados; refresh web por cookie HttpOnly. */
             201: {
                 headers: {
+                    /** @description Cookie rotativa HttpOnly para cliente web. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             400: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
+            429: components["responses"]["Problem"];
         };
     };
     login: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -313,16 +512,17 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Sesión creada (propuesto). */
+            /** @description Sesión creada; web usa Set-Cookie, móvil indica client=mobile y guarda refresh en SecureStore. */
             200: {
                 headers: {
+                    /** @description Solo cliente web. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
-            400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
         };
@@ -330,23 +530,75 @@ export interface operations {
     refreshSession: {
         parameters: {
             query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Refresh rotado y access renovado. */
+            200: {
+                headers: {
+                    /** @description Cookie rotativa solo para web. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf. */
+                "X-CSRF-Token"?: components["parameters"]["CsrfToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MobileRefreshRequest"];
+            };
+        };
+        responses: {
+            /** @description Sesión revocada y cookie web expirada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    getCurrentUser: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Credenciales rotadas (propuesto). */
+            /** @description Usuario autenticado. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionResponse"];
+                    "application/json": components["schemas"]["User"];
                 };
             };
             401: components["responses"]["Problem"];
@@ -361,7 +613,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Cuentas propias (propuesto). */
+            /** @description Solo cuentas del usuario autenticado. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -375,6 +627,30 @@ export interface operations {
             401: components["responses"]["Problem"];
         };
     };
+    getAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cuenta del usuario actual. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Account"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
     listBeneficiaries: {
         parameters: {
             query?: never;
@@ -384,7 +660,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Beneficiarios propios (propuesto). */
+            /** @description Solo beneficiarios propios, con CLABE enmascarada. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -411,7 +687,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Beneficiario creado (propuesto). */
+            /** @description Beneficiario interno guardado. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -422,31 +698,28 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
-    listTransfers: {
+    getBeneficiary: {
         parameters: {
-            query: {
-                accountId: string;
-                from?: string;
-                to?: string;
-                type?: "debit" | "credit";
-                cursor?: string;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                beneficiaryId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Página de historial propia (propuesto). */
+            /** @description Beneficiario propio; CLABE enmascarada. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TransferPage"];
+                    "application/json": components["schemas"]["Beneficiary"];
                 };
             };
             401: components["responses"]["Problem"];
@@ -457,7 +730,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                /** @description Clave aleatoria por intento; reutilizarla solo para retries exactos. */
+                /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
                 "Idempotency-Key": components["parameters"]["IdempotencyKey"];
             };
             path?: never;
@@ -465,12 +738,21 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TransferRequest"];
+                "application/json": components["schemas"]["TransferCreateRequest"];
             };
         };
         responses: {
-            /** @description Transferencia creada (propuesto). */
+            /** @description Transferencia inmediata completada en transacción. */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            /** @description Requiere OTP simulado; no se ha debitado ni acreditado. */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -480,6 +762,7 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
             409: components["responses"]["Problem"];
             422: components["responses"]["Problem"];
             429: components["responses"]["Problem"];
@@ -496,13 +779,77 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Resultado (propuesto). */
+            /** @description Estado actual del mismo intento; sólo actor/propietario autorizado. */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    confirmTransfer: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Aleatoria por operación; se reutiliza en retries exactos del mismo intento. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transferId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Resultado del intento confirmado; repetición idempotente devuelve el mismo resultado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transfer"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
+            422: components["responses"]["Problem"];
+        };
+    };
+    listMovements: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                type?: "debit" | "credit";
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Movimientos de la cuenta propia. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovementPage"];
                 };
             };
             401: components["responses"]["Problem"];

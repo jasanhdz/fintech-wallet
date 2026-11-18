@@ -1,34 +1,52 @@
 openapi: 3.1.0
 info:
-  title: Fintech Wallet API (design draft)
-  version: 0.1.0-draft
-  summary: Propuesta inicial de contrato; no describe endpoints de producto implementados.
+  title: Fintech Wallet API
+  version: 0.2.0
+  summary: Contrato de implementación del producto obligatorio de la prueba.
   description: >-
-    Borrador derivado de docs/challenge.md y sujeto a design review. Ninguna ruta
-    de producto está autorizada para implementación durante BOOT-00. Seguridad,
-    límites, campos y políticas marcados como propuestos requieren aprobación.
+    Contrato aprobado para el alcance de docs/challenge.md y specs/requirements.md.
+    Implementación por fases; las respuestas se implementan de forma progresiva.
+    No cubre SPEI real, bancos externos, inversiones, biometría ni bonus opcionales.
 servers:
-  - url: http://localhost:3000
-    description: Desarrollo local; solo endpoints de scaffold BOOT-00 están previstos en código.
+  - url: http://localhost:3000/v1
+    description: Desarrollo local
 tags:
   - name: Auth
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Registro, inicio/cierre de sesión y rotación segura de credenciales.
   - name: Accounts
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Cuentas MXN propias y saldos disponibles.
   - name: Beneficiaries
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Beneficiarios de cuentas internas registradas por el usuario.
   - name: Transfers
-    description: Propuesto, pendiente de diseño y autorización.
-  - name: Activity
-    description: Propuesto, pendiente de diseño y autorización.
+    description: Intentos idempotentes entre cuentas internas, confirmación OTP y comprobantes.
+  - name: Movements
+    description: Historial de la cuenta propia paginado con cursor.
 paths:
-  /v1/auth/register:
+  /auth/csrf:
+    get:
+      tags: [Auth]
+      operationId: getCsrfToken
+      summary: Obtener token CSRF para sesión web
+      security: []
+      responses:
+        '200':
+          description: Token para enviar en X-CSRF-Token; API también coloca cookie no HttpOnly de comprobación.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [csrfToken]
+                properties:
+                  csrfToken: { type: string }
+  /auth/register:
     post:
       tags: [Auth]
-      operationId: registerUser
-      summary: "[PENDIENTE] Registrar usuario"
-      description: No implementado. Campos/política de identidad requieren aprobación.
+      operationId: register
+      summary: Registrar usuario desde web y abrir cuenta MXN
+      description: La cuenta de cliente queda asociada al usuario; datos demo de apertura solo en perfil local de desarrollo.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -36,19 +54,24 @@ paths:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
         '201':
-          description: Cuenta creada (propuesto).
+          description: Usuario y cuenta inicial creados; refresh web por cookie HttpOnly.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Cookie rotativa HttpOnly para cliente web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
         '400': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
-  /v1/auth/login:
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/login:
     post:
       tags: [Auth]
       operationId: login
-      summary: "[PENDIENTE] Iniciar sesión"
-      description: Access JWT corto y refresh rotativo son requisitos del reto; transporte web y duraciones pendientes.
+      summary: Iniciar sesión web o móvil
+      description: Access JWT de corta vida permanece en memoria web; móvil recibe refresh token para SecureStore. No guardar credenciales/tokens en web localStorage ni mobile AsyncStorage.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
         required: true
         content:
@@ -56,41 +79,75 @@ paths:
             schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
         '200':
-          description: Sesión creada (propuesto).
+          description: Sesión creada; web usa Set-Cookie, móvil indica client=mobile y guarda refresh en SecureStore.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Solo cliente web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
-        '400': { $ref: '#/components/responses/Problem' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
         '401': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
-  /v1/auth/refresh:
+  /auth/refresh:
     post:
       tags: [Auth]
       operationId: refreshSession
-      summary: "[PENDIENTE] Rotar refresh token"
-      description: No implementado; rotación/reutilización revocada propuestas, detalles pendientes.
+      summary: Rotar refresh y renovar access token
+      description: Web envía cookie HttpOnly y CSRF; móvil envía refresh token almacenado en SecureStore. Una rotación invalida el token previo y detecta reutilización.
       security: []
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RefreshRequest' }
+            schema: { $ref: '#/components/schemas/MobileRefreshRequest' }
       responses:
         '200':
-          description: Credenciales rotadas (propuesto).
+          description: Refresh rotado y access renovado.
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Cookie rotativa solo para web. }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SessionResponse' }
+              schema: { $ref: '#/components/schemas/AuthResponse' }
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/accounts:
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Revocar sesión actual
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/CsrfToken'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MobileRefreshRequest' }
+      responses:
+        '204': { description: Sesión revocada y cookie web expirada. }
+        '401': { $ref: '#/components/responses/Problem' }
+  /auth/me:
     get:
-      tags: [Accounts]
-      operationId: listAccounts
-      summary: "[PENDIENTE] Listar cuentas propias"
+      tags: [Auth]
+      operationId: getCurrentUser
+      summary: Obtener identidad de sesión actual
       security: [{ bearerAuth: [] }]
       responses:
         '200':
-          description: Cuentas propias (propuesto).
+          description: Usuario autenticado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Listar cuentas propias y saldo disponible
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Solo cuentas del usuario autenticado.
           content:
             application/json:
               schema:
@@ -101,15 +158,31 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Account' }
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/beneficiaries:
+  /accounts/{accountId}:
+    get:
+      tags: [Accounts]
+      operationId: getAccount
+      summary: Consultar una cuenta propia
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Cuenta del usuario actual.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /beneficiaries:
     get:
       tags: [Beneficiaries]
       operationId: listBeneficiaries
-      summary: "[PENDIENTE] Listar beneficiarios propios"
+      summary: Listar beneficiarios registrados por el usuario
       security: [{ bearerAuth: [] }]
       responses:
         '200':
-          description: Beneficiarios propios (propuesto).
+          description: Solo beneficiarios propios, con CLABE enmascarada.
           content:
             application/json:
               schema:
@@ -123,7 +196,8 @@ paths:
     post:
       tags: [Beneficiaries]
       operationId: createBeneficiary
-      summary: "[PENDIENTE] Registrar beneficiario"
+      summary: Registrar beneficiario interno por CLABE
+      description: CLABE de 18 dígitos, checksum válido y destino existente en la misma plataforma. No se conecta a SPEI ni bancos externos.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -132,20 +206,39 @@ paths:
             schema: { $ref: '#/components/schemas/BeneficiaryInput' }
       responses:
         '201':
-          description: Beneficiario creado (propuesto).
+          description: Beneficiario interno guardado.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Beneficiary' }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
-  /v1/transfers:
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /beneficiaries/{beneficiaryId}:
+    get:
+      tags: [Beneficiaries]
+      operationId: getBeneficiary
+      summary: Consultar beneficiario propio
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: beneficiaryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Beneficiario propio; CLABE enmascarada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Beneficiary' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /transfers:
     post:
       tags: [Transfers]
       operationId: createTransfer
-      summary: "[PENDIENTE] Crear transferencia"
+      summary: Crear intento de transferencia interna
       description: >-
-        Requiere Idempotency-Key único por intento. La serialización amountMinor
-        evita precisión JSON insegura; moneda, límites y máximo siguen pendientes.
+        Idempotency-Key identifica el intento. Si requiere OTP se crea estado
+        awaiting_confirmation sin debitar; la confirmación se liga a transferId.
+        Si la respuesta se pierde, repetir la misma key y payload devuelve el mismo intento.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -153,26 +246,75 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/TransferRequest' }
+            schema: { $ref: '#/components/schemas/TransferCreateRequest' }
       responses:
         '201':
-          description: Transferencia creada (propuesto).
+          description: Transferencia inmediata completada en transacción.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '202':
+          description: Requiere OTP simulado; no se ha debitado ni acreditado.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Transfer' }
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}:
     get:
-      tags: [Activity]
-      operationId: listTransfers
-      summary: "[PENDIENTE] Consultar historial con cursor"
-      description: Cursor keyset opaco; filtros de fecha/tipo y orden estable pendientes de decisión.
+      tags: [Transfers]
+      operationId: getTransfer
+      summary: Consultar estado/comprobante del intento propio
       security: [{ bearerAuth: [] }]
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Estado actual del mismo intento; sólo actor/propietario autorizado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /transfers/{transferId}/confirm:
+    post:
+      tags: [Transfers]
+      operationId: confirmTransfer
+      summary: Confirmar intento con OTP simulado
+      description: El challenge pertenece a un único intento y expira según configuración; no genera SPEI/banco externo.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferConfirmRequest' }
+      responses:
+        '200':
+          description: Resultado del intento confirmado; repetición idempotente devuelve el mismo resultado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transfer' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /accounts/{accountId}/movements:
+    get:
+      tags: [Movements]
+      operationId: listMovements
+      summary: Historial propio paginado por cursor
+      description: Cursor keyset estable; no usar OFFSET. Los últimos 20 son el tamaño por defecto en móvil.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: path, required: true, schema: { type: string, format: uuid } }
         - { name: from, in: query, required: false, schema: { type: string, format: date-time } }
         - { name: to, in: query, required: false, schema: { type: string, format: date-time } }
         - { name: type, in: query, required: false, schema: { type: string, enum: [debit, credit] } }
@@ -180,27 +322,10 @@ paths:
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
       responses:
         '200':
-          description: Página de historial propia (propuesto).
+          description: Movimientos de la cuenta propia.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/TransferPage' }
-        '401': { $ref: '#/components/responses/Problem' }
-        '404': { $ref: '#/components/responses/Problem' }
-  /v1/transfers/{transferId}:
-    get:
-      tags: [Transfers]
-      operationId: getTransfer
-      summary: "[PENDIENTE] Consultar resultado por ID"
-      description: Necesario para estado incierto/reintento móvil; ownership y política de visibilidad pendientes.
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - { name: transferId, in: path, required: true, schema: { type: string, format: uuid } }
-      responses:
-        '200':
-          description: Resultado (propuesto).
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Transfer' }
+              schema: { $ref: '#/components/schemas/MovementPage' }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
 components:
@@ -209,20 +334,26 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Propuesto para API; estrategia segura web pendiente.
+      description: Access JWT breve en memoria web y móvil. Refresh no se persiste en web JavaScript.
   parameters:
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: false
+      description: Obligatorio para web cookie-authenticated; token entregado por GET /auth/csrf.
+      schema: { type: string }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
       required: true
-      description: Clave aleatoria por intento; reutilizarla solo para retries exactos.
+      description: Aleatoria por operación; se reutiliza en retries exactos del mismo intento.
       schema:
         type: string
         minLength: 16
         maxLength: 128
   responses:
     Problem:
-      description: Error compatible RFC 7807/9457.
+      description: RFC 7807 `application/problem+json` con requestId; no filtra detalles internos.
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
@@ -230,38 +361,53 @@ components:
     RegisterRequest:
       type: object
       additionalProperties: false
-      required: [email, password]
+      required: [email, password, fullName]
       properties:
-        email: { type: string, format: email }
-        password: { type: string, format: password, minLength: 12, writeOnly: true, description: Requisito propuesto, longitud final pendiente. }
+        fullName: { type: string, minLength: 1, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, format: password, minLength: 12, writeOnly: true }
     LoginRequest:
       type: object
       additionalProperties: false
-      required: [email, password]
+      required: [email, password, client]
       properties:
         email: { type: string, format: email }
         password: { type: string, format: password, writeOnly: true }
-    RefreshRequest:
+        client: { type: string, enum: [web, mobile] }
+    MobileRefreshRequest:
       type: object
       additionalProperties: false
-      required: [refreshToken]
       properties:
-        refreshToken: { type: string, writeOnly: true }
-    SessionResponse:
+        refreshToken: { type: string, writeOnly: true, description: Required for mobile; web sends HttpOnly cookie. }
+        client: { type: string, enum: [web, mobile] }
+    AuthResponse:
       type: object
-      required: [accessToken, tokenType, expiresIn]
+      required: [accessToken, tokenType, expiresIn, user]
       properties:
-        accessToken: { type: string, description: JWT corto propuesto; transporte web pendiente. }
-        refreshToken: { type: string, writeOnly: true, description: En móvil solo almacenamiento seguro; en web evaluar cookie HttpOnly. }
+        accessToken: { type: string, description: Short-lived JWT held in memory on web. }
+        refreshToken: { type: string, writeOnly: true, description: Returned only for mobile and stored in SecureStore; web uses HttpOnly cookie. }
         tokenType: { type: string, const: Bearer }
-        expiresIn: { type: integer, minimum: 1, description: Segundos, valor pendiente. }
-    Account:
+        expiresIn: { type: integer, minimum: 1 }
+        user: { $ref: '#/components/schemas/User' }
+    User:
       type: object
-      required: [id, currency, availableBalanceMinor]
+      required: [id, fullName, email]
       properties:
         id: { type: string, format: uuid }
+        fullName: { type: string }
+        email: { type: string, format: email }
+    Account:
+      type: object
+      required: [id, name, kind, currency, availableBalanceMinor, clabeMasked]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        kind: { type: string, enum: [checking, savings] }
         currency: { type: string, const: MXN }
-        availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: Centavos como entero serializado; rango pendiente. }
+        availableBalanceMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
+        clabeMasked: { type: string }
+        dailyLimitMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$', description: Configured policy; demo values do not define production policy. }
+        dailyUsedMinor: { type: string, pattern: '^(0|[1-9][0-9]*)$' }
     BeneficiaryInput:
       type: object
       additionalProperties: false
@@ -269,52 +415,91 @@ components:
       properties:
         name: { type: string, minLength: 1, maxLength: 120 }
         alias: { type: string, minLength: 1, maxLength: 80 }
-        clabe: { type: string, pattern: '^[0-9]{18}$', description: Dígito verificador CLABE requerido por el reto. }
+        clabe: { type: string, pattern: '^[0-9]{18}$', writeOnly: true, description: Checksum válido y vinculado a cuenta interna de Billetera MXN. }
     Beneficiary:
-      allOf:
-        - { $ref: '#/components/schemas/BeneficiaryInput' }
-        - type: object
-          required: [id]
-          properties:
-            id: { type: string, format: uuid }
-            clabe: { type: string, writeOnly: true, description: Valor completo no se devolvería; representación de salida pendiente. }
-            clabeMasked: { type: string, readOnly: true }
-    TransferRequest:
       type: object
-      additionalProperties: false
-      required: [sourceAccountId, amountMinor, concept, reference]
-      properties:
-        sourceAccountId: { type: string, format: uuid }
-        destinationAccountId: { type: string, format: uuid, description: Cuenta propia de destino; mutually exclusive with beneficiaryId pendiente. }
-        beneficiaryId: { type: string, format: uuid, description: Beneficiario propio; mutually exclusive with destinationAccountId pendiente. }
-        amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: Centavos MXN serializados como string para evitar float; techo pendiente. }
-        concept: { type: string, maxLength: 140 }
-        reference: { type: string, pattern: '^[0-9]{1,7}$', description: Longitud exacta pendiente de aprobar. }
-        otp: { type: string, writeOnly: true, description: Necesario sobre umbral solo cuando política futura lo indique. }
-    Transfer:
-      type: object
-      required: [id, status, amountMinor, currency, createdAt]
+      required: [id, name, alias, clabeMasked, destinationAccountId]
       properties:
         id: { type: string, format: uuid }
-        status: { type: string, enum: [pending, completed, rejected], description: Estados propuestos; máquina de estados pendiente. }
+        name: { type: string }
+        alias: { type: string }
+        clabeMasked: { type: string }
+        destinationAccountId: { type: string, format: uuid, writeOnly: true }
+        isFrequent: { type: boolean }
+    TransferCreateRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [sourceAccountId, destinationType, beneficiaryId, amountMinor, concept, reference]
+          properties:
+            sourceAccountId: { type: string, format: uuid }
+            destinationType: { type: string, const: beneficiary }
+            beneficiaryId: { type: string, format: uuid }
+            amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: MXN cents as decimal string. }
+            concept: { type: string, minLength: 1, maxLength: 40 }
+            reference: { type: string, pattern: '^[0-9]{1,7}$' }
+        - type: object
+          additionalProperties: false
+          required: [sourceAccountId, destinationType, destinationAccountId, amountMinor, concept, reference]
+          properties:
+            sourceAccountId: { type: string, format: uuid }
+            destinationType: { type: string, const: own_account }
+            destinationAccountId: { type: string, format: uuid }
+            amountMinor: { type: string, pattern: '^[1-9][0-9]*$', description: MXN cents as decimal string. }
+            concept: { type: string, minLength: 1, maxLength: 40 }
+            reference: { type: string, pattern: '^[0-9]{1,7}$' }
+    TransferConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: { type: string, pattern: '^[0-9]{6}$', writeOnly: true }
+    Transfer:
+      type: object
+      required: [id, status, sourceAccountId, destination, amountMinor, currency, concept, reference, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [awaiting_confirmation, processing, completed, rejected] }
+        sourceAccountId: { type: string, format: uuid }
+        destination:
+          oneOf:
+            - { $ref: '#/components/schemas/Beneficiary' }
+            - { $ref: '#/components/schemas/Account' }
         amountMinor: { type: string, pattern: '^[1-9][0-9]*$' }
         currency: { type: string, const: MXN }
+        concept: { type: string }
+        reference: { type: string }
         createdAt: { type: string, format: date-time }
-        receiptReference: { type: string, readOnly: true }
-    TransferPage:
+        completedAt: { type: [string, 'null'], format: date-time }
+        receiptReference: { type: [string, 'null'] }
+        requestId: { type: string }
+    Movement:
+      type: object
+      required: [id, type, amountMinor, currency, concept, reference, status, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        transferId: { type: string, format: uuid }
+        type: { type: string, enum: [debit, credit] }
+        amountMinor: { type: string, pattern: '^[1-9][0-9]*$' }
+        currency: { type: string, const: MXN }
+        concept: { type: string }
+        reference: { type: string }
+        status: { type: string, enum: [processing, completed, rejected] }
+        occurredAt: { type: string, format: date-time }
+    MovementPage:
       type: object
       required: [items]
       properties:
-        items: { type: array, items: { $ref: '#/components/schemas/Transfer' } }
-        nextCursor: { type: [string, 'null'], description: Cursor opaco de keyset. }
+        items: { type: array, items: { $ref: '#/components/schemas/Movement' } }
+        nextCursor: { type: [string, 'null'] }
     Problem:
       type: object
-      required: [type, title, status]
+      required: [type, title, status, instance, requestId]
       properties:
         type: { type: string, format: uri-reference }
         title: { type: string }
         status: { type: integer, minimum: 400, maximum: 599 }
-        detail: { type: string, description: Detalle no sensible y sin información interna. }
+        detail: { type: string, description: Safe user-facing message only. }
         instance: { type: string, format: uri-reference }
         requestId: { type: string }
         errors:

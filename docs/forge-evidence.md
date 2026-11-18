@@ -32,3 +32,10 @@ Después de la pasada 3, el commit documental `26fec66` añadió el findings, ma
 ## Compatibilidad observada del instalador
 
 El instalador global colocó los documentos Planner/Generator/Evaluator directamente en `skills/forge/`, no en `skills/forge/references/` como las rutas de contexto que describe el `SKILL.md`. Se inspeccionaron y cargaron los archivos en su ubicación real. No se corrigió ni modificó globalmente el skill después de la instalación.
+
+## Seguimiento de producto y revisión de Stitch (2026-11-14)
+
+- OpenCode `1.18.33` expone contextos independientes por `task`; `opencode agent list` muestra `general` y `explore`. El usuario autorizó Backend/Web/Mobile en paralelo. El inventario visual se delegó a tres contextos `general` independientes, sin escrituras, para W01–W07, W08–W14 y M01–M12; resultados consolidados en `docs/design-mapping.md`.
+- Los exports se encontraron en el árbol local como trabajo de usuario no versionado; se preservan y se versionan en la rama de implementación después de inspeccionarlos. No se ejecutó su HTML ni se copió a la UI.
+- La aprobación visual es del usuario; no hay aprobación humana de policy de producción. El usuario aprobó únicamente account-on-signup y una fixture local balanceada con cuentas propias y contra-asientos; montos de fixture y límites/OTP siguen ilustrativos.
+- El ciclo anterior BOOT-00 sigue registrado 3/3 en `docs/forge/BOOT-00-FINDINGS.md` y no se reutiliza como evaluación del producto.
