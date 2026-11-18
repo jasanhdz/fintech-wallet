@@ -1,6 +1,6 @@
 import React from 'react';
 import assert from 'node:assert/strict';
-import { ActivityIndicator, AppState } from 'react-native';
+import { ActivityIndicator, AppState, Keyboard, KeyboardAvoidingView, ScrollView } from 'react-native';
 import TestRenderer from 'react-test-renderer';
 import App from '../App';
 
@@ -40,13 +40,13 @@ describe('mobile login', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
 
     const visible = () => JSON.stringify(renderer!.toJSON());
-    assert.match(visible(), /Inicia sesión/);
-    assert.match(visible(), /exclusivamente desde el panel web/);
+    assert.match(visible(), /Iniciar sesión/);
+    assert.match(visible(), /exclusivamente desde la versión web/);
     assert.doesNotMatch(visible(), /Crear cuenta|Registrarme/);
 
     const input = renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' });
     await TestRenderer.act(async () => { input!.props.onChangeText('correo-inválido'); });
-    const submit = renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === 'Ingresar').length > 0);
+    const submit = renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === 'Iniciar sesión').length > 0);
     await TestRenderer.act(async () => { submit!.props.onPress(); });
     assert.match(visible(), /Ingresa un correo válido/);
     assert.equal(fetchSpy.mock.calls.length, 0);
@@ -84,7 +84,7 @@ describe('mobile logout', () => {
       password.props.onChangeText('a-long-password');
     });
     const findButton = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
-    await TestRenderer.act(async () => { findButton('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { findButton('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     secureStore.deleteItemAsync.mockClear();
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cerrar sesión' }).props.onPress(); });
@@ -94,7 +94,7 @@ describe('mobile logout', () => {
     assert.deepEqual(JSON.parse(String(logout[1]?.body)), { client: 'mobile', refreshToken: 'refresh-secret' });
     assert.equal((logout[1]?.headers as Record<string, string>).Authorization, 'Bearer access-secret');
     assert.equal(secureStore.deleteItemAsync.mock.calls.length, 2);
-    assert.match(JSON.stringify(renderer!.toJSON()), /Inicia sesión/);
+    assert.match(JSON.stringify(renderer!.toJSON()), /Iniciar sesión/);
     assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Ada Lovelace|access-secret|refresh-secret/);
 
     await TestRenderer.act(async () => { renderer!.unmount(); });
@@ -123,7 +123,7 @@ describe('mobile logout', () => {
       renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com');
       renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
     });
-    const login = renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === 'Ingresar').length > 0)!;
+    const login = renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === 'Iniciar sesión').length > 0)!;
     await TestRenderer.act(async () => { login.props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     secureStore.deleteItemAsync.mockClear();
@@ -131,7 +131,7 @@ describe('mobile logout', () => {
 
     assert.equal(fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/auth/logout')).length, 1);
     assert.equal(secureStore.deleteItemAsync.mock.calls.length, 2);
-    assert.match(JSON.stringify(renderer!.toJSON()), /Inicia sesión/);
+    assert.match(JSON.stringify(renderer!.toJSON()), /Iniciar sesión/);
     assert.doesNotMatch(JSON.stringify(renderer!.toJSON()), /Ada Lovelace|access-secret|refresh-secret/);
 
     await TestRenderer.act(async () => { renderer!.unmount(); });
@@ -164,7 +164,7 @@ describe('mobile beneficiary selection', () => {
       renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
     });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
@@ -224,7 +224,7 @@ describe('mobile transfer attempt', () => {
       renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
     });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     {
       const homeScreen = JSON.stringify(renderer!.toJSON());
@@ -319,7 +319,7 @@ describe('mobile transfer attempt', () => {
       renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
     });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
@@ -383,7 +383,7 @@ describe('mobile transfer attempt', () => {
         renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('a-long-password');
       });
       const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
-      await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+      await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
       await TestRenderer.act(async () => { await Promise.resolve(); });
       await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
       await TestRenderer.act(async () => { await Promise.resolve(); });
@@ -445,7 +445,7 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     assert.match(JSON.stringify(renderer!.toJSON()), /125\.00/);
     assert.match(JSON.stringify(renderer!.toJSON()), /100\.00/);
@@ -489,7 +489,7 @@ describe('mobile movement history', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const movementsTab = renderer!.root.findAll((node) => node.props.accessibilityRole === 'tab').find((node) => node.findAll((child) => child.props.children === 'Movimientos').length > 0)!;
     await TestRenderer.act(async () => { movementsTab.props.onPress(); });
@@ -543,7 +543,7 @@ describe('mobile beneficiary picker (M05)', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
@@ -586,7 +586,7 @@ describe('mobile transfer details (M06)', () => {
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     const wait = () => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await wait();
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await wait();
@@ -653,7 +653,7 @@ async function startTransferFlow(handler: FlowHandler, options: { amount: string
   const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
   const wait = (ms = 30) => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
   await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-  await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+  await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
   await wait();
   await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
   await wait();
@@ -985,7 +985,7 @@ describe('mobile login reference (M01)', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     const visible = JSON.stringify(renderer!.toJSON());
     assert.match(visible, /"¿No tienes cuenta\?"/);
-    assert.match(visible, /exclusivamente desde el panel web de Billetera MXN/);
+    assert.match(visible, /exclusivamente desde la versión web de Billetera MXN/);
     assert.match(visible, /Billetera MXN • Demostración técnica/);
     assert.doesNotMatch(visible, /SIMULAR ESTADO|Versión \d|cifrada|SPEI|Alfanumérica/);
     await TestRenderer.act(async () => { renderer!.unmount(); });
@@ -1009,7 +1009,7 @@ describe('mobile home reference (M02)', () => {
     const visible = () => JSON.stringify(renderer!.toJSON());
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const home = visible();
     assert.match(home, /"Hola, ","Ana López"/);
@@ -1047,7 +1047,7 @@ describe('mobile home reference (M02)', () => {
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const tabs = renderer!.root.findAll((node) => typeof node.props.onPress === 'function' && /^(Cuenta principal|Ahorro) •• /.test(node.props.accessibilityLabel ?? ''));
     assert.deepEqual(tabs.map((tab) => tab.props.accessibilityLabel), ['Cuenta principal •• 0618', 'Ahorro •• 5931'], 'principal tab comes first');
@@ -1093,7 +1093,7 @@ async function loginWith(handler: FlowHandler) {
   const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
   const wait = (ms = 30) => TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
   await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
-  await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+  await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
   await wait();
   const finish = async () => { await TestRenderer.act(async () => { renderer!.unmount(); }); delete (global as { fetch?: typeof fetch }).fetch; };
   return { renderer: renderer!, visible, button, wait, calls, finish };
@@ -1528,5 +1528,83 @@ describe('round 6 · G (F-10): leaving the code step cancels the pending attempt
     assert.match(flow.visible(), /"Transferencia completada"/);
     assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
     await flow.finish();
+  });
+});
+
+describe('round 6 · I: keyboard never hides the primary action', () => {
+  const insideScroll = (renderer: TestRenderer.ReactTestRenderer, title: string) => renderer.root.findAllByType(ScrollView).some((scroll) => scroll.findAll((node) => String(node.type).includes('Text') && node.props.children === title).length > 0);
+
+  it('M06 and M08 keep Continuar / Autorizar outside the scroll view inside a KeyboardAvoidingView, and a tap outside closes the keyboard', async () => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ ...flowTransfer(), demoOnlyCode: '123456' }, { status: 202 });
+      return undefined;
+    }, { amount: '6000' });
+    await TestRenderer.act(async () => { flow.button('Modificar datos').props.onPress(); });
+    const avoiding = flow.renderer.root.findAllByType(KeyboardAvoidingView);
+    assert.equal(avoiding.length, 1);
+    assert.equal(insideScroll(flow.renderer, 'Continuar'), false, 'M06 Continuar is in the footer above the keyboard');
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    const area = flow.renderer.root.findAll((node) => node.props.testID === 'dismiss-keyboard' && typeof node.props.onResponderRelease === 'function')[0]!;
+    await TestRenderer.act(async () => { area.props.onResponderRelease(); });
+    assert.equal(dismiss.mock.calls.length, 1);
+    dismiss.mockRestore();
+    await TestRenderer.act(async () => { flow.button('Continuar').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.ok(flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }));
+    assert.equal(insideScroll(flow.renderer, 'Autorizar transferencia'), false, 'M08 Autorizar is anchored above the keyboard');
+    assert.equal(insideScroll(flow.renderer, 'Cancelar y volver a revisar'), false);
+    await flow.finish();
+  });
+
+  it('M01 sits in a KeyboardAvoidingView with a scrollable form and closes the keyboard on outside taps', async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    assert.equal(renderer!.root.findAllByType(KeyboardAvoidingView).length, 1);
+    assert.equal(renderer!.root.findAllByType(ScrollView)[0]!.props.keyboardShouldPersistTaps, 'handled');
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
+    await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.testID === 'dismiss-keyboard' && typeof node.props.onResponderRelease === 'function')[0]!.props.onResponderRelease(); });
+    assert.equal(dismiss.mock.calls.length, 1);
+    dismiss.mockRestore();
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+  });
+});
+
+describe('round 6 · M01/M12 states', () => {
+  it.each([
+    [401, { title: 'Unauthorized', detail: 'Credenciales inválidas.' }, /Credenciales no válidas/],
+    [429, { title: 'Too Many Requests', detail: 'Demasiados intentos. Intenta más tarde.' }, /Acceso bloqueado temporalmente/],
+  ])('login %s shows the matching M01 error card', async (status, body, title) => {
+    const fetchSpy = jest.fn(async () => Response.json(body, { status }));
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('x'); });
+    const submit = renderer!.root.findAll((node) => node.props.accessibilityRole === 'button' && node.findAll((child) => child.props.children === 'Iniciar sesión').length > 0)[0]!;
+    await TestRenderer.act(async () => { submit.props.onPress(); });
+    assert.match(JSON.stringify(renderer!.toJSON()), title);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+
+  it('a revoked session returns to login with the "sesión ha expirado" notice (M12 variant)', async () => {
+    mockSecureValues.set('wallet.refresh-token', 'refresh');
+    let refreshes = 0;
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/refresh')) { refreshes += 1; return refreshes === 1 ? Response.json({ accessToken: 'access', refreshToken: 'refresh-2', tokenType: 'Bearer', expiresIn: 300, user: { id: 'exp-user', fullName: 'Ana López', email: 'ana@example.com' } }) : Response.json({ title: 'Unauthorized', status: 401 }, { status: 401 }); }
+      if (url.endsWith('/accounts')) return Response.json({ title: 'Unauthorized', status: 401 }, { status: 401 });
+      if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
+      return Response.json({ title: 'Unauthorized', status: 401 }, { status: 401 });
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 80)); });
+    const screen = JSON.stringify(renderer!.toJSON());
+    assert.match(screen, /Tu sesión ha expirado/);
+    assert.match(screen, /Iniciar sesión/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
   });
 });
