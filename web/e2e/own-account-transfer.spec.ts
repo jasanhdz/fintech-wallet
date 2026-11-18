@@ -96,6 +96,11 @@ test('registers with the development fixture and transfers between own accounts'
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await capture(page, 'W03-cuentas-own');
   await captureAfterScrollIfOutsideViewport(page, page.getByRole('region', { name: 'Actividad reciente' }), 'W03-actividad-reciente-own');
+  // F-03: tablet-width coverage (~768px) alongside the existing mobile/desktop viewports for the accounts/history journey.
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+  await capture(page, 'W03-cuentas-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await expect(page.locator('.app-rail')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1440);
@@ -110,6 +115,9 @@ test('registers with the development fixture and transfers between own accounts'
   await expect(page.getByRole('heading', { name: 'Movimientos', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Sin movimientos' })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W04-historial-vacio-own');
+  await page.setViewportSize({ width: 768, height: 1024 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
   await capture(page, 'W04-historial-vacio-own');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W04-historial-vacio-own');
