@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { SessionProvider } from '../src/session.js';
 import { NewTransferPage } from '../src/transfers.js';
+import { activateTransferUser, clearAllTransferDrafts, readTransferDraft, saveTransferDraft } from '../src/transfer-attempt.js';
 import { JSDOM } from 'jsdom';
 
 const sourceAccountId = '00000000-0000-4000-8000-000000000001';
@@ -45,6 +46,20 @@ test('create retries forward identical payload and idempotency key', async () =>
       assert.equal(call.init?.body, body);
     }
   } finally { globalThis.fetch = originalFetch; }
+});
+
+test('transfer recovery is session-persisted, exact, and isolated when the user changes', () => {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost' });
+  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: dom.window.sessionStorage });
+  const draft = { key: 'attempt-key', body: { amountMinor: '2500', concept: 'Pago' }, transferId: 'transfer-id' };
+  activateTransferUser('user-a');
+  saveTransferDraft('user-a', draft);
+  assert.deepEqual(readTransferDraft('user-a'), draft);
+  assert.equal(readTransferDraft('user-b'), null);
+  activateTransferUser('user-b');
+  assert.equal(readTransferDraft('user-a'), null);
+  clearAllTransferDrafts();
+  dom.window.close();
 });
 
 test('transfer UI renders contract-backed destination choices with accessible labels', async () => {

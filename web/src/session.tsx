@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { refreshSession, setAccessToken, setSessionExpiredHandler, type User } from './api.js';
+import { activateTransferUser, clearAllTransferDrafts, forgetTransferUser } from './transfer-attempt.js';
 
 type Session = { accessToken: string; user: User };
 type SessionContextValue = { session: Session | null; hydrated: boolean; start: (accessToken: string, user: User) => void; end: () => void };
@@ -13,6 +14,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSessionExpiredHandler(() => { if (active) { setAccessToken(undefined); setSession(null); } });
     refreshSession().then((result) => {
       if (active) {
+        if (result) activateTransferUser(result.user.id);
         setAccessToken(result?.accessToken);
         setSession(result ? { accessToken: result.accessToken, user: result.user } : null);
       }
@@ -26,8 +28,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     session,
     hydrated,
-    start: (token: string, user: User) => { setAccessToken(token); setSession({ accessToken: token, user }); },
-    end: () => { setAccessToken(undefined); setSession(null); },
+    start: (token: string, user: User) => { activateTransferUser(user.id); setAccessToken(token); setSession({ accessToken: token, user }); },
+    end: () => { clearAllTransferDrafts(); forgetTransferUser(); setAccessToken(undefined); setSession(null); },
   }), [session, hydrated]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

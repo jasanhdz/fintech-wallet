@@ -40,6 +40,7 @@ export function createApp() {
   const db = dataSource();
   const api = express.Router();
   const limiter = rateLimit({ windowMs: 60_000, limit: 10, standardHeaders: true, legacyHeaders: false, handler: (_req, res) => problem(res, 429, 'Too Many Requests', 'Intenta de nuevo más tarde.') });
+  const refreshLimiter = rateLimit({ windowMs: 60_000, limit: 10, standardHeaders: true, legacyHeaders: false, handler: (_req, res) => problem(res, 429, 'Too Many Requests', 'Intenta de nuevo más tarde.') });
   const jwtKey = () => new TextEncoder().encode(process.env.JWT_ACCESS_SECRET ?? '');
   const issueAccess = async (user: User) => new SignJWT({ email: user.email }).setProtectedHeader({ alg: 'HS256' }).setSubject(user.id).setIssuedAt().setExpirationTime('10m').sign(jwtKey());
   const csrfGuard = (req: Request, res: Response, next: (error?: unknown) => void) => {
@@ -82,7 +83,7 @@ export function createApp() {
     if(parsed.data.client==='web'&&!csrfValid(req,webOrigin)) return problem(res,403,'Forbidden','Token CSRF u origen inválido.');
     try { const rows=await db.query('SELECT id,email,full_name,password_hash FROM users WHERE email=$1',[parsed.data.email.trim().toLowerCase()]); const user=rows[0] as User|undefined; const passwordMatches=await compare(parsed.data.password,user?.password_hash??await dummyPasswordHash); if(!user||!passwordMatches) return problem(res,401,'Unauthorized','Credenciales inválidas.'); const runner=db.createQueryRunner(); await runner.connect(); await runner.startTransaction(); try {const body=await createSession(runner,user,parsed.data.client,res); await runner.commitTransaction(); res.json(body);}catch(error){await runner.rollbackTransaction();throw error;}finally{await runner.release();} } catch(error) { next(error); }
   });
-  api.post('/auth/refresh',limiter,async(req,res,next)=>{
+  api.post('/auth/refresh',refreshLimiter,async(req,res,next)=>{
     const client:Client=req.body?.client==='mobile'?'mobile':'web';
      if(client==='web'&&!csrfValid(req,webOrigin)) return problem(res,403,'Forbidden','Token CSRF u origen inválido.');
     const refresh=client==='mobile'?req.body?.refreshToken:req.cookies[cookieName]; if(typeof refresh!=='string') { if(client==='web'&&!req.cookies[cookieName]) return res.status(204).end(); return problem(res,401,'Unauthorized','Sesión inválida.'); }

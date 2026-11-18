@@ -10,6 +10,7 @@ const action = process.argv[2];
 if (action !== 'migrate' && action !== 'migrate:test' && action !== 'seed') throw new Error('Expected migrate, migrate:test or seed');
 if (action === 'seed') {
   if (process.env.APP_ENV !== 'development') throw new Error('Manual demo profile requires APP_ENV=development');
+  if (process.env.DEMO_FIXTURE_ENABLED !== 'true') throw new Error('Manual demo profile requires DEMO_FIXTURE_ENABLED=true');
   const seedUrl = process.env.MIGRATOR_DATABASE_URL;
   if (!seedUrl) throw new Error('MIGRATOR_DATABASE_URL is required');
   const target = new URL(seedUrl);

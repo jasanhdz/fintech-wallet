@@ -1,18 +1,31 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatMxnFromMinor, mxnInputSchema, parseMxnToMinor, transferConfirmRequestSchema, transferCreateRequestSchema } from '@fintech-wallet/shared';
 import { ApiError, request, requestTransfer, type Account } from './api.js';
 import { AppShell, Notice, StatePanel } from './components.js';
 import { useSession } from './session.js';
+import { clearTransferDraft, readTransferDraft, saveTransferDraft, type TransferDraft } from './transfer-attempt.js';
 
 type Beneficiary = { id: string; name: string; alias: string; clabeMasked: string; destinationAccountId: string };
 type Transfer = { id: string; status: 'awaiting_confirmation' | 'processing' | 'completed' | 'rejected'; sourceAccountId: string; destination: Beneficiary | Account; amountMinor: string; currency: 'MXN'; concept: string; reference: string; createdAt: string; completedAt?: string | null; receiptReference?: string | null; demoOnlyCode?: string };
-type Draft = { body: Record<string, string>; key: string };
-// Never persisted: retaining this in memory enables an exact retry while this page stays alive.
-const attempts = new Map<string, Draft>();
 const confirmationAttempts = new Map<string, { code: string; key: string }>();
+const recoveryFlights = new Map<string, Promise<Transfer>>();
 const createKey = () => crypto.randomUUID();
+
+function recoverTransferDraft(userId: string, draft: TransferDraft): Promise<Transfer> {
+  const flightKey = `${userId}:${draft.key}`;
+  const inFlight = recoveryFlights.get(flightKey);
+  if (inFlight) return inFlight;
+  const recovery = (async () => {
+    if (draft.transferId) return request<Transfer>(`/transfers/${draft.transferId}`);
+    const transfer = await requestTransfer<Transfer>('/transfers', draft.key, { method: 'POST', body: JSON.stringify(draft.body) });
+    saveTransferDraft(userId, { ...draft, transferId: transfer.id });
+    return transfer;
+  })().finally(() => recoveryFlights.delete(flightKey));
+  recoveryFlights.set(flightKey, recovery);
+  return recovery;
+}
 
 function errorText(error: unknown) {
   if (error instanceof ApiError) {
@@ -35,8 +48,29 @@ export function NewTransferPage() {
   const submitLock = useRef(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [recovering, setRecovering] = useState(false);
+  useEffect(() => {
+    if (!hydrated || !session) return;
+    const draft = readTransferDraft(session.user.id);
+    if (!draft) return;
+    let active = true;
+    setRecovering(true);
+    void (async () => {
+      try {
+        const transfer = await recoverTransferDraft(session.user.id, draft);
+        if (active) navigate(`/transfers/${transfer.id}/status`, { replace: true, state: { transfer } });
+      } catch (cause) {
+        if (active && !(cause instanceof ApiError && cause.problem.status === 401)) {
+          setError(`Estamos recuperando el mismo intento. No inicies otra transferencia. ${errorText(cause)}`);
+        }
+      } finally { if (active) setRecovering(false); }
+    })();
+    return () => { active = false; };
+  }, [hydrated, session, navigate]);
   if (!hydrated) return <AppShell><StatePanel title="Cargando tu sesión">Estamos verificando tu acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: '/transfers/new' }} />;
+  if (recovering) return <AppShell active="transfers"><StatePanel title="Recuperando tu transferencia">Consultando el intento anterior con la misma clave. No inicies otro envío.</StatePanel></AppShell>;
+  const currentUserId = session.user.id;
   const ownAccounts = accounts.data?.items ?? [];
   const recipients = beneficiaries.data?.items ?? [];
   const accountsError = accounts.error;
@@ -58,17 +92,21 @@ export function NewTransferPage() {
     if (!parsed.success) { setError(parsed.error.issues.map((issue) => issue.message).join(' ')); submitLock.current = false; setBusy(false); return; }
     if (body.destinationType === 'own_account' && body.destinationAccountId === sourceAccountId) { setError('Elige una cuenta de destino distinta a la cuenta de origen.'); submitLock.current = false; setBusy(false); return; }
     const serialized = JSON.stringify(parsed.data);
-    const prior = attempts.get('uncertain');
-    const draft: Draft = prior && JSON.stringify(prior.body) === serialized ? prior : { body: parsed.data as unknown as Record<string, string>, key: createKey() };
+    const prior = readTransferDraft(currentUserId);
+    if (prior && JSON.stringify(prior.body) !== serialized) { setError('Hay un intento anterior pendiente de recuperar. Reintenta sus mismos datos; no se enviará una transferencia nueva.'); submitLock.current = false; setBusy(false); return; }
+    const draft: TransferDraft = prior && JSON.stringify(prior.body) === serialized ? prior : { body: parsed.data as unknown as Record<string, string>, key: createKey() };
+    saveTransferDraft(currentUserId, draft);
     try {
       const result = await requestTransfer<Transfer>('/transfers', draft.key, { method: 'POST', body: JSON.stringify(draft.body) });
-      attempts.delete('uncertain');
-      attempts.set(result.id, draft);
+      saveTransferDraft(currentUserId, { ...draft, transferId: result.id });
       navigate(`/transfers/${result.id}/status`, { state: { transfer: result } });
     } catch (cause) {
       // Keep exact key+payload for an explicit retry; never silently mint a second attempt.
-      attempts.set('uncertain', draft);
-      setError(`No conocemos el resultado del envío. Reintenta con la misma clave y los mismos datos. ${errorText(cause)}`);
+      const definitivelyRejected = cause instanceof ApiError && [422, 429].includes(cause.problem.status);
+      if (definitivelyRejected) clearTransferDraft(currentUserId);
+      setError(definitivelyRejected
+        ? `${errorText(cause)} Puedes corregir los datos y crear un nuevo intento.`
+        : `No conocemos el resultado del envío. Reintenta con la misma clave y los mismos datos. ${errorText(cause)}`);
     } finally { submitLock.current = false; setBusy(false); }
   }
 
@@ -96,8 +134,12 @@ export function TransferStatusPage() {
   const status = useQuery({ queryKey: ['transfer', transferId], queryFn: () => request<Transfer>(`/transfers/${transferId}`), enabled: Boolean(transferId), initialData: initial, refetchInterval: (query) => query.state.data?.status === 'processing' ? 1500 : false });
   const [code, setCode] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   const submitLock = useRef(false);
+  useEffect(() => {
+    if (session && (status.data?.status === 'completed' || status.data?.status === 'rejected')) clearTransferDraft(session.user.id);
+  }, [session, status.data]);
   if (!hydrated) return <AppShell active="transfers"><StatePanel title="Cargando tu sesión">Verificando acceso.</StatePanel></AppShell>;
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  const currentUserId = session.user.id;
   if (!status.data && status.isPending) return <AppShell active="transfers"><StatePanel title="Consultando transferencia">Recuperando el estado real del intento.</StatePanel></AppShell>;
   if (!status.data && status.error) return <AppShell active="transfers"><StatePanel title="No pudimos consultar el intento" action={<button className="secondary-button" onClick={() => void status.refetch()}>Consultar de nuevo</button>}>{errorText(status.error)}</StatePanel></AppShell>;
   const transfer = status.data;
@@ -113,11 +155,11 @@ export function TransferStatusPage() {
     finally { submitLock.current = false; setBusy(false); }
   }
   function statusClientUpdate(next: Transfer) { queryClient.setQueryData(['transfer', next.id], next); navigate(`/transfers/${next.id}/status`, { replace: true, state: { transfer: next } }); }
-  const retry = attempts.get(transferId) ?? attempts.get('uncertain');
+  const retry = readTransferDraft(currentUserId);
   async function retryCreate() {
     if (!retry) { void status.refetch(); return; }
     setBusy(true); setError('');
-    try { const result = await requestTransfer<Transfer>('/transfers', retry.key, { method: 'POST', body: JSON.stringify(retry.body) }); attempts.delete('uncertain'); attempts.set(result.id, retry); void status.refetch(); }
+    try { const result = await requestTransfer<Transfer>('/transfers', retry.key, { method: 'POST', body: JSON.stringify(retry.body) }); saveTransferDraft(currentUserId, { ...retry, transferId: result.id }); void status.refetch(); }
     catch (cause) { setError(errorText(cause)); }
     finally { setBusy(false); }
   }

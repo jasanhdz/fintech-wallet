@@ -38,6 +38,7 @@ test('registers with the development fixture and transfers between own accounts'
   const password = `Local-test-${crypto.randomUUID()}-Aa1`;
   let accountIds: string[] = [];
   let fundedAccounts: string[] = [];
+  const balancesByAccount = new Map<string, string>();
   let beneficiaryCount = -1;
   let demoOnlyCode: string | undefined;
   let transferStatus: string | undefined;
@@ -55,6 +56,7 @@ test('registers with the development fixture and transfers between own accounts'
     try {
       const data = await response.json() as { items: Array<{ id: string; clabe: string; availableBalanceMinor: string }> };
       accountIds = data.items.map((account) => account.id);
+      for (const account of data.items) balancesByAccount.set(account.id, account.availableBalanceMinor);
       fundedAccounts = data.items.filter((account) => BigInt(account.availableBalanceMinor) >= 1n).map((account) => account.id);
     } catch { /* Ignore unrelated/non-JSON responses. */ }
   });
@@ -126,6 +128,23 @@ test('registers with the development fixture and transfers between own accounts'
   expect(destinationId).toBeTruthy();
   await page.getByLabel('Cuenta de origen').selectOption(sourceId);
   await page.getByLabel('Cuenta de destino').selectOption(destinationId!);
+  const rejectedAmountMinor = BigInt(balancesByAccount.get(sourceId) ?? '0') + 1n;
+  const rejectedAmountInput = `${rejectedAmountMinor / 100n}.${(rejectedAmountMinor % 100n).toString().padStart(2, '0')}`;
+  if (BigInt(process.env.OTP_THRESHOLD_MINOR ?? '0') > rejectedAmountMinor) {
+    await page.getByLabel('Importe en MXN').fill(rejectedAmountInput);
+    await page.getByLabel('Concepto').fill('Rechazo sin débito E2E');
+    await page.getByLabel('Referencia numérica').fill('204200');
+    await page.getByRole('button', { name: /Continuar a revisión/ }).click();
+    await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+    await expect(page.getByRole('alert')).toContainText(/no se realizó ningún débito/i);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await capture(page, 'W13-rechazo-sin-debito-own');
+    await page.setViewportSize({ width: 1440, height: 960 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await capture(page, 'W13-rechazo-sin-debito-own');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole('button', { name: 'Editar' }).click();
+  }
   await page.getByLabel('Importe en MXN').fill('0.01');
   await page.getByLabel('Concepto').fill('Transferencia propia E2E');
   await page.getByLabel('Referencia numérica').fill('204201');

@@ -1,4 +1,6 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { Client } from 'pg';
+import { assertSafeTestDatabase } from '../../api/src/db/test-database-guard.js';
 
 async function capture(page: import('@playwright/test').Page, name: string, fullPage = false) {
   await page.screenshot({
@@ -53,6 +55,10 @@ test('login and registration screens render responsively without browser errors 
   await page.setViewportSize({ width: 1440, height: 960 });
   await expect(page.locator('.auth-side')).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
+  await capture(page, 'W02-registro');
+  await page.getByRole('link', { name: 'Inicia sesión' }).click();
+  await expect(page.getByRole('heading', { name: 'Qué gusto verte.' })).toBeVisible();
+  await capture(page, 'W01-login');
   expect(consoleErrors).toEqual([]);
 });
 
@@ -80,6 +86,19 @@ test('an expired authenticated session shows the real session-expired screen res
   await capture(page, 'W14-session-expired');
   await page.setViewportSize({ width: 1440, height: 960 });
   await capture(page, 'W14-session-expired');
+  await page.goto('/access-denied');
+  await expect(page.getByRole('heading', { name: 'Acceso no disponible' })).toBeVisible();
+  await expect(page.getByText('No tienes permiso para consultar esta sección o el enlace no es válido.')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W14-access-denied');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.getByRole('link', { name: /Volver al inicio/ })).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'Billetera, inicio' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: /Volver al inicio/ })).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W14-access-denied');
 });
 
 test('registers, logs in and reads only accounts returned by the API', async ({ page }) => {
@@ -116,7 +135,7 @@ test('registers, logs in and reads only accounts returned by the API', async ({ 
   await expect(page.getByRole('region', { name: 'Tus cuentas' })).toBeVisible({ timeout: 15_000 });
   // A real backend session is restored from its HttpOnly cookie after reload.
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-  expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual([]);
+  expect(await page.evaluate(() => Object.keys(sessionStorage))).toEqual(['wallet:web:active-user']);
 });
 
 test('registers a real internal beneficiary and displays only a masked CLABE', async ({ page }) => {
@@ -204,10 +223,12 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
 test('retries an uncertain real transfer with identical idempotency key and shows one receipt', async ({ page }) => {
   const browserErrors: string[] = [];
   page.on('console', (message) => {
-    // The deliberately aborted first transfer attempt emits this browser diagnostic by design.
-    if (message.type() === 'error' && message.text() !== 'Failed to load resource: net::ERR_FAILED') browserErrors.push(message.text());
+    // The deliberately aborted POST and unauthenticated bootstrap probes are expected browser diagnostics.
+    if (message.type() === 'error' && message.text() !== 'Failed to load resource: net::ERR_FAILED' && !/status of 401 \(Unauthorized\)/.test(message.text())) browserErrors.push(message.text());
   });
   page.on('pageerror', (error) => browserErrors.push(error.message));
+  const emptyRefreshProbe = (route: import('@playwright/test').Route) => route.fulfill({ status: 204 });
+  await page.route('**/auth/refresh', emptyRefreshProbe);
   await page.setViewportSize({ width: 390, height: 844 });
   const overflowPages: string[] = [];
   const expectNoHorizontalOverflow = async () => {
@@ -328,8 +349,19 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.evaluate(() => window.scrollTo(0, 0));
   await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 390, height: 844 });
-  // The reviewed form remains available after an uncertain response; resubmitting its unchanged fields retries the cached draft.
-  await page.getByRole('button', { name: /Enviar transferencia/ }).click();
+  // A full reload must recover the exact persisted attempt; the first POST was committed server-side.
+  expect((await page.context().cookies()).some((cookie) => cookie.name === 'wallet_refresh')).toBeTruthy();
+  await page.unroute('**/auth/refresh', emptyRefreshProbe);
+  await page.reload();
+  await expect(page).toHaveURL(/\/(?:login|transfers\/new)$/);
+  if (new URL(page.url()).pathname === '/login') {
+    await page.getByLabel('Correo electrónico').fill(ownerEmail);
+    await page.getByLabel('Contraseña').fill(ownerPassword);
+    await page.getByRole('button', { name: /Iniciar sesión/ }).click();
+    await expect(page).toHaveURL(/\/accounts$/);
+    await page.goto('/transfers/new');
+  }
+  await expect(page).toHaveURL(/\/transfers\/[^/]+\/status$/, { timeout: 15_000 });
   await expect.poll(() => observed.length).toBe(2);
   expect(observed[0].key).toBeTruthy();
   expect(observed[1].key).toBe(observed[0].key);
@@ -363,6 +395,19 @@ test('retries an uncertain real transfer with identical idempotency key and show
 
   const transferId = observed[1].transferId;
   expect(sourceAccountId).toBeTruthy();
+  const databaseUrl = assertSafeTestDatabase(process.env.E2E_DATABASE_URL ?? process.env.TEST_DATABASE_URL, process.env.DATABASE_URL).toString();
+  const database = new Client({ connectionString: databaseUrl });
+  await database.connect();
+  try {
+    const ledger = await database.query<{ transfer_count: string; posting_count: string; net: string; amount: string; statuses: string }>(
+      `SELECT count(DISTINCT t.id)::text AS transfer_count, count(le.id)::text AS posting_count,
+        COALESCE(sum(le.signed_amount_minor), 0)::text AS net, max(t.amount_minor)::text AS amount,
+        string_agg(DISTINCT t.status, ',') AS statuses
+       FROM transfers t LEFT JOIN ledger_transactions lt ON lt.reference_type='transfer' AND lt.reference_id=t.id
+       LEFT JOIN ledger_entries le ON le.ledger_transaction_id=lt.id WHERE t.id=$1`, [transferId],
+    );
+    expect(ledger.rows[0]).toMatchObject({ transfer_count: '1', posting_count: '2', net: '0', amount: '1', statuses: 'completed' });
+  } finally { await database.end(); }
   await page.getByRole('link', { name: 'Volver a mis cuentas', exact: true }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   await page.locator(`.account-history-link[href="/accounts/${sourceAccountId}/movements"]`).click();

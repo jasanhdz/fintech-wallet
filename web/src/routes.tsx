@@ -3,7 +3,7 @@ import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { loginRequestSchema, registerRequestSchema, formatMxnFromMinor } from '@fintech-wallet/shared';
 import { ApiError, getCsrf, request, type Account, type AuthResponse, type Problem } from './api.js';
-import { AppShell, AuthLayout, Field, Notice, StatePanel } from './components.js';
+import { AppShell, AuthLayout, Brand, Field, Notice, StatePanel } from './components.js';
 import { useSession } from './session.js';
 
 type RecentMovement = { id: string; type: 'debit' | 'credit'; amountMinor: string; concept: string; occurredAt: string; status: 'processing' | 'completed' | 'rejected' };
@@ -90,6 +90,6 @@ export function AccountsPage() {
 
 export function SessionExpiredPage() { return <AuthLayout title="Tu sesión terminó." subtitle="Vuelve a iniciar sesión para consultar tus cuentas."><Notice tone="info">Por seguridad, necesitas autenticarte de nuevo.</Notice><Link className="primary-button full button-link" to="/login">Ir a iniciar sesión <span aria-hidden="true">→</span></Link></AuthLayout>; }
 
-export function AccessDeniedPage() { return <AppShell><StatePanel title="Acceso no autorizado" action={<Link className="secondary-button button-link" to="/accounts">Volver a mis cuentas</Link>}>No tienes permiso para ver este contenido.</StatePanel></AppShell>; }
+export function AccessDeniedPage() { return <main className="access-denied-page"><Brand /><section className="access-denied-card"><div className="state-icon" aria-hidden="true">🔒</div><h1>Acceso no disponible</h1><p>No tienes permiso para consultar esta sección o el enlace no es válido.</p><Link className="primary-button button-link" to="/accounts">← Volver al inicio</Link></section></main>; }
 
 export function NotFoundPage() { return <main className="not-found"><h1>Página no encontrada</h1><p>La dirección puede haber cambiado o no estar disponible.</p><Link to="/accounts">Ir a mis cuentas</Link></main>; }
