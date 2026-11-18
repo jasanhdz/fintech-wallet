@@ -1188,3 +1188,90 @@ describe('round 6 · F: one money format everywhere', () => {
     }
   });
 });
+
+describe('round 6 · E: sending, verifying, completed, rejected, expired and cancelled are distinct', () => {
+  it('a normal request in flight is "Enviando" with neutral copy, never the uncertain-result screen', async () => {
+    let release: (response: Response) => void = () => undefined;
+    const done = flowTransfer({ id: 'tr-10', status: 'completed', amountMinor: '1000', completedAt: '2026-11-13T20:32:00.000Z' });
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return new Promise<Response>((resolve) => { release = resolve; });
+      if (url.endsWith('/transfers/tr-10')) return Response.json(done);
+      return undefined;
+    }, { amount: '10' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    const sending = flow.visible();
+    assert.match(sending, /Enviando transferencia…/);
+    assert.doesNotMatch(sending, /Verificando|Consultando operación|Protección contra duplicados|No intentes enviar|No pudimos confirmar|intacto/);
+    await TestRenderer.act(async () => { release(Response.json(done, { status: 201 })); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    await flow.finish();
+  });
+
+  it('only a lost response turns into "Verificando resultado" and the retry reuses the same key', async () => {
+    const keys: string[] = [];
+    let attempts = 0;
+    let release: (response: Response) => void = () => undefined;
+    const done = flowTransfer({ id: 'tr-11', status: 'completed', amountMinor: '1000', completedAt: '2026-11-13T20:32:00.000Z' });
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') {
+        keys.push((init.headers as Record<string, string>)['Idempotency-Key']!);
+        attempts += 1;
+        if (attempts === 1) throw new Error('network lost');
+        return new Promise<Response>((resolve) => { release = resolve; });
+      }
+      if (url.endsWith('/transfers/tr-11')) return Response.json(done);
+      return undefined;
+    }, { amount: '10' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /Estamos verificando si tu transferencia se completó/);
+    await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    // Loading button renders an ActivityIndicator; the title says what is happening to the same attempt.
+    assert.match(flow.visible(), /Verificando resultado…/);
+    await TestRenderer.act(async () => { release(Response.json(done, { status: 201 })); });
+    await flow.wait();
+    assert.equal(keys.length, 2);
+    assert.equal(keys[0], keys[1]);
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    await flow.finish();
+  });
+
+  it.each([
+    ['expired', /El código de esta operación expiró/],
+    ['cancelled', /Operación cancelada/],
+  ])('an API status "%s" shows a closed attempt without postings, never the receipt', async (status, title) => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json(flowTransfer({ id: 'tr-closed', status, amountMinor: '600000' }), { status: 200 });
+      return undefined;
+    }, { amount: '6000' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    const screen = flow.visible();
+    assert.match(screen, title);
+    assert.match(screen, /No se movió dinero/);
+    assert.doesNotMatch(screen, /Transferencia completada|Confirmada y aplicada|Nuevo saldo/);
+    assert.equal(mockSecureValues.get('wallet.transfer-recovery'), undefined, 'a terminal attempt leaves no recovery record');
+    await flow.finish();
+  });
+
+  it('checking an uncertain attempt that the server expired goes to the closed screen', async () => {
+    mockSecureValues.set('wallet.refresh-token', 'refresh');
+    mockSecureValues.set('wallet.transfer-recovery', JSON.stringify({ key: 'key-1', payload: { sourceAccountId: 'source-1', destinationType: 'beneficiary', beneficiaryId: 'beneficiary-1', amountMinor: '600000', concept: 'Comida', reference: '131126' }, transferId: 'tr-exp' }));
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/refresh')) return Response.json({ accessToken: 'access', refreshToken: 'refresh-2', tokenType: 'Bearer', expiresIn: 300, user: { id: 'restart-user', fullName: 'Ana López', email: 'ana@example.com' } });
+      if (url.endsWith('/transfers/tr-exp')) return Response.json(flowTransfer({ id: 'tr-exp', status: 'expired' }));
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /El código de esta operación expiró/);
+    assert.equal(mockSecureValues.get('wallet.transfer-recovery'), undefined);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
