@@ -1,0 +1,73 @@
+
+===== S1b: respuesta perdida antes de aplicarse; revisar Movimientos y descartar =====
+DB after lost-before + 2 foreground returns with network back: (none) | creates without tap 0
+PASS F-27: nothing created or debited without a tap
+SHOT S1b-movimientos-revisados minFont=12 scrollW=390 offscreen=0 errs=1
+Movimientos shows a -$300.25 charge: false
+SHOT S1b-dialogo-descartar minFont=12 scrollW=390 offscreen=0 errs=1
+PASS confirmation dialog with the warning
+dialog role: 1 aria-modal: 1
+PASS Conservar keeps the record and the notice
+SHOT S1b-descartado minFont=12 scrollW=390 offscreen=0 errs=1
+PASS discarded: note on Home and no record left
+new transfer after discard: receipt true | DB completed:12000 | 2 rows sum 0 | debit 12000
+PASS exactly one transfer and one debit after the discard
+
+===== S2 (E4): 409 "en curso" en el reintento =====
+SHOT S2-E4-409-sigue-en-M09 minFont=12 scrollW=390 offscreen=0 errs=2
+PASS retry 409 stays on M09 (uncertain), never M11
+PASS record kept byte-identical
+AUDIT S2 Home tras 409: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 4200","Ahorro •• 7559"," Verificar estado de la transferencia"," Descartar este intento","Última actualización de saldo, Actualiza","Traspaso a Cuenta de ahorro demo, •• 755","Ver los últimos 20 movimientos "]
+PASS Home offers no second attempt
+resolved: receipt true | keys ["9b5449cd","9b5449cd","9b5449cd"] | DB completed:30025 | 2 rows sum 0 | debit 30025
+PASS E4: 1 transfer, 1 debit
+
+===== S3: GET 404 real del transferId guardado =====
+SHOT S3-404-liberado minFont=12 scrollW=390 offscreen=0 errs=1
+requests: ["GET /transfers/101e key=-"]
+PASS released with a clear note; no record left
+PASS releasing sends nothing
+new transfer: DB completed:10000 | debit 10000
+PASS exactly one transfer after the release
+
+===== S3b: repetición con 404 real "Beneficiario no encontrado" =====
+AUDIT S3b Home tras reinicio: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 0598","Ahorro •• 4250"," Verificar estado de la transferencia"," Descartar este intento","Última actualización de saldo, Actualiza"]
+PASS F-27: restart + foreground send no create
+SHOT S3b-404-beneficiario-M11 minFont=12 scrollW=390 offscreen=0 errs=1
+after tap: creates 1 | M11 true | reason true | record left 0
+PASS definitive 404 on the replay releases the record
+AUDIT S3b Home tras liberar: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 0598","Ahorro •• 4250","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+PASS flow enabled again
+DB (none)
+
+===== S4: registro corrupto =====
+AUDIT S4 Home: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 9895","Ahorro •• 0320"," Descartar este intento","Última actualización de saldo, Actualiza"]
+SHOT S4-registro-danado minFont=12 scrollW=390 offscreen=0 errs=0
+PASS plain-words notice, no parser text, no new-transfer entry
+PASS discarded
+DB completed:10000
+PASS one transfer after the discard
+
+===== S5: SecureStore ilegible =====
+SHOT S5-confirmar-ilegible minFont=12 scrollW=390 offscreen=0 errs=0
+PASS guard fails closed: message and 0 POST
+AUDIT S5 Home ilegible: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 7484","Ahorro •• 6255"," Reintentar comprobación"," Descartar este intento","Última actualización de saldo, Actualiza"]
+SHOT S5-inicio-ilegible minFont=12 scrollW=390 offscreen=0 errs=0
+PASS Home explains it and blocks new transfers
+SHOT S5-descartar-fallido minFont=12 scrollW=390 offscreen=0 errs=0
+PASS discard failure is reported, no fake success
+store readable again -> Home buttons: ["Cerrar sesión","Cuenta principal •• 7484","Ahorro •• 6255","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualizado hoy, 19"]
+PASS store readable again: flow available (no record existed)
+DB (none)
+
+===== S6: F-22, cerrar sesión conserva, B no toca el registro de A =====
+PASS A logout keeps A record byte-identical
+AUDIT S6 B Home: notice=false forbidden=["Transferir dinero, elegir beneficiario"] | buttons=["Cerrar sesión","Cuenta principal •• 8660","Ahorro •• 1548","Transferir dinero, elegir beneficiario","Última actualización de saldo, Actualiza"]
+PASS B does not see A notice
+B requests on /transfers during login: 0
+PASS A record unchanged after B transferred
+PASS B logout did not delete/replace A record
+AUDIT S6 A vuelve: notice=true forbidden=[] | buttons=["Cerrar sesión","Cuenta principal •• 4941","Ahorro •• 4658"," Verificar estado de la transferencia"," Descartar este intento","Última actualización de saldo, Actualiza"]
+PASS A sees the notice; no create sent without a tap (F-27)
+A tap: receipt true | keys ["a1551cd3"] same as stored true | A completed:30025 | 2 rows sum 0 | B completed:15000
+PASS A resumed with the same key; 1 transfer each

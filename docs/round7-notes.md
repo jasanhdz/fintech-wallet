@@ -197,3 +197,83 @@ camino para crear otro intento sin resolver el primero.
 
 Evidencia (código `ed4945e`): `docs/evidence/round7/h3-ed4945e/` (README con el procedimiento, scripts, logs y capturas antes/
 después lado a lado).
+
+## 11. Tanda H4 (pasada 9): salida segura del bloqueo (F-26), 4xx no verificado (F-21 residual), sin repetición sin toque (F-27) y cobertura del guard (F-28)
+
+Restricción que se conserva (F-21/F-22 de H3): mientras exista un intento incierto o pendiente propio no hay camino a crear
+otro con llave nueva; cerrar sesión no borra el registro; otro usuario no toca el registro de A. Lo nuevo es una salida
+segura y proporcional: el registro sólo se suelta solo ante un negativo definitivo del servidor o por decisión explícita del
+usuario, advertida y confirmada.
+
+### 11.1 Cuándo se libera el registro automáticamente (F-26 a)
+
+| Consulta | Respuesta | Efecto |
+|---|---|---|
+| `GET /transfers/{id}` (registro con `transferId`) | **404** | El servidor no tiene ese intento para este usuario: se borra el registro, Inicio dice "El servidor no tiene registro de la operación de $X (Ref: R), así que dejamos de darle seguimiento… Ya puedes hacer otra transferencia." |
+| Repetición del `POST /transfers` con la misma llave y cuerpo (registro sin `transferId`) | **404** (beneficiario/cuenta inexistente), **422** (p. ej. saldo insuficiente, origen = destino), **429 "límite diario"** | La API sólo responde esto *después* de buscar la llave (`api/src/transfers/service.ts`, `createTransfer`): no existe intento con esa llave. Se borra el registro y se muestra M11 con el motivo ("Tu dinero está intacto" es cierto para ese intento). |
+| Cualquiera | **400**, 401, 403, **409** (incluido "en curso"), 429 de límite de tasa, 5xx, sin respuesta | **Nunca** libera. El 400 se valida *antes* de buscar la llave (`service.ts:28-29`), así que no prueba que el intento no exista (p. ej. tras endurecer una validación). |
+
+Ventana de carrera conocida (aceptada): si una repetición llega *mientras* el primer `POST` con esa llave todavía se procesa, la
+API puede responder 422 "Saldo insuficiente"/429 "límite diario" porque el primero ya descontó el saldo/límite (bloqueo de filas)
+y la repetición se libera aunque el primero se aplicó. Es autoprotegida para el mismo importe (un segundo intento igual también
+sería rechazado por la misma razón) y con F-27 la repetición sólo ocurre por un toque del usuario, ya fuera de la ventana de
+milisegundos. El 409 "en curso" (la otra cara de esa carrera) nunca libera.
+
+### 11.2 Registro dañado o almacenamiento ilegible (F-26 b/d)
+
+- Registro dañado (JSON inválido o sin `key`/`payload`/importe válido): ya no aparece "Unexpected end of JSON input". Inicio muestra
+  "Registro de transferencia dañado" con texto claro, bloquea las entradas a una transferencia nueva y ofrece el descarte (11.3).
+  Si el guard lo encuentra al confirmar, no envía nada y vuelve a Inicio con ese aviso.
+- Hueco antiguo (`wallet.transfer-recovery`, sin `userId`): sigue la migración a quien inicia sesión (regla de H3). Si es ilegible
+  se copia tal cual a la clave de ese usuario antes de tratarlo como dañado, así el descarte sólo borra la clave del usuario actual.
+  Si su repetición recibe un negativo definitivo, se libera por 11.1.
+- SecureStore ilegible: el guard sigue cerrando en falla (0 `POST`, mensaje "No pudimos comprobar si tienes una transferencia en
+  verificación…"). Inicio muestra "No pudimos comprobar tus transferencias" con "Reintentar comprobación" y el descarte.
+
+### 11.3 Descarte explícito (F-26 c) y riesgo aceptado
+
+- **Cuándo se ofrece** ("Descartar este intento", acción secundaria del aviso de Inicio): sólo si el intento no se pudo verificar:
+  registro dañado, almacenamiento ilegible, última consulta sin respuesta (`GET` fallido), o intento cuyo id nunca llegó (Inicio no
+  puede leerlo; sólo la repetición con toque lo resuelve). **No** se ofrece mientras se consulta ni cuando el servidor confirmó que
+  el intento espera su código (allí la salida es "Cancelar y volver a revisar" de M08, confirmada por la API).
+- **Confirmación**: diálogo modal (`Modal` de React Native; en web `role=dialog`, `aria-modal`) "¿Descartar este intento?" con la
+  advertencia "Revisa primero Movimientos: si el cargo aparece, la transferencia ya se realizó. Descartar no la cancela ni la
+  revierte." y "Descartar intento" / "Conservar intento". Conservar (o el gesto/botón atrás) no cambia nada.
+- **Efecto**: borra sólo `wallet.transfer-recovery.<userId actual>` (nunca el hueco antiguo ni claves de otros usuarios) y lo vuelve a
+  leer; sólo si la lectura confirma que no queda registro se informa éxito: Inicio muestra "Descartaste manualmente el seguimiento
+  de una transferencia anterior. Si su cargo aparece en Movimientos, esa transferencia sí se realizó." (sin importes ni ids). Si el
+  almacenamiento no permite borrar o leer: "No pudimos descartar el registro en este dispositivo…", el aviso y el bloqueo siguen.
+- **Riesgo aceptado (decisión documentada)**: si el intento descartado sí se aplicó y el usuario no revisa Movimientos, puede enviar
+  otra transferencia igual (doble débito por decisión explícita tras la advertencia). El descarte no cancela nada en el servidor:
+  un intento `awaiting_confirmation` descartado queda sin código en la app y expira solo en `expiresAt` (no mueve dinero).
+
+### 11.4 F-21 residual: 4xx no verificado
+
+- Al **reintentar** un intento cuyo resultado ya era incierto (M09 "Verificar estado" o el toque en Inicio), un 4xx que no sea rechazo
+  confirmado (409 "en curso", 401, 403, 429 de tasa, 400) deja el intento incierto en M09 con su registro; nunca lleva a M11.
+- En el **primer envío** un 4xx no confirmado sigue mostrando M11 "Revisa tu saldo antes de reintentar" (F-09), pero sus salidas ya
+  no sueltan el registro y desaparece "Modificar monto o cuenta": "Volver al inicio" deja Inicio con el aviso.
+- Sólo un rechazo confirmado (422, 429 "límite diario", o el 404 posterior a la búsqueda de la llave) suelta el registro, en cuanto
+  se conoce.
+
+### 11.5 F-27: sin repetición del `POST` sin toque
+
+- Inicio (cada vez que se muestra) y la vuelta a primer plano sólo **leen**: `GET /transfers/{id}` cuando el registro tiene id.
+- Un registro **sin** `transferId` (la respuesta se perdió antes de conocer el id) sólo se repite (`POST /transfers`, misma llave y
+  cuerpo) con el toque explícito en "Verificar estado de la transferencia" (aviso de Inicio o M09).
+- Arranque e inicio de sesión: antes repetían el `POST` solos (documentado en la ronda 7 · 8 y H3 §10 "Resolución automática");
+  ante la duda se exige el toque también aquí. Un registro con id se lee (`GET`) al arrancar y, si el servidor dice
+  `awaiting_confirmation`, M08 se reabre; la repetición que recupera el código de demostración en memoria no puede crear nada
+  (la llave ya está registrada en el servidor con ese id).
+
+### 11.6 F-28 y verificación
+
+- Pruebas nuevas en `mobile/tests/recovery-h4.test.tsx` (F-26, F-21, F-27, F-28); las pruebas de `app.test.tsx` que codificaban la
+  repetición automática se ajustaron al toque (misma llave, una fila) o a la lectura por id.
+- Mutaciones (`docs/evidence/round7/h4-*/tools/mutate-h4.py`): guard que falla abierto con SecureStore ilegible, `requestNewCode`
+  con `replacesClosedAttempt=true` sin intento previo, liberación ante cualquier error, 404 que no libera, 409/400 como definitivos,
+  descarte que borra el hueco antiguo, descarte sin diálogo, descarte que finge éxito, descarte ofrecido con el intento confirmado
+  pendiente de código, registro dañado como error crudo, 409 de reintento a M11, salidas de M11 que sueltan siempre, Inicio y
+  arranque que repiten el `POST` sin toque: todas hacen fallar pruebas.
+- Evidencia y límites: README de `docs/evidence/round7/h4-*/`. Nativo (Keychain real, `AppState` real, `Modal` con VoiceOver) sigue
+  pendiente (F-05).

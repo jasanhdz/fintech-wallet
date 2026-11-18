@@ -1,0 +1,8 @@
+  ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers 404 (start-up): the record is released, Home says why and exactly one new transfer goes through with a new key
+  ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › GET of the stored attempt answers 404 (Home): the record is released, Home says why and exactly one new transfer goes through with a new key
+  ● H4 · F-26 (a): only a definitive negative from the server releases a record automatically › a legacy record without owner is migrated to the user signed in; when its replay answers 404 it is released (M11 explains it) and the flow is enabled again
+  ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged (truncated JSON) record is explained in plain words, never as a parser error; discarding it after confirming deletes only this user's record and enables one new transfer
+  ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › a damaged record found by the guard when confirming sends nothing and shows the same notice on Home
+  ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › cancelling the confirmation keeps the record and the notice exactly as they were
+  ● H4 · F-26 (b)/(c)/(d): damaged or unreadable records and the explicit discard › an unreadable secure store fails closed; the discard tries to delete and, when it cannot, says so without claiming success
+Tests:       7 failed, 7 passed, 14 total

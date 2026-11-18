@@ -1,0 +1,8 @@
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 409 "en curso" keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 401 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 403 keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 429 rate limit keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › retrying an uncertain attempt that answers 400 (validated before the key lookup) keeps it uncertain on M09 (not M11), keeps the record and Home offers no second attempt
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › a first send answered with an unverified 4xx shows M11 "Revisa tu saldo" whose exits keep the record (no edit path)
+  ● H4 · F-21 residual: an unverified 4xx never opens a path to a second attempt › a confirmed rejection (422 "Saldo insuficiente") on the retry releases the record: M11 with no debit and the flow enabled again
+Tests:       7 failed, 14 passed, 21 total

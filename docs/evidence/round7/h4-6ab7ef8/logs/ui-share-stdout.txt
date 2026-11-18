@@ -1,0 +1,16 @@
+SHOT M10-comprobante minFont=12 scrollW=390 offscreen=0 errs=0
+M10 actions: Compartir comprobante 1 | PDF button label (web) 
+Compartir PDF | caption true | disclaimer on screen true
+share text: calls 1 | has disclaimer true | masked ends true | full 18-digit CLABE false | UUID folio present true | email false | token-like (eyJ) false
+cancel (AbortError): error alert shown false | button enabled again true
+SHOT M10-error-compartir minFont=12 scrollW=390 offscreen=0 errs=0
+error: message true | leaks path/internals false
+retry after error: error cleared true
+double tap: calls to navigator.share during the first sheet 2 | other action disabled meanwhile true | live status true
+PDF on web: El PDF del comprobante solo se puede generar en la app para iOS o Android.
+navigator.share missing: Compartir no está disponible en este dispositivo.
+M09 (unverified) offers share actions: false
+M04 detail offers share/PDF: false
+HTML render: <script> elements 0 | <img> elements 0 | injected <b> elements 0 | alert dialogs fired 0 | literal payload visible as text true
+/bin/sh: pdftotext: command not found
+pdftotext not available: Command failed: pdftotext -layout ./artifacts/receipt-malici

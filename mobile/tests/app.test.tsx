@@ -280,6 +280,11 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { renderer!.unmount(); });
     await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
+    // F-27: after the restart the attempt whose id never arrived is only shown on Home; nothing is sent until the tap.
+    assert.equal(createCalls().length, 1, 'no create replay without a tap');
+    assert.match(JSON.stringify(renderer!.toJSON()), /Transferencia en verificación/);
+    await TestRenderer.act(async () => { button('Verificar estado de la transferencia').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 40)); });
     const second = createCalls()[1];
     assert.ok(second);
     assert.equal((second[1]?.headers as Record<string, string>)['Idempotency-Key'], firstKey);
@@ -949,19 +954,20 @@ describe('mobile rejected transfer (M11)', () => {
   });
 
   for (const [status, title, detail] of [[401, 'Unauthorized', 'Sesión vencida.'], [409, 'Conflict', 'La llave de idempotencia ya se usó con otros datos.'], [429, 'Too Many Requests', 'Demasiadas solicitudes.']] as const) {
-    it(`F-09: a ${status} answer does not claim the money is intact`, async () => {
+    // H5 (F-21): an unconfirmed 4xx no longer opens M11 ("Revisa tu saldo antes de reintentar", whose exits could lead
+    // to another attempt); the attempt stays in verification on M09 with its record, and nothing claims the money is intact.
+    it(`F-09: a ${status} answer does not claim the money is intact and keeps the attempt in verification`, async () => {
       const flow = await startTransferFlow((url) => {
         if (url.endsWith('/transfers')) return Response.json({ title, detail }, { status });
         return undefined;
       }, { amount: '6000.00' });
       await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
       await flow.wait();
-      const rejected = flow.visible();
-      assert.match(rejected, /No se pudo completar la transferencia/);
-      assert.ok(rejected.includes(detail));
-      assert.doesNotMatch(rejected, /Tu dinero está intacto|No se aplicó ningún cargo|Importe debitado|Ningún dinero fue retirado|"\$0.00 MXN"/);
-      assert.match(rejected, /Revisa tu saldo antes de reintentar/);
-      assert.match(rejected, /Consulta tus movimientos antes de volver a enviar/);
+      const screen = flow.visible();
+      assert.match(screen, /Estamos verificando si tu transferencia se completó/);
+      assert.ok(screen.includes(detail));
+      assert.doesNotMatch(screen, /No se pudo completar la transferencia|Tu dinero está intacto|No se aplicó ningún cargo|Importe debitado|Ningún dinero fue retirado|"\$0.00 MXN"|Modificar monto o cuenta/);
+      assert.ok(storedRecovery(), 'the record of the attempt is kept');
       await flow.finish();
     });
   }
@@ -2455,8 +2461,8 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
     let sends = 0;
     const done = flowTransfer({ id: 'tr-lost', status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'R-LOST' });
     const flow = await startTransferFlow((url, init) => {
-      // F-21: Home re-checks on its own when shown; that replay is lost too, so the notice stays until "Verificar".
-      if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 2) throw new TypeError('response lost after the server applied it'); return Response.json(done, { status: 201 }); }
+      // F-27: Home does not replay the create on its own (its id never arrived); only the tap on "Verificar" does.
+      if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 1) throw new TypeError('response lost after the server applied it'); return Response.json(done, { status: 201 }); }
       if (url.endsWith('/transfers/tr-lost')) return Response.json(done);
       return undefined;
     }, { amount: '850.00' });
@@ -2476,7 +2482,7 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
     await flow.wait(60);
     assert.match(flow.visible(), /"Transferencia completada"/);
     const creates = flow.calls.filter((call) => call.url.endsWith('/transfers') && call.init?.method === 'POST');
-    assert.equal(creates.length, 3);
+    assert.equal(creates.length, 2);
     assert.equal(new Set(creates.map(keyOf)).size, 1, 'the same Idempotency-Key: one logical row, no second debit');
     assert.equal(storedRecovery(), undefined);
     await TestRenderer.act(async () => { flow.button('Ir al inicio').props.onPress(); });
@@ -2509,8 +2515,8 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
         if (url.endsWith('/auth/login')) return login(user);
         if (url.endsWith('/auth/me')) return meStatus === 200 ? Response.json({ id: user, fullName: 'Ana López', email: 'ana@example.com' }) : Response.json({ title: 'Unauthorized' }, { status: 401 });
         if (url.endsWith('/auth/refresh') || url.endsWith('/auth/logout')) return Response.json({ title: 'Unauthorized' }, { status: 401 });
-        // The original response and Home's own re-check (same key) are both lost.
-        if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 2) throw new TypeError('response lost'); return Response.json({ ...flowTransfer({ id: 'tr-a', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '000000' }, { status: 202 }); }
+        // The original response is lost (F-27: Home itself never replays the create).
+        if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 1) throw new TypeError('response lost'); return Response.json({ ...flowTransfer({ id: 'tr-a', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '000000' }, { status: 202 }); }
         return undefined;
       }, { amount: '850.00' });
       await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
@@ -2535,7 +2541,7 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
       user = 'user-b'; meStatus = 200;
       await signIn();
       assert.doesNotMatch(flow.visible(), /Estamos verificando|Código de confirmación|Transferencia en verificación/);
-      assert.equal(sends, 2, 'no replay under another user');
+      assert.equal(sends, 1, 'no replay under another user');
       assert.equal(JSON.parse(mockSecureValues.get(recoveryKeyOf('user-a'))!).userId, 'user-a');
       // That session also expires; the original user signs in and the attempt resumes with its original key.
       meStatus = 401;
@@ -2544,7 +2550,12 @@ describe('round 7 · 6/8: unresolved attempts, background curtain and expired se
       await flow.wait(60);
       user = 'user-a'; meStatus = 200;
       await signIn();
-      assert.equal(sends, 3);
+      // F-27: the same user sees the attempt on Home; the replay of its create needs the tap.
+      assert.equal(sends, 1);
+      assert.match(flow.visible(), /Transferencia en verificación/);
+      await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+      await flow.wait(60);
+      assert.equal(sends, 2);
       const creates = flow.calls.filter((call) => call.url.endsWith('/transfers') && call.init?.method === 'POST');
       assert.equal(new Set(creates.map(keyOf)).size, 1);
       assert.match(flow.visible(), /"Código de confirmación"/);
@@ -2623,7 +2634,7 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     const flow = await startTransferFlow((url, init) => {
       if (url.endsWith('/auth/login')) return login('user-a');
       if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
-      if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 2) throw new TypeError('response lost'); return Response.json(done, { status: 201 }); }
+      if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 1) throw new TypeError('response lost'); return Response.json(done, { status: 201 }); }
       if (url.endsWith('/transfers/tr-once')) return Response.json(done);
       return undefined;
     }, { amount: '850.00' });
@@ -2638,8 +2649,13 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     assert.match(flow.visible(), /Iniciar sesión/);
     assert.equal(mockSecureValues.get(recoveryKeyOf('user-a')), record, 'an explicit logout does not delete the own pending record');
     await signIn(flow);
+    // F-27: resumed by the user's tap (same key), never on its own.
+    assert.equal(sends, 1);
+    assert.match(flow.visible(), /Transferencia en verificación/);
+    await TestRenderer.act(async () => { flow.button('Verificar estado de la transferencia').props.onPress(); });
+    await flow.wait(60);
     assert.match(flow.visible(), /"Transferencia completada"/);
-    assert.equal(sends, 3);
+    assert.equal(sends, 2);
     assert.equal(new Set(creates(flow).map(keyOf)).size, 1);
     assert.equal(storedRecovery(), undefined, 'resolved: the record is gone');
     await flow.finish();
@@ -2670,50 +2686,56 @@ describe('round 8 · F-21/F-22: one unresolved attempt at a time, bound to its u
     await flow.finish();
   });
 
-  it('Home resolves the attempt by itself (same key): completed -> receipt, record cleared, the transfer flow is offered again', async () => {
-    let sends = 0;
-    const flow = await startTransferFlow((url, init) => {
-      if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends === 1) throw new TypeError('response lost after the server applied it'); return Response.json(done, { status: 201 }); }
-      if (url.endsWith('/transfers/tr-once')) return Response.json(done);
-      return undefined;
-    }, { amount: '850.00' });
+  // F-27: Home and the foreground only READ the attempt (GET by its id); see tests/recovery-h4.test.tsx for the attempt
+  // whose id never arrived (no request at all until the user taps "Verificar estado de la transferencia").
+  const pendingThenRead = (reads: () => Response) => (url: string, init?: RequestInit) => {
+    if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-once', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '111111' }, { status: 202 });
+    if (url.endsWith('/transfers/tr-once/cancel')) throw new TypeError('Network request failed');
+    if (url.endsWith('/transfers/tr-once')) return reads();
+    return undefined;
+  };
+
+  it('Home resolves the attempt by itself with a read (GET by id): completed -> receipt, record cleared, the transfer flow is offered again', async () => {
+    let reads = 0;
+    const flow = await startTransferFlow(pendingThenRead(() => { reads += 1; if (reads === 1) throw new TypeError('Network request failed'); return Response.json(done); }), { amount: '6000.00' });
     await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
     await flow.wait();
-    await TestRenderer.act(async () => { flow.button('Ir al inicio (revisar saldo después)').props.onPress(); });
+    // Leaving M08 while neither the cancel nor the read answers keeps the attempt; Home then reads it and finds it completed.
+    await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
     await flow.wait(60);
     assert.match(flow.visible(), /"Transferencia completada"/, 'the real result is shown');
     assert.match(flow.visible(), /R-ONCE/);
-    assert.equal(sends, 2);
-    assert.equal(new Set(creates(flow).map(keyOf)).size, 1);
+    assert.equal(reads, 2);
+    assert.equal(creates(flow).length, 1, 'resolving never sends a create');
     assert.equal(storedRecovery(), undefined);
     await TestRenderer.act(async () => { flow.button('Ir al inicio').props.onPress(); });
     await flow.wait();
-    assert.doesNotMatch(flow.visible(), /Transferencia en verificación/);
+    assert.doesNotMatch(flow.visible(), /Transferencia en verificación|pendiente de autorizar/);
     assert.ok(pressables(flow, 'Continuar con transferencia').length > 0, 'the flow is enabled again');
     await flow.finish();
   });
 
-  it('returning to the foreground with a valid session re-checks the pending attempt with the same key', async () => {
+  it('returning to the foreground with a valid session re-reads the pending attempt (GET by id, no create)', async () => {
     await withAppState(async (emit) => {
-      let sends = 0;
+      let reads = 0;
+      let available = false;
       const flow = await startTransferFlow((url, init) => {
         if (url.endsWith('/auth/me')) return Response.json({ id: 'u', fullName: 'Ana López', email: 'ana@example.com' });
-        if (url.endsWith('/transfers') && init?.method === 'POST') { sends += 1; if (sends <= 2) throw new TypeError('response lost'); return Response.json(done, { status: 201 }); }
-        if (url.endsWith('/transfers/tr-once')) return Response.json(done);
-        return undefined;
-      }, { amount: '850.00' });
+        return pendingThenRead(() => { reads += 1; if (!available) throw new TypeError('Network request failed'); return Response.json(done); })(url, init);
+      }, { amount: '6000.00' });
       await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
       await flow.wait();
-      await TestRenderer.act(async () => { flow.button('Ir al inicio (revisar saldo después)').props.onPress(); });
-      await flow.wait();
-      assert.match(flow.visible(), /Transferencia en verificación/);
+      await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
+      await flow.wait(60);
+      assert.match(flow.visible(), /Transferencia pendiente de autorizar/);
       assert.match(flow.visible(), /Sin respuesta por ahora/);
-      assert.equal(sends, 2);
+      const before = reads;
+      available = true;
       await emit('background');
       await emit('active');
       await flow.wait(60);
-      assert.equal(sends, 3);
-      assert.equal(new Set(creates(flow).map(keyOf)).size, 1);
+      assert.equal(reads, before + 1);
+      assert.equal(creates(flow).length, 1);
       assert.match(flow.visible(), /"Transferencia completada"/);
       await flow.finish();
     });
@@ -2786,8 +2808,9 @@ describe('round 7 · 7: M11 reasons, real amounts and "no debit" only for confir
   it('a 429 that is not the daily limit (e.g. a rate limit) does not claim the money is intact', async () => {
     const flow = await run(() => Response.json({ title: 'Too Many Requests', detail: 'Intenta de nuevo más tarde.' }, { status: 429 }));
     const screen = flow.visible();
-    assert.doesNotMatch(screen, /Tu dinero está intacto|Importe debitado/);
-    assert.match(screen, /Revisa tu saldo antes de reintentar/);
+    assert.doesNotMatch(screen, /Tu dinero está intacto|Importe debitado|No se pudo completar la transferencia/);
+    // H5 (F-21): unconfirmed, so it stays in verification (M09) instead of M11.
+    assert.match(screen, /Estamos verificando si tu transferencia se completó/);
     await flow.finish();
   });
 });

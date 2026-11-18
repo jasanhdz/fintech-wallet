@@ -1,0 +1,10 @@
+bundle entry-f94daf719e13cca6e50054d70fff25ba.hbc
+True Descartar este intento
+True Conservar intento
+True Revisa primero Movimientos: si el cargo aparece, la transferencia ya s
+True Registro de transferencia dañado
+True El servidor no tiene registro de la operación de 
+True Descartaste manualmente el seguimiento
+True No pudimos descartar el registro en este dispositivo
+True No pudimos comprobar tus transferencias
+True wallet.transfer-recovery

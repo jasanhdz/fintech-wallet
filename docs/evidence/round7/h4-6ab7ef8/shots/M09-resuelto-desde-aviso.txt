@@ -1,0 +1,46 @@
+
+Detalle
+AL
+
+
+Transferencia completada
+-$300.25
+MXN
+
+16 de noviembre de 2026, 19:28 hrs (Tiempo del Centro de México)
+
+DETALLE DE OPERACIÓN
+Confirmada y aplicada
+Cuenta origen
+Cuenta principal
+•• 5607
+Para
+Cuenta de ahorro demo
+Ahorro demo
+Cuenta destino
+Billetera MXN
+•• 8417
+Concepto
+Verifica
+Referencia
+4402
+Folio interno
+3265ec0d-2d14-4fc7-a0eb-53a2b60a4ebf
+Tipo de operación
+Transferencia interna
+Opciones de comprobante (opcional)
+
+Compartir comprobante
+
+Compartir PDF
+
+Nuevo saldo disponible en Cuenta principal:
+$9,699.75
+MXN
+
+Tu saldo se actualizó tras confirmarse la operación.
+
+Ir al inicio
+
+Ver últimos movimientos
+Comprobante de demostración técnica interna de Billetera MXN
