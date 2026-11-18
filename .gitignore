@@ -1,5 +1,7 @@
 node_modules/
 **/node_modules/
+.claude/
+**/.claude/
 dist/
 **/dist/
 coverage/
