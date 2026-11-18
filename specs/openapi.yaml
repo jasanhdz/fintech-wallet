@@ -114,6 +114,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AuthResponse' }
+        '204':
+          description: Cliente web sin cookie de refresh; no hay sesión que restaurar. Cliente móvil sin token no usa este resultado.
         '401': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
