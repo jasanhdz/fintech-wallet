@@ -1,0 +1,9 @@
+F17 normal run1: login usable after 987 ms | rendered fonts {"Inter SemiBold":118,"Ionicons":14,"Inter Medium":154,"Inter":304}
+F17 normal run2: login usable after 876 ms
+F17 normal run3: login usable after 882 ms
+F17 abort run1: login usable after 880 ms | rendered fonts {".SF NS":576}
+F17 abort run2: login usable after 882 ms
+F17 abort run3: login usable after 876 ms
+F17 hang run1: login usable after 3416 ms | rendered fonts {".SF NS":576}
+F17 hang run2: login usable after 3404 ms
+F17 hang run3: login usable after 3397 ms

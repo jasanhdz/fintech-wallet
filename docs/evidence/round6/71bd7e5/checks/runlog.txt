@@ -1,0 +1,55 @@
+SHOT M01-login ref=m01_iniciar_sesi_n_2 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+SHOT M01-error-credenciales ref=m01_iniciar_sesi_n_1 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+SHOT M01-error-sin-red ref=m01_iniciar_sesi_n_1 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+SHOT M02-inicio ref=m02_inicio_y_cuentas badText=false fonts=Inter_500Medium|Inter_600SemiBold|Inter_400Regular|Inter_700Bold
+SHOT M03-movimientos ref=m03_ltimos_20_movimientos badText=false fonts=Inter_500Medium|Inter_600SemiBold|ui-monospace|Inter_700Bold|Inter_400Regular
+SHOT M04-detalle-enviada ref=m04_detalle_de_movimiento badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_700Bold|Inter_400Regular
+SHOT M04-detalle-recibida ref=m04_detalle_de_movimiento badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_700Bold|Inter_400Regular
+M04 sent has Para/Enviada/-$850.00: true | received has De/Recibida/+$1,000.00/Carlos: true
+M04 reqs (no GET for received): GET /transfers/f5e5 key=-
+SHOT M05-beneficiarios ref=m05_elegir_beneficiario_2 badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium
+SHOT M05-origen-ahorro-destino-incompatible ref=m05_elegir_beneficiario_1 badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium
+M05 Ahorro: own beneficiary aria-disabled= true | explained: true
+SHOT M06-origen-igual-destino ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+M06 same-account: blocked= true | message: true | estimate shown: false
+SHOT M06-selector-origen ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+M06 after Principal: blocked= 
+M06 POSTs to /transfers so far: 0
+SHOT M06-datos-propias ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+SHOT M07-revision-propias ref=m07_revisar_transferencia_2 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_700Bold|Inter_400Regular
+SHOT M10-comprobante-propias ref=m10_transferencia_completada_2 badText=false fonts=Inter_600SemiBold|Inter_700Bold|Inter_500Medium|Inter_400Regular
+E2E Principal->Ahorro 1500: before Cuenta principal=865000 Ahorro=650000 | after Cuenta principal=715000 Ahorro=800000 | total 1515000 -> 1515000 | ledger sum/count 0/2 | transfers completed:150000
+History shows Traspaso a Cuenta de ahorro demo -$1,500.00: true | receipt shows -$1,500.00: true
+SHOT M06-datos ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+SHOT M07-revision ref=m07_revisar_transferencia_2 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_700Bold|Inter_400Regular
+SHOT M09-enviando ref=m09_procesando_y_recuperaci_n_1 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular|ui-monospace
+M09 sending neutral: true
+SHOT M10-comprobante ref=m10_transferencia_completada_1 badText=false fonts=Inter_600SemiBold|Inter_700Bold|Inter_500Medium|Inter_400Regular
+SHOT M09-verificando ref=m09_procesando_y_recuperaci_n_2 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular|ui-monospace
+M09 DB after lost response: completed:12000
+Reentry after reload resumed to: verifying
+M09 POST /transfers keys used: 8cca0994 | DB rows: completed:12000
+SHOT M07-revision-umbral ref=m07_revisar_transferencia_6_000_mxn_verificaci_n badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_700Bold|Inter_400Regular
+SHOT M08-codigo-vacio ref=m08_c_digo_de_confirmaci_n_2 badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular|monospace
+SHOT M08-codigo-vigente ref=m08_c_digo_de_confirmaci_n_c_digo_vigente badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular|monospace
+SHOT M08-codigo-expirado ref=m08_c_digo_de_confirmaci_n_c_digo_expirado badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+M08 expired banner: true
+M08 new code reqs: POST /transfers key=f9850d95 | POST /transfers/0917/cancel key=- | POST /transfers key=0ee18836
+M08 DB after new code (first must be expired/cancelled, second pending): expired | completed:85000 completed:85000 expired:600000 awaiting_confirmation:600000
+G leave OTP -> DB: completed:85000 completed:85000 expired:600000 cancelled:600000 | cancel reqs: 2
+SHOT M11-intento-expirado ref=m11_transferencia_rechazada badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium
+Closed after relaunch: true | DB: expired
+Out-of-band spend (another session, same user): 400000:201 118000:201 | balances now Cuenta principal=100000 Ahorro=1318000
+SHOT M11-rechazada-saldo ref=m11_transferencia_rechazada badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium|Inter_700Bold
+M11 real 422:  | Transferir | AL |  | No se pudo completar la transferencia | El monto solicitado ($4,000.00 MXN) supera el saldo disponible actual en tu cuenta. |  | Tu dinero está intacto
+M11 -> edit keeps data: true | on details: true
+SHOT M12-privacidad ref=m12_privacidad_en_segundo_plano badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+M12 curtain hides balances: true
+SHOT M12-sesion-vencida ref=m12_privacidad_y_sesi_n badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium
+SHOT M05-vacio ref=m05_elegir_beneficiario_1 badText=false fonts=Inter_600SemiBold|Inter_400Regular|Inter_500Medium
+SHOT I-texto-130-M06 ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+I 130% M06 Continuar visible in viewport: true
+SHOT I-viewport-reducido-M06 ref=m06_datos_de_transferencia badText=false fonts=Inter_600SemiBold|Inter_500Medium|Inter_400Regular
+I reduced viewport M06 Continuar visible: true
+console/page errors: 7 console: Failed to load resource: the server responded with a status of 401 (Unauthorized) || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: net::ERR_FAILED || console: Failed to load resource: the server responded with a status of 422 (Unprocessable Entity) || console: Failed to load resource: the server responded with a status of 401 (Unauthorized) || console: Failed to load resource: the server responded with a status of 401 (Unauthorized)
+final balances Cuenta principal=100000 Ahorro=1318000

@@ -1,0 +1,17 @@
+F06 uncertain screen:  | Transferir | AL |  | Confirmación de seguridad | Monto extraordinario | DESTINATARIO | Carlos Ruiz •• 6169 | (Billetera MXN) | IMPORTE | $5,000.00 MXN |  | Operación mayor o igual a $5,000.00 MXN (umbral de demostración) | CÓDIGO DE DEMOSTRACIÓN | Código de confirmación | Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por $5,000.00 MXN a Carlos Ruiz •• 6169. |  | Código asignado para esta prueba: ###### |  | El código expira en 04:56 | No pudimos conectar. Revisa tu conexión e inténtalo de nuevo. |  | Autorizar transferencia | Reintentar envío del mismo código |  | Cancelar y volver a revisar
+F06 DB after lost confirm response: completed:500000
+F06 after "Solicitar nuevo código": POST /transfers (create) count delta: 0 | cancel POSTs: 0 | DB: completed:500000
+F06 after "Cancelar y volver" (GET blocked): cancel POSTs: 0 | screen:  | Transferir | AL |  | Confirmación de seguridad | Monto extraordinario
+F06 after GET unblocked: screen:  | Detalle | AL |  |  | Transferencia completada | -$5,000.00 | MXN | cancel POSTs: 0 | creates: 0 | DB transfers with ref 6001: completed:500000 | total completed 500000 for ref: 1
+H M06 with mocked policy: shows daily limit $3,000.00: true | lines: Límite diario: $3,000.00 MXN / Disponible hoy: $3,000.00 MXN · límites de demostración
+H review with mocked threshold $1,234.56 (amount 1,500 >= threshold): Operación mayor o igual a $1,234.56 MXN requiere código de autorización (umbral de demostración) / Continuar a verificación
+H amount 3,500 > mocked remaining 3,000: Límite diario: $3,000.00 MXN / Disponible hoy: $3,000.00 MXN · límites de demostración / El monto supera lo disponible hoy según el límite diario de demostración ($3,000.00 MXN). / Continuar | Continuar disabled= true
+H 4999.99 review button: Confirmar transferencia
+H 4999.99 DB: completed:499999
+H 5000.00 review button: Continuar a verificación
+H countdown samples (should decrease): 00:07 -> 00:04
+H after countdown reached 0: Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por $5,000.00 MXN a Carlos Ruiz •• 6169. / El código ha expirado. Por seguridad solicita uno nuevo para continuar. / Solicitar nuevo código de demostración / Autorizar transferencia | Autorizar disabled= true
+H DB for 6004 (server not expired yet): awaiting_confirmation:500000
+C4 review after Modificar with same combo: Estos datos son iguales a los del intento rechazado (Se excedió el límite diario.). Cambia el monto o la cuenta antes de reintentar, o continúa si la situación ya cambió.
+Race (leave OTP while confirm in flight): DB completed:500000 | balances Cuenta principal=915001 Ahorro=500000 -> Cuenta principal=415001 Ahorro=500000 | final screen:  | Billetera MXN | INICIO | AL | Hola, Ana López | Actualizado hoy, 11:34 hrs |  | Principal
+Race cancel POSTs: 0

@@ -1,0 +1,21 @@
+
+> fintech-wallet@0.1.0 typecheck
+> npm run typecheck --workspaces --if-present && tsc -p tsconfig.shared.json --noEmit
+
+
+> @fintech-wallet/api@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+
+> @fintech-wallet/web@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @fintech-wallet/mobile@0.1.0 typecheck
+> tsc --noEmit
+
+
+> @fintech-wallet/shared@0.1.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+typecheck exit 0

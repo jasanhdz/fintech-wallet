@@ -1,0 +1,12 @@
+== api/tests/auth-accounts.integration.ts
+ℹ tests 2 ℹ pass 2 ℹ fail 0 
+== api/tests/beneficiaries.integration.ts
+ℹ tests 1 ℹ pass 1 ℹ fail 0 
+== api/tests/database.integration.ts
+ℹ tests 2 ℹ pass 2 ℹ fail 0 
+== api/tests/movements.integration.ts
+ℹ tests 1 ℹ pass 1 ℹ fail 0 
+== api/tests/round6-contract.integration.ts
+ℹ tests 1 ℹ pass 1 ℹ fail 0 
+== api/tests/transfers.integration.ts
+ℹ tests 2 ℹ pass 2 ℹ fail 0 

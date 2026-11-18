@@ -1,0 +1,36 @@
+ICON M01: [button] "Mostrar contraseña" (icon only)
+ICON M02: [button] "Cerrar sesión" (icon only)
+OK   M02: [button] label="Cuenta principal •• 6177" | first visible="Principal" | other text nodes not in label: []
+OK   M02: [button] label="Ahorro •• 5351" | first visible="Ahorro" | other text nodes not in label: []
+OK   M02: [button] label="Transferir dinero, elegir beneficiario" | first visible="Transferir dinero" | other text nodes not in label: []
+OK   M02: [button] label="Última actualización de saldo. Actualizado hoy, 12:41 hrs. Saldo total $15,150.0" | first visible="Última actualización de saldo" | other text nodes not in label: ["Actualizado hoy, 12:41 hrs •"]
+OK   M02: [button] label="Cargo $850.00 pesos, A Carlos Ruiz, Comida" | first visible="A Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Comida","16 nov, 12:41","-$850.00 MXN","Completado"]
+OK   M02: [button] label="Abono $1,000.00 pesos, De Carlos Ruiz, Abono honorarios" | first visible="De Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Abono honorarios","16 nov, 12:41","+$1,000.00 MXN","Completado"]
+OK   M03: [button] label="Cuenta principal (•• 6177), cambiar cuenta" | first visible="Cuenta principal" | other text nodes not in label: []
+OK   M03: [button] label="Cargo $850.00 pesos, A Carlos Ruiz, Comida" | first visible="A Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Comida","Ref:","MXN"]
+OK   M03: [button] label="Abono $1,000.00 pesos, De Carlos Ruiz, Abono honorarios" | first visible="De Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Abono honorarios","Ref:","MXN"]
+OK   M03 selector: [button] label="Cuenta principal (•• 6177), cambiar cuenta" | first visible="Cuenta principal" | other text nodes not in label: []
+OK   M03 selector: [button] label="Cuenta principal (•• 6177), ver sus movimientos" | first visible="Cuenta principal" | other text nodes not in label: ["MXN"]
+OK   M03 selector: [button] label="Ahorro (•• 5351), ver sus movimientos" | first visible="Ahorro" | other text nodes not in label: ["MXN"]
+OK   M03 selector: [button] label="Cargo $850.00 pesos, A Carlos Ruiz, Comida" | first visible="A Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Comida","Ref:","MXN"]
+OK   M03 selector: [button] label="Abono $1,000.00 pesos, De Carlos Ruiz, Abono honorarios" | first visible="De Carlos Ruiz" | other text nodes not in label: ["•• 1231 · Abono honorarios","Ref:","MXN"]
+ICON M04: [button] "Volver a movimientos" (icon only)
+OK   M04: [null] label="Folio 37592841-86ad-452c-982f-b109dd4b58ae" | first visible="37592841-86ad-452c-982f-b109dd4b58ae" | other text nodes not in label: []
+ICON M05: [button] "Volver a inicio" (icon only)
+OK   M05: [button] label="Seleccionar Cuenta de ahorro demo, Ahorro demo, CLABE 646•••••••••••5351" | first visible="Cuenta de ahorro demo" | other text nodes not in label: ["Billetera MXN ••"]
+OK   M05: [button] label="Seleccionar Carlos Ruiz, Carlos, CLABE 646•••••••••••1231" | first visible="Carlos Ruiz" | other text nodes not in label: ["Billetera MXN ••"]
+ICON M06: [button] "Volver" (icon only)
+OK   M06: [button] label="Cambiar cuenta de origen" | first visible="Cambiar cuenta" | other text nodes not in label: []
+OK   M06: [button] label="Cambiar beneficiario" | first visible="Cambiar beneficiario" | other text nodes not in label: []
+ICON M06 selector: [button] "Volver" (icon only)
+OK   M06 selector: [button] label="Listo, cerrar las cuentas de origen" | first visible="Listo" | other text nodes not in label: []
+OK   M06 selector: [radio] label="Usar Cuenta principal •• 6177 como cuenta de origen" | first visible="Cuenta principal" | other text nodes not in label: ["Disponible:","$10,150.00 MXN"]
+OK   M06 selector: [radio] label="Usar Ahorro •• 5351 como cuenta de origen" | first visible="Ahorro" | other text nodes not in label: ["Disponible:","$5,000.00 MXN"]
+OK   M06 selector: [button] label="Cambiar beneficiario" | first visible="Cambiar beneficiario" | other text nodes not in label: []
+ICON M07 umbral: [button] "Volver" (icon only)
+ICON M08: [button] "Cancelar y volver a revisar" (icon only)
+OK   M08: [button] label="Solicitar nuevo código de demostración" | first visible="Solicitar nuevo código de demostración" | other text nodes not in label: []
+ICON M07: [button] "Volver" (icon only)
+ICON M10: [button] "Volver al inicio" (icon only)
+OK   M10: [null] label="Folio 85176be7-2f32-4c3f-adc3-fdda6b4420cd" | first visible="85176be7-2f32-4c3f-adc3-fdda6b4420cd" | other text nodes not in label: []
+E19 checked 25 controls with visible text, 0 DIFF

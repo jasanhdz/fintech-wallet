@@ -1,0 +1,2 @@
+  ● F-12: no exit from the code step while the confirm is in flight › disables "Cancelar y volver a revisar" and the header arrow until the confirm answers, never cancels and lands on the receipt
+Tests:       1 failed, 89 passed, 90 total

@@ -1,0 +1,10 @@
+F15 844 normal: primary {"top":720,"bottom":768,"left":16,"right":374} modificar {"top":776,"bottom":820,"left":16,"right":374} | both inside without scroll: true
+F15 844 propias: primary {"top":736,"bottom":784,"left":16,"right":374} modificar {"top":792,"bottom":836,"left":16,"right":374} | both inside without scroll: true
+F15 844 umbral: primary {"top":736,"bottom":784,"left":16,"right":374} modificar {"top":792,"bottom":836,"left":16,"right":374} | both inside without scroll: true
+F15 884 normal: primary {"top":721,"bottom":769,"left":16,"right":374} modificar {"top":777,"bottom":821,"left":16,"right":374} | both inside without scroll: true
+F15 884 propias: primary {"top":741,"bottom":789,"left":16,"right":374} modificar {"top":797,"bottom":841,"left":16,"right":374} | both inside without scroll: true
+F15 884 umbral: primary {"top":741,"bottom":789,"left":16,"right":374} modificar {"top":797,"bottom":841,"left":16,"right":374} | both inside without scroll: true
+F15 763 normal: primary {"top":639,"bottom":687,"left":16,"right":374} modificar {"top":695,"bottom":739,"left":16,"right":374} | both inside without scroll: true | after scrolling to the end: primary {"top":639,"bottom":687,"left":16,"right":374} modificar {"top":695,"bottom":739,"left":16,"right":374} reachable: true
+F15 763 propias: primary {"top":655,"bottom":703,"left":16,"right":374} modificar {"top":711,"bottom":755,"left":16,"right":374} | both inside without scroll: true | after scrolling to the end: primary {"top":639,"bottom":687,"left":16,"right":374} modificar {"top":695,"bottom":739,"left":16,"right":374} reachable: true
+F15 763 umbral: primary {"top":655,"bottom":703,"left":16,"right":374} modificar {"top":711,"bottom":755,"left":16,"right":374} | both inside without scroll: true | after scrolling to the end: primary {"top":639,"bottom":687,"left":16,"right":374} modificar {"top":695,"bottom":739,"left":16,"right":374} reachable: true
+F15 failures: 0

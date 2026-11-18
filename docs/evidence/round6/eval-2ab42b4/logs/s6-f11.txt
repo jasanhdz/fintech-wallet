@@ -1,0 +1,18 @@
+beneficiary create 201 {"id":"e5566b1b-e0de-4471-a30b-3e1bc332eec3","name":"Corporativo Internacional de Servicios Profesionales y Consultoría 
+F11-x1 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+F11-x1.3 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+F11-x2 HOME overflow {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} | greeting: Hola, Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor | Cerrar sesión: x=338 y=68 w=44 h=44 right=382
+D-x1 M05 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x1 M06 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} /^Continuar[^a-zA-Z]*$/: x=16 y=780 w=358 h=48 right=374
+D-x1 M07 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0} Confirmar transferencia: x=16 y=720 w=358 h=48 right=374 Modificar datos: x=16 y=776 w=358 h=44 right=374
+D-x1 M10 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x1 M03 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x1 M04 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x2 M05 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x2 M06 {"docScrollW":390,"bodyScrollW":390,"bad":["BUTTON:Cambiar beneficiario L177 R419","DIV:Cambiar beneficiario L177 R419","DIV:Proveedor principal de materia L257 R396"],"nbad":3} /^Continuar[^a-zA-Z]*$/: x=16 y=780 w=358 h=48 right=374
+D-x2 M07 {"docScrollW":390,"bodyScrollW":390,"bad":["DIV:Transferencia interna L154 R410","DIV:Transferencia interna L166 R410"],"nbad":2} Confirmar transferencia: x=16 y=1461 w=358 h=80 right=374 Modificar datos: x=16 y=1549 w=358 h=44 right=374
+D-x2 M10 {"docScrollW":390,"bodyScrollW":390,"bad":["DIV:-$850.00 MXN L-9 R399","DIV:-$850.00 L-9 R329","DIV:MXN L333 R399"],"nbad":3}
+D-x2 M03 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D-x2 M04 {"docScrollW":390,"bodyScrollW":390,"bad":["SPAN:MXN L373 R450","DIV:d33f472b-aff1-4f87-9502-e09a2e L184 R399","DIV:Transferencia interna L250 R406"],"nbad":3}
+D M07 umbral {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}
+D M08 {"docScrollW":390,"bodyScrollW":390,"bad":[],"nbad":0}

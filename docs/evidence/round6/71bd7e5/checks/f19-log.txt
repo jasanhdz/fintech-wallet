@@ -1,0 +1,19 @@
+OK   M02: name "Cuenta principal •• 7413" | visible "Principal"
+OK   M02: name "Ahorro •• 2675" | visible "Ahorro"
+OK   M02: name "Transferir dinero, elegir beneficiario" | visible "Transferir dinero"
+OK   M02: name "Última actualización de saldo. Actualizado hoy, 12:15 hrs. Saldo total $15,150.00 MXN" | visible "Última actualización de saldo"
+OK   M02: name "Cargo $850.00 pesos, A Carlos Ruiz, Comida" | visible "A Carlos Ruiz"
+OK   M02: name "Abono $1,000.00 pesos, De Carlos Ruiz, Abono honorarios" | visible "De Carlos Ruiz"
+OK   M03 selector abierto: name "Cuenta principal (•• 7413), cambiar cuenta" | visible "Cuenta principal"
+OK   M03 selector abierto: name "Cuenta principal (•• 7413), ver sus movimientos" | visible "Cuenta principal"
+OK   M03 selector abierto: name "Ahorro (•• 2675), ver sus movimientos" | visible "Ahorro"
+OK   M03 selector abierto: name "Cargo $850.00 pesos, A Carlos Ruiz, Comida" | visible "A Carlos Ruiz"
+OK   M03 selector abierto: name "Abono $1,000.00 pesos, De Carlos Ruiz, Abono honorarios" | visible "De Carlos Ruiz"
+OK   M06 selector abierto: name "Listo, cerrar las cuentas de origen" | visible "Listo"
+OK   M06 selector abierto: name "Usar Cuenta principal •• 7413 como cuenta de origen" | visible "Cuenta principal"
+OK   M06 selector abierto: name "Usar Ahorro •• 2675 como cuenta de origen" | visible "Ahorro"
+OK   M06 selector abierto: name "Cambiar beneficiario" | visible "Cambiar beneficiario"
+M06 field names: ["Monto a transferir","Concepto de pago","Referencia numérica (hasta 7 dígitos)"]
+OK   M08: name "Solicitar nuevo código de demostración" | visible "Solicitar nuevo código de demostración"
+M08 a voice command "Solicitar nuevo código de demostración" finds 1 control(s)
+F19 checked 16 named controls, 0 without their visible text

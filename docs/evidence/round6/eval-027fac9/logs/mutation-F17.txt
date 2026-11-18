@@ -1,0 +1,2 @@
+  ● a hanging Inter download falls back to the system font after 2.5 s (not 6 s) and the login opens
+Tests:       1 failed, 1 total

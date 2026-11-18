@@ -1,0 +1,26 @@
+policy                                         {"currency":"MXN","businessDate":"2026-11-16","businessTimeZone":"America/Mexico_City","dailyLimitMinor":"2000000","dailyUsedMinor":"235000","dailyRemainingMinor":"1765000","otpThresholdMinor":"500000","otpExpirySeconds":300,"otpMaxAttempts":5,"demoOnly":true}
+accounts has dailyLimit fields?                [["id","name","kind","currency","availableBalanceMinor","clabe","clabeMasked"],["id","name","kind","currency","availableBalanceMinor","clabe","clabeMasked"]]
+movement sample (sent)                         {"id":"e2b1abdb-109b-44be-894a-b7d9022e746e","transferId":"c174c706-0271-452c-a1e3-aa8aa7d10b7c","type":"debit","amountMinor":"150000","currency":"MXN","concept":"Ahorro mensual","reference":"661099","status":"completed","occurredAt":"2026-11-16T15:51:55.202Z","counterparty":{"name":"Cuenta de ahorro demo","clabeMasked":"646•••••••••••7142","ownAccountId":"fe090de9-6be8-4333-a044-b54aa3a475a6"}}
+occurredAt formats ok                          true
+carlos movement (received?)                    {"id":"41026ae0-163a-48de-8dae-0b758b11061a","transferId":"83111a6b-faf2-47ed-9cf6-7da2b2348eac","type":"credit","amountMinor":"85000","currency":"MXN","concept":"Comida","reference":"131126","status":"completed","occurredAt":"2026-11-16T15:51:55.188Z","counterparty":{"name":"Ana López","clabeMasked":"646•••••••••••4167"}}
+own beneficiary ownAccountId                   {"own":"fe090de9-6be8-4333-a044-b54aa3a475a6","dest":"fe090de9-6be8-4333-a044-b54aa3a475a6"}
+B: Ahorro->Ahorro API                          {"s":422,"detail":"El origen y destino deben ser distintos."}
+  rows/bal unchanged                           {"rows":true,"bal":true}
+Principal->Ahorro                              {"s":201,"st":"completed","bal_before":"Cuenta principal=865000 Ahorro=650000","bal_after":"Cuenta principal=715000 Ahorro=800000","ledger":"-150000,150000"}
+replay same key                                {"same":true,"s":201,"bal":"Cuenta principal=715000 Ahorro=800000"}
+OTP create                                     {"s":202,"st":"awaiting_confirmation","expiresAt":"2026-11-16T15:56:56.261Z","hasDemo":true}
+  no ledger while pending                      0
+confirm wrong code                             {"s":422,"d":"Código incorrecto."}
+confirm wrong replay same key                  {"s":422,"d":"Código incorrecto."}
+cancel                                         {"s":200,"st":"cancelled"}
+confirm cancelled w/ correct code              {"s":409}
+  ledger/bal                                   {"l":"0","bal":"Cuenta principal=715000 Ahorro=800000"}
+confirm expired w/ correct code                {"s":422,"d":"El código expiró."}
+  status/ledger/bal                            {"st":"expired","l":"0","bal":"Cuenta principal=715000 Ahorro=800000"}
+confirm expired again                          {"s":409}
+pending then confirm good                      skip
+confirm good                                   {"s":200,"st":"completed","bal":"Cuenta principal=115000 Ahorro=800000","ledger":"-600000,600000"}
+all statuses                                   131126:completed 661099:completed 2222:completed 3333:cancelled 4444:expired 5555:completed
+huge amount                                    {"s":202}
+carlos reads ana transfer                      404
+policy now                                     {"currency":"MXN","businessDate":"2026-11-16","businessTimeZone":"America/Mexico_City","dailyLimitMinor":"2000000","dailyUsedMinor":"985000","dailyRemainingMinor":"1015000","otpThresholdMinor":"500000","otpExpirySeconds":300,"otpMaxAttempts":5,"demoOnly":true}

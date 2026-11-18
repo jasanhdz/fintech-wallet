@@ -1,0 +1,34 @@
+NORMAL ttf responses: 200 Inter_700Bold.6e237de4f1f413afa2fcc45c77ac343a.ttf ; 200 Inter_400Regular.51b6ad87261f18b6433ec52871ddfabc.ttf ; 200 Inter_500Medium.137ab18bace28dd0bd83eb3b8ed2bc54.ttf ; 200 Inter_600SemiBold.a5f35888d2da465de352e0dcfaf33324.ttf ; 200 Ionicons.b4eb097d35f44ed943676fd56f6bdc51.ttf
+NORMAL document.fonts loaded: ["Inter_400Regular normal","Inter_500Medium normal","Inter_600SemiBold normal","ionicons normal"]
+NORMAL (family|weight) of text nodes on login: {"Times|w=400":1,"ionicons|w=400":7,"Inter_600SemiBold|w=400":4,"Inter_500Medium|w=400":4,"Inter_400Regular|w=400":2}
+NORMAL platform fonts login: {"Inter SemiBold|custom=true":118,"Ionicons|custom=true":14,"Inter Medium|custom=true":154,"Inter|custom=true":304}
+NORMAL home combos: {"Times|w=400":1,"ionicons|w=400":7,"Inter_500Medium|w=400":11,"Inter_600SemiBold|w=400":18,"Inter_400Regular|w=400":11,"Inter_700Bold|w=400":4,"material|w=400":3}
+NORMAL home platform fonts: {"Ionicons|custom=true":14,"Inter Medium|custom=true":178,"Inter SemiBold|custom=true":614,"Inter|custom=true":430,"Material Icons|custom=true":6}
+NORMAL movimientos combos: {"Times|w=400":1,"ionicons|w=400":12,"Inter_500Medium|w=400":41,"Inter_600SemiBold|w=400":22,"material|w=400":9,"ui-monospace|w=700":1,"Inter_700Bold|w=400":2,"Inter_400Regular|w=400":7}
+FALLBACK abort: login visible after 582 ms (null = never)
+FALLBACK abort: combos {"Times|w=400":1,"-apple-system|w=600":4,"-apple-system|w=500":4,"-apple-system|w=400":2}
+FALLBACK abort: platform fonts {".SF NS|custom=false":576}
+FALLBACK abort: logged in, home shows:  | Billetera MXN | INICIO | AL
+FALLBACK hang: login visible after 6655 ms (null = never)
+FALLBACK hang: combos {"Times|w=400":1,"-apple-system|w=600":4,"-apple-system|w=500":4,"-apple-system|w=400":2}
+FALLBACK hang: platform fonts {".SF NS|custom=false":576}
+FAIL page.screenshot: Timeout 30000ms exceeded.
+Call log:
+[2m  - taking page screenshot[22m
+[2m  - waiting for fonts to load...[22m
+
+    at page.shot (/Users/jasanhernandez/Develop/fintech-wallet-g1/docs/evidence/round6/eval-2ab42b4/tools/lib.cjs:28:87)
+    at async /Users/jasanhernandez/Develop/fintech-wallet-g1/docs/evidence/round6/eval-2ab42b4/tools/s8.cjs:45:5 {
+  log: [ '  - taking page screenshot', '  - waiting for fonts to load...' ],
+  name: 'TimeoutError'
+}
+home document.fonts loaded: ["Inter_400Regular","Inter_500Medium","Inter_600SemiBold","Inter_700Bold","ionicons","material"]
+nodes styled Inter_700Bold render with platform font: {"Inter|Inter-Bold":49}
+hang t=1.5s body text: ""
+hang: login rendered after 6885 ms
+hang: after login:  | Billetera MXN | INICIO | AL
+home document.fonts loaded: ["Inter_400Regular","Inter_500Medium","Inter_600SemiBold","Inter_700Bold","ionicons","material"]
+nodes styled Inter_700Bold render with platform font: {"Inter|Inter-Bold":49}
+hang t=1.5s body text: ""
+hang: login rendered after 6885 ms
+hang: after login:  | Billetera MXN | INICIO | AL

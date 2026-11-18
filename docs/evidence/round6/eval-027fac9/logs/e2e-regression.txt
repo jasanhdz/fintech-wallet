@@ -1,0 +1,7 @@
+before Cuenta principal=1015000 Ahorro=500000 total 1515000
+review: $300.25 | Transferencia interna | Saldo posterior estimado | Cálculo: | $10,150.00 - $300.25 = $9,849.75 MXN
+receipt has -$300.25: true | POST /transfers: 1
+after Cuenta principal=984975 Ahorro=530025 total 1515000 | ledger 0/2
+Ahorro->Ahorro row aria-disabled: true
+still on picker: true | POST /transfers: 0
+DB rows with source=destination: 0

@@ -1,8 +1,9 @@
 import React from 'react';
 import assert from 'node:assert/strict';
-import { ActivityIndicator, AppState, Keyboard, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { ActivityIndicator, AppState, Keyboard, KeyboardAvoidingView, PixelRatio, ScrollView, StyleSheet } from 'react-native';
 import TestRenderer from 'react-test-renderer';
 import App from '../App';
+import { formatMoney } from '../src/money';
 
 jest.mock('../App', () => {
   process.env.EXPO_PUBLIC_API_URL = 'https://wallet.test/v1';
@@ -166,7 +167,7 @@ describe('mobile beneficiary selection', () => {
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     assert.ok(fetchSpy.mock.calls.some(([url]) => String(url).endsWith('/beneficiaries')));
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
@@ -233,14 +234,14 @@ describe('mobile transfer attempt', () => {
       assert.ok(balanceIndex >= 0 && transferEntryIndex >= 0, 'home screen must show both the account balance and the transfer entry point');
       assert.ok(balanceIndex < transferEntryIndex, 'the account balance must render above the transfer entry point, matching the approved M02 composition');
     }
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
     assert.ok(beneficiaryButton);
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
-    const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Importe' });
+    const amountInput = renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' });
     const findReviewButton = () => renderer!.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Continuar').length > 0);
     await TestRenderer.act(async () => { amountInput.props.onChangeText('12.345'); });
     const invalidAmountReviewButton = findReviewButton();
@@ -252,7 +253,7 @@ describe('mobile transfer attempt', () => {
     assert.ok(reviewButton, 'the incomplete form should keep the review action visible');
     assert.equal(reviewButton.props.accessibilityState?.disabled, true);
     assert.equal(reviewButton.findAllByType(ActivityIndicator).length, 0, 'validation-disabled review action must not look busy');
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('123'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('123'); });
     await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     const createCalls = () => fetchSpy.mock.calls.filter(([url]) => String(url).endsWith('/transfers')) as [RequestInfo | URL, RequestInit?][];
@@ -321,15 +322,15 @@ describe('mobile transfer attempt', () => {
     const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
     await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
     assert.ok(beneficiaryButton);
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('50.00'); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Ahorro'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('914'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText('50.00'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Ahorro'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('914'); });
     await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('914823'); });
@@ -385,15 +386,15 @@ describe('mobile transfer attempt', () => {
       const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
       await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
       await TestRenderer.act(async () => { await Promise.resolve(); });
-      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
       await TestRenderer.act(async () => { await Promise.resolve(); });
       await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
       const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
       assert.ok(beneficiaryButton);
       await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
       await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
-      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('100.00'); });
-      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Abono'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('1546'); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText('100.00'); });
+      await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Abono'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('1546'); });
       await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
 
       // This is the exact tap that crashed with "Uncaught (in promise): No se pudo crear una
@@ -500,12 +501,12 @@ describe('mobile movement history', () => {
     assert.match(visible(), /Puedes consultar más movimientos en la web/);
     assert.match(visible(), /Honorarios/);
     assert.doesNotMatch(visible(), /Ciclo/);
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cuenta Principal, cambiar cuenta' }).props.onPress(); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Ver movimientos de Ahorro' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.find((node) => /^Principal \(•• \d{4}\), cambiar cuenta$/.test(node.props.accessibilityLabel ?? '')).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.find((node) => /^Ahorro \(•• \d{4}\), ver sus movimientos$/.test(node.props.accessibilityLabel ?? '')).props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     assert.ok(calls.some((url) => url.includes('/accounts/own-2/movements?limit=20')));
     assert.match(visible(), /Farmacia/);
-    assert.ok(renderer!.root.findByProps({ accessibilityLabel: 'Cuenta Ahorro, cambiar cuenta' }));
+    assert.ok(renderer!.root.find((node) => /^Ahorro \(•• \d{4}\), cambiar cuenta$/.test(node.props.accessibilityLabel ?? '')));
 
     const movement = renderer!.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Cargo '))[0]!;
     await TestRenderer.act(async () => { movement.props.onPress(); });
@@ -545,7 +546,7 @@ describe('mobile beneficiary picker (M05)', () => {
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
     await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const visible = JSON.stringify(renderer!.toJSON());
     assert.match(visible, /No tienes beneficiarios guardados/);
@@ -588,7 +589,7 @@ describe('mobile transfer details (M06)', () => {
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
     await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
     await wait();
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
     await wait();
     await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0]!.props.onPress(); });
     await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
@@ -599,7 +600,7 @@ describe('mobile transfer details (M06)', () => {
     assert.match(visible(), /Grace Hopper/);
     assert.match(visible(), /"Principal •• 8412"/);
     assert.doesNotMatch(visible(), /Límite diario/, 'the API exposes no daily limit, so none may be shown');
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('850.00'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText('850.00'); });
 
     // Back from the picker returns to the details step, not Home.
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Cambiar beneficiario' }).props.onPress(); });
@@ -613,9 +614,9 @@ describe('mobile transfer details (M06)', () => {
     await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Katherine'))[0]!.props.onPress(); });
     assert.match(visible(), /Katherine Johnson/);
     assert.doesNotMatch(visible(), /Grace Hopper/);
-    assert.equal(renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '850.00', 'typed amount survives changing the beneficiary');
+    assert.equal(renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.value, '850.00', 'typed amount survives changing the beneficiary');
 
-    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('131126'); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('131126'); });
     await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
     await TestRenderer.act(async () => { button('Confirmar transferencia').props.onPress(); });
     await wait();
@@ -627,7 +628,7 @@ describe('mobile transfer details (M06)', () => {
   });
 });
 
-type FlowHandler = (url: string, init?: RequestInit) => Response | Promise<Response> | undefined;
+type FlowHandler = (url: string, init?: RequestInit) => Response | Promise<Response | undefined> | undefined;
 const flowAccount = { id: 'source-1', name: 'Cuenta Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '1245000', clabe: '000000000000008412', clabeMasked: '000•••••••••••8412' };
 const flowBeneficiary = { id: 'beneficiary-1', name: 'Carlos Ruiz', alias: 'Carlos', clabeMasked: '000•••••••••••0028', destinationAccountId: 'dest-1' };
 const flowTransfer = (overrides: Record<string, unknown> = {}) => ({ id: 'transfer-flow', status: 'awaiting_confirmation', sourceAccountId: 'source-1', destination: flowBeneficiary, amountMinor: '600000', currency: 'MXN', concept: 'Comida', reference: '131126', createdAt: '2026-11-13T20:30:00.000Z', ...overrides });
@@ -655,12 +656,12 @@ async function startTransferFlow(handler: FlowHandler, options: { amount: string
   await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
   await TestRenderer.act(async () => { button('Iniciar sesión').props.onPress(); });
   await wait();
-  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Transferir dinero, elegir beneficiario' }).props.onPress(); });
   await wait();
   await TestRenderer.act(async () => { renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Carlos'))[0]!.props.onPress(); });
   await TestRenderer.act(async () => { button('Continuar con transferencia').props.onPress(); });
-  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText(options.amount); });
-  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('131126'); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText(options.amount); });
+  await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Comida'); renderer!.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('131126'); });
   await TestRenderer.act(async () => { button('Continuar').props.onPress(); });
   const finish = async () => { await TestRenderer.act(async () => { renderer!.unmount(); }); delete (global as { fetch?: typeof fetch }).fetch; };
   return { renderer: renderer!, visible, button, wait, calls, finish };
@@ -736,7 +737,7 @@ describe('mobile confirmation code (M08)', () => {
     assert.equal(authorize.props.accessibilityState?.disabled, true);
     assert.equal(flow.calls.filter((call) => call.url.endsWith('/confirm')).length, 1);
 
-    await TestRenderer.act(async () => { flow.button('Solicitar nuevo código de demostración').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
     await flow.wait();
     const creations = flow.calls.filter((call) => call.url.endsWith('/transfers'));
     assert.equal(creations.length, 2);
@@ -816,7 +817,7 @@ describe('mobile uncertain result (M09)', () => {
     assert.match(uncertain, /Protección contra duplicados activa/);
     assert.match(uncertain, /Estamos verificando si tu transferencia se completó/);
     assert.match(uncertain, /No pudimos confirmar el resultado de la operación de .*"\$850.00"," MXN".*" a ".*"Carlos Ruiz •• 0028"/);
-    assert.match(uncertain, /\(Ref: 131126\)/);
+    assert.match(uncertain, /" \(Ref: ",.{0,140}"children":\["131126"\]\},"\)"/);
     assert.match(uncertain, /No intentes enviar el dinero nuevamente/);
     assert.match(uncertain, /"Monto en verificación"/);
     assert.match(uncertain, /"En verificación de estado"/);
@@ -913,7 +914,7 @@ describe('mobile rejected transfer (M11)', () => {
     assert.match(rejected, /No se pudo completar la transferencia/);
     assert.match(rejected, /Se excedió el límite diario./);
     assert.match(rejected, /Tu dinero está intacto/);
-    assert.match(rejected, /"Cuenta Principal •• 8412"/);
+    assert.match(rejected, /"Principal •• 8412"/);
     assert.match(rejected, /"\$12,450.00 MXN"/);
     assert.match(rejected, /"Monto solicitado"/);
     assert.match(rejected, /"\$6,000.00 MXN"/);
@@ -923,7 +924,7 @@ describe('mobile rejected transfer (M11)', () => {
     await TestRenderer.act(async () => { flow.button('Modificar monto o cuenta').props.onPress(); });
     await flow.wait();
     assert.match(flow.visible(), /PASO 1 DE 2/);
-    assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '6000.00');
+    assert.equal(flow.renderer.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.value, '6000.00');
     assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
     await flow.finish();
   });
@@ -1296,8 +1297,8 @@ async function sameAccountApp(options: { beneficiaries?: unknown[]; onCreate?: (
   });
   const press = async (label: string) => { await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: label }).props.onPress(); }); await app.wait(); };
   const fill = async (amount: string) => {
-    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText(amount); });
-    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Concepto' }).props.onChangeText('Ahorro mensual'); app.renderer.root.findByProps({ accessibilityLabel: 'Referencia' }).props.onChangeText('1546'); });
+    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText(amount); });
+    await TestRenderer.act(async () => { app.renderer.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.onChangeText('Ahorro mensual'); app.renderer.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.onChangeText('1546'); });
   };
   const choose = async (prefix: string) => { await TestRenderer.act(async () => { app.renderer.root.findAll((node) => node.props.accessibilityLabel?.startsWith(`Seleccionar ${prefix}`) && typeof node.props.onPress === 'function')[0]!.props.onPress(); }); await app.wait(); };
   const continueButton = () => app.button('Continuar');
@@ -1308,7 +1309,7 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
   it('M05: from Ahorro, the own "Cuenta de ahorro demo" beneficiary is disabled and explained; Carlos stays available', async () => {
     const app = await sameAccountApp();
     await app.press('Ahorro •• 5719');
-    await app.press('Elegir beneficiario');
+    await app.press('Transferir dinero, elegir beneficiario');
     const own = app.renderer.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Cuenta de ahorro demo') && typeof node.props.onPress === 'function')[0]!;
     assert.equal(own.props.disabled, true);
     assert.match(own.props.accessibilityLabel, /misma cuenta de origen/);
@@ -1322,19 +1323,23 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
 
   it('changing the origin to the destination account (Home tab or M06 selector) invalidates the beneficiary and blocks Continuar; no POST', async () => {
     const app = await sameAccountApp();
-    await app.press('Elegir beneficiario');
+    await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
     // Home tab changed after choosing the destination: the combination becomes invalid.
     await app.press('Ahorro •• 5719');
     assert.match(app.visible(), /Es la misma cuenta de origen seleccionada/);
+    // Round 7 · 1: Home no longer offers "Continuar" for this pair; back on Principal, M06 can still be made invalid.
+    assert.equal(Boolean(app.button('Continuar con transferencia')), false);
+    await app.press('Cuenta Principal •• 8412');
     await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.press('Cambiar cuenta de origen');
+    await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
     await app.fill('100');
     assert.match(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
     assert.equal(app.continueButton().props.disabled, true);
     await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
     assert.doesNotMatch(app.visible(), /Revisar transferencia|Saldo posterior estimado/, 'D: no review or estimate for an invalid combination');
     // M06 origin selector: choosing Principal makes it valid again (own accounts that differ are allowed).
-    await app.press('Cambiar cuenta de origen');
     await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
     assert.doesNotMatch(app.visible(), /La cuenta de origen y el destino son la misma cuenta/);
     assert.notEqual(app.continueButton().props.disabled, true);
@@ -1345,9 +1350,32 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     await app.finish();
   });
 
+  it('round 7 · 1: M02 with origin Ahorro and saved destination Ahorro offers "Elegir otro destinatario" (to M05), never "Continuar"', async () => {
+    const app = await sameAccountApp();
+    await app.press('Transferir dinero, elegir beneficiario');
+    await app.choose('Cuenta de ahorro demo');
+    assert.ok(app.button('Continuar con transferencia'), 'Principal -> Ahorro is a valid pair');
+    assert.equal(Boolean(app.button('Elegir otro destinatario')), false);
+    await app.press('Ahorro •• 5719');
+    assert.match(app.visible(), /Es la misma cuenta de origen seleccionada/);
+    assert.equal(Boolean(app.button('Continuar con transferencia')), false, 'an incompatible pair never shows "Continuar con transferencia"');
+    await TestRenderer.act(async () => { app.button('Elegir otro destinatario').props.onPress(); });
+    await app.wait();
+    const picker = app.visible();
+    assert.match(picker, /Elegir beneficiario/);
+    assert.match(picker, /Un destino que es esta misma cuenta no está disponible/);
+    assert.ok(app.renderer.root.findAll((node) => String(node.props.accessibilityLabel ?? '').startsWith('Usar Cuenta Principal •• 8412 como cuenta de origen')).length > 0, 'M05 offers changing the origin');
+    assert.doesNotMatch(picker, /Revisar transferencia|Datos de la operación/);
+    // Choosing another destination (Carlos) from M05 makes Home valid again.
+    await app.choose('Carlos');
+    assert.ok(app.button('Continuar con transferencia'));
+    assert.equal(app.createBodies.length, 0);
+    await app.finish();
+  });
+
   it('Principal -> Ahorro (different own accounts) stays valid, shows the BigInt estimate and sends that exact payload', async () => {
     const app = await sameAccountApp();
-    await app.press('Elegir beneficiario');
+    await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
     await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
     await app.fill('100');
@@ -1366,7 +1394,7 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     const legacy = { ...ownSavingsBeneficiary, ownAccountId: undefined };
     const app = await sameAccountApp({ beneficiaries: [legacy], onCreate: () => Response.json({ title: 'Unprocessable', status: 422, detail: 'El origen y destino deben ser distintos.' }, { status: 422 }) });
     await app.press('Ahorro •• 5719');
-    await app.press('Elegir beneficiario');
+    await app.press('Transferir dinero, elegir beneficiario');
     await app.choose('Cuenta de ahorro demo');
     await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
     await app.fill('100');
@@ -1378,9 +1406,9 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
     const details = app.visible();
     assert.match(details, /Datos de la operación/);
     assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Usar Cuenta Principal •• 8412 como cuenta de origen' }), 'the origin selector is open');
-    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.value, '100');
-    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Concepto' }).props.value, 'Ahorro mensual');
-    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Referencia' }).props.value, '1546');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.value, '100');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Concepto de pago' }).props.value, 'Ahorro mensual');
+    assert.equal(app.renderer.root.findByProps({ accessibilityLabel: 'Referencia numérica (hasta 7 dígitos)' }).props.value, '1546');
     // Resending the very same combination is not silent.
     await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
     assert.match(app.visible(), /iguales a los del intento rechazado/);
@@ -1395,7 +1423,7 @@ describe('round 6 · B/C/D: origin = destination is decided by account identity 
   it('M05: when every destination is the origin itself, an explanatory empty state offers changing the origin', async () => {
     const app = await sameAccountApp({ beneficiaries: [ownSavingsBeneficiary] });
     await app.press('Ahorro •• 5719');
-    await app.press('Elegir beneficiario');
+    await app.press('Transferir dinero, elegir beneficiario');
     assert.match(app.visible(), /No hay destinos disponibles desde Ahorro •• 5719/);
     await app.press('Usar Cuenta Principal •• 8412 como cuenta de origen');
     assert.doesNotMatch(app.visible(), /No hay destinos disponibles/);
@@ -1414,13 +1442,12 @@ describe('round 6 · H: server transfer policy, threshold variant and real code 
     await TestRenderer.act(async () => { flow.button('Modificar datos').props.onPress(); });
     await flow.wait();
     const details = flow.visible();
-    assert.match(details, /Límite diario \(demo\): /);
-    assert.match(details, /"\$20,000.00 MXN"/);
+    assert.match(details, /"Límite diario: ","\$20,000.00 MXN"/);
     assert.match(details, /"\$18,248.44 MXN"/);
-    assert.match(details, /configuración de demostración/);
+    assert.match(details, /límites de demostración/);
     assert.match(details, /supera lo disponible hoy/);
     assert.equal(flow.button('Continuar').props.disabled, true);
-    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Importe' }).props.onChangeText('18248.44'); });
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Monto a transferir' }).props.onChangeText('18248.44'); });
     assert.notEqual(flow.button('Continuar').props.disabled, true);
     await flow.finish();
   });
@@ -1464,7 +1491,7 @@ describe('round 6 · H: server transfer policy, threshold variant and real code 
     const expired = flow.visible();
     assert.match(expired, /El código ha expirado/);
     assert.equal(flow.button('Autorizar transferencia').props.disabled, true);
-    await TestRenderer.act(async () => { flow.button('Solicitar nuevo código de demostración').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
     await flow.wait();
     const cancelCalls = flow.calls.filter((call) => call.url.endsWith('/transfers/tr-otp-1/cancel'));
     assert.equal(cancelCalls.length, 1);
@@ -1517,7 +1544,7 @@ describe('round 6 · G (F-10): leaving the code step cancels the pending attempt
     await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('123456'); });
     await TestRenderer.act(async () => { flow.button('Autorizar transferencia').props.onPress(); });
     await flow.wait();
-    assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Solicitar nuevo código').length, 0, 'no new code while uncertain');
+    assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Solicitar un código nuevo').length, 0, 'no new code while uncertain');
     await TestRenderer.act(async () => { flow.button('Cancelar y volver a revisar').props.onPress(); });
     await flow.wait();
     assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
@@ -1606,5 +1633,724 @@ describe('round 6 · M01/M12 states', () => {
     assert.match(screen, /Iniciar sesión/);
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+describe('F-11: long dynamic data never pushes controls off screen', () => {
+  const LONG_NAME = 'Ana María de los Ángeles López-Hernández de la Cruz y Villaseñor';
+  const flat = (style: unknown) => StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) ?? {};
+
+  it.each([1, 2])('M02 with a 63-character name (fontScale %s) keeps the greeting flexible and "Cerrar sesión" fixed in the same row', async (fontScale) => {
+    assert.ok(LONG_NAME.length >= 63, "the 63+ character name from the F-11 report");
+    const fontScaleSpy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(fontScale);
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: `long-${fontScale}`, fullName: LONG_NAME, email: 'ana@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [], nextCursor: null });
+      if (url.endsWith('/auth/logout')) return new Response(null, { status: 204 });
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ana@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    const submit = renderer!.root.findAll((node) => node.props.accessibilityRole === 'button' && node.findAll((child) => child.props.children === 'Iniciar sesión').length > 0)[0]!;
+    await TestRenderer.act(async () => { submit.props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+
+    const greeting = renderer!.root.findAllByProps({ testID: 'home-greeting' })[0]!;
+    assert.equal(greeting.props.numberOfLines, 2, 'the greeting wraps to two lines and then ellipsizes instead of overflowing');
+    assert.notEqual(greeting.props.allowFontScaling, false, 'Dynamic Type is respected, not disabled');
+    const row = renderer!.root.findAllByProps({ testID: 'home-greeting-row' })[0]!;
+    assert.equal(flat(row.props.style).flexDirection, 'row');
+    const copy = row.findAll((node) => flat(node.props.style).flex === 1 && node.findAllByProps({ testID: 'home-greeting' }).length > 0)[0]!;
+    assert.ok(copy, 'the greeting column takes the free space');
+    assert.equal(flat(copy.props.style).minWidth, 0, 'and may shrink below its text width');
+    const logout = row.findAll((node) => node.props.accessibilityLabel === 'Cerrar sesión' && typeof node.props.onPress === 'function')[0]!;
+    assert.ok(logout, 'logout lives in the same row as the greeting');
+    const logoutStyle = flat(typeof logout.props.style === 'function' ? logout.props.style({ pressed: false }) : logout.props.style);
+    assert.equal(logoutStyle.flexShrink, 0, 'the logout target never shrinks below its 44 pt size');
+    assert.ok(Number(logoutStyle.width) >= 44, "44 pt minimum touch target");
+    await TestRenderer.act(async () => { logout.props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Iniciar sesión/, 'logout stays reachable and works with the long name');
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    fontScaleSpy.mockRestore();
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+describe('F-12: no exit from the code step while the confirm is in flight', () => {
+  it('disables "Cancelar y volver a revisar" and the header arrow until the confirm answers, never cancels and lands on the receipt', async () => {
+    let releaseConfirm: (() => void) | undefined;
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-slow' }), demoOnlyCode: '123456' }, { status: 202 });
+      if (url.endsWith('/confirm')) return new Promise<Response>((resolve) => { releaseConfirm = () => resolve(Response.json(flowTransfer({ id: 'tr-slow', status: 'completed', completedAt: '2026-11-13T20:32:00.000Z' }))); });
+      if (url.endsWith('/transfers/tr-slow')) return Response.json(flowTransfer({ id: 'tr-slow', status: 'completed', completedAt: '2026-11-13T20:32:00.000Z' }));
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.renderer.root.findByProps({ accessibilityLabel: 'Código de confirmación' }).props.onChangeText('123456'); });
+    await TestRenderer.act(async () => { flow.button('Autorizar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.ok(releaseConfirm, 'the confirm request is pending');
+    const cancelButton = flow.button('Cancelar y volver a revisar');
+    assert.equal(cancelButton.props.disabled, true);
+    const arrow = flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Cancelar y volver a revisar' && typeof node.props.onPress === 'function')[0]!;
+    assert.equal(arrow.props.disabled, true);
+    assert.equal(arrow.props.accessibilityState.disabled, true);
+    // Even a press that slips through (e.g. a queued tap) must not leave the step or cancel the attempt.
+    await TestRenderer.act(async () => { cancelButton.props.onPress(); arrow.props.onPress(); });
+    await flow.wait();
+    assert.doesNotMatch(flow.visible(), /"Revisar transferencia"/);
+    assert.match(flow.visible(), /Código de confirmación/);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
+    await TestRenderer.act(async () => { releaseConfirm!(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/cancel')).length, 0);
+    await flow.finish();
+  });
+});
+
+describe('F-14: the OTP threshold of M07 comes from the server policy, never from a constant', () => {
+  it.each([
+    // [policy threshold, amount, requires code]
+    ['123456', '1234.56', true],
+    ['123456', '1234.55', false],
+    ['123456', '4999.99', true],
+    ['1000000', '6000.00', false],
+    ['1000000', '10000.00', true],
+  ])('threshold %s minor, amount %s -> requires code: %s', async (threshold, amount, otp) => {
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy({ otpThresholdMinor: threshold, dailyRemainingMinor: '2000000', dailyLimitMinor: '2000000' })) : undefined), { amount });
+    await flow.wait();
+    const review = flow.visible();
+    const label = formatMoney(threshold, { currency: true });
+    if (otp) {
+      assert.ok(review.includes(`Operación mayor o igual a ${label} requiere código de autorización`), `M07 names the server threshold ${label}`);
+      assert.ok(flow.button('Continuar a verificación'));
+      assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.findAll((child) => child.props.children === 'Confirmar transferencia').length > 0).length, 0);
+    } else {
+      assert.doesNotMatch(review, /requiere código de autorización/);
+      assert.ok(flow.button('Confirmar transferencia'));
+    }
+    await flow.finish();
+  });
+});
+
+describe('F-15: the M07 threshold variant keeps both actions within 390x844', () => {
+  const flat = (style: unknown) => StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) ?? {};
+  const styleOf = (renderer: TestRenderer.ReactTestRenderer, testID: string) => flat(renderer.root.findAllByProps({ testID })[0]!.props.style);
+  // Measured on the RN-web render (docs/evidence/round6/71bd7e5/checks/f15-*.txt): the two-line threshold pill made the
+  // variant 36 px taller and pushed "Modificar datos" to y=812-856. The hero (-8 px) and the gap above the actions
+  // (-12 px) are tighter only in that variant, so it ends at y=836 like the own-accounts variant.
+  it.each([
+    ['6000.00', true],
+    ['850.00', false],
+  ])('amount %s (threshold variant: %s) uses the matching hero padding and gap above the actions', async (amount, threshold) => {
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy({ dailyRemainingMinor: '2000000' })) : undefined), { amount });
+    await flow.wait();
+    const hero = styleOf(flow.renderer, 'review-hero');
+    const estimate = styleOf(flow.renderer, 'estimate-card');
+    if (threshold) {
+      assert.match(flow.visible(), /requiere código de autorización/);
+      assert.equal(hero.paddingVertical, 12);
+      assert.equal(estimate.marginBottom, 12);
+      assert.ok(flow.button('Continuar a verificación'));
+    } else {
+      assert.doesNotMatch(flow.visible(), /requiere código de autorización/);
+      assert.equal(hero.paddingVertical, undefined, 'the other variants keep the Stitch p-4 hero');
+      assert.equal(hero.padding, 16);
+      assert.equal(estimate.marginBottom, 24, 'and the Stitch gap above the actions');
+      assert.ok(flow.button('Confirmar transferencia'));
+    }
+    assert.ok(flow.button('Modificar datos'));
+    await flow.finish();
+  });
+});
+
+describe('F-16: with large text (fontScale 1.3 / 2) label-value rows and amounts wrap instead of overflowing sideways', () => {
+  // The test renderer has no layout engine, so this locks the structure that makes wrapping possible; the measured
+  // result (0 boxes outside 390 px at 100/130/200 % on M01-M11 with long data) is in the RN-web evidence (f16-log.txt).
+  const flat = (style: unknown) => StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) ?? {};
+  type Node = TestRenderer.ReactTestInstance;
+  const hostText = (renderer: TestRenderer.ReactTestRenderer, text: string) => renderer.root.findAll((node) => String(node.type) === 'Text' && node.props.children === text)[0];
+  const rowOf = (node: Node) => { let current: Node | null = node.parent; while (current && !(String(current.type) === 'View' && flat(current.props.style).flexDirection === 'row')) current = current.parent; return current; };
+  // A row whose label sits next to a value: it must wrap, and its value must be allowed to shrink.
+  const assertWrappingRow = (renderer: TestRenderer.ReactTestRenderer, label: string) => {
+    const text = hostText(renderer, label);
+    assert.ok(text, `"${label}" is rendered`);
+    const row = rowOf(text)!;
+    assert.equal(flat(row.props.style).flexWrap, 'wrap', `the "${label}" row wraps its value below the label when both do not fit`);
+    const value = row.children.filter((child): child is Node => typeof child !== 'string' && !child.findAll((inner) => inner.props.children === label).length).pop()!;
+    assert.equal(flat(value.props.style).flexShrink, 1, `the "${label}" value can shrink`);
+  };
+  // Amount + currency: siblings in a wrapping row (a currency nested inside the amount Text cannot move below it).
+  const assertAmountLine = (renderer: TestRenderer.ReactTestRenderer, currency: string) => {
+    const unit = hostText(renderer, currency);
+    assert.ok(unit, `${currency} is rendered`);
+    assert.notEqual(String(unit.parent?.type), 'Text', 'the currency is not nested in the amount text');
+    const row = rowOf(unit)!;
+    assert.equal(flat(row.props.style).flexWrap, 'wrap');
+    const amount = row.findAll((node) => String(node.type) === 'Text' && node.props.numberOfLines === 1)[0]!;
+    assert.equal(flat(amount.props.style).flexShrink, 1);
+    assert.equal(flat(amount.props.style).minWidth, 0, 'the amount box never exceeds its row');
+  };
+  let fontScaleSpy: jest.SpyInstance | undefined;
+  afterEach(() => { fontScaleSpy?.mockRestore(); });
+
+  it.each([1.3, 2])('M06, M07 (threshold) and M08 at fontScale %s', async (fontScale) => {
+    fontScaleSpy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(fontScale);
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfer-policy')) return Response.json(demoPolicy({ dailyRemainingMinor: '2000000' }));
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-big' }), demoOnlyCode: '123456' }, { status: 202 });
+      if (url.endsWith('/cancel')) return Response.json(flowTransfer({ id: 'tr-big', status: 'cancelled' }));
+      return undefined;
+    }, { amount: '6000.00' });
+    await flow.wait();
+    // M07
+    for (const label of ['Concepto', 'Referencia numérica', 'Tipo de operación']) assertWrappingRow(flow.renderer, label);
+    assertAmountLine(flow.renderer, 'MXN');
+    // M06
+    await TestRenderer.act(async () => { flow.button('Modificar datos').props.onPress(); });
+    await flow.wait();
+    for (const label of ['Cuenta de origen', 'Beneficiario destino']) {
+      const row = rowOf(hostText(flow.renderer, label)!)!;
+      assert.equal(flat(row.props.style).flexWrap, 'wrap', `the "${label}" header lets its link move below`);
+      assert.equal(flat(hostText(flow.renderer, label)!.props.style).flexShrink, 1);
+    }
+    const alias = hostText(flow.renderer, 'Carlos')!;
+    assert.equal(flat(rowOf(alias)!.props.style).flexWrap, 'wrap', 'a long alias moves below the beneficiary name');
+    // M08
+    await TestRenderer.act(async () => { flow.button('Continuar').props.onPress(); });
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /Código de confirmación/);
+    assertAmountLine(flow.renderer, 'MXN');
+    const amountBlock = flow.renderer.root.findAllByProps({ testID: 'otp-amount-line' })[0]!.parent!;
+    assert.equal(flat(amountBlock.props.style).maxWidth, '100%', 'the amount may use the whole width instead of half of it');
+    assert.equal(flat(rowOf(amountBlock)!.props.style).flexWrap, 'wrap', 'and moves below the recipient when needed');
+    await flow.finish();
+  });
+
+  it.each([1.3, 2])('M10 and M04 (folio, type, amount) at fontScale %s', async (fontScale) => {
+    fontScaleSpy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(fontScale);
+    const UUID = '12089d0f-0c30-43fd-aab6-b877c6a1f1e2';
+    const done = flowTransfer({ id: UUID, status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: UUID });
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json(done, { status: 201 });
+      if (url.endsWith(`/transfers/${UUID}`)) return Response.json(done);
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [{ id: 'mv-out', transferId: UUID, type: 'debit', amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', status: 'completed', occurredAt: '2026-11-13T20:32:00.123Z', counterparty: { name: 'Carlos Ruiz', clabeMasked: '000•••••••••••0028' } }], nextCursor: null });
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    assertAmountLine(flow.renderer, 'MXN');
+    await TestRenderer.act(async () => { flow.button('Ver últimos movimientos').props.onPress(); });
+    await flow.wait();
+    const row = flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Cargo '))[0]!;
+    await TestRenderer.act(async () => { row.props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia enviada"/);
+    assertAmountLine(flow.renderer, 'MXN');
+    for (const label of ['Concepto', 'Referencia', 'Tipo de operación']) assertWrappingRow(flow.renderer, label);
+    const folio = flow.renderer.root.findAll((node) => String(node.type) === 'Text' && node.props.testID === 'folio-value')[0]!;
+    assert.equal(flat(rowOf(folio)!.props.style).flexWrap, 'wrap', 'a UUID that does not fit next to "Folio interno" moves below it');
+    assert.equal(flat(folio.props.style).flexBasis, 0, 'and stays beside the label while its longest segment fits');
+    await flow.finish();
+  });
+
+  it.each([1.3, 2])('M11 at fontScale %s', async (fontScale) => {
+    fontScaleSpy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(fontScale);
+    const flow = await startTransferFlow((url) => (url.endsWith('/transfers') ? Response.json({ title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 }) : undefined), { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    for (const label of ['Saldo disponible', 'Monto solicitado']) assertWrappingRow(flow.renderer, label);
+    await flow.finish();
+  });
+});
+
+describe('F-19: the accessible name of every control contains its visible text (voice control "label in name")', () => {
+  type Node = TestRenderer.ReactTestInstance;
+  const norm = (value: string) => value.toLocaleLowerCase('es-MX').replace(/\s+/g, ' ').trim();
+  const textOf = (node: Node): string => node.children.map((child) => (typeof child === 'string' ? child : textOf(child))).join('');
+  // Top-level visible texts of a control, in order (nested Text spans belong to their parent text).
+  const visibleTexts = (control: Node) => control.findAll((node) => String(node.type) === 'Text' && String(node.parent?.type) !== 'Text').map(textOf).filter((text) => text.trim());
+  const checked: string[] = [];
+  const assertLabelInName = (renderer: TestRenderer.ReactTestRenderer, screen: string) => {
+    const controls = renderer.root.findAll((node) => typeof node.props.onPress === 'function' && typeof node.props.accessibilityLabel === 'string' && typeof node.type !== 'string', { deep: false });
+    assert.ok(controls.length > 0, `${screen}: labelled controls found`);
+    for (const control of controls) {
+      // The name a user reads on the control: its first text with a word (icon-only controls have none).
+      const shown = visibleTexts(control).find((text) => /\p{L}{3,}/u.test(text));
+      if (!shown) continue;
+      const label = control.props.accessibilityLabel as string;
+      assert.ok(norm(label).includes(norm(shown)), `${screen}: label "${label}" does not contain the visible text "${shown}"`);
+      checked.push(`${screen}: ${label}`);
+    }
+  };
+  const fieldLabels = ['Monto a transferir', 'Concepto de pago', 'Referencia numérica (hasta 7 dígitos)'];
+
+  it('M02, M05, M06 (origin selector closed and open, fields) and M07', async () => {
+    const app = await sameAccountApp();
+    assertLabelInName(app.renderer, 'M02');
+    await app.press('Transferir dinero, elegir beneficiario');
+    assertLabelInName(app.renderer, 'M05');
+    await app.choose('Carlos');
+    assertLabelInName(app.renderer, 'M02 con destino');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.wait();
+    assertLabelInName(app.renderer, 'M06');
+    await app.press('Cambiar cuenta de origen');
+    assertLabelInName(app.renderer, 'M06 selector abierto');
+    assert.ok(app.renderer.root.findByProps({ accessibilityLabel: 'Listo, cerrar las cuentas de origen' }), 'the open selector names its "Listo" text');
+    for (const label of fieldLabels) {
+      const input = app.renderer.root.findAll((node) => String(node.type) === 'TextInput' && node.props.accessibilityLabel === label);
+      assert.equal(input.length, 1, `input named "${label}"`);
+      assert.ok(app.visible().includes(label), `"${label}" is the visible field label`);
+    }
+    await app.fill('100');
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    await app.wait();
+    assertLabelInName(app.renderer, 'M07');
+    await app.finish();
+  });
+
+  it('M08 with a valid and with an expired code', async () => {
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-lbl', expiresAt: new Date(Date.now() + 1500).toISOString() }), demoOnlyCode: '123456' }, { status: 202 });
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assertLabelInName(flow.renderer, 'M08');
+    assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Solicitar un código nuevo' && typeof node.props.onPress === 'function', { deep: false }).length, 1);
+    await flow.wait(2200);
+    assert.match(flow.visible(), /El código ha expirado/);
+    assertLabelInName(flow.renderer, 'M08 expirado');
+    assert.equal(flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Solicitar un código nuevo' && typeof node.props.onPress === 'function', { deep: false }).length, 1);
+    await flow.finish();
+  });
+
+  it('M03 (account picker open) and M04', async () => {
+    const app = await loginWith((url) => {
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount, savingsAccount] });
+      if (url.includes('/movements?limit=20')) return Response.json({ items: [{ id: 'mv-out', transferId: 'tr-x', type: 'debit', amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', status: 'completed', occurredAt: '2026-11-13T20:32:00.123Z', counterparty: { name: 'Carlos Ruiz', clabeMasked: '000•••••••••••0028' } }], nextCursor: null });
+      if (url.endsWith('/transfers/tr-x')) return Response.json(flowTransfer({ id: 'tr-x', status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z' }));
+      return undefined;
+    });
+    const tab = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'tab' && typeof node.props.onPress === 'function').find((node) => node.findAll((child) => child.props.children === 'Movimientos').length > 0)!;
+    await TestRenderer.act(async () => { tab.props.onPress(); });
+    await app.wait();
+    const picker = app.renderer.root.find((node) => /^Cuenta Principal \(•• 8412\), cambiar cuenta$/.test(node.props.accessibilityLabel ?? ''));
+    await TestRenderer.act(async () => { picker.props.onPress(); });
+    assertLabelInName(app.renderer, 'M03');
+    const row = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Cargo '))[0]!;
+    await TestRenderer.act(async () => { row.props.onPress(); });
+    await app.wait();
+    assert.match(app.visible(), /"Transferencia enviada"/);
+    assertLabelInName(app.renderer, 'M04');
+    await app.finish();
+    // Guard against a vacuous pass: the scan really covered the controls whose names changed.
+    for (const expected of ['Transferir dinero, elegir beneficiario', 'Última actualización de saldo', 'Listo, cerrar las cuentas de origen', 'Solicitar un código nuevo', 'cambiar cuenta', 'ver sus movimientos']) {
+      assert.ok(checked.some((entry) => entry.includes(expected)), `checked a control named "${expected}"`);
+    }
+  });
+});
+
+describe('round 7 · real folios (UUID) on M04 and M10', () => {
+  const UUID = 'f915ada2-ba25-4eee-9e1b-ca75c9a47872';
+  const folioChecks = (renderer: TestRenderer.ReactTestRenderer) => {
+    const folio = renderer.root.findAll((node) => node.props.testID === 'folio-value' && node.props.selectable !== undefined)[0]!;
+    assert.ok(folio, 'folio text rendered');
+    assert.equal(folio.props.children, UUID, 'the complete UUID is shown, never shortened or replaced by a mock');
+    assert.equal(folio.props.selectable, true, 'the folio can be selected and copied (no fake copy button)');
+    assert.equal(folio.props.numberOfLines, undefined, 'it wraps instead of being cut');
+    assert.equal(folio.props.accessibilityLabel, `Folio ${UUID}`);
+    const style = StyleSheet.flatten(folio.props.style);
+    assert.equal(style.flexShrink, 1, 'the value shrinks/wraps inside its row');
+    let row: TestRenderer.ReactTestInstance | null = folio;
+    for (let level = 0; level < 6 && row && row.findAll((node) => node.props.children === 'Folio interno').length === 0; level += 1) row = row.parent;
+    assert.ok(row, 'the folio sits in the "Folio interno" row');
+    const label = row.findAll((node) => node.props.children === 'Folio interno' && node.props.style)[0]!;
+    assert.equal(StyleSheet.flatten(label.props.style).flexShrink, 0, 'the label never wraps under a long folio');
+    const json = JSON.stringify(renderer.toJSON());
+    assert.doesNotMatch(json, /DEMO-0001|content_copy/);
+  };
+
+  it('M10 shows the full folio of a completed transfer', async () => {
+    const done = flowTransfer({ id: UUID, status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: UUID });
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json(done, { status: 201 });
+      if (url.endsWith(`/transfers/${UUID}`)) return Response.json(done);
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    folioChecks(flow.renderer);
+    await flow.finish();
+  });
+
+  it('M04 shows the full folio of a sent movement in the accent colour', async () => {
+    const app = await loginWith((url) => {
+      if (url.endsWith('/accounts')) return Response.json({ items: [flowAccount] });
+      if (url.includes('/accounts/source-1/movements?limit=20')) return Response.json({ items: [{ id: 'mv-out', transferId: UUID, type: 'debit', amountMinor: '85000', currency: 'MXN', concept: 'Comida', reference: '131126', status: 'completed', occurredAt: '2026-11-13T20:32:00.123Z', counterparty: { name: 'Carlos Ruiz', clabeMasked: '000•••••••••••0028' } }], nextCursor: null });
+      if (url.endsWith(`/transfers/${UUID}`)) return Response.json(flowTransfer({ id: UUID, status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: UUID }));
+      return undefined;
+    });
+    const row = app.renderer.root.findAll((node) => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel?.startsWith('Cargo '))[0]!;
+    await TestRenderer.act(async () => { row.props.onPress(); });
+    await app.wait();
+    assert.match(app.visible(), /"Transferencia enviada"/);
+    folioChecks(app.renderer);
+    const folio = app.renderer.root.findAllByProps({ testID: 'folio-value' })[0]!;
+    assert.equal(StyleSheet.flatten(folio.props.style).color, '#0037b0');
+    await app.finish();
+  });
+});
+
+describe('round 7 · 2: readable type scale (>= 12 pt secondary, >= 14 pt help, errors and key data)', () => {
+  type Node = TestRenderer.ReactTestInstance;
+  const flat = (style: unknown) => (StyleSheet.flatten(style as Parameters<typeof StyleSheet.flatten>[0]) ?? {}) as { fontSize?: number; lineHeight?: number };
+  const textOf = (node: Node): string => node.children.map((child) => (typeof child === 'string' ? child : textOf(child))).join('');
+  // Every rendered text (icons excluded: vector icons are glyphs, not copy) must be >= 12 pt with a line height that fits it.
+  const scan = (renderer: TestRenderer.ReactTestRenderer, screen: string) => {
+    const texts = renderer.root.findAll((node) => String(node.type) === 'Text' && String(node.parent?.type) !== 'Text' && !String(node.parent?.type).match(/Icon/) && /\p{L}|\d/u.test(textOf(node)));
+    assert.ok(texts.length > 5, `${screen}: texts found`);
+    for (const node of texts) {
+      const style = flat(node.props.style);
+      if (style.fontSize === undefined) continue; // platform default (14)
+      assert.ok(style.fontSize >= 12, `${screen}: "${textOf(node).slice(0, 60)}" is ${style.fontSize} pt (< 12)`);
+      if (style.lineHeight !== undefined) assert.ok(style.lineHeight >= style.fontSize, `${screen}: "${textOf(node).slice(0, 40)}" line height ${style.lineHeight} < ${style.fontSize}`);
+    }
+  };
+  const sizeOf = (renderer: TestRenderer.ReactTestRenderer, pattern: RegExp) => {
+    const node = renderer.root.findAll((candidate) => String(candidate.type) === 'Text' && String(candidate.parent?.type) !== 'Text' && pattern.test(textOf(candidate)))[0];
+    assert.ok(node, `text ${pattern} rendered`);
+    return flat(node.props.style).fontSize ?? 14;
+  };
+
+  it('M02, M05, M06 (limit and daily remaining), M07 (secondary data) and M08 (help, countdown)', async () => {
+    const app = await sameAccountApp();
+    scan(app.renderer, 'M02');
+    assert.ok(sizeOf(app.renderer, /^Movimientos$/) >= 13, 'tab bar labels are at least 13 pt');
+    await app.press('Transferir dinero, elegir beneficiario');
+    scan(app.renderer, 'M05');
+    await app.choose('Carlos');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.wait();
+    await app.fill('6000');
+    scan(app.renderer, 'M06');
+    assert.ok(sizeOf(app.renderer, /^Límite diario:/) >= 12);
+    assert.ok(sizeOf(app.renderer, /^Disponible hoy:/) >= 12);
+    assert.ok(sizeOf(app.renderer, /^Los beneficiarios se registran/) >= 12);
+    await TestRenderer.act(async () => { app.continueButton().props.onPress(); });
+    scan(app.renderer, 'M07');
+    assert.ok(sizeOf(app.renderer, /^Concepto$/) >= 14, 'M07 secondary labels match their values (14 pt)');
+    assert.ok(sizeOf(app.renderer, /^CUENTA DE ORIGEN$/) >= 12);
+    assert.ok(sizeOf(app.renderer, /^El envío aún no está confirmado/) >= 12);
+    assert.ok(sizeOf(app.renderer, /requiere código de autorización/) >= 12);
+    await app.finish();
+  });
+
+  it('M08 help/countdown, M11 messages and M10 receipt date are body size (14 pt)', async () => {
+    const flow = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ ...flowTransfer({ expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '742890' }, { status: 202 });
+      return undefined;
+    }, { amount: '6000.00' });
+    await TestRenderer.act(async () => { flow.button('Confirmar transferencia').props.onPress(); });
+    await flow.wait();
+    scan(flow.renderer, 'M08');
+    assert.ok(sizeOf(flow.renderer, /^Ingresa el código/) >= 14);
+    assert.ok(sizeOf(flow.renderer, /^El código expira en/) >= 14);
+    assert.ok(sizeOf(flow.renderer, /^Código asignado para esta prueba/) >= 14);
+    await flow.finish();
+
+    const done = flowTransfer({ id: 'transfer-done', status: 'completed', amountMinor: '85000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'f2b6a1f0-1b2c-4d5e-8f90-0123456789ab' });
+    const receipt = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json(done, { status: 201 });
+      if (url.endsWith('/transfers/transfer-done')) return Response.json(done);
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { receipt.button('Confirmar transferencia').props.onPress(); });
+    await receipt.wait();
+    scan(receipt.renderer, 'M10');
+    assert.ok(sizeOf(receipt.renderer, /13 de noviembre de 2026/) >= 14, 'receipt date');
+    assert.ok(sizeOf(receipt.renderer, /^f2b6a1f0/) >= 14, 'folio');
+    await receipt.finish();
+
+    const rejected = await startTransferFlow((url) => {
+      if (url.endsWith('/transfers')) return Response.json({ title: 'Unprocessable Entity', detail: 'Saldo insuficiente.' }, { status: 422 });
+      return undefined;
+    }, { amount: '850.00' });
+    await TestRenderer.act(async () => { rejected.button('Confirmar transferencia').props.onPress(); });
+    await rejected.wait();
+    scan(rejected.renderer, 'M11');
+    assert.ok(sizeOf(rejected.renderer, /^No se aplicó ningún cargo/) >= 14);
+    await rejected.finish();
+  });
+
+  it('the same-account warning on M06 is body size', async () => {
+    const app = await sameAccountApp();
+    await app.press('Transferir dinero, elegir beneficiario');
+    await app.choose('Cuenta de ahorro demo');
+    await TestRenderer.act(async () => { app.button('Continuar con transferencia').props.onPress(); });
+    await app.press('Cambiar cuenta de origen');
+    await app.press('Usar Ahorro •• 5719 como cuenta de origen, es el destino elegido');
+    assert.ok(sizeOf(app.renderer, /^La cuenta de origen y el destino son la misma cuenta/) >= 14);
+    await app.finish();
+  });
+});
+
+describe('round 7 · 3: M07 estimated-balance bar shows the real split, neutral and decorative', () => {
+  it('blue = balance after the transfer / current balance, neutral = amount / current balance, hidden from assistive tech', async () => {
+    const flow = await startTransferFlow(() => undefined, { amount: '850.00' });
+    await flow.wait();
+    assert.match(flow.visible(), /"\$12,450.00"," - ","\$850.00"," = ","\$11,600.00"," MXN"/);
+    const bar = flow.renderer.root.findAll((node) => node.props.testID === 'estimate-bar' && String(node.type) === 'View')[0]!;
+    assert.equal(bar.props.accessibilityElementsHidden, true);
+    assert.equal(bar.props.importantForAccessibility, 'no-hide-descendants');
+    const [remaining, spent] = bar.children as TestRenderer.ReactTestInstance[];
+    const remainingStyle = StyleSheet.flatten(remaining!.props.style);
+    const spentStyle = StyleSheet.flatten(spent!.props.style);
+    // 1,160,000 / 1,245,000 = 93.17 % (BigInt basis points, as in the Stitch reference).
+    assert.equal(remainingStyle.width, '93.17%');
+    assert.equal(remainingStyle.backgroundColor, '#0037b0');
+    assert.equal(spentStyle.flex, 1);
+    assert.ok(!['#ffb4a8', '#ba1a1a', '#8f0001', '#ffdad5', '#b22217'].includes(String(spentStyle.backgroundColor)), `the used share is not an alarm red (${String(spentStyle.backgroundColor)})`);
+    await flow.finish();
+  });
+});
+
+describe('round 7 · 4: M07/M08 code states follow the server (threshold, expiry, attempts)', () => {
+  const policyHandler = (url: string) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy({ dailyRemainingMinor: '2000000' })) : undefined);
+  const codeInput = (flow: { renderer: TestRenderer.ReactTestRenderer }) => flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Código de confirmación' && typeof node.props.onChangeText === 'function')[0]!;
+  const type = async (flow: { renderer: TestRenderer.ReactTestRenderer }, value: string) => { await TestRenderer.act(async () => { codeInput(flow).props.onChangeText(value); }); };
+  const authorize = (flow: { renderer: TestRenderer.ReactTestRenderer }) => flow.renderer.root.findAll((node) => node.props.accessibilityRole === 'button').find((node) => node.findAll((child) => child.props.children === 'Autorizar transferencia').length > 0)!;
+
+  // The client only predicts the variant from GET /transfer-policy (amount >= otpThresholdMinor, as the API applies it).
+  it.each([
+    ['4999.99', '499999', false],
+    ['5000.00', '500000', true],
+    ['5000.01', '500001', true],
+  ])('review of %s (%s minor) against the 500000 policy threshold predicts a code: %s', async (amount, _minor, otp) => {
+    const flow = await startTransferFlow(policyHandler, { amount });
+    await flow.wait();
+    assert.equal(Boolean(flow.button('Continuar a verificación')), otp);
+    assert.equal(Boolean(flow.button('Confirmar transferencia')), !otp);
+    assert.equal(/requiere código de autorización/.test(flow.visible()), otp);
+    await flow.finish();
+  });
+
+  it('the server answer wins over the prediction: 202 awaiting_confirmation opens M08, 201 completed opens the receipt', async () => {
+    const otpFlow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-202', amountMinor: '499999', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '000000' }, { status: 202 });
+      return policyHandler(url);
+    }, { amount: '4999.99' });
+    await otpFlow.wait();
+    await TestRenderer.act(async () => { otpFlow.button('Confirmar transferencia').props.onPress(); });
+    await otpFlow.wait();
+    assert.match(otpFlow.visible(), /"Código de confirmación"/, 'predicted no code, the server asked for one: M08');
+    assert.match(otpFlow.visible(), /"\$4,999.99"/);
+    await otpFlow.finish();
+
+    const done = flowTransfer({ id: 'tr-201', status: 'completed', amountMinor: '500000', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'R-201' });
+    const directFlow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json(done, { status: 201 });
+      if (url.endsWith('/transfers/tr-201')) return Response.json(done);
+      return policyHandler(url);
+    }, { amount: '5000.00' });
+    await directFlow.wait();
+    await TestRenderer.act(async () => { directFlow.button('Continuar a verificación').props.onPress(); });
+    await directFlow.wait();
+    assert.match(directFlow.visible(), /"Transferencia completada"/, 'predicted a code, the server completed it: receipt');
+    assert.doesNotMatch(directFlow.visible(), /"Código de confirmación"/);
+    await directFlow.finish();
+  });
+
+  it('one hidden accessible input: one-time-code autofill, paste of 6 digits, delete, digits only; incomplete and complete states', async () => {
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '742890' }, { status: 202 });
+      return policyHandler(url);
+    }, { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    const inputs = flow.renderer.root.findAll((node) => String(node.type) === 'TextInput');
+    assert.equal(inputs.length, 1, 'a single native input behind the six boxes');
+    const input = codeInput(flow);
+    assert.equal(input.props.autoComplete, 'one-time-code');
+    assert.equal(input.props.textContentType, 'oneTimeCode');
+    assert.equal(input.props.keyboardType, 'number-pad');
+    assert.equal(input.props.maxLength, 6);
+    const boxes = flow.renderer.root.findAll((node) => String(node.type) === 'View' && node.props.accessibilityElementsHidden === true && node.props.pointerEvents === 'none');
+    assert.ok(boxes.length >= 1, 'the six boxes are hidden from assistive technologies');
+    await type(flow, '74');
+    assert.match(flow.visible(), /Faltan 4 dígitos/);
+    assert.equal(authorize(flow).props.accessibilityState?.disabled, true);
+    await type(flow, '74 28-90x1');
+    assert.equal(codeInput(flow).props.value, '742890', 'pasted text keeps only the first 6 digits');
+    assert.match(flow.visible(), /Código completo. Ya puedes autorizar./);
+    assert.equal(authorize(flow).props.accessibilityState?.disabled, false);
+    await type(flow, '74289');
+    assert.match(flow.visible(), /Falta 1 dígito/);
+    await flow.finish();
+  });
+
+  it('wrong code (422) keeps the attempt with a clear message and the server attempt limit; verifying is its own state', async () => {
+    let release: (() => void) | null = null;
+    let confirms = 0;
+    const flow = await startTransferFlow(async (url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '742890' }, { status: 202 });
+      if (url.endsWith('/confirm')) {
+        confirms += 1;
+        await new Promise<void>((resolve) => { release = resolve; });
+        return Response.json({ title: 'Unprocessable Entity', detail: 'Código incorrecto.' }, { status: 422 });
+      }
+      return policyHandler(url);
+    }, { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    await type(flow, '111111');
+    await TestRenderer.act(async () => { authorize(flow).props.onPress(); });
+    await flow.wait();
+    const verifying = flow.visible();
+    assert.match(verifying, /Verificando código…/);
+    assert.doesNotMatch(verifying, /Enviando transferencia|Estamos verificando si tu transferencia/, 'verifying the code is not the sending or uncertain screen');
+    assert.equal(codeInput(flow).props.editable, false);
+    await TestRenderer.act(async () => { release!(); });
+    await flow.wait();
+    const wrong = flow.visible();
+    assert.match(wrong, /Código incorrecto. Verifica los 6 dígitos/);
+    assert.match(wrong, /Tras 5 intentos fallidos/);
+    assert.equal(codeInput(flow).props.value, '');
+    assert.equal(Boolean(flow.button('Reintentar envío del mismo código')), false, 'a wrong code is never replayed');
+    assert.equal(confirms, 1);
+    await flow.finish();
+  });
+
+  it('attempts exhausted (429): own state, input and Autorizar disabled, demo code hidden; a new code closes the attempt first', async () => {
+    const order: string[] = [];
+    let created = 0;
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') { created += 1; order.push(`create-${created}`); return Response.json({ ...flowTransfer({ id: `tr-lock-${created}`, expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: created === 1 ? '111111' : '222222' }, { status: 202 }); }
+      if (url.endsWith('/transfers/tr-lock-1/confirm')) return Response.json({ title: 'Too Many Requests', detail: 'Se agotaron los intentos.' }, { status: 429 });
+      if (url.endsWith('/transfers/tr-lock-1/cancel')) { order.push('cancel-1'); return Response.json(flowTransfer({ id: 'tr-lock-1', status: 'cancelled' })); }
+      return policyHandler(url);
+    }, { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    await type(flow, '999999');
+    await TestRenderer.act(async () => { authorize(flow).props.onPress(); });
+    await flow.wait();
+    const locked = flow.visible();
+    assert.match(locked, /Se agotaron los intentos para este código/);
+    assert.match(locked, /no movió dinero/);
+    assert.doesNotMatch(locked, /111111/);
+    assert.equal(codeInput(flow).props.editable, false);
+    assert.equal(authorize(flow).props.accessibilityState?.disabled, true);
+    assert.ok(flow.button('Cancelar y volver a revisar'), 'a useful exit remains');
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
+    await flow.wait();
+    assert.deepEqual(order, ['create-1', 'cancel-1', 'create-2'], 'the locked attempt is cancelled before the new one exists');
+    assert.doesNotMatch(flow.visible(), /Se agotaron los intentos/);
+    assert.match(flow.visible(), /222222/);
+    await flow.finish();
+  });
+
+  it.each([
+    [422, 'Unprocessable Entity', 'Saldo insuficiente.'],
+    [429, 'Too Many Requests', 'Se excedió el límite diario.'],
+  ])('a %s business rejection at confirm time goes to M11 with no debit and closes the pending attempt', async (status, title, detail) => {
+    const flow = await startTransferFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-biz', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '742890' }, { status: 202 });
+      if (url.endsWith('/transfers/tr-biz/confirm')) return Response.json({ title, detail }, { status });
+      if (url.endsWith('/transfers/tr-biz/cancel')) return Response.json(flowTransfer({ id: 'tr-biz', status: 'cancelled' }));
+      return policyHandler(url);
+    }, { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    await type(flow, '742890');
+    await TestRenderer.act(async () => { authorize(flow).props.onPress(); });
+    await flow.wait();
+    const rejected = flow.visible();
+    assert.match(rejected, /No se pudo completar la transferencia/);
+    assert.match(rejected, /Tu dinero está intacto/);
+    assert.match(rejected, /"\$6,000.00 MXN"/);
+    assert.equal(flow.calls.filter((call) => call.url.endsWith('/transfers/tr-biz/cancel')).length, 1);
+    assert.equal(mockSecureValues.has('wallet.transfer-recovery'), false);
+    await flow.finish();
+  });
+});
+
+describe('round 7 · 5: "Solicitar un código nuevo" never leaves two open attempts', () => {
+  const policyHandler = (url: string) => (url.endsWith('/transfer-policy') ? Response.json(demoPolicy({ dailyRemainingMinor: '2000000' })) : undefined);
+  const otpFlow = async (handler: FlowHandler) => {
+    const flow = await startTransferFlow((url, init) => handler(url, init) ?? policyHandler(url), { amount: '6000.00' });
+    await flow.wait();
+    await TestRenderer.act(async () => { flow.button('Continuar a verificación').props.onPress(); });
+    await flow.wait();
+    return flow;
+  };
+  const creates = (flow: { calls: Array<{ url: string; init?: RequestInit }> }) => flow.calls.filter((call) => call.url.endsWith('/transfers') && call.init?.method === 'POST');
+
+  it('creates nothing when neither the cancel nor the status read of the previous attempt answers', async () => {
+    const flow = await otpFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-a', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '111111' }, { status: 202 });
+      if (url.endsWith('/transfers/tr-a/cancel') || url.endsWith('/transfers/tr-a')) throw new TypeError('Network request failed');
+      return undefined;
+    });
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
+    await flow.wait();
+    assert.equal(creates(flow).length, 1, 'no second attempt while the first one may still be open');
+    assert.match(flow.visible(), /No pudimos confirmar que el intento anterior quedó cancelado/);
+    assert.match(flow.visible(), /111111/, 'the original attempt and its code stay on screen');
+    await flow.finish();
+  });
+
+  it('when the cancel is refused (409) and the attempt is completed, shows its receipt and creates nothing', async () => {
+    const done = flowTransfer({ id: 'tr-b', status: 'completed', completedAt: '2026-11-13T20:32:00.000Z', receiptReference: 'R-B' });
+    const flow = await otpFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') return Response.json({ ...flowTransfer({ id: 'tr-b', expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '111111' }, { status: 202 });
+      if (url.endsWith('/transfers/tr-b/cancel')) return Response.json({ title: 'Conflict', detail: 'La transferencia ya no puede cancelarse.' }, { status: 409 });
+      if (url.endsWith('/transfers/tr-b')) return Response.json(done);
+      return undefined;
+    });
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
+    await flow.wait();
+    assert.equal(creates(flow).length, 1);
+    assert.match(flow.visible(), /"Transferencia completada"/);
+    await flow.finish();
+  });
+
+  it('after a confirmed cancel, the new attempt keeps amount, origin, destination, concept and reference with a new key', async () => {
+    let created = 0;
+    const flow = await otpFlow((url, init) => {
+      if (url.endsWith('/transfers') && init?.method === 'POST') { created += 1; return Response.json({ ...flowTransfer({ id: `tr-c${created}`, expiresAt: new Date(Date.now() + 120_000).toISOString() }), demoOnlyCode: '111111' }, { status: 202 }); }
+      if (url.endsWith('/transfers/tr-c1/cancel')) return Response.json(flowTransfer({ id: 'tr-c1', status: 'cancelled' }));
+      return undefined;
+    });
+    await TestRenderer.act(async () => { flow.button('Solicitar un código nuevo').props.onPress(); });
+    await flow.wait();
+    const [first, second] = creates(flow);
+    assert.ok(first && second);
+    assert.deepEqual(JSON.parse(String(second.init?.body)), JSON.parse(String(first.init?.body)));
+    assert.deepEqual(JSON.parse(String(first.init?.body)), { sourceAccountId: 'source-1', destinationType: 'beneficiary', beneficiaryId: 'beneficiary-1', amountMinor: '600000', concept: 'Comida', reference: '131126' });
+    const key = (call: { init?: RequestInit }) => (call.init?.headers as Record<string, string>)['Idempotency-Key'];
+    assert.notEqual(key(first), key(second));
+    const cancelIndex = flow.calls.findIndex((call) => call.url.endsWith('/transfers/tr-c1/cancel'));
+    const secondIndex = flow.calls.indexOf(second);
+    assert.ok(cancelIndex >= 0 && cancelIndex < secondIndex, 'cancel answered before the new attempt was created');
+    // The new code is confirmed against the NEW attempt only.
+    await TestRenderer.act(async () => { flow.renderer.root.findAll((node) => node.props.accessibilityLabel === 'Código de confirmación' && typeof node.props.onChangeText === 'function')[0]!.props.onChangeText('111111'); });
+    assert.equal(flow.calls.filter((call) => call.url.includes('/transfers/tr-c1/confirm')).length, 0);
+    await flow.finish();
   });
 });

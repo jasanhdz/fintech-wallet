@@ -1,0 +1,9 @@
+SHOT E4-expired-confirm bad=[]
+E4 expired confirm: screen:  | Transferir | AL |  | Confirmación de seguridad | Monto extraordinario | DESTINATARIO | Carlos Ruiz •• 4151 | (Billetera MXN) | IMPORTE | $5,000.00 MXN |  | Operación mayor o igual a $5,000.00 MXN (umbral de demostración) | CÓDIGO DE DEMOSTRACIÓN | Código de confirmación | Ingresa el código de demostración de 6 dígitos para autorizar el traspaso por $5,000.00 MXN a Carlos Ruiz •• 4151. |  | El código ha expirado. Por seguridad solicita uno nuevo para continuar. |  | Solicitar nuevo código
+E4 DB: expired:500000 | balances unchanged: true | ledger rows: 0
+SHOT E5-relaunch-expired bad=[]
+E5 expired after relaunch: DB expired:500000 | screen:  | Transferir | AL |  | El código de esta operación expiró | El intento se cerró sin autorizarse. |  | No se movió dinero | Un intento expirado no genera cargo ni abono. | Destinatario | Carlos Ruiz | Monto | $5,000.00 MXN | Referencia | 5555 | Estado actual | Expirada |  | Volver al inicio
+SHOT E5-relaunch-cancelled bad=[]
+E5 cancelled after relaunch: DB cancelled:500000 | screen:  | Transferir | AL |  | Operación cancelada | Cancelaste este intento antes de autorizarlo. |  | No se movió dinero | Un intento cancelado no genera cargo ni abono. | Destinatario | Carlos Ruiz | Monto | $5,000.00 MXN | Referencia | 6666 | Estado actual | Cancelada |  | Volver al inicio
+"Consultando operación" anywhere: false
+Totals: transfers by status for Ana: 131126:completed 4444:expired 5555:expired 6666:cancelled

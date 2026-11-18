@@ -98,3 +98,45 @@ POST /transfers (>= umbral) ──► awaiting_confirmation ──OTP correcto�
 - `wallet_dev` **no** tiene la migración 1763000008000. La API demo (puerto 3200) corre con `tsx watch` sobre el checkout principal; por eso esta tanda se trabajó en un worktree aparte y el checkout principal sigue en `902743f`. Al hacer fast-forward del checkout principal la API demo recargará el código nuevo: antes hay que correr `npm run db:migrate` contra `wallet_dev` (decisión del usuario), o las rutas de transferencias fallarán por la columna `closed_at` faltante.
 - `npm run test:integration` (raíz) corre los archivos en paralelo; la prueba de corte de BD de `transfers.integration.ts` termina backends activos de `wallet_runtime_test` y puede tumbar consultas de otra suite simultánea. Recomendación al dueño de `package.json`: añadir `--test-concurrency=1`. Esta tanda ejecutó las suites de una en una.
 - No verificado: parseo de fechas/Intl en Hermes en dispositivo (no hay simulador en este host); cambios de UI web/móvil (fuera del alcance de G1).
+
+## 7. F-18 — `paths` de `mobile/tsconfig.json` y especificadores `.js` de `shared` (riesgo documentado)
+
+Estado actual (verificado en la tanda G4):
+
+- `mobile/tsconfig.json` mapea `@fintech-wallet/shared` → `../packages/shared/src/index.ts`. `packages/shared/package.json`
+  exporta `"./src/index.ts"` (sin `dist`, sin condiciones). En un clon limpio con `npm ci` el symlink de workspace
+  `node_modules/@fintech-wallet/shared` apunta al mismo directorio, así que el mapeo es **redundante e inocuo**. Sólo es
+  necesario en un worktree cuyo `node_modules` es un symlink al checkout principal (como `fintech-wallet-g1`): ahí el symlink
+  de workspace resuelve al `packages/shared` del checkout principal (otra versión del contrato) y sin `paths` `tsc` falla.
+- Mobile sólo hace `import type { ProductComponents } from '@fintech-wallet/shared'` (`App.tsx`). Babel elimina los imports de
+  tipo, de modo que ni Metro (ios/web) ni Jest cargan código de `shared`; la API se consume con `fetch` y los tipos.
+- `packages/shared/src/index.ts` usa especificadores ESM `./money.js`, `./validation.js`, `./generated/*.js` que apuntan a
+  archivos `.ts` (convención de `tsc`/`tsx` con `moduleResolution` NodeNext). Metro no reescribe `.js` → `.ts`.
+
+Cuándo rompería un build:
+
+1. **Un import de valor desde mobile** (`import { isValidClabe } from '@fintech-wallet/shared'`, `import * as`, `require`,
+   `import()` o `import { type X }` sin `import type`). Metro resuelve `packages/shared/src/index.ts` (por `paths` o por el
+   symlink, da igual) y falla: `Unable to resolve "./money.js" from "packages/shared/src/index.ts"` (reproducido en G4 con
+   `expo export --platform web`, salida 1; revertido). `tsc` y Jest no lo detectan por sí solos.
+2. **Construir `mobile/` aislado** (copiar sólo esa carpeta, o un CI que no instale el workspace): `../packages` no existe;
+   `tsc` falla al resolver el tipo. El bundle no se ve afectado mientras sólo haya imports de tipo.
+3. **`shared` cambia su `exports`** (p. ej. a `dist/` compilado o con condiciones `types`/`import`): el mapeo seguiría apuntando
+   al fuente y podría divergir de lo que resuelve el workspace (tipos de una versión, runtime de otra).
+4. **Worktree con `node_modules` ajeno sin el mapeo**: `tsc` valida contra el contrato de otro checkout (los 7 errores que
+   el evaluador reprodujo en `logs/tsc-without-paths-mutation.txt`).
+
+Cómo proceder:
+
+- Regla: en `mobile/**` sólo `import type`/`export type` de `@fintech-wallet/shared`. Lo vigila
+  `mobile/tests/shared-imports.test.ts` (corre en `npm test`): falla ante cualquier otra referencia al paquete, se
+  autoverifica con ejemplos de imports de valor y comprueba que el `paths` apunta al mismo archivo que `exports` de `shared`
+  (si `shared` cambia su `exports`, la prueba falla y obliga a revisar esta sección).
+- Si mobile necesita **lógica** compartida (no sólo tipos), no basta con quitar la regla. Opciones, a decidir por el
+  Coordinador (dueño de `packages/shared` y de los `package.json`): (a) publicar un build JS de `shared` (`dist/` con
+  especificadores resueltos) y apuntar `exports` y el `paths` de mobile a él; (b) añadir a mobile un `metro.config.js` con un
+  `resolver.resolveRequest` que reescriba `.js` → `.ts` dentro de `packages/shared` y verificarlo con `expo export` ios y web;
+  (c) quitar las extensiones `.js` de `shared` sólo si su `tsconfig` deja de usar NodeNext. En cualquier caso, comprobar con
+  `npm run build` en `mobile/` (export ios+web), no sólo con `tsc`/Jest.
+- El mapeo `paths` puede quitarse cuando no se trabaje en worktrees con `node_modules` compartido; mientras tanto se conserva
+  porque coincide con el destino del workspace y la prueba lo garantiza. No se modificó `packages/shared/package.json`.

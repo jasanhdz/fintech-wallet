@@ -1,0 +1,8 @@
+App.tsx(20,52): error TS2339: Property 'TransferPolicy' does not exist on type '{ RegisterRequest: { fullName: string; email: string; password: string; }; LoginRequest: { email: string; password: string; client: "web" | "mobile"; }; MobileRefreshRequest: { refreshToken?: string | undefined; client?: "web" | ... 1 more ... | undefined; }; ... 10 more ...; Problem: { ...; }; }'.
+App.tsx(30,7): error TS2367: This comparison appears to be unintentional because the types '"processing"' and '"expired"' have no overlap.
+App.tsx(30,31): error TS2367: This comparison appears to be unintentional because the types '"processing"' and '"cancelled"' have no overlap.
+App.tsx(37,31): error TS2339: Property 'ownAccountId' does not exist on type '{ id: string; name: string; alias: string; clabeMasked: string; readonly destinationAccountId: string; isFrequent?: boolean | undefined; }'.
+App.tsx(37,78): error TS2339: Property 'ownAccountId' does not exist on type '{ id: string; name: string; alias: string; clabeMasked: string; readonly destinationAccountId: string; isFrequent?: boolean | undefined; }'.
+App.tsx(42,61): error TS2367: This comparison appears to be unintentional because the types '"awaiting_confirmation" | "processing"' and '"expired"' have no overlap.
+App.tsx(42,85): error TS2367: This comparison appears to be unintentional because the types '"awaiting_confirmation" | "processing"' and '"cancelled"' have no overlap.
+App.tsx(713,26): error TS2339: Property 'counterparty' does not exist on type '{ id: string; transferId?: string | undefined; type: "debit" | "credit"; amountMinor: string; currency: "MXN"; concept: string; reference: string; status: "processing" | "completed" | "rejected"; occurredAt: string; }'.
