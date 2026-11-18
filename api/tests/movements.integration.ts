@@ -13,6 +13,8 @@ test('movement history is owner-scoped, ledger-backed and keyset-paginated in wa
   process.env.DATABASE_URL = url.toString(); process.env.APP_ENV = 'development'; process.env.WEB_ORIGIN = 'http://localhost:5173';
   process.env.DEMO_FIXTURE_ENABLED = 'true'; process.env.DEMO_PRIMARY_BALANCE_MINOR = '100000'; process.env.DEMO_SAVINGS_BALANCE_MINOR = '0';
   process.env.OTP_THRESHOLD_MINOR = '9223372036854775807'; process.env.DAILY_TRANSFER_LIMIT_MINOR = '9223372036854775807';
+  // Round 8: new mandatory setting (demo example, not approved policy); a local .env older than R8 lacks it.
+  process.env.IDEMPOTENCY_RECORD_RETENTION_DAYS ??= '30';
   let server: ReturnType<typeof createServer> | undefined;
   const source = dataSource(url.toString()); await source.initialize();
   t.after(async () => { if (server?.listening) await new Promise<void>((resolveClose, reject) => server!.close((error) => error ? reject(error) : resolveClose())); if (source.isInitialized) await source.destroy(); });

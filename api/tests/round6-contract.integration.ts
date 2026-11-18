@@ -22,6 +22,8 @@ test('round 6 contract: own-account identity, transfer policy, OTP expiry/cancel
   process.env.DEMO_FIXTURE_ENABLED = 'true'; process.env.DEMO_PRIMARY_BALANCE_MINOR = '5000000'; process.env.DEMO_SAVINGS_BALANCE_MINOR = '100000';
   process.env.BUSINESS_TIME_ZONE = 'America/Mexico_City'; process.env.DAILY_TRANSFER_LIMIT_MINOR = '2000000'; process.env.OTP_THRESHOLD_MINOR = '500000';
   process.env.OTP_EXPIRY_SECONDS = '300'; process.env.OTP_MAX_ATTEMPTS = '5';
+  // Round 8: new mandatory setting (demo example, not approved policy); a local .env older than R8 lacks it.
+  process.env.IDEMPOTENCY_RECORD_RETENTION_DAYS ??= '30';
   const source = dataSource(testUrl.toString()); await source.initialize();
   const server = createServer(createApp()); await new Promise<void>((listening) => server.listen(0, '127.0.0.1', listening));
   t.after(async () => { if (server.listening) await new Promise<void>((closed, reject) => server.close((error) => error ? reject(error) : closed())); if (source.isInitialized) await source.destroy(); });

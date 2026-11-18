@@ -15,6 +15,8 @@ test('internal transfers enforce owner, idempotency, OTP, ledger, balance and co
   const testUrl=assertSafeTestDatabase(process.env.TEST_DATABASE_URL,process.env.DATABASE_URL);
   process.env.DATABASE_URL=testUrl.toString();process.env.APP_ENV='development';process.env.WEB_ORIGIN='http://localhost:5173';
   process.env.BUSINESS_TIME_ZONE??='America/Mexico_City';process.env.DAILY_TRANSFER_LIMIT_MINOR??='2000000';process.env.OTP_THRESHOLD_MINOR??='500000';process.env.OTP_EXPIRY_SECONDS??='300';process.env.OTP_MAX_ATTEMPTS??='5';
+  // Round 8: new mandatory setting (demo example, not approved policy); a local .env older than R8 lacks it.
+  process.env.IDEMPOTENCY_RECORD_RETENTION_DAYS ??= '30';
   let server:ReturnType<typeof createServer>|undefined;let base='';const source=dataSource(testUrl.toString());await source.initialize();
   const startServer=async()=>{server=createServer(createApp());await new Promise<void>((resolveListen)=>server!.listen(0,'127.0.0.1',resolveListen));const address=server.address();assert(address&&typeof address!=='string');base=`http://127.0.0.1:${address.port}/v1`;};
   const stopServer=async()=>{if(server?.listening)await new Promise<void>((resolveClose,reject)=>server!.close((error)=>error?reject(error):resolveClose()));};
