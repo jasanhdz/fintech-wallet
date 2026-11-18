@@ -198,7 +198,7 @@ describe('mobile transfer attempt', () => {
     await TestRenderer.act(async () => { await Promise.resolve(); });
     await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Elegir beneficiario' }).props.onPress(); });
     await TestRenderer.act(async () => { await Promise.resolve(); });
-    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     const beneficiaryButton = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Seleccionar Grace'))[0];
     assert.ok(beneficiaryButton);
     await TestRenderer.act(async () => { beneficiaryButton.props.onPress(); });
@@ -221,6 +221,51 @@ describe('mobile transfer attempt', () => {
     assert.equal((second[1]?.headers as Record<string, string>)['Idempotency-Key'], (first[1]?.headers as Record<string, string>)['Idempotency-Key']);
     assert.deepEqual(JSON.parse(String(second[1]?.body)), firstPayload);
     assert.match(JSON.stringify(renderer!.toJSON()), /654321/);
+    await TestRenderer.act(async () => { renderer!.unmount(); });
+    delete (global as { fetch?: typeof fetch }).fetch;
+  });
+});
+
+describe('mobile movement history', () => {
+  it('retries the first page, loads the next cursor, and opens the authenticated transfer receipt', async () => {
+    const secureStore = jest.requireMock('expo-secure-store') as { getItemAsync: jest.Mock };
+    secureStore.getItemAsync.mockResolvedValueOnce(null);
+    let firstPageAttempts = 0;
+    const calls: string[] = [];
+    const transfer = { id: 'transfer-1', status: 'completed', sourceAccountId: 'own-1', destination: { id: 'beneficiary', name: 'Grace', alias: 'Grace', clabeMasked: '••1234', destinationAccountId: 'other' }, amountMinor: '90071992547409931234', currency: 'MXN', concept: 'Pago', reference: '4', createdAt: '2026-11-14T12:00:00.000Z', receiptReference: 'folio-1' };
+    const fetchSpy = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input); calls.push(url);
+      if (url.endsWith('/auth/login')) return Response.json({ accessToken: 'access', refreshToken: 'refresh', tokenType: 'Bearer', expiresIn: 300, user: { id: 'u1', fullName: 'Ada Lovelace', email: 'ada@example.com' } });
+      if (url.endsWith('/accounts')) return Response.json({ items: [{ id: 'own-1', name: 'Principal', kind: 'checking', currency: 'MXN', availableBalanceMinor: '10000', clabe: '000000000000000000', clabeMasked: '••0000' }] });
+      if (url.includes('/accounts/own-1/movements?limit=20')) {
+        if (!url.includes('cursor=')) {
+          firstPageAttempts += 1;
+          if (firstPageAttempts === 1) throw new Error('offline');
+          return Response.json({ items: [{ id: 'movement-1', transferId: 'transfer-1', type: 'debit', amountMinor: '90071992547409931234', currency: 'MXN', concept: 'Pago', reference: '4', status: 'completed', occurredAt: '2026-11-14T12:00:00.000Z' }], nextCursor: 'next / cursor' });
+        }
+        return Response.json({ items: [], nextCursor: null });
+      }
+      if (url.endsWith('/transfers/transfer-1')) return Response.json(transfer);
+      throw new Error(`Unexpected API request: ${url}`);
+    });
+    Object.defineProperty(global, 'fetch', { configurable: true, writable: true, value: fetchSpy });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await TestRenderer.act(async () => { renderer = TestRenderer.create(<App />); });
+    const button = (title: string) => renderer!.root.findAll((node) => typeof node.props.onPress === 'function').find((node) => node.findAll((child) => String(child.type).includes('Text') && child.props.children === title).length > 0)!;
+    await TestRenderer.act(async () => { renderer!.root.findByProps({ accessibilityLabel: 'Correo electrónico' }).props.onChangeText('ada@example.com'); renderer!.root.findByProps({ accessibilityLabel: 'Contraseña' }).props.onChangeText('password'); });
+    await TestRenderer.act(async () => { button('Ingresar').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /Sin conexión|No pudimos conectar/);
+    await TestRenderer.act(async () => { button('Reintentar').props.onPress(); });
+    await TestRenderer.act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+    assert.match(JSON.stringify(renderer!.toJSON()), /900,719,925,474,099,312\.34/);
+    await TestRenderer.act(async () => { button('Cargar más movimientos').props.onPress(); });
+    assert.ok(calls.some((url) => url.endsWith('cursor=next%20%2F%20cursor')));
+    const movement = renderer!.root.findAll((node) => node.props.accessibilityLabel?.startsWith('Cargo '))[0];
+    assert.ok(movement);
+    await TestRenderer.act(async () => { movement.props.onPress(); });
+    assert.ok(calls.some((url) => url.endsWith('/transfers/transfer-1')));
+    assert.match(JSON.stringify(renderer!.toJSON()), /folio-1/);
     await TestRenderer.act(async () => { renderer!.unmount(); });
     delete (global as { fetch?: typeof fetch }).fetch;
   });
