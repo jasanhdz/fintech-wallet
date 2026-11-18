@@ -1,15 +1,15 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 
-async function capture(page: import('@playwright/test').Page, name: string) {
+async function capture(page: import('@playwright/test').Page, name: string, fullPage = false) {
   await page.screenshot({
     path: `test-results/visual/${name}-${page.viewportSize()?.width ?? 'full'}.png`,
-    fullPage: false,
+    fullPage,
     mask: [
       page.locator('input'),
       page.locator('select'),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
     ],
     maskColor: '#172b4d',
   });
@@ -68,6 +68,18 @@ test('a browser without a refresh cookie sees the real login and registration sc
   await expect(page.getByRole('heading', { name: 'Empieza por aquí.' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Crear cuenta/ })).toBeVisible();
   expect(consoleErrors).toEqual([]);
+});
+
+test('an expired authenticated session shows the real session-expired screen responsively @visual', async ({ page }) => {
+  // Empty refresh probe represents a browser session without a refresh cookie; no token claims are fabricated.
+  await page.route('**/auth/refresh', (route) => route.fulfill({ status: 204 }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/session-expired');
+  await expect(page).toHaveURL(/\/session-expired$/);
+  await expect(page.getByRole('heading', { name: 'Tu sesión terminó.' })).toBeVisible();
+  await capture(page, 'W14-session-expired');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W14-session-expired');
 });
 
 test('registers, logs in and reads only accounts returned by the API', async ({ page }) => {
@@ -167,6 +179,11 @@ test('registers a real internal beneficiary and displays only a masked CLABE', a
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();
   await expect(page.getByText('CLABE inválida.')).toBeVisible();
   await expect(page).toHaveURL(/\/beneficiaries\/new$/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W07-error');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W07-error');
+  await page.setViewportSize({ width: 390, height: 844 });
 
   await page.getByLabel('CLABE interbancaria').fill(destinationClabe);
   await page.getByRole('button', { name: /Guardar beneficiario/ }).click();
@@ -306,9 +323,10 @@ test('retries an uncertain real transfer with identical idempotency key and show
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();
   await expect(page.getByText(/No conocemos el resultado del envío/)).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
-  await capture(page, 'W11-resultado-incierto');
+  await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 1440, height: 960 });
-  await capture(page, 'W11-resultado-incierto');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await capture(page, 'W11-resultado-incierto', false);
   await page.setViewportSize({ width: 390, height: 844 });
   // The reviewed form remains available after an uncertain response; resubmitting its unchanged fields retries the cached draft.
   await page.getByRole('button', { name: /Enviar transferencia/ }).click();

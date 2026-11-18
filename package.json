@@ -16,6 +16,7 @@
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "npm --workspace @fintech-wallet/api run dev",
+    "dev:api:testdb": "tsx scripts/env/dev-api-testdb.ts",
     "dev:web": "npm --workspace @fintech-wallet/web run dev",
     "dev:mobile": "npm --workspace @fintech-wallet/mobile run start",
     "env:local": "node scripts/env/local.mjs",

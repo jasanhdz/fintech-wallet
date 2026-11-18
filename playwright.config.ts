@@ -8,6 +8,7 @@ if (!isolatedDatabaseUrl) {
 
 export default defineConfig({
   testDir: './web/e2e',
+  outputDir: './playwright-report/test-results',
   fullyParallel: false,
   workers: 1,
   reporter: 'list',

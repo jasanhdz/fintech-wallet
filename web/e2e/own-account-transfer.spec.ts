@@ -8,7 +8,7 @@ async function capture(page: import('@playwright/test').Page, name: string) {
       page.locator('input, select'),
       page.locator('[data-sensitive]'),
       page.locator('.masked-clabe, .notice strong, dt:has-text("Folio interno") + dd, dt:has-text("Referencia") + dd'),
-      page.locator('.balance-value, .account-balance, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
+      page.locator('.balance-value, .account-balance, .consolidated-balance strong, .amount-debit, .amount-credit, dt:has-text("Importe") + dd'),
     ],
     maskColor: '#172b4d',
   });
@@ -101,6 +101,18 @@ test('registers with the development fixture and transfers between own accounts'
   expect(accountIds.length, 'La fixture local debe devolver dos cuentas propias').toBe(2);
   expect(fundedAccounts.length, 'La fixture local debe financiar al menos una cuenta propia con 1 minor unit').toBeGreaterThan(0);
 
+  const sourceId = fundedAccounts[0];
+  await page.locator(`.account-history-link[href="/accounts/${sourceId}/movements"]`).click();
+  await expect(page.getByRole('heading', { name: 'Movimientos', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sin movimientos' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await capture(page, 'W04-historial-vacio-own');
+  await page.setViewportSize({ width: 1440, height: 960 });
+  await capture(page, 'W04-historial-vacio-own');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('link', { name: /Volver a mis cuentas/ }).click();
+  await expect(page).toHaveURL(/\/accounts$/);
+
   await page.getByRole('link', { name: 'Transferir', exact: true }).first().click();
   await expect.poll(() => beneficiaryCount).toBe(0);
   await expect(page.getByRole('heading', { name: 'Aún no tienes beneficiarios' })).toBeVisible();
@@ -110,7 +122,6 @@ test('registers with the development fixture and transfers between own accounts'
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('button', { name: 'Entre mis cuentas' })).toBeVisible();
   await page.getByRole('button', { name: 'Entre mis cuentas' }).click();
-  const sourceId = fundedAccounts[0];
   const destinationId = accountIds.find((id) => id !== sourceId);
   expect(destinationId).toBeTruthy();
   await page.getByLabel('Cuenta de origen').selectOption(sourceId);
@@ -137,11 +148,18 @@ test('registers with the development fixture and transfers between own accounts'
   if (transferStatus === 'awaiting_confirmation') {
     await expect(confirmation).toBeVisible();
     await expect.poll(() => demoOnlyCode).toMatch(/^\d{6}$/);
-    await confirmation.fill(demoOnlyCode!);
     await capture(page, 'W10-otp-own');
     await page.setViewportSize({ width: 1440, height: 960 });
     await capture(page, 'W10-otp-own');
     await page.setViewportSize({ width: 390, height: 844 });
+    await confirmation.fill(`${(Number(demoOnlyCode![0]) + 1) % 10}${demoOnlyCode!.slice(1)}`);
+    await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
+    await expect(page.getByText(/No se confirmó la respuesta/)).toBeVisible();
+    await capture(page, 'W10-otp-error-own');
+    await page.setViewportSize({ width: 1440, height: 960 });
+    await capture(page, 'W10-otp-error-own');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await confirmation.fill(demoOnlyCode!);
     await page.getByRole('button', { name: 'Confirmar transferencia' }).click();
     await expect.poll(() => confirmationResponseStatus).toBe(200);
     await expect.poll(() => confirmedStatus).toBe('completed');
@@ -170,7 +188,7 @@ test('registers with the development fixture and transfers between own accounts'
   await capture(page, 'W03-cuentas-transfer-completada-own');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator(`.account-history-link[href="/accounts/${sourceId}/movements"]`).click();
-  await expect(page.getByRole('heading', { name: 'Movimientos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Movimientos', exact: true })).toBeVisible();
   const transferRow = page.getByRole('row').filter({ hasText: 'Transferencia propia E2E' });
   await expect(transferRow).toContainText('Cargo');
   await expect(transferRow).toContainText('Completado');
